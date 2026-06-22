@@ -1,4 +1,4 @@
-import { Baby, Heart, UserRound, Users } from 'lucide-react';
+import { Baby, Heart, PawPrint, UserRound, Users } from 'lucide-react';
 import { Pessoa } from '../../types';
 import { getInitials } from '../../utils/personFields';
 import { formatCount, getFirstName } from './meusVinculosUtils';
@@ -29,6 +29,7 @@ function PersonAvatar({ person, avatarSrc }: { person: Pessoa; avatarSrc?: strin
 const GROUP_ICONS = {
   pais: UserRound,
   filhos: Baby,
+  pets: PawPrint,
   conjuges: Heart,
   irmaos: Users,
 };
@@ -52,7 +53,7 @@ export function RelationshipOverview({ person, avatarSrc, groups }: Relationship
         </div>
       </section>
 
-      <div className="grid grid-cols-4 gap-2 sm:grid-cols-2 sm:gap-3 xl:grid-cols-4">
+      <div className="grid grid-cols-4 gap-2 sm:grid-cols-2 sm:gap-3 xl:grid-cols-5">
         {groups.map((group) => {
           const Icon = GROUP_ICONS[group.key];
           return (

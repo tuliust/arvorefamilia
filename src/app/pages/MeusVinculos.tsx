@@ -5,6 +5,7 @@ import {
   ChevronDown,
   ChevronUp,
   Heart,
+  PawPrint,
   Plus,
   UserRound,
   Users,
@@ -58,11 +59,13 @@ import {
   formatOptionalValue,
   getChildOtherParentOptions,
   getChildRelationshipLabel,
+  getPetRelationshipLabel,
   findKnownOtherParentForChild,
   getRelationshipChangeNoticeText,
   getRelationshipControlNoticeText,
   getRelationshipFinalButtonLabel,
   getRelationshipOverviewGroupLabel,
+  isPetPerson,
   relationshipStatusHasPending,
 } from './meus-vinculos/meusVinculosUtils';
 import {
@@ -81,6 +84,7 @@ type RelationshipGroups = {
   maes: Pessoa[];
   conjuges: Pessoa[];
   filhos: Pessoa[];
+  pets: Pessoa[];
   irmaos: Pessoa[];
 };
 
@@ -117,12 +121,14 @@ const EMPTY_GROUPS: RelationshipGroups = {
   maes: [],
   conjuges: [],
   filhos: [],
+  pets: [],
   irmaos: [],
 };
 
 const EMPTY_REMOVED_RELATIONSHIP_IDS: RemovedRelationshipIds = {
   pais: [],
   filhos: [],
+  pets: [],
   conjuges: [],
   irmaos: [],
 };
@@ -131,7 +137,49 @@ function uniquePeople(people: Pessoa[]) {
   return Array.from(new Map(people.map((person) => [person.id, person])).values());
 }
 
-function createLocalPerson(form: AddRelativeForm): Pessoa {
+function splitChildrenAndPets(people: Pessoa[]) {
+  return people.reduce<{ filhos: Pessoa[]; pets: Pessoa[] }>((groups, person) => {
+    if (isPetPerson(person)) {
+      groups.pets.push(person);
+    } else {
+      groups.filhos.push(person);
+    }
+    return groups;
+  }, { filhos: [], pets: [] });
+}
+
+function normalizeRelationshipGroups(groups: RelationshipGroups): RelationshipGroups {
+  const split = splitChildrenAndPets(uniquePeople([...(groups.filhos ?? []), ...(groups.pets ?? [])]));
+  return {
+    ...groups,
+    filhos: split.filhos,
+    pets: split.pets,
+  };
+}
+
+function normalizeSpouseActivity(details: MarriageDetails, spouses: Pessoa[], currentPerson?: Pessoa | null): MarriageDetails {
+  let activeSpouseId: string | null = null;
+  const currentPersonDeceased = currentPerson ? isPersonDeceased(currentPerson) : false;
+
+  return spouses.reduce<MarriageDetails>((next, spouse) => {
+    const normalized = normalizeMarriageDetails(details[spouse.id]);
+    const spouseDeceased = isPersonDeceased(spouse);
+    const canBeActive = !currentPersonDeceased && !spouseDeceased;
+    const shouldStayActive = canBeActive && normalized.ativo && !activeSpouseId;
+
+    if (shouldStayActive) {
+      activeSpouseId = spouse.id;
+    }
+
+    next[spouse.id] = {
+      ...normalized,
+      ativo: shouldStayActive,
+    };
+    return next;
+  }, {});
+}
+
+function createLocalPerson(form: AddRelativeForm, humanoOuPet: Pessoa['humano_ou_pet'] = 'Humano'): Pessoa {
   return {
     id: `local-${Date.now()}-${Math.random().toString(36).slice(2)}`,
     nome_completo: form.nome_completo.trim(),
@@ -140,7 +188,7 @@ function createLocalPerson(form: AddRelativeForm): Pessoa {
       international: form.local_nascimento_exterior,
     }) || undefined,
     local_nascimento_exterior: form.local_nascimento_exterior,
-    humano_ou_pet: 'Humano',
+    humano_ou_pet: humanoOuPet,
   };
 }
 
@@ -194,6 +242,7 @@ function readMeusVinculosDraft(key: string): MeusVinculosDraft | null {
         maes: Array.isArray(draft.relationships.maes) ? draft.relationships.maes : [],
         conjuges: Array.isArray(draft.relationships.conjuges) ? draft.relationships.conjuges : [],
         filhos: Array.isArray(draft.relationships.filhos) ? draft.relationships.filhos : [],
+        pets: Array.isArray(draft.relationships.pets) ? draft.relationships.pets : [],
         irmaos: Array.isArray(draft.relationships.irmaos) ? draft.relationships.irmaos : [],
       },
       marriageDetails: Object.fromEntries(
@@ -205,6 +254,7 @@ function readMeusVinculosDraft(key: string): MeusVinculosDraft | null {
       removedRelationshipIds: {
         pais: Array.isArray(draft.removedRelationshipIds?.pais) ? draft.removedRelationshipIds.pais : [],
         filhos: Array.isArray(draft.removedRelationshipIds?.filhos) ? draft.removedRelationshipIds.filhos : [],
+        pets: Array.isArray(draft.removedRelationshipIds?.pets) ? draft.removedRelationshipIds.pets : [],
         conjuges: Array.isArray(draft.removedRelationshipIds?.conjuges) ? draft.removedRelationshipIds.conjuges : [],
         irmaos: Array.isArray(draft.removedRelationshipIds?.irmaos) ? draft.removedRelationshipIds.irmaos : [],
       },
@@ -273,31 +323,34 @@ export function MeusVinculos() {
       obterRelacionamentosDaPessoa(pessoaId),
       obterTodosRelacionamentos(),
     ]);
+    const normalizedRelationships = normalizeRelationshipGroups(nextRelationships as RelationshipGroups);
     const nextMarriageDetails: MarriageDetails = {};
-    uniquePeople(nextRelationships.conjuges).forEach((person) => {
+    uniquePeople(normalizedRelationships.conjuges).forEach((person) => {
       const rel = findRelationshipBetween(nextAllRelationships, pessoaId, person.id, ['conjuge']);
       const defaultActive = !isPersonDeceased({ ...pessoa, falecido: pessoa?.falecido }) && !isPersonDeceased(person);
       nextMarriageDetails[person.id] = {
         ...createEmptyMarriageDetails(),
         data_casamento: String(rel?.data_casamento ?? ''),
         local_casamento: String(rel?.local_casamento ?? ''),
-        ativo: rel?.ativo ?? defaultActive,
+        ativo: isPersonDeceased(person) || isPersonDeceased({ ...pessoa, falecido: pessoa?.falecido }) ? false : (rel?.ativo ?? defaultActive),
         data_separacao: String(rel?.data_separacao ?? ''),
         local_separacao: String(rel?.local_separacao ?? ''),
       };
     });
 
     setAllRelacionamentos(nextAllRelationships);
-    setRelationships(nextRelationships);
-    setInitialRelationships(nextRelationships);
-    setMarriageDetails(nextMarriageDetails);
-    setInitialMarriageDetails(nextMarriageDetails);
+    const normalizedMarriageDetails = normalizeSpouseActivity(nextMarriageDetails, normalizedRelationships.conjuges, pessoa);
+
+    setRelationships(normalizedRelationships);
+    setInitialRelationships(normalizedRelationships);
+    setMarriageDetails(normalizedMarriageDetails);
+    setInitialMarriageDetails(normalizedMarriageDetails);
     setRemovedRelationshipIds(EMPTY_REMOVED_RELATIONSHIP_IDS);
 
     return {
-      relationships: nextRelationships,
+      relationships: normalizedRelationships,
       allRelacionamentos: nextAllRelationships,
-      marriageDetails: nextMarriageDetails,
+      marriageDetails: normalizedMarriageDetails,
     };
   }
 
@@ -338,8 +391,9 @@ export function MeusVinculos() {
         if (mounted) setPendingAvatarDataUrl(dadosDraft?.pendingAvatarDataUrl ?? null);
 
         if (mounted && draft) {
-          setRelationships(draft.relationships);
-          setMarriageDetails(draft.marriageDetails);
+          const normalizedDraftRelationships = normalizeRelationshipGroups(draft.relationships);
+          setRelationships(normalizedDraftRelationships);
+          setMarriageDetails(normalizeSpouseActivity(draft.marriageDetails, normalizedDraftRelationships.conjuges, data.pessoa));
           setLocalRelationshipRoles(draft.localRelationshipRoles);
           setChildOtherParent(draft.childOtherParent);
           setSpouseExpanded(draft.spouseExpanded);
@@ -570,7 +624,12 @@ export function MeusVinculos() {
     }
 
     markDraftDirty();
-    const relativePerson = person ?? createLocalPerson(addForm);
+    if (addDialog.group === 'pets' && person && !isPetPerson(person)) {
+      toast.error('Selecione um cadastro de pet ou crie um novo pet.');
+      return;
+    }
+
+    const relativePerson = person ?? createLocalPerson(addForm, addDialog.group === 'pets' ? 'Pet' : 'Humano');
 
     setRelationships((current) => {
       if (addDialog.group === 'pais' && addForm.parentRole === 'mae') {
@@ -640,7 +699,7 @@ export function MeusVinculos() {
       });
     }
 
-    if (group === 'filhos') {
+    if (group === 'filhos' || group === 'pets') {
       setChildOtherParent((current) => {
         const next = { ...current };
         delete next[personId];
@@ -749,10 +808,33 @@ export function MeusVinculos() {
 
   const updateMarriageDetail = (spouseId: string, details: MarriageDetailsForm) => {
     markDraftDirty();
-    setMarriageDetails((current) => ({
-      ...current,
-      [spouseId]: normalizeMarriageDetails(details),
-    }));
+    const spouse = getGroupPeople(relationships, 'conjuges').find((person) => person.id === spouseId);
+    const normalizedDetails = normalizeMarriageDetails(details);
+    const spouseDeceased = spouse ? isPersonDeceased(spouse) : false;
+    const currentPersonDeceased = pessoa ? isPersonDeceased(pessoa) : false;
+    const canBeActive = !spouseDeceased && !currentPersonDeceased;
+    const nextDetails = {
+      ...normalizedDetails,
+      ativo: canBeActive ? normalizedDetails.ativo : false,
+    };
+
+    setMarriageDetails((current) => {
+      if (!nextDetails.ativo) {
+        return {
+          ...current,
+          [spouseId]: nextDetails,
+        };
+      }
+
+      return Object.fromEntries(
+        Object.entries({ ...current, [spouseId]: nextDetails }).map(([id, value]) => [
+          id,
+          id === spouseId
+            ? nextDetails
+            : { ...normalizeMarriageDetails(value), ativo: false },
+        ])
+      );
+    });
     setHasLocalRelationshipChanges(true);
   };
 
@@ -765,7 +847,7 @@ export function MeusVinculos() {
     if (group === 'pais') {
       return relationships.maes.some((mae) => mae.id === person.id) ? 'mae' : 'pai';
     }
-    if (group === 'filhos') return localRelationshipRoles[person.id] ?? 'pai';
+    if (group === 'filhos' || group === 'pets') return localRelationshipRoles[person.id] ?? 'pai';
     if (group === 'conjuges') return 'conjuge';
     return 'irmao';
   };
@@ -807,7 +889,7 @@ export function MeusVinculos() {
   };
 
   const reviewGroups = useMemo(() => {
-    const groups: RelationshipGroupKey[] = ['pais', 'filhos', 'conjuges', 'irmaos'];
+    const groups: RelationshipGroupKey[] = ['pais', 'filhos', 'pets', 'conjuges', 'irmaos'];
 
     return groups.reduce<Record<RelationshipGroupKey, {
       people: Pessoa[];
@@ -833,19 +915,20 @@ export function MeusVinculos() {
     }, {
       pais: { people: [], visiblePeople: [], pendingCount: 0, added: 0, edited: 0, removed: 0 },
       filhos: { people: [], visiblePeople: [], pendingCount: 0, added: 0, edited: 0, removed: 0 },
+      pets: { people: [], visiblePeople: [], pendingCount: 0, added: 0, edited: 0, removed: 0 },
       conjuges: { people: [], visiblePeople: [], pendingCount: 0, added: 0, edited: 0, removed: 0 },
       irmaos: { people: [], visiblePeople: [], pendingCount: 0, added: 0, edited: 0, removed: 0 },
     });
   }, [initialMarriageDetails, initialRelationships, marriageDetails, relationships, removedRelationshipIds]);
 
   useEffect(() => {
-    if (!pessoa?.id || reviewGroups.filhos.visiblePeople.length === 0) return;
+    if (!pessoa?.id || (reviewGroups.filhos.visiblePeople.length === 0 && reviewGroups.pets.visiblePeople.length === 0)) return;
 
     setChildOtherParent((current) => {
       let changed = false;
       const next = { ...current };
 
-      reviewGroups.filhos.visiblePeople.forEach((child) => {
+      [...reviewGroups.filhos.visiblePeople, ...reviewGroups.pets.visiblePeople].forEach((child) => {
         if (next[child.id]) return;
 
         const knownOtherParent = findKnownOtherParentForChild({
@@ -874,16 +957,18 @@ export function MeusVinculos() {
     relationships.maes,
     relationships.pais,
     reviewGroups.filhos.visiblePeople,
+    reviewGroups.pets.visiblePeople,
   ]);
 
   const reviewSummary = useMemo(() => {
-    const added = reviewGroups.pais.added + reviewGroups.filhos.added + reviewGroups.conjuges.added + reviewGroups.irmaos.added;
-    const edited = reviewGroups.pais.edited + reviewGroups.filhos.edited + reviewGroups.conjuges.edited + reviewGroups.irmaos.edited;
-    const removed = reviewGroups.pais.removed + reviewGroups.filhos.removed + reviewGroups.conjuges.removed + reviewGroups.irmaos.removed;
+    const added = reviewGroups.pais.added + reviewGroups.filhos.added + reviewGroups.pets.added + reviewGroups.conjuges.added + reviewGroups.irmaos.added;
+    const edited = reviewGroups.pais.edited + reviewGroups.filhos.edited + reviewGroups.pets.edited + reviewGroups.conjuges.edited + reviewGroups.irmaos.edited;
+    const removed = reviewGroups.pais.removed + reviewGroups.filhos.removed + reviewGroups.pets.removed + reviewGroups.conjuges.removed + reviewGroups.irmaos.removed;
 
     return {
       parents: reviewGroups.pais.people.length,
       children: reviewGroups.filhos.people.length,
+      pets: reviewGroups.pets.people.length,
       spouses: reviewGroups.conjuges.people.length,
       siblings: reviewGroups.irmaos.people.length,
       added,
@@ -901,6 +986,7 @@ export function MeusVinculos() {
     return Array.from(new Set([
       ...reviewGroups.pais.visiblePeople.map((person) => person.id),
       ...reviewGroups.filhos.visiblePeople.map((person) => person.id),
+      ...reviewGroups.pets.visiblePeople.map((person) => person.id),
       ...reviewGroups.conjuges.visiblePeople.map((person) => person.id),
       ...reviewGroups.irmaos.visiblePeople.map((person) => person.id),
     ].filter((id) => Boolean(id) && !String(id).startsWith('local-')))).sort();
@@ -934,6 +1020,7 @@ export function MeusVinculos() {
   const reviewCounts: RelationshipCounts = {
     parents: reviewSummary.parents,
     children: reviewSummary.children,
+    pets: reviewSummary.pets,
     spouses: reviewSummary.spouses,
     siblings: reviewSummary.siblings,
   };
@@ -947,6 +1034,7 @@ export function MeusVinculos() {
   const overviewGroups: RelationshipOverviewGroup[] = [
     { key: 'pais', label: getRelationshipOverviewGroupLabel('pais'), count: reviewSummary.parents, pendingCount: reviewGroups.pais.pendingCount },
     { key: 'filhos', label: getRelationshipOverviewGroupLabel('filhos'), count: reviewSummary.children, pendingCount: reviewGroups.filhos.pendingCount },
+    { key: 'pets', label: getRelationshipOverviewGroupLabel('pets'), count: reviewSummary.pets, pendingCount: reviewGroups.pets.pendingCount },
     { key: 'conjuges', label: getRelationshipOverviewGroupLabel('conjuges'), count: reviewSummary.spouses, pendingCount: reviewGroups.conjuges.pendingCount },
     { key: 'irmaos', label: getRelationshipOverviewGroupLabel('irmaos'), count: reviewSummary.siblings, pendingCount: reviewGroups.irmaos.pendingCount },
   ];
@@ -973,12 +1061,12 @@ export function MeusVinculos() {
     return {
       requester_pessoa_id: pessoa?.id,
       action,
-      target_pessoa_id: group === 'filhos' ? person.id : pessoa?.id,
-      related_pessoa_id: group === 'filhos' ? pessoa?.id : person.id,
+      target_pessoa_id: group === 'filhos' || group === 'pets' ? person.id : pessoa?.id,
+      related_pessoa_id: group === 'filhos' || group === 'pets' ? pessoa?.id : person.id,
       relationship_id: relationshipId,
       relationship_type: relationshipType,
       relationship_subtype: existingRelationship?.subtipo_relacionamento ?? (group === 'conjuges' ? 'casamento' : 'sangue'),
-      details: group === 'filhos' ? { ...details, inverseTipoForFilho: relationshipType as 'pai' | 'mae' } : details,
+      details: group === 'filhos' || group === 'pets' ? { ...details, inverseTipoForFilho: relationshipType as 'pai' | 'mae' } : details,
       changes,
     };
   };
@@ -997,7 +1085,7 @@ export function MeusVinculos() {
 
     let created = 0;
     let skipped = 0;
-    const groups: RelationshipGroupKey[] = ['pais', 'filhos', 'conjuges', 'irmaos'];
+    const groups: RelationshipGroupKey[] = ['pais', 'filhos', 'pets', 'conjuges', 'irmaos'];
 
     for (const group of groups) {
       const initialPeople = getGroupPeople(initialRelationships, group);
@@ -1013,13 +1101,13 @@ export function MeusVinculos() {
             data_nascimento: person.data_nascimento,
             local_nascimento: person.local_nascimento,
             local_nascimento_exterior: person.local_nascimento_exterior,
-            humano_ou_pet: 'Humano',
+            humano_ou_pet: group === 'pets' ? 'Pet' : 'Humano',
           });
 
           if (!createdPerson) {
             throw new Error(`Não foi possível cadastrar ${person.nome_completo} para solicitar o vínculo.`);
           }
-          if (group === 'filhos') {
+          if (group === 'filhos' || group === 'pets') {
             requestInput.target_pessoa_id = createdPerson.id;
           } else {
             requestInput.related_pessoa_id = createdPerson.id;
@@ -1032,7 +1120,7 @@ export function MeusVinculos() {
       }
 
       for (const person of initialPeople.filter((initialPerson) => !currentIds.has(initialPerson.id))) {
-        const acceptedTypes: Relacionamento['tipo_relacionamento'][] = group === 'pais' || group === 'filhos'
+        const acceptedTypes: Relacionamento['tipo_relacionamento'][] = group === 'pais' || group === 'filhos' || group === 'pets'
           ? ['pai', 'mae', 'filho']
           : [group === 'conjuges' ? 'conjuge' : 'irmao'];
         const rel = findRelationshipBetween(allRelacionamentos, pessoa.id, person.id, acceptedTypes);
@@ -1137,7 +1225,7 @@ export function MeusVinculos() {
     <div className="min-h-screen bg-gray-50">
       <MemberPageHeader
         title="Confirmar vínculos familiares"
-        subtitle="Revise quem são seus pais, filhos, cônjuges e irmãos antes de seguir."
+        subtitle="Revise quem são seus pais, filhos, pets, cônjuges e irmãos antes de seguir."
         icon={Users}
         actions={[
           { label: 'Árvore geral', to: '/', icon: HEADER_ACTION_ICONS.Home },
@@ -1174,6 +1262,7 @@ export function MeusVinculos() {
               emptyDescription="Adicione pai ou mãe para completar a geração anterior da árvore."
               addButtonLabel="Adicionar pai ou mãe"
               onAdd={() => openAddDialog('pais', 'Adicionar pai ou mãe')}
+              showEmptyAddButton={false}
             >
               {reviewGroups.pais.visiblePeople.map((person) => {
                 const status: RelationshipReviewStatus = hasProfileControlRequest(person.id)
@@ -1265,6 +1354,73 @@ export function MeusVinculos() {
             </RelationshipGroupPanel>
 
             <RelationshipGroupPanel
+              id="vinculos-pets"
+              title="Pets"
+              description="Confirme seus pets e, se houver, informe outros tutores."
+              icon={PawPrint}
+              count={reviewGroups.pets.visiblePeople.length}
+              pendingCount={reviewGroups.pets.pendingCount}
+              emptyTitle="Nenhum pet cadastrado"
+              emptyDescription="Adicione pets em uma área própria, sem tratá-los como filhos."
+              addButtonLabel="Adicionar pet"
+              onAdd={() => openAddDialog('pets', 'Adicionar pet')}
+            >
+              {reviewGroups.pets.visiblePeople.map((person) => {
+                const status: RelationshipReviewStatus = hasProfileControlRequest(person.id)
+                  ? 'control_pending'
+                  : getRelationshipReviewStatus('pets', person);
+                const otherTutorOptions = getChildOtherParentOptionsForPerson(person);
+                const tutorValue = childOtherParent[person.id] ?? '';
+
+                return (
+                  <RelativeCard
+                    key={`pets-${person.id}-${status}`}
+                    person={person}
+                    relationshipGroup="pets"
+                    relationshipLabel={getPetRelationshipLabel(person)}
+                    status={status}
+                    hasAuthUser={linkedPersonIds.has(person.id)}
+                    canRequestControl={canRequestProfileControl(person, pessoa.id, hasProfileControlRequest(person.id), status)}
+                    onRemove={() => removeRelative('pets', person.id)}
+                    onUndoRemove={() => undoRemoveRelative('pets', person.id)}
+                    onCancelAddition={() => removeRelative('pets', person.id)}
+                    onRequestControl={() => openControlRequestDialog(person)}
+                  >
+                    {status !== 'removed_pending' && (
+                      <div className="space-y-3 rounded-lg border border-gray-200 bg-white/80 p-3">
+                        <div className="space-y-2">
+                          <Label htmlFor={`pet-other-tutor-${person.id}`}>Outros tutores</Label>
+                          <select
+                            id={`pet-other-tutor-${person.id}`}
+                            value={tutorValue}
+                            onChange={(event) => {
+                              const nextValue = event.target.value;
+                              markDraftDirty();
+                              setChildOtherParent((current) => ({
+                                ...current,
+                                [person.id]: nextValue,
+                              }));
+                            }}
+                            className="flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 ring-offset-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
+                          >
+                            <option value="">Manter tutor atual do pré-cadastro</option>
+                            <option value="__none__">Não há outro tutor do pet</option>
+                            {otherTutorOptions.map((option) => (
+                              <option key={option.id} value={option.id}>Alterar para {option.nome_completo}</option>
+                            ))}
+                          </select>
+                        </div>
+                        {otherTutorOptions.length === 0 && (
+                          <p className="text-sm text-gray-500">Adicione um cônjuge ou outro familiar para habilitar a seleção de tutor adicional.</p>
+                        )}
+                      </div>
+                    )}
+                  </RelativeCard>
+                );
+              })}
+            </RelationshipGroupPanel>
+
+            <RelationshipGroupPanel
               id="vinculos-conjuges"
               title="Cônjuges"
               description="Registre relacionamentos importantes e detalhes de casamento ou separação."
@@ -1281,6 +1437,9 @@ export function MeusVinculos() {
                   ? 'control_pending'
                   : getRelationshipReviewStatus('conjuges', person);
                 const details = marriageDetails[person.id] ?? createEmptyMarriageDetails();
+                const spouseDeceased = isPersonDeceased(person);
+                const currentPersonDeceased = isPersonDeceased(pessoa);
+                const activeDisabled = spouseDeceased || currentPersonDeceased;
                 const expanded = spouseExpanded[person.id] ?? false;
 
                 return (
@@ -1303,12 +1462,18 @@ export function MeusVinculos() {
                           <label className="flex items-center gap-2 rounded-md border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700">
                             <input
                               type="checkbox"
-                              checked={details.ativo}
+                              checked={details.ativo && !activeDisabled}
+                              disabled={activeDisabled}
                               onChange={(event) => updateMarriageDetail(person.id, { ...details, ativo: event.target.checked })}
-                              className="h-4 w-4"
+                              className="h-4 w-4 disabled:cursor-not-allowed disabled:opacity-60"
                             />
                             Relacionamento ativo
                           </label>
+                          {activeDisabled && (
+                            <p className="text-sm text-gray-500">
+                              Relacionamento inativo porque {spouseDeceased ? 'o cônjuge é falecido' : 'a pessoa em revisão é falecida'}.
+                            </p>
+                          )}
                           <Button
                             type="button"
                             variant="ghost"
