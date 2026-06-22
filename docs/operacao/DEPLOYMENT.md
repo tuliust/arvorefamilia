@@ -1,10 +1,10 @@
 
 # Deploy e operação
 
-> Última revisão: 2026-06-14
+> Última revisão: 2026-06-22
 > Local canônico: `docs/operacao/DEPLOYMENT.md`
 > Tipo: checklist operacional completo de build, deploy e publicação
-> Status: organizado para manter operação/deploy neste arquivo e delegar QA manual de produto para `docs/QA_MANUAL.md`.
+> Status: revisado para deploy com mapas mobile sensíveis, chunks lazy e migrations dependentes.
 
 ---
 
@@ -458,3 +458,90 @@ Nunca tentar resolver falha de schema removendo payload do frontend sem confirma
 - Não corrigir problema visual com migration.
 - Não rodar scripts destrutivos sem dry-run.
 - Não marcar QA como concluído sem validação real.
+
+## 18. Deploy com mapas mobile sensíveis
+
+Mudanças que envolvem qualquer um destes arquivos exigem QA mobile pós-deploy:
+
+```txt
+src/app/components/FamilyTree/MobileFamilyTreeView.tsx
+src/app/components/FamilyTree/MobileFamilyMapToolbar.tsx
+src/app/pages/home/HomeMobileNav.tsx
+src/mobileFamilyMap*.ts
+src/mobileFamilyTree*.ts
+src/staticMobileFamilyTreeScreens.ts
+src/styles/*mobile*
+index.html
+```
+
+Checklist mínimo pós-deploy:
+
+- [ ] Safari/iPhone abre `/mapa-familiar`;
+- [ ] toolbar fixa mostra `Formato`, `Cor`, `Filtros`, `Zoom` e `+`;
+- [ ] `Zoom` vertical abre overview 3x3;
+- [ ] `Zoom` horizontal abre overview por gerações;
+- [ ] `descendants` não treme;
+- [ ] botão `+` abre e fecha painel sem travar body;
+- [ ] mapa completo abre, pinça/arraste funcionam e fecha sem travar scroll;
+- [ ] `?pessoa=` é preservado ao alternar vertical/horizontal.
+
+---
+
+## 19. Deploy com migration dependente
+
+Quando frontend depender de schema novo, aplicar migration antes do deploy.
+
+Casos atuais sensíveis:
+
+```txt
+arquivos_historicos.url nullable
+arquivos_historicos.storage_bucket nullable
+arquivos_historicos.storage_path nullable
+arquivos_historicos.mime_type nullable
+arquivos_historicos.participante_ids opcional/compatível
+```
+
+Fluxo recomendado:
+
+```bash
+supabase migration list
+supabase db push
+npm run build
+git diff --check
+```
+
+Depois do deploy:
+
+- testar criação de fato sem arquivo;
+- testar upload de imagem/PDF;
+- testar listagem de arquivos antigos;
+- conferir console/PostgREST schema cache.
+
+---
+
+## 20. Deploy documental
+
+Mudanças somente documentais ainda devem rodar:
+
+```bash
+git diff --check
+npm run build
+```
+
+Motivo: o build confirma que o repositório não ficou em estado inconsistente enquanto a documentação é consolidada.
+
+Não é necessário publicar novo deploy só por documentação, exceto quando o fluxo do time exigir deploy a cada push.
+
+---
+
+## 21. Recuperação de chunks
+
+O código atual possui tratamento de erro de chunk dinâmico em `routes.tsx`, com tentativa de reload controlado.
+
+Mesmo assim, a causa operacional deve ser corrigida:
+
+- `/index.html` sem cache forte;
+- `/assets/*` com cache imutável;
+- fallback SPA não respondendo HTML para JS inexistente;
+- Vercel/preview apontando para commit esperado;
+- Safari/iOS testado em janela privada quando necessário.

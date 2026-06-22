@@ -1,9 +1,9 @@
-﻿# Manutenção de Storage
+# Manutenção de Storage
 
-> Última revisão: 2026-06-14
+> Última revisão: 2026-06-22
 > Local canônico: `docs/operacao/STORAGE_MAINTENANCE.md`
 > Tipo: documentação operacional de Storage.
-> Status: revisado para diagnóstico de órfãos, base64 legado, buckets principais e separação entre fallback visual e arquivos reais.
+> Status: revisado para diferenciar arquivos reais de fatos históricos sem anexo.
 
 ---
 
@@ -308,3 +308,56 @@ Atualize quando houver:
 - nova policy de Storage;
 - novo fluxo de upload;
 - alteração operacional de base64 legado.
+
+## 15. Fatos históricos sem arquivo
+
+A frente **Fatos e Arquivos Históricos** permite que um registro histórico exista sem upload.
+
+Regra operacional:
+
+```txt
+Registro sem arquivo não cria objeto no Storage.
+```
+
+Campos esperados para fato/memória sem anexo:
+
+```txt
+url = null
+storage_bucket = null
+storage_path = null
+mime_type = null
+```
+
+Consequências:
+
+- scripts de órfãos devem comparar apenas objetos reais existentes no bucket;
+- ausência de `url` em um registro histórico não significa Storage quebrado;
+- limpeza de Storage não deve remover registros textuais sem anexo;
+- UI deve renderizar fato textual com ícone/estado próprio, não imagem quebrada;
+- migration que permite esses campos como nulos deve estar aplicada antes do deploy do frontend dependente.
+
+---
+
+## 16. `participante_ids`
+
+`participante_ids` pertence ao schema da tabela `arquivos_historicos`, não ao Storage.
+
+Regras:
+
+- não tornar `participante_ids` obrigatório sem migration, backfill e atualização de services;
+- fallback para ausência da coluna é compatibilidade de schema, não rotina de Storage;
+- erro de schema cache em `participante_ids` deve ser tratado em `MIGRATIONS_SUPABASE.md`.
+
+---
+
+## 17. Upload opcional e órfãos
+
+Com upload opcional, há três casos distintos:
+
+| Caso | Storage | Banco |
+|---|---|---|
+| fato/memória sem anexo | não cria objeto | registro textual com campos de arquivo nulos |
+| upload concluído e item salvo | objeto referenciado | registro com `url`, bucket/path e MIME |
+| upload concluído e formulário abandonado | objeto possivelmente órfão | sem registro correspondente |
+
+Apenas o terceiro caso deve aparecer como possível órfão em diagnóstico.

@@ -1,9 +1,9 @@
-﻿# Decisões arquiteturais — Árvore Família
+# Decisões arquiteturais — Árvore Família
 
-> Última revisão: 2026-06-14
+> Última revisão: 2026-06-22
 > Local canônico: `docs/DECISOES_ARQUITETURAIS.md`
 > Tipo: registro de decisões estruturais/ADR leve.
-> Status: documento revisado para refletir a `main` atual e separar decisão vigente de pendência/backlog.
+> Status: revisado para registrar decisões atuais de mobile, IA, documentação e migrations.
 
 ---
 
@@ -144,7 +144,7 @@ src/app/pages/home/HomeTreeSection.tsx
 | Rota | Desktop/tablet | Mobile |
 |---|---|---|
 | `/mapa-familiar` | `DesktopFamilyMapView` | `MobileFamilyTreeView` |
-| `/mapa-familiar-horizontal` | `DesktopFamilyHorizontalMapView` | `MobileFamilyHorizontalMapView` |
+| `/mapa-familiar-horizontal` | `DesktopFamilyHorizontalMapFilteredView` | `MobileFamilyHorizontalMapFilteredView` |
 
 **Consequências:**
 
@@ -160,8 +160,8 @@ src/app/pages/Home.tsx
 src/app/pages/home/HomeTreeSection.tsx
 src/app/components/FamilyTree/DesktopFamilyMapView.tsx
 src/app/components/FamilyTree/MobileFamilyTreeView.tsx
-src/app/components/FamilyTree/DesktopFamilyHorizontalMapView.tsx
-src/app/components/FamilyTree/MobileFamilyHorizontalMapView.tsx
+src/app/components/FamilyTree/DesktopFamilyHorizontalMapFilteredView.tsx
+src/app/components/FamilyTree/MobileFamilyHorizontalMapFilteredView.tsx
 ```
 
 ---
@@ -484,3 +484,85 @@ npm run test:e2e
 ```
 
 Se a alteração for somente documental e não tocar código, `git diff --check` e `npm run build` são o mínimo; os testes completos continuam recomendados quando a documentação altera contratos de rotas, árvore ou exportação.
+
+### ADR-012 — Mapas mobile usam contrato composto React + scripts auxiliares
+
+**Status:** vigente com dívida técnica.
+
+**Contexto:** a versão mobile de `/mapa-familiar` foi estabilizada por uma combinação de componentes React, scripts auxiliares DOM/CSS, MutationObservers, handlers de swipe e ajustes visuais carregados pelo `index.html`.
+
+**Decisão:** tratar o comportamento mobile como contrato composto. A fonte vigente é a combinação entre código atual, `docs/funcionalidades/MAPA_FAMILIAR_MOBILE.md`, `docs/arquitetura/MAPA_FAMILIAR_MOBILE_ARQUITETURA.md`, `docs/REGRAS_DE_NAO_REGRESSAO.md` e QA real.
+
+**Consequências:**
+
+- não fazer Prompt 6 ou refatoração visual de mapa mobile sem frente isolada;
+- não remover scripts `mobileFamilyMap*`/`mobileFamilyTree*` por limpeza genérica;
+- qualquer novo script deve declarar rota, seletor raiz, atributo de escopo e risco de conflito;
+- refactor futuro deve migrar comportamento para React/hooks apenas depois de baseline visual aprovada.
+
+**Arquivos relacionados:**
+
+```txt
+index.html
+src/mobileFamilyMap*.ts
+src/mobileFamilyTree*.ts
+src/app/components/FamilyTree/MobileFamilyTreeView.tsx
+src/app/pages/home/HomeMobileNav.tsx
+src/app/components/FamilyTree/MobileFamilyMapToolbar.tsx
+docs/funcionalidades/MAPA_FAMILIAR_MOBILE.md
+docs/arquitetura/MAPA_FAMILIAR_MOBILE_ARQUITETURA.md
+```
+
+---
+
+### ADR-013 — Toolbar mobile principal sem `Exportar` fixo
+
+**Status:** vigente com nuance de implementação.
+
+**Contexto:** a documentação antiga afirmava que o mobile não tinha Exportar; o código atual possui fluxos auxiliares de exportação, mas a toolbar fixa principal renderizada por `MobileFamilyMapToolbar` contém apenas `Formato`, `Cor`, `Filtros`, `Zoom` e `+`.
+
+**Decisão:** documentar separadamente:
+
+| Área | Regra |
+|---|---|
+| Toolbar fixa principal | não possui item `Exportar` |
+| Botão `+` / painel completo | pode conter ações avançadas, inclusive salvar/exportar enquanto implementado |
+| `SidebarPanelTabs mobileControls` legado | ainda pode renderizar `Exportar`; remover exige frente de código própria |
+
+**Consequências:**
+
+- não tratar `Exportar` mobile como removido se o código ainda renderiza a ação em fluxos auxiliares;
+- não colocar `Exportar` como item fixo obrigatório da toolbar principal;
+- todo elemento de exportação mobile deve usar `data-tree-export-ignore`.
+
+---
+
+### ADR-014 — IA não deve inferir parentesco, gênero ou dados privados por nome
+
+**Status:** vigente para futuras alterações; código atual ainda possui dívida.
+
+**Contexto:** há risco de a IA e utilitários auxiliares inferirem pai/mãe por nomes ou sufixos e de contexto da IA incluir telefone/rede social sem filtragem específica.
+
+**Decisão:** respostas assistidas por IA devem usar dados explícitos/cálculo sustentado pelo grafo. Nome, sufixo, gênero presumido, WhatsApp, telefone, endereço e redes sociais não devem ser usados como base de inferência sensível.
+
+**Consequências:**
+
+- `homeAiContext.ts` deve ser revisado em frente própria;
+- documentação deve tratar a inferência por nome como risco, não como contrato;
+- payloads da IA devem ser minimizados e respeitar permissões de privacidade.
+
+---
+
+### ADR-015 — Fatos históricos sem arquivo não são operação de Storage
+
+**Status:** vigente para a frente de `/arquivos-historicos`.
+
+**Contexto:** o produto passou a aceitar o conceito de fato/memória sem anexo. Isso altera schema e UI, mas não cria objeto no Storage.
+
+**Decisão:** fato histórico sem arquivo deve persistir como registro textual em `arquivos_historicos`, com campos de arquivo nulos quando aplicável. A operação de Storage só entra no escopo quando houver upload real.
+
+**Consequências:**
+
+- `url`, `storage_bucket`, `storage_path` e `mime_type` não devem ser assumidos como obrigatórios depois da migration correspondente;
+- scripts de limpeza de Storage não devem apagar ou tentar reconciliar registros sem arquivo;
+- migration deve ser aplicada antes do frontend depender do comportamento.

@@ -1,10 +1,10 @@
 # Guia de correção de erros — Árvore Família
 
-> Última revisão: 2026-06-16
+> Última revisão: 2026-06-22
 > Local canônico: `docs/GUIA_CORRECAO_ERROS.md`
 > Projeto: `tuliust/arvorefamilia`
 > Baseline revisada: `main` após os ajustes do onboarding condicional e revisão final.
-> Status: troubleshooting alinhado às duas views oficiais, ao onboarding condicional e à revisão final editável.
+> Status: revisado para incluir troubleshooting de mobile 3x3, toolbar, fatos históricos, IA e cache pós-deploy.
 
 ---
 
@@ -524,3 +524,186 @@ Critério de aceite:
 - painel antigo não voltou;
 - testes passam;
 - docs canônicas atualizadas se o comportamento mudou.
+
+## 20. Mapa mobile 3x3 com regressão
+
+Arquivos prováveis:
+
+```txt
+src/app/components/FamilyTree/MobileFamilyTreeView.tsx
+src/app/pages/home/HomeMobileNav.tsx
+src/app/components/FamilyTree/MobileFamilyMapToolbar.tsx
+src/mobileFamilyMap*.ts
+src/mobileFamilyTree*.ts
+src/staticMobileFamilyTreeScreens.ts
+src/styles/family-map-mobile-palettes.css
+src/styles/mobile-family-map-branch-connectors-final.css
+index.html
+```
+
+Sintomas:
+
+| Sintoma | Investigar primeiro |
+|---|---|
+| `core` volta a mostrar filhos/pets/netos | `mobileFamilyMapCoreConnectorFix.ts`, fonte de descendentes e seletores `data-mobile-family-tree-descendant-*`. |
+| `descendants` treme ou some | `mobileFamilyMapStableMobileFix.ts`, `mobileFamilyMapDescendantsStabilityLock.ts`, conflito de `transform`. |
+| swipe vai para tela errada | `mobileFamilyMapDirectionalNavigationFix.ts`, estado `data-mobile-family-tree-active-screen`. |
+| tios perdem conectores | `mobileFamilyMapCoreConnectorFix.ts`, CSS de branch connectors. |
+| Zoom abre tela errada | `mobileFamilyMapZoomOverviewVisualFix.ts`, scripts de overview, tela ativa real. |
+| mapa completo vira cards soltos | `mobileFamilyMapFullOverview.ts`, `mobileFamilyMapFullOverviewMosaicFix.ts`. |
+
+Correção segura:
+
+1. não remover scripts em lote;
+2. comparar contra baseline mobile;
+3. testar em 375px/390px/430px;
+4. validar Safari/iOS real quando possível;
+5. confirmar que nenhum arquivo de mapa mobile entrou no diff sem intenção.
+
+---
+
+## 21. Toolbar mobile, `+`, Zoom e Exportar
+
+Arquivos prováveis:
+
+```txt
+src/app/components/FamilyTree/MobileFamilyMapToolbar.tsx
+src/app/pages/home/HomeMobileNav.tsx
+src/app/pages/home/SidebarPanelTabs.tsx
+src/app/pages/home/HomeTreeSection.tsx
+```
+
+Contrato atual:
+
+```txt
+Toolbar fixa principal = Formato, Cor, Filtros, Zoom, +
+```
+
+Sintomas:
+
+| Sintoma | Interpretação |
+|---|---|
+| `Exportar` aparece na toolbar fixa principal | regressão de UX; conferir `MobileFamilyMapToolbar.tsx`. |
+| `Exportar` aparece em painel/popup auxiliar | pode ser comportamento atual, não bug automático. |
+| `Zoom` não abre overview 3x3 | conferir scripts de Zoom da vertical. |
+| `Zoom` horizontal abre 3x3 | regressão; horizontal deve abrir overview por gerações. |
+| botão `+` trava body | conferir `fullControlsOpen` e cleanup do `overflow`. |
+
+Regra: distinguir toolbar fixa, popovers da toolbar, painel completo do botão `+` e modal legado `SidebarPanelTabs mobileControls`.
+
+---
+
+## 22. Fatos históricos sem arquivo falham
+
+Arquivos prováveis:
+
+```txt
+src/app/pages/ArquivosHistoricosPage.tsx
+src/app/components/ArquivosHistoricos.tsx
+src/app/services/arquivosHistoricosService.ts
+src/app/types/index.ts
+supabase/migrations/
+docs/operacao/MIGRATIONS_SUPABASE.md
+```
+
+Sintomas:
+
+| Sintoma | Causa provável |
+|---|---|
+| erro de `url` nulo | migration que permite arquivo opcional não aplicada. |
+| erro de `storage_path` ou `mime_type` nulo | constraint/not null ainda existe no banco remoto. |
+| botão exige upload | validação no componente ainda antiga. |
+| registro sem arquivo aparece como imagem quebrada | renderização não diferencia fato textual de arquivo. |
+| `participante_ids` falha | coluna ausente/schema cache; fallback do service ou migration precisa ser verificado. |
+
+Correção:
+
+1. confirmar migration aplicada;
+2. conferir schema remoto;
+3. aguardar/recarregar PostgREST schema cache;
+4. não mascarar com string vazia;
+5. manter `null` para campos de arquivo ausentes;
+6. validar item com arquivo e item sem arquivo.
+
+---
+
+## 23. Pets voltam a aparecer como filhos humanos
+
+Arquivos prováveis:
+
+```txt
+src/app/pages/MeusVinculos.tsx
+src/app/pages/meus-vinculos/*
+src/app/pages/RevisaoDados.tsx
+src/app/services/dataService.ts
+src/app/utils/personEntity.ts
+src/app/types/index.ts
+```
+
+Sintomas:
+
+| Sintoma | Correção |
+|---|---|
+| pet aparece no grupo Filhos | filtrar `humano_ou_pet !== 'Pet'` para filhos humanos. |
+| grupo Pets sumiu | separar pets de `relationships.filhos` ou grupo equivalente. |
+| card de pet mostra `Alterar mãe/pai` | usar microcopy `Outros tutores`. |
+| IA chama pet de filho humano | revisar contexto semântico de IA. |
+
+---
+
+## 24. IA expõe dado privado ou inventa relação
+
+Arquivos prováveis:
+
+```txt
+src/app/pages/home/homeAiContext.ts
+src/app/pages/home/AiQuestionPanel.tsx
+api/ai.ts
+docs/funcionalidades/CURIOSIDADES_E_IA.md
+docs/funcionalidades/MINI_BIO_CURIOSIDADES_IA.md
+```
+
+Sintomas:
+
+| Sintoma | Investigar |
+|---|---|
+| resposta usa telefone/rede social | payload de `homeAiContext.ts`. |
+| resposta infere pai/mãe por nome | funções de inferência por nome/sufixo. |
+| IA inventa fato biográfico | system prompt e contexto enviado. |
+| pet vira filho humano | normalização semântica de pets. |
+
+Correção esperada:
+
+- usar dados explícitos ou calculáveis;
+- minimizar payload;
+- remover dado privado do contexto padrão;
+- orientar IA a responder “não há dado suficiente” quando o grafo não sustenta a resposta.
+
+---
+
+## 25. Cache pós-deploy e chunks antigos
+
+Sintomas:
+
+```txt
+Failed to fetch dynamically imported module
+Expected a JavaScript-or-Wasm module script but the server responded with MIME type text/html
+Não foi possível carregar esta página
+```
+
+Investigar:
+
+- headers de cache de `/` e `/index.html`;
+- fallback SPA respondendo HTML para `/assets/*.js`;
+- deployment ativo na Vercel;
+- Safari/iOS com HTML antigo;
+- rota lazy-loaded recém-alterada.
+
+Correção:
+
+1. abrir em janela anônima;
+2. hard refresh;
+3. confirmar commit do deployment;
+4. conferir headers;
+5. garantir `/api/*` antes do fallback SPA;
+6. não alterar código funcional para mascarar cache.

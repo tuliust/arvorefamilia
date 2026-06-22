@@ -1,9 +1,9 @@
-﻿# Arquitetura atual — Árvore Família
+# Arquitetura atual — Árvore Família
 
-> Última revisão: 2026-06-14
+> Última revisão: 2026-06-22
 > Local canônico: `docs/arquitetura/ARCHITECTURE.md`
 > Tipo: visão técnica de alto nível.
-> Status: revisado para refletir a baseline atual com duas views oficiais da árvore, Supabase, Edge Functions, documentação operacional separada e legado ReactFlow tratado como dependência técnica, não como renderer público principal.
+> Status: revisado contra o código atual, com arquitetura mobile composta por React + scripts auxiliares DOM/CSS.
 
 ---
 
@@ -179,7 +179,7 @@ Matriz de renderização:
 | View | Desktop/tablet | Mobile |
 |---|---|---|
 | `mapa-familiar` | `DesktopFamilyMapView` | `MobileFamilyTreeView` |
-| `mapa-familiar-horizontal` | `DesktopFamilyHorizontalMapView` | `MobileFamilyHorizontalMapView` |
+| `mapa-familiar-horizontal` | `DesktopFamilyHorizontalMapFilteredView` | `MobileFamilyHorizontalMapFilteredView` |
 
 Regras:
 
@@ -198,8 +198,8 @@ Arquivos críticos:
 ```txt
 src/app/components/FamilyTree/DesktopFamilyMapView.tsx
 src/app/components/FamilyTree/MobileFamilyTreeView.tsx
-src/app/components/FamilyTree/DesktopFamilyHorizontalMapView.tsx
-src/app/components/FamilyTree/MobileFamilyHorizontalMapView.tsx
+src/app/components/FamilyTree/DesktopFamilyHorizontalMapFilteredView.tsx
+src/app/components/FamilyTree/MobileFamilyHorizontalMapFilteredView.tsx
 src/app/components/FamilyTree/FamilyTreeVisualCards.tsx
 src/app/components/FamilyTree/treeColorPalettes.ts
 src/app/components/FamilyTree/utils/treeExport.ts
@@ -412,3 +412,59 @@ npm run build
 npm test
 npm run test:e2e
 ```
+
+## 15. Consolidação 2026-06-22 — arquitetura mobile e dívidas críticas
+
+### 15.1 Renderização horizontal atual
+
+A horizontal atual deve ser tratada como versão filtrada:
+
+```txt
+/mapa-familiar-horizontal desktop/tablet -> DesktopFamilyHorizontalMapFilteredView
+/mapa-familiar-horizontal mobile         -> MobileFamilyHorizontalMapFilteredView
+```
+
+Os nomes antigos `DesktopFamilyHorizontalMapView` e `MobileFamilyHorizontalMapView` podem existir como histórico, dependência interna ou documentação antiga, mas não devem ser usados como matriz canônica sem nova auditoria.
+
+### 15.2 Arquitetura mobile composta
+
+A versão mobile de `/mapa-familiar` não é apenas um componente React isolado. O comportamento vigente depende de:
+
+- `MobileFamilyTreeView`;
+- `MobileFamilyMapToolbar`;
+- `HomeMobileNav`;
+- scripts auxiliares `mobileFamilyTree*` e `mobileFamilyMap*` carregados no `index.html`;
+- CSS escopado em `src/styles/`;
+- atributos como `data-mobile-family-tree-root`, `data-mobile-family-tree-stage`, `data-mobile-family-tree-screen`, `data-tree-export-ignore`.
+
+Regra arquitetural:
+
+```txt
+Não remover ou substituir script mobile global sem documentar:
+rota afetada,
+seletor raiz,
+atributo de escopo,
+risco de MutationObserver,
+risco de touch/swipe,
+QA mínimo em Safari/iOS.
+```
+
+### 15.3 Exportação mobile
+
+A toolbar principal mobile não expõe `Exportar` como item fixo. A exportação pode existir em painel/popup auxiliar e continua sujeita ao contrato de `data-tree-export-ignore`.
+
+Nenhum overlay, toolbar, modal, painel completo, popover, bottom nav, loading ou debug deve entrar no canvas exportado.
+
+### 15.4 IA e privacidade
+
+A arquitetura server-side da IA deve preservar:
+
+- `OPENAI_API_KEY` fora do frontend;
+- contexto mínimo necessário;
+- nenhum envio de service role, tokens ou secrets;
+- nenhum envio padrão de telefone, endereço, WhatsApp ou rede social sem regra explícita de privacidade;
+- nenhuma inferência genealógica sensível por nome/sufixo quando o grafo não sustenta a resposta.
+
+### 15.5 Onboarding e fatos históricos
+
+Após a frente de fatos históricos, arquivos sem anexo devem ser tratados como registros históricos textuais, não como objetos de Storage. Qualquer dependência de `url`, `storage_bucket`, `storage_path` ou `mime_type` obrigatórios deve ser resolvida por migration antes de deploy do frontend dependente.

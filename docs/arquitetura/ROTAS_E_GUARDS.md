@@ -1,9 +1,9 @@
 # Rotas e guards de acesso — Árvore Família
 
-> Última revisão: 2026-06-16
+> Última revisão: 2026-06-22
 > Local canônico: `docs/arquitetura/ROTAS_E_GUARDS.md`
 > Tipo: documentação arquitetural de rotas, guards e navegação.
-> Status: atualizado para o fluxo de cadastro do membro com Etapa 4 condicional, tratamento de pessoa falecida e revisão final editável.
+> Status: revisado contra `src/app/routes.tsx`, `HomeTreeSection.tsx`, toolbar mobile e fluxo atual de onboarding.
 
 ---
 
@@ -159,6 +159,7 @@ Protege páginas de membro autenticado:
 /pessoa/:id
 /pessoas/:id
 /calendario-familiar
+/curiosidades
 /meus-favoritos
 /notificacoes
 /ajustar-notificacoes
@@ -344,7 +345,7 @@ A renderização principal é decidida por `HomeTreeSection.tsx`.
 | Rota | Desktop/tablet | Mobile |
 |---|---|---|
 | `/mapa-familiar` | `DesktopFamilyMapView` | `MobileFamilyTreeView` |
-| `/mapa-familiar-horizontal` | `DesktopFamilyHorizontalMapView` | `MobileFamilyHorizontalMapView` |
+| `/mapa-familiar-horizontal` | `DesktopFamilyHorizontalMapFilteredView` | `MobileFamilyHorizontalMapFilteredView` |
 
 Regras:
 
@@ -482,39 +483,44 @@ Atualize este arquivo quando houver:
 
 Não atualize este arquivo para mudanças puramente visuais em cards, CSS, paletas ou exportação, exceto se a mudança afetar navegação.
 
-<!-- ROTAS-CONSOLIDADAS-2026-06-18 -->
-## Rotas envolvidas na consolidaÃ§Ã£o recente
+## 15. Consolidação 2026-06-22 — rotas, guards e mobile
 
-### Onboarding do membro
+### 15.1 Código atual confirmado
 
-| Rota | Papel |
-|---|---|
-| `/meus-dados` | Dados pessoais, nascimento, residÃªncia/falecimento, contato, redes, mini bio e curiosidades |
-| `/meus-vinculos` | VÃ­nculos familiares |
-| `/arquivos-historicos` | Documentos, fotos, memÃ³rias e participantes em camada visual/metadados |
-| `/preferencias` | PreferÃªncias e permissÃµes, apenas para pessoa viva |
-| `/revisao-dados` | RevisÃ£o final e finalizaÃ§Ã£o |
+No código atual da branch `feature/questionario-ia-vinculos-pets`:
 
-Regra: pessoa falecida nÃ£o deve passar por `/preferencias`; o fluxo segue de arquivos histÃ³ricos para revisÃ£o.
+- `/` continua redirecionando para `/mapa-familiar` com `location.search` preservado;
+- as rotas de árvore ativas continuam apenas `/mapa-familiar` e `/mapa-familiar-horizontal`;
+- `/meus-vinculos` carrega o wrapper `MeusVinculosWithProfileBio`;
+- `/curiosidades` existe como rota autenticada de membro;
+- a horizontal renderizada por `HomeTreeSection.tsx` usa os componentes filtrados:
+  - `DesktopFamilyHorizontalMapFilteredView`;
+  - `MobileFamilyHorizontalMapFilteredView`.
 
-### EdiÃ§Ã£o e administraÃ§Ã£o de pessoas
+### 15.2 Toolbar mobile versus modal legado
 
-| Rota | Papel |
-|---|---|
-| `/minha-arvore/editar` | EdiÃ§Ã£o da prÃ³pria Ã¡rvore/perfil, sem virar onboarding |
-| `/admin/pessoas/:id/editar` | EdiÃ§Ã£o administrativa de pessoa |
-| `/admin/pessoas/nova` | CriaÃ§Ã£o administrativa de pessoa |
-| `/admin/pessoas/:id` | Forma administrativa associada ao registro |
+A toolbar mobile fixa dos mapas familiares é controlada por `MobileFamilyMapToolbar` e exibe apenas:
 
-### Ãrvore e navegaÃ§Ã£o
+```txt
+Formato
+Cor
+Filtros
+Zoom
++
+```
 
-| Rota | Papel |
-|---|---|
-| `/mapa-familiar` | View de mapa familiar |
-| `/mapa-familiar-horizontal` | View horizontal do mapa familiar |
-| `/notificacoes` | Central de notificaÃ§Ãµes |
-| `/meus-favoritos` | Favoritos |
-| `/calendario-familiar` | CalendÃ¡rio familiar |
-| `/pessoa/:id` | Perfil pÃºblico/interno da pessoa |
+O botão `+` abre o painel completo de visualização. O fluxo de exportação mobile pode existir em painel/popup auxiliar enquanto o código mantiver essa ação, mas **Exportar não deve ser documentado como item fixo da toolbar principal**.
 
-Rotas antigas removidas ou apenas planejadas nÃ£o devem voltar ao roteamento ativo por documentaÃ§Ã£o.
+O componente legado `SidebarPanelTabs` ainda possui modo `mobileControls` e ainda renderiza ação `Exportar`. Portanto, qualquer frente futura que deseje remover exportação do modal mobile precisa ser tratada como alteração de código, não como mera correção documental.
+
+### 15.3 Regra de não regressão de navegação
+
+Alterações em `routes.tsx`, `treeViewMode.ts`, `HomeTreeSection.tsx`, `HomeMobileNav.tsx` ou `SidebarPanelTabs.tsx` devem validar:
+
+```txt
+/?pessoa=abc -> /mapa-familiar?pessoa=abc
+/mapa-familiar?pessoa=abc -> /mapa-familiar-horizontal?pessoa=abc
+/mapa-familiar-horizontal?pessoa=abc -> /mapa-familiar?pessoa=abc
+```
+
+Não usar `/minha-arvore`, `/genealogia` ou `/visao-completa` como fallback operacional.
