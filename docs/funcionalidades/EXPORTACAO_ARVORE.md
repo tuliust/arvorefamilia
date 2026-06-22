@@ -1,14 +1,34 @@
 
 # Exportação da árvore
 
-> Última revisão: 2026-06-14
+> Última revisão: 2026-06-22
 > Local canônico: `docs/funcionalidades/EXPORTACAO_ARVORE.md`
 > Tipo: documentação funcional/técnica da exportação da árvore
-> Status: organizado para manter detalhes técnicos da exportação e delegar QA manual para `docs/QA_MANUAL.md`.
+> Status: revisado contra o código atual para diferenciar exportação desktop, exportação mobile, toolbar fixa, modal legacy e painel completo.
 
 ---
 
 ## 1. Objetivo
+
+---
+
+## Atualização crítica — 2026-06-22
+
+Estado observado no código atual:
+
+- Desktop: exportação está disponível via painel/controles e ações `Área`, `Imagem`, `PDF` e `Imprimir`.
+- Toolbar fixa mobile: `MobileFamilyMapToolbar` não possui botão `Exportar`; possui `Formato`, `Cor`, `Filtros`, `Zoom` e `+`.
+- `HomeMobileNav` possui handlers e UI de exportação mobile/painel; o painel completo aberto pelo `+` possui ação `Salvar`, que dispara `save-image`.
+- Modal legacy `Controles`: renderiza `SidebarPanelTabs mobileControls`; no código atual, esse componente ainda expõe `Exportar`.
+
+Contrato seguro:
+
+```txt
+Exportar não é item fixo da toolbar mobile.
+Exportação mobile pode existir por painel/modal auxiliar enquanto o código mantiver essa ação.
+Todos os controles de exportação mobile devem ter data-tree-export-ignore="true".
+```
+
 
 A exportação permite gerar:
 
@@ -37,7 +57,7 @@ docs/QA_MANUAL.md
 | View | Rota | Componentes |
 |---|---|---|
 | Árvore Familiar | `/mapa-familiar` | `DesktopFamilyMapView`, `MobileFamilyTreeView` |
-| Mapa Genealógico | `/mapa-familiar-horizontal` | `DesktopFamilyHorizontalMapView`, `MobileFamilyHorizontalMapView` |
+| Mapa Genealógico | `/mapa-familiar-horizontal` | `DesktopFamilyHorizontalMapFilteredView`, `MobileFamilyHorizontalMapFilteredView` |
 
 Rotas antigas fora do produto ativo:
 
@@ -61,9 +81,9 @@ src/app/components/FamilyTree/utils/treeExport.ts
 src/app/components/FamilyTree/TreeAreaSelectionOverlay.tsx
 src/app/components/FamilyTree/TreeExportLoadingOverlay.tsx
 src/app/components/FamilyTree/DesktopFamilyMapView.tsx
-src/app/components/FamilyTree/DesktopFamilyHorizontalMapView.tsx
+src/app/components/FamilyTree/DesktopFamilyHorizontalMapFilteredView.tsx
 src/app/components/FamilyTree/MobileFamilyTreeView.tsx
-src/app/components/FamilyTree/MobileFamilyHorizontalMapView.tsx
+src/app/components/FamilyTree/MobileFamilyHorizontalMapFilteredView.tsx
 src/app/components/FamilyTree/FamilyTreeVisualCards.tsx
 src/app/pages/home/SidebarPanelTabs.tsx
 src/app/pages/home/HomeTreeSection.tsx
@@ -97,7 +117,8 @@ src/app/components/FamilyTree/layouts/genealogyColumnsLayout.ts
 Regras:
 
 - disponíveis no painel desktop/completo;
-- não disponíveis no modal mobile de controles;
+- não disponíveis como item fixo da toolbar mobile;
+- podem aparecer em painel/modal mobile auxiliar conforme código atual;
 - a view ativa resolve o alvo de captura;
 - cliques repetidos devem ser bloqueados durante exportação;
 - erros devem liberar loading;
@@ -106,6 +127,26 @@ Regras:
 ---
 
 ## 5. Modelo de refs e alvos
+
+## 4.1 Exportação no mobile
+
+Superfícies atuais:
+
+| Superfície | Exportação |
+|---|---|
+| Toolbar fixa `MobileFamilyMapToolbar` | não possui item `Exportar`. |
+| Popover de `HomeMobileNav` | possui handler/estrutura para exportação quando acionado. |
+| Painel completo `+` | possui ação `Salvar`, disparando `save-image`. |
+| Modal legacy `Controles` | pode expor `Exportar` por `SidebarPanelTabs mobileControls`. |
+
+QA obrigatório:
+
+- [ ] ação de exportação não entra na captura;
+- [ ] overlay/painel é ignorado por `data-tree-export-ignore`;
+- [ ] body destrava após ação ou erro;
+- [ ] PNG/PDF/Imprimir não capturam toolbar, bottom nav, popover, modal ou debug;
+- [ ] exportação mobile não quebra Zoom/overview nem scroll interno.
+
 
 Refs esperadas nas views:
 

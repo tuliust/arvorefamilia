@@ -1,14 +1,34 @@
 
 # Árvore — painel, filtros, conectores, destaques e exportação
 
-> Última revisão: 2026-06-14
+> Última revisão: 2026-06-22
 > Local canônico: `docs/funcionalidades/ARVORE_LEGENDAS_CONECTORES_PAINEL.md`
 > Tipo: documentação funcional/técnica do painel, filtros, conectores e destaques da árvore
-> Status: organizado para descrever contrato funcional e apontar QA manual para `docs/QA_MANUAL.md`.
+> Status: revisado contra o código atual para resolver a tensão entre toolbar mobile, modal legacy, Exportar, Zoom, painel `+` e scripts auxiliares.
 
 ---
 
 ## 1. Função deste documento
+
+---
+
+## Atualização crítica — 2026-06-22
+
+Este documento deve distinguir três superfícies mobile diferentes:
+
+| Superfície | Arquivo principal | Estado observado |
+|---|---|---|
+| Toolbar fixa | `MobileFamilyMapToolbar.tsx` | Botões `Formato`, `Cor`, `Filtros`, `Zoom` e `+`. |
+| Popovers/painel da toolbar | `HomeMobileNav.tsx` | Controla visualização, cor, filtros, Zoom, exportação por handler e painel completo. |
+| Modal legacy `Controles` | `Home.tsx` + `SidebarPanelTabs mobileControls` | Ainda renderiza `SidebarPanelTabs`; no código atual, `Exportar` continua aparecendo nesse componente. |
+
+Portanto:
+
+- `Zoom` é ação fixa da toolbar mobile;
+- `Exportar` não é item fixo da toolbar mobile;
+- `Exportar` ainda pode aparecer no modal legacy/painel conforme código atual;
+- se o contrato de produto for remover `Exportar` do modal legacy, isso exige alteração em `SidebarPanelTabs`, não apenas documentação.
+
 
 Este documento descreve:
 
@@ -105,9 +125,9 @@ src/app/pages/home/DirectRelationKpiGrid.tsx
 src/app/pages/home/DirectRelativeFilterGrid.tsx
 src/app/pages/home/LifeStatusKpiGrid.tsx
 src/app/components/FamilyTree/DesktopFamilyMapView.tsx
-src/app/components/FamilyTree/DesktopFamilyHorizontalMapView.tsx
+src/app/components/FamilyTree/DesktopFamilyHorizontalMapFilteredView.tsx
 src/app/components/FamilyTree/MobileFamilyTreeView.tsx
-src/app/components/FamilyTree/MobileFamilyHorizontalMapView.tsx
+src/app/components/FamilyTree/MobileFamilyHorizontalMapFilteredView.tsx
 src/styles/home-sidebar-unified.css
 src/styles/mobile-tree-controls.css
 src/styles/tree-panel-palette-cards.css
@@ -167,24 +187,35 @@ Regras:
 
 O modal mobile é uma versão reduzida, não uma réplica do desktop.
 
-### Deve conter
+### Contrato esperado do modal legacy
+
+Deve conter, no mínimo:
 
 ```txt
-Vertical
-Horizontal
+Vertical/Horizontal
 Cores
 Grupos
-Destacar
 Filtros
 ```
 
-### Não deve conter
+Não deve conter controles externos de zoom desktop:
 
 ```txt
 Zoom +
 Zoom -
 Restaurar visualização
-Exportar
+```
+
+### Tensão atual sobre Exportar
+
+O código atual de `SidebarPanelTabs mobileControls` ainda renderiza `Exportar`.
+
+Regra documental:
+
+```txt
+Exportar não é item fixo da toolbar mobile.
+Exportar pode existir em fluxo mobile auxiliar enquanto o código mantiver essa ação.
+Se o produto decidir remover Exportar do modal legacy, alterar código + docs no mesmo commit.
 ```
 
 Contrato visual:
@@ -209,6 +240,27 @@ Regras específicas:
 ---
 
 ## 8. Filtros de grupos
+
+## 7.1 Scripts mobile que afetam painel/zoom/filtros
+
+O comportamento mobile dos controles também depende dos scripts carregados pelo `index.html`, especialmente:
+
+```txt
+mobileFamilyHorizontalZoomOverview.ts
+mobileFamilyMapZoomOverviewVisualFix.ts
+mobileFamilyMapDescendantsStabilityLock.ts
+mobileFamilyMapExtendedSpouseCards.ts
+mobileFamilyMapFilterButtonsBehaviorFix.ts
+mobileFamilyMapFullOverview.ts
+mobileFamilyMapFullOverviewMosaicFix.ts
+```
+
+Regras:
+
+- não criar novo script de toolbar/zoom/exportação sem auditar os scripts acima;
+- não alterar `data-mobile-family-spouse-scope` sem validar filtros de cônjuges;
+- não alterar overview/Zoom sem validar `descendants` e mapa completo.
+
 
 Keys esperadas:
 

@@ -1,9 +1,26 @@
 # Mini Bio e Curiosidades com IA
 
-> Última revisão: 2026-06-16  
+> Última revisão: 2026-06-22  
 > Local canônico: `docs/funcionalidades/MINI_BIO_CURIOSIDADES_IA.md`  
 > Tipo: documentação funcional e técnica da geração assistida de Mini Bio e Curiosidades em `/meus-dados`.  
-> Status: funcionalidade implementada e em refinamento contínuo de UX.
+> Status: revisado contra os riscos atuais de IA, privacidade, anti-invenção e separação entre `/meus-dados` e modal Curiosidades da Home.
+
+---
+
+## Atualização crítica — 2026-06-22
+
+Esta funcionalidade continua limitada a `/meus-dados`.
+
+Regras reforçadas após auditoria da IA da Home:
+
+- não inventar fatos biográficos, profissões, lugares, parentescos ou datas;
+- não inferir gênero, pai/mãe, origem familiar ou estado vital por nome/sufixo;
+- não usar telefone, endereço, WhatsApp, redes sociais ou contato como insumo de geração textual, salvo se houver consentimento explícito e necessidade funcional clara;
+- não expor dados privados em resposta, preview, prompt, toast, log ou payload persistido;
+- para pessoas falecidas, usar tom memorial apenas com dados fornecidos pelo usuário ou já cadastrados;
+- textos gerados continuam sendo rascunho editável, nunca publicação automática;
+- se o usuário fornecer informação livre sensível, a IA deve resumir com discrição e não ampliar detalhes.
+
 
 ## 1. Função deste documento
 
@@ -1289,3 +1306,19 @@ A ajuda de IA para Mini Bio e Curiosidades deve ser documentada separando:
 - limites de ediÃ§Ã£o humana antes/depois da sugestÃ£o.
 
 Quando um uso fora do onboarding nÃ£o estiver confirmado por commit, manter em `PLANO_PROXIMOS_PASSOS.md`.
+
+
+## 23.1 Regras de privacidade e anti-inferência
+
+A geração de Mini Bio e Curiosidades deve seguir estas restrições:
+
+| Risco | Regra |
+|---|---|
+| Invenção biográfica | Gerar apenas a partir de dados do formulário e escolhas do usuário. |
+| Inferência por nome | Não deduzir gênero, parentesco, origem ou personalidade pelo nome. |
+| Dados de contato | Não enviar telefone, endereço, WhatsApp ou redes sociais para a IA como contexto padrão. |
+| Pessoa falecida | Usar terceira pessoa e passado apenas quando o usuário escolhe modo memorial/nostálgico ou quando o estado vital já está cadastrado. |
+| Dados familiares | Não criar parentes, vínculos ou fatos não informados. |
+| Sensibilidade | Evitar detalhar conflitos, doenças, uso de substâncias, finanças ou temas íntimos se o usuário não pedir explicitamente. |
+
+A IA pode melhorar redação, tom e concisão, mas não deve aumentar o conteúdo factual além do que foi informado.

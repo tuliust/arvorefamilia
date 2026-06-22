@@ -1,14 +1,31 @@
 # Guia de UX e Layout — Árvore Família
 
-> Última revisão: 2026-06-16
+> Última revisão: 2026-06-22
 > Local canônico: `docs/GUIA_UX_LAYOUT.md`
 > Projeto: `tuliust/arvorefamilia`
 > Tipo: guia de experiência, layout e responsividade
-> Status: revisado para documentar comportamento visual vigente da árvore, Mini Bio/Curiosidades com IA, revisão de vínculos em largura total, onboarding condicional e revisão final editável.
+> Status: revisado contra o código atual para consolidar toolbar mobile, modal legado, exportação, mapa mobile 3x3, horizontal por gerações, onboarding e riscos de privacidade/IA.
 
 ---
 
 ## 1. Objetivo
+
+---
+
+## Atualização crítica — 2026-06-22
+
+O UX vigente dos mapas mobile deve ser descrito em camadas:
+
+| Camada | Estado observado | Observação |
+|---|---|---|
+| Toolbar fixa mobile | `Formato`, `Cor`, `Filtros`, `Zoom` e botão `+`. | Fonte atual: `MobileFamilyMapToolbar`. |
+| Popover `Zoom` | Abre overview 3x3 em `/mapa-familiar` e overview por gerações em `/mapa-familiar-horizontal`. | Controlado por scripts auxiliares mobile. |
+| Botão `+` | Abre painel completo de **Visualização**, com seletor de pessoa, estatísticas e ação `Salvar`. | Não é o mesmo que o modal legacy `Controles`. |
+| Modal legacy `Controles` | Aberto por `legendOpen`, renderiza `SidebarPanelTabs mobileControls`. | O código atual ainda expõe `Exportar` neste modal; se o produto quiser removê-lo, é necessária alteração de código. |
+| Exportação mobile | Não é botão fixo da toolbar, mas ainda existe por fluxos auxiliares/painel/modal. | Não documentar como totalmente ausente. |
+
+Regra de produto: qualquer mudança em toolbar, modal, Zoom, Exportar ou botão `+` deve ser isolada e testada em 320px, 375px, 390px e 430px, com Safari/iOS quando possível.
+
 
 Este documento registra decisões de experiência e layout.
 
@@ -204,11 +221,13 @@ Cônjuges de pais/Geração 4 não devem ser tratados como implementados até fe
 
 ### Mobile
 
-Componente:
+Componente renderizado pelo shell atual:
 
 ```txt
-MobileFamilyHorizontalMapView
+MobileFamilyHorizontalMapFilteredView
 ```
+
+`MobileFamilyHorizontalMapView` pode existir como legado/wrapper, mas não deve ser citado como fonte renderizada sem conferência do código.
 
 Contrato:
 
@@ -279,25 +298,23 @@ Comportamento:
 - conteúdo interno rola;
 - modal não entra na exportação.
 
-Controles visíveis:
+Controles esperados no contrato de UX reduzido:
 
 ```txt
-Vertical
-Horizontal
+Vertical/Horizontal
 Cores
-Grupos
-Destacar
-Filtros
+Grupos/Filtros
+Destacar, se mantido no fluxo
 ```
 
-Não exibir:
+Tensão observada no código atual:
 
 ```txt
-Zoom +
-Zoom -
-Restaurar visualização
-Exportar
+Zoom + / Zoom - / Restaurar não aparecem no SidebarPanelTabs mobileControls.
+Exportar ainda aparece no SidebarPanelTabs mobileControls.
 ```
+
+Regra: se a decisão for retirar `Exportar` do modal legacy, alterar `SidebarPanelTabs` e atualizar esta documentação no mesmo commit. Enquanto isso não ocorrer, não afirmar que o modal mobile já está sem Exportar.
 
 Regra de layout:
 
@@ -309,6 +326,31 @@ Regra de layout:
 ---
 
 ## 9. Paletas
+
+### 8.1 Toolbar fixa dos mapas mobile
+
+A toolbar fixa dos mapas mobile não deve ser confundida com o modal legacy `Controles`.
+
+Itens da toolbar atual:
+
+```txt
+Formato
+Cor
+Filtros
+Zoom
++
+```
+
+Regras de UX:
+
+- `Formato` alterna as duas views oficiais preservando `?pessoa=`;
+- `Cor` troca paleta;
+- `Filtros` controla cônjuges estendidos versus familiares diretos;
+- `Zoom` abre overview da view ativa;
+- `+` abre painel completo de visualização;
+- nenhum popover da toolbar deve entrar na exportação;
+- abrir um popover deve fechar o anterior.
+
 
 Paletas:
 
@@ -722,3 +764,20 @@ Regras visuais:
 
 - Modais informativos automÃ¡ticos no mobile nÃ£o devem bloquear o acesso inicial.
 - Se houver orientaÃ§Ã£o, preferir tour contextual ou dica dispensÃ¡vel.
+
+
+### 14.6 Pets e fatos históricos
+
+Regras de UX pós-Prompt 4:
+
+- Pets aparecem em grupo próprio, nunca misturados a filhos humanos.
+- Contadores devem separar filhos humanos e pets.
+- Cards de pet usam linguagem de tutela, não maternidade/paternidade humana.
+- Badges de cadastro em vínculos usam `Cadastrado` e `Pré-cadastrado`.
+
+Regra planejada para `/arquivos-historicos`:
+
+- a frente deve evoluir para **Fatos e Arquivos Históricos**;
+- o usuário deve poder registrar fato/memória sem arquivo;
+- upload de imagem/PDF deve continuar disponível, mas opcional;
+- não exibir obrigação visual de arquivo quando o schema já aceitar item sem arquivo.

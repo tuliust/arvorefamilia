@@ -1,14 +1,38 @@
 # QA manual — Árvore Família
 
-> Última revisão: 2026-06-20  
+> Última revisão: 2026-06-22  
 > Local canônico: `docs/QA_MANUAL.md`  
 > Projeto: `tuliust/arvorefamilia`  
 > Tipo: guia central de QA manual  
-> Status: revisado para incluir roteiro dos mapas familiares mobile, overview/zoom, painel `+`, rolagem interna e validações pós-deploy.
+> Status: revisado contra o código atual para incluir toolbar mobile, modal legado, mapa completo, riscos de exportação, onboarding com pets e fatos históricos.
 
 ---
 
 ## 1. Objetivo
+
+---
+
+## Atualização crítica — 2026-06-22
+
+Antes de executar qualquer Prompt 6 ou ajuste de mapa mobile, usar este guia junto com:
+
+```txt
+docs/funcionalidades/MAPA_FAMILIAR_MOBILE.md
+docs/operacao/QA_MAPAS_MOBILE_2026_06_21.md
+docs/operacao/NAO_REGRESSAO_MAPAS_MOBILE.md
+```
+
+Pontos observados no código atual:
+
+- a toolbar fixa mobile tem `Formato`, `Cor`, `Filtros`, `Zoom` e `+`;
+- a horizontal atual é renderizada por componentes `*HorizontalMapFilteredView`;
+- o `index.html` carrega scripts recentes de Zoom visual, lock de descendentes, cônjuges estendidos, filtros mobile, mapa completo e mosaico;
+- o modal legacy `Controles` ainda usa `SidebarPanelTabs mobileControls` e pode expor `Exportar`;
+- o painel completo do `+` possui ação `Salvar`;
+- `Home.tsx` ainda mantém `Visualizar como...`.
+
+Regra de QA: se a documentação disser que uma ação não existe, mas o código/visual ainda mostrar a ação, registrar como divergência documental ou pendência de código, não como teste aprovado.
+
 
 Este guia centraliza os procedimentos de QA manual do projeto **Árvore Família**.
 
@@ -292,8 +316,8 @@ Componentes esperados:
 
 | Ambiente | Componente |
 |---|---|
-| Desktop/tablet | `DesktopFamilyHorizontalMapView` |
-| Mobile | `MobileFamilyHorizontalMapView` |
+| Desktop/tablet | `DesktopFamilyHorizontalMapFilteredView` |
+| Mobile | `MobileFamilyHorizontalMapFilteredView` |
 
 ### Desktop/tablet
 
@@ -312,7 +336,7 @@ Checklist:
 
 Checklist:
 
-- [ ] renderiza `MobileFamilyHorizontalMapView`.
+- [ ] renderiza `MobileFamilyHorizontalMapFilteredView`.
 - [ ] uma geração aparece por tela.
 - [ ] botões `Ger 1`, `Ger 2`, `Ger 3` etc. funcionam.
 - [ ] swipe lateral troca geração.
@@ -432,6 +456,32 @@ Checklist:
 
 ## 14. QA de exportação
 
+## QA complementar — onboarding, pets e fatos históricos
+
+### `/meus-vinculos`
+
+- [ ] grupo `Pets` aparece separado de `Filhos`;
+- [ ] pets não aparecem na contagem de filhos humanos;
+- [ ] criação manual de pet grava/usa `humano_ou_pet: 'Pet'`;
+- [ ] card de pet usa linguagem de tutela;
+- [ ] badge de pessoa com usuário vinculado é `Cadastrado`;
+- [ ] pessoa sem usuário vinculado é `Pré-cadastrado`;
+- [ ] cônjuge ativo é único;
+- [ ] cônjuge falecido ou pessoa central falecida não permite relação ativa;
+- [ ] rascunho antigo de `sessionStorage` sem `pets` não quebra a tela.
+
+### `/arquivos-historicos`
+
+Validar esta seção somente depois de confirmar o commit/migration de fatos sem arquivo:
+
+- [ ] página usa título `Fatos e Arquivos Históricos`;
+- [ ] é possível salvar fato/memória sem arquivo;
+- [ ] título ou descrição é obrigatório como conteúdo mínimo;
+- [ ] upload opcional de imagem/PDF continua funcionando;
+- [ ] registros antigos com arquivo continuam abrindo;
+- [ ] `participante_ids` funciona quando existir e não bloqueia ambientes sem a coluna.
+
+
 Ações:
 
 ```txt
@@ -544,3 +594,37 @@ Checklist operacional detalhado:
 ```txt
 docs/operacao/QA_MAPAS_MOBILE_POS_DEPLOY.md
 ```
+
+
+## 8.1 QA da toolbar fixa mobile dos mapas
+
+Validar nas rotas:
+
+```txt
+/mapa-familiar
+/mapa-familiar-horizontal
+```
+
+Checklist:
+
+- [ ] a toolbar fixa aparece abaixo do header;
+- [ ] itens visíveis: `Formato`, `Cor`, `Filtros`, `Zoom` e botão `+`;
+- [ ] `Formato` preserva `?pessoa=...` ao alternar a view;
+- [ ] `Cor` altera paleta sem quebrar cards/conectores;
+- [ ] `Filtros` alterna cônjuges estendidos sem alterar dados;
+- [ ] `Zoom` abre overview correto da rota atual;
+- [ ] `+` abre painel completo de visualização;
+- [ ] popovers ficam acima da árvore e abaixo de overlays críticos;
+- [ ] nenhum popover entra na exportação;
+- [ ] fechar/trocar popover não trava scroll, swipe ou body.
+
+### Divergência conhecida a validar
+
+O modal legacy `Controles`, quando aberto por `legendOpen`, ainda renderiza `SidebarPanelTabs mobileControls`.
+
+Checklist específico:
+
+- [ ] verificar se o modal `Controles` ainda mostra `Exportar`;
+- [ ] se mostrar, registrar como comportamento atual do código;
+- [ ] se a decisão de produto for remover, abrir frente de código específica;
+- [ ] não aprovar documentação dizendo “sem Exportar” se a UI continuar exibindo Exportar.

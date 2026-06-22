@@ -1,14 +1,32 @@
 # Guia de implementações — Árvore Família
 
-> Última revisão: 2026-06-16
+> Última revisão: 2026-06-22
 > Local canônico: `docs/GUIA_IMPLEMENTACOES.md`
 > Projeto: `tuliust/arvorefamilia`
 > Tipo: guia de implementação vigente
-> Status: atualizado para Mini Bio/Curiosidades com IA, revisão de vínculos familiares em largura total, busca de pessoa existente, controle de perfil, upload com rascunho e revisão final editável.
+> Status: revisado contra o código atual para diferenciar implementado, pendente e tensão documental em mapas mobile, exportação, vínculos, pets, IA e fatos históricos.
 
 ---
 
 ## 1. Objetivo
+
+---
+
+## Atualização crítica — 2026-06-22
+
+Esta revisão separa **estado implementado no código atual** de **decisão/pendência documental**.
+
+Estado observado no código atual:
+
+- `HomeTreeSection.tsx` usa `DesktopFamilyHorizontalMapFilteredView` e `MobileFamilyHorizontalMapFilteredView` na horizontal.
+- `MobileFamilyMapToolbar` expõe `Formato`, `Cor`, `Filtros`, `Zoom` e `+`.
+- `HomeMobileNav` mantém handlers de exportação mobile e o painel completo aberto pelo `+` possui ação `Salvar`.
+- `SidebarPanelTabs mobileControls`, usado pelo modal legado `Controles`, ainda renderiza `Exportar`. Portanto, a remoção de Exportar do modal mobile é pendência de decisão/código, não comportamento garantido.
+- `Home.tsx` ainda mantém `Visualizar como...` no header/painel para QA/troca de pessoa central.
+- O `index.html` carrega scripts recentes de mapa mobile, incluindo Zoom visual, lock de descendentes, cônjuges estendidos, filtros mobile, mapa completo e mosaico.
+- A frente `/meus-vinculos` deve ser considerada consolidada com **Pets**, **Cadastrado/Pré-cadastrado** e regra de um cônjuge ativo.
+- Fatos históricos sem arquivo só devem ser considerados implementados após confirmação do commit/migration correspondente em `supabase/migrations/`.
+
 
 Este guia descreve as frentes implementadas no projeto e os arquivos principais que sustentam cada comportamento.
 
@@ -150,6 +168,26 @@ Acesso direto a `/preferencias` para pessoa falecida deve redirecionar para `/re
 
 #### Responsabilidades consolidadas
 
+#### Fatos e arquivos históricos — estado de implementação
+
+Não tratar fatos/memórias sem arquivo como baseline implementada sem verificar:
+
+```txt
+src/app/pages/ArquivosHistoricosPage.tsx
+src/app/components/ArquivosHistoricos.tsx
+src/app/services/arquivosHistoricosService.ts
+supabase/migrations/*historical*
+```
+
+Contrato desejado para a frente:
+
+- título: `Fatos e Arquivos Históricos`;
+- permitir fato/memória com título ou descrição, sem arquivo obrigatório;
+- upload de imagem/PDF continua opcional e funcional;
+- campos de arquivo devem aceitar `null` no banco;
+- `participante_ids` não deve virar obrigatório sem migration/backfill.
+
+
 - `/meus-dados`: dados pessoais, estado vital, Mini Bio, Curiosidades, assistente de IA e, quando aplicável, contato, endereço e redes sociais;
 - `/meus-vinculos`: revisão guiada de vínculos familiares, busca de pessoa existente, criação manual, remoção/desfazer, solicitação de controle de perfil, badges por status e botão final no rodapé;
 - `/arquivos-historicos`: arquivos/documentos da pessoa vinculada, pré-preenchimento por categoria e rascunho local;
@@ -171,17 +209,31 @@ Acesso direto a `/preferencias` para pessoa falecida deve redirecionar para `/re
 
 - layout em largura total, sem painel lateral de resumo;
 - card superior usa `Familiares de [Primeiro Nome]`;
-- cards-resumo funcionam como âncoras para `Pais`, `Filhos`, `Cônjuges` e `Irmãos`;
+- cards-resumo funcionam como âncoras para `Pais`, `Filhos`, `Pets`, `Cônjuges` e `Irmãos`;
 - pluralização usa `Nenhum vínculo`, `1 vínculo` e `N vínculos`;
-- vínculos confirmados exibem `Pré-cadastrado` ou `Ativo` conforme vínculo de usuário;
+- pessoas sem usuário/auth vinculado exibem `Pré-cadastrado`; pessoas com vínculo de usuário/auth exibem `Cadastrado`;
 - vínculos novos/alterados exibem `Em análise`;
 - remoções exibem `Remoção em análise` e permanecem visíveis para desfazer;
 - solicitações de controle exibem `Controle em análise`;
 - busca de pessoa existente ocorre antes da criação manual para reduzir duplicidade;
-- cards de filhos usam `Filho`, `Filha` ou `Filho(a)` conforme gênero disponível;
+- cards de filhos humanos usam `Filho`, `Filha` ou `Filho(a)` conforme gênero disponível; pets ficam em grupo próprio e não devem ser contados como filhos humanos;
 - dropdown `Outro pai/mãe` tenta pré-selecionar outro responsável conhecido.
 
 #### Regras implementadas para pessoa falecida
+
+#### Regras implementadas/esperadas em `/meus-vinculos` após Prompt 4
+
+- `Pets` é grupo próprio e não deve aparecer dentro de `Filhos`.
+- Pessoa é pet quando `humano_ou_pet === 'Pet'`.
+- Se o service retornar pets dentro de `relationships.filhos`, a UI deve separar:
+  - filhos humanos: `filhos.filter(p => p.humano_ou_pet !== 'Pet')`;
+  - pets: `filhos.filter(p => p.humano_ou_pet === 'Pet')`.
+- Card de pet não usa rótulos como `Alterar mãe`/`Alterar pai`; quando necessário, usar `Outros tutores`.
+- Ao criar pet localmente pela seção de Pets, preencher `humano_ou_pet: 'Pet'`.
+- Cônjuges: apenas um relacionamento conjugal ativo por vez.
+- Se a pessoa em revisão ou o cônjuge for falecido, o relacionamento deve ficar inativo e o controle de ativo deve ser protegido/desabilitado.
+- Drafts de `sessionStorage` antigos, sem chave `pets`, devem continuar funcionando.
+
 
 - ocultar **Cidade de residência**;
 - exibir **Dia ou Ano de Falecimento** e **Local de falecimento**;
@@ -243,7 +295,7 @@ Matriz implementada:
 | View | Desktop/tablet | Mobile |
 |---|---|---|
 | `/mapa-familiar` | `DesktopFamilyMapView` | `MobileFamilyTreeView` |
-| `/mapa-familiar-horizontal` | `DesktopFamilyHorizontalMapView` | `MobileFamilyHorizontalMapView` |
+| `/mapa-familiar-horizontal` | `DesktopFamilyHorizontalMapFilteredView` | `MobileFamilyHorizontalMapFilteredView` |
 
 ### `/mapa-familiar`
 
@@ -271,7 +323,7 @@ Implementado:
 - cônjuges adjacentes conforme grupos suportados;
 - conectores casal/filhos;
 - exportação;
-- versão mobile com uma geração por tela;
+- versão mobile filtrada com uma geração por tela;
 - botões `Ger X`, swipe lateral e scroll vertical.
 
 Pendência relevante:
@@ -375,8 +427,8 @@ Arquivos:
 src/app/components/FamilyTree/utils/treeExport.ts
 src/app/components/FamilyTree/TreeAreaSelectionOverlay.tsx
 src/app/components/FamilyTree/DesktopFamilyMapView.tsx
-src/app/components/FamilyTree/DesktopFamilyHorizontalMapView.tsx
-src/app/components/FamilyTree/MobileFamilyHorizontalMapView.tsx
+src/app/components/FamilyTree/DesktopFamilyHorizontalMapFilteredView.tsx
+src/app/components/FamilyTree/MobileFamilyHorizontalMapFilteredView.tsx
 ```
 
 Implementado:

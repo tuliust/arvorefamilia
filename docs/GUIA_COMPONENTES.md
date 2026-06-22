@@ -1,14 +1,32 @@
 # Guia de componentes — Árvore Família
 
-> Última revisão: 2026-06-16
+> Última revisão: 2026-06-22
 > Local canônico: `docs/GUIA_COMPONENTES.md`
 > Projeto: `tuliust/arvorefamilia`
 > Tipo: guia de responsabilidades de componentes
-> Status: atualizado para Mini Bio/Curiosidades com IA, revisão de vínculos familiares modularizada, busca de pessoa existente, controle de perfil, arquivos históricos com rascunho e revisão final editável.
+> Status: revisado contra o código atual para consolidar toolbar mobile, modal de Controles, exportação, scripts auxiliares dos mapas, Prompt 4 de vínculos e riscos de IA/documentação.
 
 ---
 
 ## 1. Objetivo
+
+---
+
+## Atualização crítica — 2026-06-22
+
+Esta revisão foi feita contra o código atual da branch `feature/questionario-ia-vinculos-pets`.
+
+Pontos que prevalecem sobre trechos antigos deste guia:
+
+- `HomeTreeSection.tsx` renderiza a horizontal atual com `DesktopFamilyHorizontalMapFilteredView` e `MobileFamilyHorizontalMapFilteredView`; os nomes antigos sem `Filtered` só devem ser citados como legado, wrapper ou histórico se ainda existirem no código.
+- O `index.html` carrega uma sequência ampla de scripts mobile de mapa. Qualquer alteração em mapa mobile deve considerar todos os scripts carregados, não apenas os quatro scripts da baseline de 2026-06-20.
+- A toolbar fixa mobile de mapa é `MobileFamilyMapToolbar` e expõe `Formato`, `Cor`, `Filtros`, `Zoom` e o botão `+`; ela não expõe `Exportar` como item fixo.
+- O modal legado `Controles`, aberto por `legendOpen`, ainda renderiza `SidebarPanelTabs mobileControls`. No código atual, esse componente continua oferecendo `Exportar` mesmo em modo mobile. Portanto, a regra “modal mobile sem Exportar” deve ser tratada como objetivo de produto/pendência de limpeza, não como fato absoluto do código enquanto `SidebarPanelTabs` não for ajustado.
+- O painel completo aberto pelo botão `+` tem ação `Salvar`, que dispara exportação de imagem. Ele é um fluxo separado da toolbar fixa e do modal legado.
+- `Home.tsx` ainda mantém `Visualizar como...`/debug viewer como funcionalidade técnica de QA/produto pendente; não tratar como removido.
+- `/meus-vinculos` já deve ser documentado com grupo **Pets**, badge **Cadastrado**, badge **Pré-cadastrado** e regra de apenas um cônjuge ativo.
+- Fatos históricos sem arquivo dependem da migration/alteração de schema correspondente; não documentar como implementado sem confirmar commit e aplicação da migration.
+
 
 Este guia descreve **quem faz o quê** no front-end e nos services principais.
 
@@ -107,9 +125,9 @@ Matriz:
 | Condição | Componente |
 |---|---|
 | mobile + `mapa-familiar` | `MobileFamilyTreeView` |
-| mobile + `mapa-familiar-horizontal` | `MobileFamilyHorizontalMapView` |
+| mobile + `mapa-familiar-horizontal` | `MobileFamilyHorizontalMapFilteredView` |
 | desktop/tablet + `mapa-familiar` | `DesktopFamilyMapView` |
-| desktop/tablet + `mapa-familiar-horizontal` | `DesktopFamilyHorizontalMapView` |
+| desktop/tablet + `mapa-familiar-horizontal` | `DesktopFamilyHorizontalMapFilteredView` |
 
 Não adicionar branches para `minha-arvore`, `genealogia` ou `visao-completa`.
 
@@ -178,7 +196,8 @@ Responsabilidades atuais:
 Cuidados:
 
 - o nome mantém legado; o componente não deve restaurar abas persistentes;
-- mobile não deve expor Zoom, Restaurar ou Exportar;
+- em `mobileControls`, Zoom +/Zoom -/Restaurar não devem aparecer;
+- no código atual, `Exportar` ainda aparece em `mobileControls`; remover isso é pendência de código se essa for a decisão de produto;
 - `Exportar > Área` deve continuar como toggle;
 - qualquer renome para `TreeControlPanel` deve ser feito em frente própria.
 
@@ -221,6 +240,28 @@ Cuidados:
 - não resolver ausência visual criando relacionamento fictício.
 
 ### 4.4 `LifeStatusKpiGrid`
+
+### 4.5 Toolbar mobile e modal legado
+
+Arquivos:
+
+```txt
+src/app/components/FamilyTree/MobileFamilyMapToolbar.tsx
+src/app/pages/home/HomeMobileNav.tsx
+src/app/pages/home/SidebarPanelTabs.tsx
+```
+
+Contrato observado no código atual:
+
+| Camada | Estado observado | Regra documental |
+|---|---|---|
+| Toolbar fixa mobile | `Formato`, `Cor`, `Filtros`, `Zoom` e botão `+`. | É a barra principal dos mapas mobile. |
+| Popovers da toolbar | visualização/formato, cor, filtros e exportação têm handlers em `HomeMobileNav`. | `Exportar` não aparece na toolbar fixa, mas há handler/painel se acionado por código. |
+| Modal legado `Controles` | usa `SidebarPanelTabs mobileControls`. | Ainda expõe `Exportar` no código atual; tratar como pendência se o produto decidir removê-lo. |
+| Painel completo `+` | abre `Visualização`, seletor de pessoa, formato, estatísticas e ação `Salvar`. | Fluxo separado da toolbar e do modal legado. |
+
+Não consolidar uma regra documental que contradiga o código. Se a decisão de produto for remover exportação do modal legacy, a alteração deve ser feita no código e documentada no mesmo commit.
+
 
 Arquivo:
 
@@ -296,13 +337,15 @@ Dívida conhecida:
 TREE-004 — hoje há limpeza em src/main.tsx para ocultar fallback de datas.
 ```
 
-### 5.3 `DesktopFamilyHorizontalMapView`
+### 5.3 `DesktopFamilyHorizontalMapFilteredView`
 
 Arquivo:
 
 ```txt
-src/app/components/FamilyTree/DesktopFamilyHorizontalMapView.tsx
+src/app/components/FamilyTree/DesktopFamilyHorizontalMapFilteredView.tsx
 ```
+
+Wrapper/legado possível: `DesktopFamilyHorizontalMapView.tsx`, se ainda existir, não deve ser citado como componente renderizado pelo shell atual sem conferência.
 
 Responsabilidades:
 
@@ -318,13 +361,15 @@ Cuidados:
 - não documentar cônjuges de pais/Geração 4 como implementados até correção;
 - não inferir conjugalidade por proximidade visual.
 
-### 5.4 `MobileFamilyHorizontalMapView`
+### 5.4 `MobileFamilyHorizontalMapFilteredView`
 
 Arquivo:
 
 ```txt
-src/app/components/FamilyTree/MobileFamilyHorizontalMapView.tsx
+src/app/components/FamilyTree/MobileFamilyHorizontalMapFilteredView.tsx
 ```
+
+Wrapper/legado possível: `MobileFamilyHorizontalMapView.tsx`, se ainda existir, não deve ser citado como componente renderizado pelo shell atual sem conferência.
 
 Responsabilidades:
 
@@ -345,6 +390,37 @@ Cuidados:
 ---
 
 ## 6. Cards, avatares e paletas
+
+### 5.5 Scripts auxiliares mobile carregados
+
+O `index.html` atual carrega scripts globais que interferem diretamente na experiência mobile dos mapas:
+
+```txt
+mobileFamilyTreeMutationPerformanceGuard.ts
+staticMobileFamilyTreeScreens.ts
+mobileFamilyTreeScreenStateGuards.ts
+mobileFamilyTreeGrandparentScreens.ts
+mobileFamilyTreeSwipeHints.ts
+mobileFamilyTreeAncestorConnectorsFix.ts
+mobileFamilyTreeDescendantConnectorsFix.ts
+mobileFamilyTreeCoreDescendantConnector.ts
+mobileFamilyTreeGroupTitleVisibilityFix.ts
+mobileFamilyHorizontalZoomOverview.ts
+mobileFamilyMapUncleSwipeNavigationGuard.ts
+mobileFamilyMapStableMobileFix.ts
+mobileFamilyMapDirectionalNavigationFix.ts
+mobileFamilyMapCoreConnectorFix.ts
+mobileVisualizationPanelFamilyStatsFix.ts
+mobileFamilyMapZoomOverviewVisualFix.ts
+mobileFamilyMapDescendantsStabilityLock.ts
+mobileFamilyMapExtendedSpouseCards.ts
+mobileFamilyMapFilterButtonsBehaviorFix.ts
+mobileFamilyMapFullOverview.ts
+mobileFamilyMapFullOverviewMosaicFix.ts
+```
+
+Regra: antes de alterar gestos, zoom, overview, mosaico, conectores, tios, descendentes, filtros mobile ou cônjuges estendidos, auditar esses scripts e validar em Safari/iOS.
+
 
 ### 6.1 `FamilyTreeVisualCards`
 
