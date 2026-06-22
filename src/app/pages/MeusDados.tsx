@@ -12,7 +12,6 @@ import {
   Trash2,
   UploadCloud,
   UserCircle2,
-  Wand2,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '../components/ui/button';
@@ -61,12 +60,16 @@ import {
   buildAiProfileQuestions,
   getAiBadgeDisplayLabel,
   getAiBadgeGroupDisplayText,
-  limitProfileQuestionnaireText,
   type AiBadge,
   type AiBadgeGroup,
   type AiGeneratedQuestion,
   type AiTone,
 } from '../constants/profileQuestionnaireConfig';
+import {
+  getProfileQuestionnaireAnswers,
+  normalizeProfileQuestionnairePayload,
+  upsertProfileQuestionnaireAnswers,
+} from '../services/profileQuestionnaireService';
 import { Pessoa } from '../types';
 import {
   buildEditablePersonFormState,
@@ -92,6 +95,11 @@ const AVATAR_SIZE = 512;
 type MeusDadosDraft = {
   form: EditableOwnPersonPayload;
   socialProfiles: SocialProfileForm[];
+  aiStep?: number;
+  aiTone?: AiTone;
+  aiSelectedBadges?: string[];
+  aiCustomTraits?: string;
+  aiGeneratedQuestions?: AiGeneratedQuestion[];
   pendingAvatarDataUrl?: string | null;
   avatarCropSourceDataUrl?: string | null;
   photoMarkedForRemoval?: boolean;
@@ -121,6 +129,11 @@ function readMeusDadosDraft(key: string): MeusDadosDraft | null {
     return {
       form,
       socialProfiles: draft.socialProfiles.length > 0 ? draft.socialProfiles : [createSocialProfile()],
+      aiStep: typeof draft.aiStep === 'number' ? draft.aiStep : undefined,
+      aiTone: draft.aiTone,
+      aiSelectedBadges: Array.isArray(draft.aiSelectedBadges) ? draft.aiSelectedBadges : undefined,
+      aiCustomTraits: typeof draft.aiCustomTraits === 'string' ? draft.aiCustomTraits : undefined,
+      aiGeneratedQuestions: Array.isArray(draft.aiGeneratedQuestions) ? draft.aiGeneratedQuestions : undefined,
       pendingAvatarDataUrl: draft.pendingAvatarDataUrl ?? null,
       avatarCropSourceDataUrl: draft.avatarCropSourceDataUrl ?? null,
       photoMarkedForRemoval: draft.photoMarkedForRemoval === true,
@@ -266,13 +279,12 @@ export function MeusDados() {
   const [photoMarkedForRemoval, setPhotoMarkedForRemoval] = useState(false);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [aiDialogOpen, setAiDialogOpen] = useState(false);
+  const [questionnaireSaving, setQuestionnaireSaving] = useState(false);
   const [aiStep, setAiStep] = useState(0);
   const [aiTone, setAiTone] = useState<AiTone>('afetivo');
   const [aiSelectedBadges, setAiSelectedBadges] = useState<string[]>([]);
   const [aiCustomTraits, setAiCustomTraits] = useState('');
   const [aiGeneratedQuestions, setAiGeneratedQuestions] = useState<AiGeneratedQuestion[]>([]);
-  const [aiLoading, setAiLoading] = useState(false);
   const [aiError, setAiError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -311,6 +323,7 @@ export function MeusDados() {
       const draftKey = user.id && nextPessoaId ? getDraftKey(user.id, nextPessoaId) : null;
       const draft = draftKey && !shouldPreserveDraft ? readMeusDadosDraft(draftKey) : null;
       let loadedSocialProfiles = buildSocialProfilesFromPerson(data?.pessoa);
+      let loadedQuestionnaire: Awaited<ReturnType<typeof getProfileQuestionnaireAnswers>>['data'] = null;
 
       setLink(data);
 
@@ -323,7 +336,23 @@ export function MeusDados() {
             toast.warning(
               socialProfilesError instanceof Error
                 ? `Não foi possível carregar redes sociais versionadas: ${socialProfilesError.message}`
-                : 'Não foi possível carregar redes sociais versionadas.',
+              : 'Não foi possível carregar redes sociais versionadas.',
+            );
+          }
+        }
+
+        try {
+          const questionnaireResult = await getProfileQuestionnaireAnswers(nextPessoaId);
+          if (questionnaireResult.error) {
+            throw new Error(questionnaireResult.error);
+          }
+          loadedQuestionnaire = questionnaireResult.data;
+        } catch (questionnaireError) {
+          if (mounted) {
+            toast.warning(
+              questionnaireError instanceof Error
+                ? `Não foi possível carregar o questionário de perfil: ${questionnaireError.message}`
+                : 'Não foi possível carregar o questionário de perfil.',
             );
           }
         }
@@ -332,6 +361,16 @@ export function MeusDados() {
       if (!shouldPreserveDraft) {
         setForm(draft?.form ?? buildEditablePersonFormState(data?.pessoa));
         setSocialProfiles(draft?.socialProfiles ?? loadedSocialProfiles);
+        setAiStep(Math.min(Math.max(draft?.aiStep ?? 0, 0), AI_STEPS.length - 1));
+        setAiTone(draft?.aiTone ?? loadedQuestionnaire?.tone ?? 'afetivo');
+        setAiSelectedBadges(
+          draft?.aiSelectedBadges ??
+          loadedQuestionnaire?.selectedBadges.map((badge) => badge.id) ??
+          [],
+        );
+        setAiCustomTraits(draft?.aiCustomTraits ?? loadedQuestionnaire?.customTraits ?? '');
+        setAiGeneratedQuestions(draft?.aiGeneratedQuestions ?? loadedQuestionnaire?.generatedQuestions ?? []);
+        setAiError(null);
         isDirtyRef.current = Boolean(draft);
       }
 
@@ -376,11 +415,21 @@ export function MeusDados() {
     writeMeusDadosDraft(getDraftKey(user.id, pessoaId), {
       form,
       socialProfiles,
+      aiStep,
+      aiTone,
+      aiSelectedBadges,
+      aiCustomTraits,
+      aiGeneratedQuestions,
       pendingAvatarDataUrl,
       avatarCropSourceDataUrl,
       photoMarkedForRemoval,
     });
   }, [
+    aiCustomTraits,
+    aiGeneratedQuestions,
+    aiSelectedBadges,
+    aiStep,
+    aiTone,
     avatarCropSourceDataUrl,
     form,
     link?.pessoa?.id,
@@ -414,13 +463,9 @@ export function MeusDados() {
     () => aiAllBadges.filter((badge) => aiSelectedBadges.includes(badge.id)),
     [aiAllBadges, aiSelectedBadges],
   );
-  const aiIsMemorialMode = aiTone === 'nostalgico';
-  const aiAnsweredQuestions = useMemo(
-    () => aiGeneratedQuestions.filter((item) => item.answer.trim()),
-    [aiGeneratedQuestions],
-  );
-  const aiHasGenerationSource = aiSelectedBadgeItems.length > 0 || aiCustomTraits.trim().length > 0 || aiAnsweredQuestions.length > 0;
+  const aiHasMinimumQuestionnaireInput = Boolean(aiTone) && (aiSelectedBadgeItems.length > 0 || aiCustomTraits.trim().length > 0);
   const aiProgressPercent = Math.round(((aiStep + 1) / AI_STEPS.length) * 100);
+  const aiIsMemorialMode = aiTone === 'nostalgico' || form.falecido === true;
 
   useEffect(() => {
     setAiGeneratedQuestions((currentQuestions) => {
@@ -434,6 +479,21 @@ export function MeusDados() {
 
   const markFormDirty = () => {
     isDirtyRef.current = true;
+  };
+
+  const markQuestionnaireDirty = () => {
+    isDirtyRef.current = true;
+    setAiError(null);
+  };
+
+  const updateAiTone = (tone: AiTone) => {
+    markQuestionnaireDirty();
+    setAiTone(tone);
+  };
+
+  const updateAiStep = (nextStep: number) => {
+    markQuestionnaireDirty();
+    setAiStep(Math.min(Math.max(nextStep, 0), AI_STEPS.length - 1));
   };
 
   const updateField = (field: keyof EditableOwnPersonPayload, value: string | boolean) => {
@@ -627,6 +687,7 @@ export function MeusDados() {
   };
 
   const toggleAiBadge = (badgeId: string) => {
+    markQuestionnaireDirty();
     setAiSelectedBadges((current) => (
       current.includes(badgeId)
         ? current.filter((item) => item !== badgeId)
@@ -634,71 +695,78 @@ export function MeusDados() {
     ));
   };
 
-  const handleGenerateAiText = async () => {
-    if (aiLoading) return;
+  const buildQuestionnairePayload = () => {
+    const answers = aiGeneratedQuestions.reduce<Record<string, string>>((nextAnswers, question) => {
+      const answer = question.answer.trim();
+      if (answer) {
+        nextAnswers[question.id] = answer;
+      }
+      return nextAnswers;
+    }, {});
 
-    if (!aiHasGenerationSource) {
-      setAiError('Selecione ao menos uma opção ou responda uma pergunta para gerar o texto.');
-      return;
+    return normalizeProfileQuestionnairePayload({
+      tone: aiTone,
+      selectedBadges: aiSelectedBadgeItems,
+      customTraits: aiCustomTraits,
+      generatedQuestions: aiGeneratedQuestions,
+      answers,
+      memorialMode: aiIsMemorialMode,
+    });
+  };
+
+  const validateQuestionnaire = () => {
+    if (!aiTone) {
+      return 'Escolha um tom para os textos antes de continuar.';
     }
 
-    setAiLoading(true);
+    if (!aiHasMinimumQuestionnaireInput) {
+      return 'Selecione ao menos uma característica ou preencha outras características antes de continuar.';
+    }
+
+    return null;
+  };
+
+  const saveProfileQuestionnaire = async ({ requireMinimum = false, quiet = false } = {}) => {
+    if (!pessoa?.id) {
+      const message = 'Não foi possível localizar a pessoa para salvar o questionário.';
+      if (!quiet) setAiError(message);
+      return { ok: false, error: message };
+    }
+
+    const validationError = validateQuestionnaire();
+    if (validationError && requireMinimum) {
+      setAiError(validationError);
+      return { ok: false, error: validationError };
+    }
+
+    if (validationError && !requireMinimum) {
+      return { ok: true, skipped: true };
+    }
+
+    setQuestionnaireSaving(true);
     setAiError(null);
 
     try {
-      const answeredQuestions = aiGeneratedQuestions
-        .filter((item) => item.answer.trim())
-        .map((item) => ({
-          question: item.question,
-          answer: item.answer.trim(),
-        }));
+      const payload = buildQuestionnairePayload();
+      const result = await upsertProfileQuestionnaireAnswers(pessoa.id, payload);
 
-      const response = await fetch('/api/ai', {
-        method: 'POST',
-        headers: {
-          Accept: 'application/json',
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          purpose: 'profile_text',
-          tone: aiTone,
-          memorialMode: aiIsMemorialMode,
-          selectedBadges: aiSelectedBadgeItems.map((badge) => getAiBadgeDisplayLabel(badge, aiIsMemorialMode)),
-          customTraits: aiCustomTraits.trim(),
-          answers: answeredQuestions,
-          context: {
-            nome: String(form.nome_completo ?? ''),
-            profissao: String(form.profissao ?? ''),
-            local_nascimento: String(form.local_nascimento ?? ''),
-            local_atual: String(form.local_atual ?? ''),
-            data_nascimento: String(form.data_nascimento ?? ''),
-            data_falecimento: String(form.data_falecimento ?? ''),
-            falecido: form.falecido === true,
-            minibio_atual: String(form.minibio ?? ''),
-            curiosidades_atuais: String(form.curiosidades ?? ''),
-          },
-        }),
-      });
-      const payload = await response.json().catch(() => null);
-      if (!response.ok) {
-        throw new Error(payload?.error || 'Não foi possível gerar os textos agora. Tente novamente em instantes.');
+      if (result.error) {
+        throw new Error(result.error);
       }
 
-      const minibio = limitProfileQuestionnaireText(payload?.minibio ?? '');
-      const curiosidades = limitProfileQuestionnaireText(payload?.curiosidades ?? '');
-      if (!minibio || !curiosidades) {
-        throw new Error('A IA não retornou textos válidos.');
-      }
-
-      updateTextField('minibio', minibio);
-      updateTextField('curiosidades', curiosidades);
-      setAiDialogOpen(false);
-      setAiError(null);
+      return { ok: true };
     } catch (error) {
-      setAiError(error instanceof Error ? error.message : 'Não foi possível gerar os textos agora. Tente novamente em instantes.');
+      const message = error instanceof Error ? error.message : 'Não foi possível salvar o questionário agora.';
+      if (!quiet) setAiError(message);
+      return { ok: false, error: message };
     } finally {
-      setAiLoading(false);
+      setQuestionnaireSaving(false);
     }
+  };
+
+  const handleQuestionnaireNext = async () => {
+    await saveProfileQuestionnaire({ quiet: true });
+    updateAiStep(aiStep + 1);
   };
   const handleConfirm = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -718,7 +786,21 @@ export function MeusDados() {
       return;
     }
 
+    const questionnaireValidationError = validateQuestionnaire();
+    if (questionnaireValidationError) {
+      setAiError(questionnaireValidationError);
+      toast.error(questionnaireValidationError);
+      return;
+    }
+
     setSaving(true);
+
+    const questionnaireSave = await saveProfileQuestionnaire({ requireMinimum: true });
+    if (!questionnaireSave.ok) {
+      setSaving(false);
+      toast.error(questionnaireSave.error || 'Não foi possível salvar o questionário.');
+      return;
+    }
 
     const completedSocialProfiles = getCompleteSocialProfiles();
     const primarySocialProfile = completedSocialProfiles[0] ?? createSocialProfile();
@@ -727,6 +809,8 @@ export function MeusDados() {
       rede_social: primarySocialProfile.rede || '',
       instagram_usuario: primarySocialProfile.perfil || '',
     });
+    delete payload.minibio;
+    delete payload.curiosidades;
 
     if (payload.falecido === true) {
       payload.permitir_exibir_data_nascimento = true;
@@ -901,7 +985,7 @@ export function MeusDados() {
                 <button
                   key={tone.id}
                   type="button"
-                  onClick={() => setAiTone(tone.id)}
+                  onClick={() => updateAiTone(tone.id)}
                   className={[
                     'flex min-w-0 items-start gap-3 rounded-lg border p-3 text-left transition-colors',
                     selected
@@ -944,7 +1028,10 @@ export function MeusDados() {
           </div>
           <Textarea
             value={aiCustomTraits}
-            onChange={(event) => setAiCustomTraits(event.target.value)}
+            onChange={(event) => {
+              markQuestionnaireDirty();
+              setAiCustomTraits(event.target.value);
+            }}
             placeholder={
               aiIsMemorialMode
                 ? 'Ex: adorava cozinhar aos domingos, era conhecido pelo bom humor, morou em três cidades, gostava de reunir a família...'
@@ -975,6 +1062,7 @@ export function MeusDados() {
                   value={item.answer}
                   onChange={(event) => {
                     const answer = event.target.value;
+                    markQuestionnaireDirty();
                     setAiGeneratedQuestions((current) => current.map((question) => (
                       question.id === item.id ? { ...question, answer } : question
                     )));
@@ -1239,50 +1327,60 @@ export function MeusDados() {
           )}
 
           <section className="mt-5 rounded-xl border border-gray-200 bg-gray-50 p-4">
-            <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="mb-4">
               <SectionTitle icon={Sparkles} className="mb-0">Sobre Mim</SectionTitle>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                className="h-10 w-full shrink-0 justify-center gap-2 border-blue-200 bg-blue-50 px-3 font-semibold text-blue-700 hover:bg-blue-100 sm:w-auto"
-                onClick={() => {
-                  setAiError(null);
-                  setAiStep(0);
-                  setAiDialogOpen(true);
-                }}
-                aria-label="Receber ajuda da IA para escrever Mini Bio e Curiosidades"
-                title="Receber ajuda da IA para escrever Mini Bio e Curiosidades"
-              >
-                <Sparkles className="h-4 w-4" />
-                <span>Escreva com a IA</span>
-              </Button>
+              <p className="mt-2 break-words text-sm leading-relaxed text-gray-600">
+                Responda este questionário para preparar a geração da sua Mini Bio e das suas Curiosidades na próxima etapa.
+              </p>
             </div>
-            <div className="grid grid-cols-1 gap-4">
-              <Field label="Mini Bio">
-                <Textarea
-                  value={String(form.minibio ?? '')}
-                  onChange={(e) => updateTextField('minibio', e.target.value)}
-                  placeholder="Escreva uma breve apresentação sobre você em até 300 caracteres."
-                  maxLength={300}
-                  className="min-h-[140px] border-gray-300 bg-white text-base focus-visible:ring-blue-600 md:min-h-24 md:text-sm"
-                />
-                <p className="text-right text-xs text-gray-500">{String(form.minibio ?? '').length}/300</p>
-              </Field>
-              <Field label="Curiosidades">
-                <Textarea
-                  value={String(form.curiosidades ?? '')}
-                  onChange={(e) => updateTextField('curiosidades', e.target.value)}
-                  placeholder="Compartilhe fatos, gostos, lembranças ou detalhes curiosos sobre sua vida em até 300 caracteres."
-                  maxLength={300}
-                  className="min-h-[140px] border-gray-300 bg-white text-base focus-visible:ring-blue-600 md:min-h-24 md:text-sm"
-                />
-                <p className="text-right text-xs text-gray-500">{String(form.curiosidades ?? '').length}/300</p>
-              </Field>
+
+            <div className="space-y-5 rounded-xl border border-gray-200 bg-white p-4">
+              <div className="space-y-2">
+                <div className="flex items-center justify-between gap-3 text-xs font-medium text-gray-600">
+                  <span>Etapa {aiStep + 1} de {AI_STEPS.length}</span>
+                  <span className="break-words text-right">{AI_STEPS[aiStep]}</span>
+                </div>
+                <div className="h-2 overflow-hidden rounded-full bg-gray-100">
+                  <div
+                    className="h-full rounded-full bg-blue-600 transition-all"
+                    style={{ width: `${aiProgressPercent}%` }}
+                  />
+                </div>
+              </div>
+
+              {renderAiStep()}
+
+              {aiError && (
+                <p className="break-words rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+                  {aiError}
+                </p>
+              )}
+
+              <div className="flex flex-col gap-2 border-t border-gray-100 pt-4 sm:flex-row sm:items-center sm:justify-between">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => updateAiStep(aiStep - 1)}
+                  disabled={aiStep === 0 || questionnaireSaving}
+                  className="w-full sm:w-auto"
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                  Voltar
+                </Button>
+                <Button
+                  type="button"
+                  onClick={handleQuestionnaireNext}
+                  disabled={aiStep === AI_STEPS.length - 1 || questionnaireSaving}
+                  className="w-full sm:w-auto"
+                >
+                  {questionnaireSaving ? 'Salvando...' : 'Avançar'}
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+              </div>
             </div>
           </section>
           <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-end">
-            <Button type="submit" disabled={saving || !canEditSelectedProfile} className="w-full sm:w-auto sm:min-w-[220px]">
+            <Button type="submit" disabled={saving || questionnaireSaving || !canEditSelectedProfile} className="w-full sm:w-auto sm:min-w-[220px]">
               {saving ? (
                 'Salvando...'
               ) : (
@@ -1327,84 +1425,6 @@ export function MeusDados() {
         </aside>
       </main>
 
-      <Dialog
-        open={aiDialogOpen}
-        onOpenChange={(open) => {
-          setAiDialogOpen(open);
-          if (open) setAiError(null);
-        }}
-      >
-        <DialogContent className="max-h-[90vh] overflow-y-auto bg-white sm:max-w-3xl">
-          <DialogHeader>
-            <DialogTitle className="break-words">Ajuda para escrever sobre você</DialogTitle>
-            <DialogDescription className="break-words">
-              {aiIsMemorialMode
-                ? 'Selecione lembranças e momentos importantes. A IA usa suas escolhas para sugerir uma Mini Bio e Curiosidades em tom de homenagem.'
-                : 'Selecione características, lembranças e momentos importantes. A IA usa suas escolhas para sugerir uma Mini Bio e Curiosidades sobre sua vida.'}
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="space-y-5">
-            <div className="space-y-2">
-              <div className="flex items-center justify-between gap-3 text-xs font-medium text-gray-600">
-                <span>Etapa {aiStep + 1} de {AI_STEPS.length}</span>
-                <span className="break-words text-right">{AI_STEPS[aiStep]}</span>
-              </div>
-              <div className="h-2 overflow-hidden rounded-full bg-gray-100">
-                <div
-                  className="h-full rounded-full bg-blue-600 transition-all"
-                  style={{ width: `${aiProgressPercent}%` }}
-                />
-              </div>
-            </div>
-
-            {renderAiStep()}
-
-            {aiError && (
-              <p className="break-words rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
-                {aiError}
-              </p>
-            )}
-          </div>
-
-          <DialogFooter className="gap-2 sm:justify-between">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => setAiStep((current) => Math.max(0, current - 1))}
-              disabled={aiStep === 0 || aiLoading}
-              className="w-full sm:w-auto"
-            >
-              <ChevronLeft className="h-4 w-4" />
-              Voltar
-            </Button>
-            {aiStep < AI_STEPS.length - 1 ? (
-              <Button
-                type="button"
-                onClick={() => {
-                  setAiError(null);
-                  setAiStep((current) => Math.min(AI_STEPS.length - 1, current + 1));
-                }}
-                disabled={aiLoading}
-                className="w-full sm:w-auto"
-              >
-                Avançar
-                <ChevronRight className="h-4 w-4" />
-              </Button>
-            ) : (
-              <Button
-                type="button"
-                onClick={handleGenerateAiText}
-                disabled={aiLoading || !aiHasGenerationSource}
-                className="w-full sm:w-auto"
-              >
-                <Wand2 className="h-4 w-4" />
-                {aiLoading ? 'Gerando...' : 'Gerar textos'}
-              </Button>
-            )}
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
       <Dialog open={photoDialogOpen} onOpenChange={setPhotoDialogOpen}>
         <DialogContent className="bg-white">
           <DialogHeader>
