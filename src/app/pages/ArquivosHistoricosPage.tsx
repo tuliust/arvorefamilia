@@ -103,7 +103,7 @@ export function ArquivosHistoricosPage() {
         }
       } catch (loadError) {
         if (mounted) {
-          toast.error(loadError instanceof Error ? loadError.message : 'Não foi possível carregar os arquivos históricos.');
+          toast.error(loadError instanceof Error ? loadError.message : 'Não foi possível carregar os fatos e arquivos históricos.');
         }
       } finally {
         if (mounted) {
@@ -137,7 +137,7 @@ export function ArquivosHistoricosPage() {
       clearArquivosHistoricosDraft(getArquivosHistoricosDraftKey(user!.id, pessoa.id));
       clearArquivosHistoricosDraft(getArquivoHistoricoUploadDraftKey(user!.id, pessoa.id));
       setArchives(saved);
-      toast.success('Arquivos históricos salvos.');
+      toast.success('Fatos e arquivos históricos salvos.');
       return true;
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Não foi possível salvar os arquivos históricos.');
@@ -157,7 +157,7 @@ export function ArquivosHistoricosPage() {
       <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4">
         <div className="text-center">
           <div className="mb-4 inline-block h-10 w-10 animate-spin rounded-full border-b-2 border-blue-600" />
-          <p className="text-gray-600">Carregando arquivos históricos...</p>
+          <p className="text-gray-600">Carregando fatos e arquivos históricos...</p>
         </div>
       </div>
     );
@@ -181,8 +181,8 @@ export function ArquivosHistoricosPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       <MemberPageHeader
-        title="Arquivos históricos"
-        subtitle="Etapa 3 de 5: adicione fotos, documentos e registros importantes."
+        title="Fatos e Arquivos Históricos"
+        subtitle="Etapa 3 de 5: registre fatos, memórias, histórias e, se quiser, anexe fotos ou documentos."
         icon={Archive}
         actions={[
           { label: 'Meus dados', to: '/meus-dados', icon: HEADER_ACTION_ICONS.Settings },

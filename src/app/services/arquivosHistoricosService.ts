@@ -62,7 +62,7 @@ function toArquivoHistorico(row: any): ArquivoHistorico {
     pessoa_id: row.pessoa_id ?? null,
     relacionamento_id: row.relacionamento_id ?? null,
     tipo: row.tipo,
-    url: row.url,
+    url: row.url ?? '',
     storage_bucket: row.storage_bucket ?? null,
     storage_path: row.storage_path ?? null,
     mime_type: row.mime_type ?? null,
@@ -116,7 +116,7 @@ function buildArquivoPayload(
   const payload: Record<string, unknown> = {
     ...ownerPayload,
     tipo: arquivo.tipo,
-    url: arquivo.url,
+    url: normalizeOptional(arquivo.url),
     storage_bucket: normalizeOptional(arquivo.storage_bucket),
     storage_path: normalizeOptional(arquivo.storage_path),
     mime_type: normalizeOptional(arquivo.mime_type),
@@ -183,7 +183,7 @@ async function insertArquivoHistoricoWithOptionalParticipants(payload: Record<st
 function hasArquivoChanged(current: ArquivoHistorico, next: ArquivoHistorico, nextOrder: number) {
   return (
     current.tipo !== next.tipo ||
-    current.url !== next.url ||
+    normalizeOptional(current.url) !== normalizeOptional(next.url) ||
     normalizeOptional(current.storage_bucket) !== normalizeOptional(next.storage_bucket) ||
     normalizeOptional(current.storage_path) !== normalizeOptional(next.storage_path) ||
     normalizeOptional(current.mime_type) !== normalizeOptional(next.mime_type) ||
@@ -201,7 +201,7 @@ type ArquivoHistoricoOwner =
   | { linkedTo: 'relationship'; relacionamentoId: string };
 
 type NovoArquivoHistoricoInput = {
-  file: File;
+  file?: File | null;
   titulo: string;
   descricao?: string | null;
   ano?: string | null;
@@ -302,6 +302,10 @@ async function salvarArquivosHistoricosPorOwner(
   }
 
   for (const [index, arquivo] of arquivos.entries()) {
+    if (!String(arquivo.titulo ?? '').trim() && !String(arquivo.descricao ?? '').trim()) {
+      throw new Error('Informe pelo menos um título ou uma descrição para salvar o fato ou memória histórica.');
+    }
+
     const payload = buildArquivoPayload(ownerPayload, arquivo, index);
 
     if (isUuid(arquivo.id)) {
@@ -324,6 +328,7 @@ async function salvarArquivosHistoricosPorOwner(
         metadata: {
           ...ownerMetadata,
           file_type: arquivo.tipo,
+          has_file: Boolean(arquivo.url),
           has_description: Boolean(arquivo.descricao),
           has_year: Boolean(arquivo.ano),
           categoria_evento: payload.categoria_evento,
@@ -345,6 +350,7 @@ async function salvarArquivosHistoricosPorOwner(
         metadata: {
           ...ownerMetadata,
           file_type: arquivo.tipo,
+          has_file: Boolean(arquivo.url),
           has_description: Boolean(arquivo.descricao),
           has_year: Boolean(arquivo.ano),
           categoria_evento: payload.categoria_evento,
@@ -399,18 +405,19 @@ export async function adicionarArquivoHistoricoAoRelacionamento(
   input: NovoArquivoHistoricoInput
 ): Promise<ArquivoHistorico> {
   await assertAdminRelationshipFileWrite();
-  const isImage = ['image/jpeg', 'image/png', 'image/webp'].includes(input.file.type);
-  const upload = await uploadHistoricalFile(input.file, { relacionamentoId });
+  const file = input.file ?? null;
+  const isImage = file ? ['image/jpeg', 'image/png', 'image/webp'].includes(file.type) : true;
+  const upload = file ? await uploadHistoricalFile(file, { relacionamentoId }) : null;
   const arquivosExistentes = await listarArquivosHistoricosDoRelacionamento(relacionamentoId);
   const nextArquivo: ArquivoHistoricoWithParticipants = {
     id: `arquivo-${Date.now()}`,
     relacionamento_id: relacionamentoId,
     pessoa_id: null,
     tipo: isImage ? 'imagem' : 'pdf',
-    url: upload.url,
-    storage_bucket: upload.bucket,
-    storage_path: upload.path,
-    mime_type: input.file.type || 'application/octet-stream',
+    url: upload?.url ?? '',
+    storage_bucket: upload?.bucket ?? null,
+    storage_path: upload?.path ?? null,
+    mime_type: file?.type ?? null,
     titulo: input.titulo,
     descricao: input.descricao ?? undefined,
     ano: input.ano ?? undefined,
@@ -423,7 +430,9 @@ export async function adicionarArquivoHistoricoAoRelacionamento(
     [...arquivosExistentes, nextArquivo]
   );
 
-  const arquivoCriado = arquivos.find((arquivo) => arquivo.url === upload.url) ?? arquivos[arquivos.length - 1];
+  const arquivoCriado = upload
+    ? arquivos.find((arquivo) => arquivo.url === upload.url) ?? arquivos[arquivos.length - 1]
+    : arquivos.find((arquivo) => arquivo.titulo === input.titulo) ?? arquivos[arquivos.length - 1];
   if (!arquivoCriado) {
     throw new Error('Não foi possível localizar o arquivo histórico criado.');
   }
