@@ -4,7 +4,7 @@ import {
   calculateFullYearsSince,
   curiositySectionCardClassName,
   getBirthMonthCounts,
-  getPeopleBySocialGeneration,
+  getPeopleByAgeRange,
   getProfessionRanking,
   parseFamilyDate,
   type CuriosidadesDataProps,
@@ -135,12 +135,12 @@ export function CuriosidadesCharts({
       value: month.count,
     }));
 
-  const generationData = getPeopleBySocialGeneration(pessoas)
-    .filter((generation) => generation.people.length > 0)
-    .map((generation) => ({
-      label: generation.label,
-      value: generation.people.length,
-      note: generation.period,
+  const ageRangeData = getPeopleByAgeRange(pessoas)
+    .filter((range) => range.people.length > 0)
+    .map((range) => ({
+      label: range.label,
+      value: range.people.length,
+      note: range.period,
     }));
 
   const professionData = getProfessionRanking(pessoas, 6).map((profession) => ({
@@ -184,16 +184,16 @@ export function CuriosidadesCharts({
           />
 
           <ChartCard
-            title="Pessoas por geração"
-            description="Classificação sociológica calculada pelo ano de nascimento."
-            data={generationData}
-            emptyLabel="Complete anos de nascimento para comparar gerações."
+            title="Faixa Etária"
+            description="Distribuição dos familiares por faixa de idade."
+            data={ageRangeData}
+            emptyLabel="Complete datas de nascimento para comparar faixas etárias."
             icon={UsersRound}
           />
 
           <ChartCard
             title="Profissões mais comuns"
-            description="Profissões mais recorrentes nos perfis familiares."
+            description="Principais ocupações dos perfis."
             data={professionData}
             emptyLabel="Complete profissões nos perfis para gerar este gráfico."
             icon={BriefcaseBusiness}
@@ -213,7 +213,7 @@ export function CuriosidadesCharts({
                 Cadastre datas de casamento e nascimento para calcular este indicador.
               </div>
             ) : (
-              <div className="mt-5 grid gap-3 sm:grid-cols-3">
+              <div className="mt-5 grid gap-3 sm:grid-cols-2">
                 <div className="rounded-xl bg-blue-50 p-4">
                   <p className="text-xs font-semibold text-blue-700">Média</p>
                   <p className="mt-2 text-2xl font-bold text-gray-950">{weddingAgeStats.average} anos</p>
@@ -223,10 +223,6 @@ export function CuriosidadesCharts({
                   <p className="mt-2 text-2xl font-bold text-gray-950">
                     {weddingAgeStats.min}-{weddingAgeStats.max}
                   </p>
-                </div>
-                <div className="rounded-xl bg-gray-50 p-4">
-                  <p className="text-xs font-semibold text-gray-600">Registros</p>
-                  <p className="mt-2 text-2xl font-bold text-gray-950">{weddingAgeStats.count}</p>
                 </div>
               </div>
             )}

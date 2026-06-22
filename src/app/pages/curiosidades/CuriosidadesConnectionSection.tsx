@@ -41,16 +41,12 @@ export function CuriosidadesConnectionSection({
       return;
     }
 
-    const firstStillExists = selectablePeople.some((pessoa) => pessoa.id === personOneId);
-    const nextPersonOneId = firstStillExists ? personOneId : selectablePeople[0].id;
+    const firstStillExists = !personOneId || selectablePeople.some((pessoa) => pessoa.id === personOneId);
+    const secondStillExists = !personTwoId || selectablePeople.some((pessoa) => pessoa.id === personTwoId);
 
-    const secondCandidates = selectablePeople.filter((pessoa) => pessoa.id !== nextPersonOneId);
-    const secondStillExists = secondCandidates.some((pessoa) => pessoa.id === personTwoId);
-    const nextPersonTwoId = secondStillExists ? personTwoId : secondCandidates[0]?.id ?? '';
-
-    if (nextPersonOneId !== personOneId || nextPersonTwoId !== personTwoId) {
-      setPersonOneId(nextPersonOneId);
-      setPersonTwoId(nextPersonTwoId);
+    if (!firstStillExists || !secondStillExists) {
+      if (!firstStillExists) setPersonOneId('');
+      if (!secondStillExists) setPersonTwoId('');
       setConnectionResult(null);
       setConnectionError(null);
       setConnectionLoading(false);
@@ -61,6 +57,18 @@ export function CuriosidadesConnectionSection({
     setConnectionResult(null);
     setConnectionError(null);
   };
+
+
+  const placeholderPerson = {
+    id: '',
+    nome_completo: 'Selecione',
+    humano_ou_pet: 'Humano',
+  } as (typeof selectablePeople)[number];
+
+  const peopleWithPlaceholder = useMemo(
+    () => [placeholderPerson, ...selectablePeople],
+    [selectablePeople]
+  );
 
   const handleDiscoverConnection = () => {
     if (!personOneId || !personTwoId || connectionLoading) return;
@@ -122,7 +130,7 @@ export function CuriosidadesConnectionSection({
       {!error && !loading && selectablePeople.length >= 2 && (
         <div className="mt-5 min-w-0 overflow-hidden break-words">
           <ConnectionDiscoveryPanel
-            pessoas={selectablePeople}
+            pessoas={peopleWithPlaceholder}
             connectionPersonOneId={personOneId}
             connectionPersonTwoId={personTwoId}
             connectionLoading={connectionLoading}

@@ -12,6 +12,7 @@ import {
 
 export function CuriosidadesInterestsSection({
   pessoas,
+  profileBadgesByPersonId,
   loading,
   error,
 }: CuriosidadesDataProps) {
@@ -32,28 +33,26 @@ export function CuriosidadesInterestsSection({
       return;
     }
 
-    const firstStillExists = selectablePeople.some((pessoa) => pessoa.id === firstPersonId);
-    const nextFirstPersonId = firstStillExists ? firstPersonId : selectablePeople[0].id;
-
-    const secondCandidates = selectablePeople.filter((pessoa) => pessoa.id !== nextFirstPersonId);
-    const secondStillExists = secondCandidates.some((pessoa) => pessoa.id === secondPersonId);
-    const nextSecondPersonId = secondStillExists ? secondPersonId : secondCandidates[0]?.id ?? '';
-
-    if (nextFirstPersonId !== firstPersonId) {
-      setFirstPersonId(nextFirstPersonId);
+    if (firstPersonId && !selectablePeople.some((pessoa) => pessoa.id === firstPersonId)) {
+      setFirstPersonId('');
     }
 
-    if (nextSecondPersonId !== secondPersonId) {
-      setSecondPersonId(nextSecondPersonId);
+    if (secondPersonId && !selectablePeople.some((pessoa) => pessoa.id === secondPersonId)) {
+      setSecondPersonId('');
+    }
+
+    if (firstPersonId && secondPersonId && firstPersonId === secondPersonId) {
+      setSecondPersonId('');
     }
   }, [firstPersonId, secondPersonId, selectablePeople]);
 
-  const firstPerson = selectablePeople.find((pessoa) => pessoa.id === firstPersonId) ?? selectablePeople[0] ?? null;
-  const secondPerson = selectablePeople.find((pessoa) => pessoa.id === secondPersonId) ?? selectablePeople.find((pessoa) => pessoa.id !== firstPerson?.id) ?? null;
+  const firstPerson = selectablePeople.find((pessoa) => pessoa.id === firstPersonId) ?? null;
+  const secondPerson = selectablePeople.find((pessoa) => pessoa.id === secondPersonId) ?? null;
+  const hasSelectedBoth = Boolean(firstPerson && secondPerson);
 
-  const comparison = comparePeopleInterests(firstPerson, secondPerson);
-  const firstProfile = firstPerson ? getPersonInterestProfile(firstPerson) : null;
-  const secondProfile = secondPerson ? getPersonInterestProfile(secondPerson) : null;
+  const comparison = comparePeopleInterests(firstPerson, secondPerson, profileBadgesByPersonId);
+  const firstProfile = firstPerson ? getPersonInterestProfile(firstPerson, profileBadgesByPersonId) : null;
+  const secondProfile = secondPerson ? getPersonInterestProfile(secondPerson, profileBadgesByPersonId) : null;
 
   return (
     <section className={curiositySectionCardClassName}>
@@ -63,7 +62,7 @@ export function CuriosidadesInterestsSection({
       </div>
 
       <p className="mt-3 text-sm leading-6 text-gray-600">
-        Compare duas pessoas por profissão, cidades e interesses cadastrados nos perfis.
+        Compare duas pessoas pelas características, gostos e interesses preenchidos nos perfis.
       </p>
 
       {error && (
@@ -82,16 +81,17 @@ export function CuriosidadesInterestsSection({
         </div>
       )}
 
-      {!error && !loading && selectablePeople.length >= 2 && firstPerson && secondPerson && (
+      {!error && !loading && selectablePeople.length >= 2 && (
         <div className="mt-5 space-y-4">
           <div className="grid gap-3 sm:grid-cols-2">
             <label className="text-sm font-semibold text-gray-700">
               Pessoa 1
               <select
-                value={firstPerson.id}
+                value={firstPersonId}
                 onChange={(event) => setFirstPersonId(event.target.value)}
                 className="mt-2 w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm text-gray-800 outline-none focus:border-blue-300 focus:ring-2 focus:ring-blue-100"
               >
+                <option value="">Selecione</option>
                 {selectablePeople.map((pessoa) => (
                   <option key={pessoa.id} value={pessoa.id}>
                     {getPersonDisplayName(pessoa)}
@@ -103,12 +103,13 @@ export function CuriosidadesInterestsSection({
             <label className="text-sm font-semibold text-gray-700">
               Pessoa 2
               <select
-                value={secondPerson.id}
+                value={secondPersonId}
                 onChange={(event) => setSecondPersonId(event.target.value)}
                 className="mt-2 w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm text-gray-800 outline-none focus:border-blue-300 focus:ring-2 focus:ring-blue-100"
               >
+                <option value="">Selecione</option>
                 {selectablePeople
-                  .filter((pessoa) => pessoa.id !== firstPerson.id)
+                  .filter((pessoa) => pessoa.id !== firstPersonId)
                   .map((pessoa) => (
                     <option key={pessoa.id} value={pessoa.id}>
                       {getPersonDisplayName(pessoa)}
@@ -118,62 +119,72 @@ export function CuriosidadesInterestsSection({
             </label>
           </div>
 
-          <div className="rounded-xl border border-blue-100 bg-blue-50 p-4">
-            <div className="flex items-start gap-3">
-              <Sparkles className="mt-0.5 h-5 w-5 shrink-0 text-blue-700" />
-              <div>
-                <p className="text-sm font-bold text-blue-900">Afinidade estimada: {comparison.score}%</p>
-                <p className="mt-1 text-sm leading-6 text-blue-900">
-                  {comparison.common.length > 0
-                    ? `${getPersonDisplayName(firstPerson)} e ${getPersonDisplayName(secondPerson)} têm ${comparison.common.length} ponto(s) em comum.`
-                    : 'Ainda não foram encontrados interesses em comum nos dados cadastrados.'}
-                </p>
-              </div>
+          {!hasSelectedBoth && (
+            <div className="rounded-xl border border-dashed border-gray-200 bg-gray-50 px-4 py-5 text-sm text-gray-600">
+              Selecione duas pessoas para comparar características, gostos e interesses.
             </div>
-          </div>
+          )}
 
-          <div className="grid gap-3 sm:grid-cols-2">
-            {[firstProfile, secondProfile].map((profile) => (
-              profile && (
-                <article key={profile.pessoa.id} className="rounded-xl border border-gray-200 bg-gray-50 p-4">
-                  <div className="flex items-center gap-3">
-                    {profile.pessoa.foto_principal_url ? (
-                      <img src={profile.pessoa.foto_principal_url} alt="" className="h-10 w-10 rounded-full object-cover" />
-                    ) : (
-                      <span className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-blue-50 text-xs font-bold text-blue-700">
-                        {getInitials(profile.pessoa.nome_completo)}
-                      </span>
-                    )}
-                    <p className="min-w-0 truncate font-bold text-gray-950">{getPersonDisplayName(profile.pessoa)}</p>
+          {hasSelectedBoth && firstPerson && secondPerson && (
+            <>
+              <div className="rounded-xl border border-blue-100 bg-blue-50 p-4">
+                <div className="flex items-start gap-3">
+                  <Sparkles className="mt-0.5 h-5 w-5 shrink-0 text-blue-700" />
+                  <div>
+                    <p className="text-sm font-bold text-blue-900">Afinidade estimada: {comparison.score}%</p>
+                    <p className="mt-1 text-sm leading-6 text-blue-900">
+                      {comparison.common.length > 0
+                        ? `${getPersonDisplayName(firstPerson)} e ${getPersonDisplayName(secondPerson)} têm ${comparison.common.length} ponto(s) em comum.`
+                        : 'Ainda não foram encontradas características em comum nos dados cadastrados.'}
+                    </p>
                   </div>
+                </div>
+              </div>
 
+              <div className="grid gap-3 sm:grid-cols-2">
+                {[firstProfile, secondProfile].map((profile) => (
+                  profile && (
+                    <article key={profile.pessoa.id} className="rounded-xl border border-gray-200 bg-gray-50 p-4">
+                      <div className="flex items-center gap-3">
+                        {profile.pessoa.foto_principal_url ? (
+                          <img src={profile.pessoa.foto_principal_url} alt="" className="h-10 w-10 rounded-full object-cover" />
+                        ) : (
+                          <span className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-blue-50 text-xs font-bold text-blue-700">
+                            {getInitials(profile.pessoa.nome_completo)}
+                          </span>
+                        )}
+                        <p className="min-w-0 truncate font-bold text-gray-950">{getPersonDisplayName(profile.pessoa)}</p>
+                      </div>
+
+                      <div className="mt-3 flex flex-wrap gap-2">
+                        {profile.interests.slice(0, 8).map((interest) => (
+                          <span key={interest} className="rounded-full border border-gray-200 bg-white px-2.5 py-1 text-xs font-semibold text-gray-700">
+                            {interest}
+                          </span>
+                        ))}
+
+                        {profile.interests.length === 0 && (
+                          <span className="text-sm text-gray-500">Sem características cadastradas.</span>
+                        )}
+                      </div>
+                    </article>
+                  )
+                ))}
+              </div>
+
+              {comparison.common.length > 0 && (
+                <div className="rounded-xl border border-gray-200 bg-gray-50 p-4">
+                  <p className="text-sm font-bold text-gray-950">Pontos em comum</p>
                   <div className="mt-3 flex flex-wrap gap-2">
-                    {profile.interests.slice(0, 8).map((interest) => (
-                      <span key={interest} className="rounded-full border border-gray-200 bg-white px-2.5 py-1 text-xs font-semibold text-gray-700">
+                    {comparison.common.map((interest) => (
+                      <span key={interest} className="rounded-full border border-green-200 bg-green-50 px-2.5 py-1 text-xs font-semibold text-green-800">
                         {interest}
                       </span>
                     ))}
-
-                    {profile.interests.length === 0 && (
-                      <span className="text-sm text-gray-500">Sem interesses cadastrados.</span>
-                    )}
                   </div>
-                </article>
-              )
-            ))}
-          </div>
-
-          {comparison.common.length > 0 && (
-            <div className="rounded-xl border border-gray-200 bg-gray-50 p-4">
-              <p className="text-sm font-bold text-gray-950">Pontos em comum</p>
-              <div className="mt-3 flex flex-wrap gap-2">
-                {comparison.common.map((interest) => (
-                  <span key={interest} className="rounded-full border border-green-200 bg-green-50 px-2.5 py-1 text-xs font-semibold text-green-800">
-                    {interest}
-                  </span>
-                ))}
-              </div>
-            </div>
+                </div>
+              )}
+            </>
           )}
         </div>
       )}

@@ -1,4 +1,4 @@
-﻿import { HeartHandshake, Medal } from 'lucide-react';
+import { HeartHandshake, Medal } from 'lucide-react';
 import {
   buildCoupleAnniversaries,
   curiositySectionCardClassName,
@@ -22,7 +22,7 @@ export function CuriosidadesCouples({
         <div>
           <div className="flex items-center gap-3">
             <HeartHandshake className="h-5 w-5 text-blue-700" />
-            <h2 className="text-xl font-bold text-gray-950">Bodas e vínculos</h2>
+            <h2 className="text-xl font-bold text-gray-950">Bodas</h2>
           </div>
           <p className="mt-3 text-sm leading-6 text-gray-600">
             Casais com datas de casamento registradas e marcos importantes da história familiar.
@@ -64,8 +64,7 @@ export function CuriosidadesCouples({
                 <div className="min-w-0 flex-1">
                   <p className="font-bold leading-6 text-gray-950">{couple.coupleName}</p>
                   <p className="mt-1 text-sm text-gray-600">
-                    {couple.years} {couple.years === 1 ? 'ano' : 'anos'} de casamento
-                    {couple.weddingDateLabel ? ` · ${couple.weddingDateLabel}` : ''}
+                    {couple.durationLabel}
                   </p>
                   {couple.milestone && (
                     <p className="mt-3 rounded-lg border border-blue-100 bg-blue-50 px-3 py-2 text-sm font-semibold text-blue-800">
