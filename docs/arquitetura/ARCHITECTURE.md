@@ -468,3 +468,11 @@ A arquitetura server-side da IA deve preservar:
 ### 15.5 Onboarding e fatos históricos
 
 Após a frente de fatos históricos, arquivos sem anexo devem ser tratados como registros históricos textuais, não como objetos de Storage. Qualquer dependência de `url`, `storage_bucket`, `storage_path` ou `mime_type` obrigatórios deve ser resolvida por migration antes de deploy do frontend dependente.
+
+## Atualização 2026-06-22 — IA, vínculos e timeline
+
+- Questionário de perfil persistido alimenta geração de Mini Bio e Curiosidades.
+- `MeusVinculosWithProfileBio` exibe/permite edição dos textos, mas o salvamento ocorre ao avançar.
+- `arquivos_historicos` é fonte única para fatos sem arquivo e arquivos históricos.
+- `buildPersonTimeline` deve transformar fatos sem anexo em itens de timeline distintos de arquivos.
+- `MemberPageHeader` pode ocultar ações em contexto de onboarding sem alterar páginas finais.

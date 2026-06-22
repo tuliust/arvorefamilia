@@ -707,3 +707,23 @@ Correção:
 4. conferir headers;
 5. garantir `/api/*` antes do fallback SPA;
 6. não alterar código funcional para mascarar cache.
+
+## Atualização 2026-06-22 — Erros recentes
+
+### `ReferenceError: MapPin is not defined` em `/meus-dados`
+
+Sintoma:
+
+```txt
+ReferenceError: MapPin is not defined
+```
+
+Causa provável: uso de `<SectionTitle icon={MapPin}>` sem importar `MapPin` de `lucide-react`.
+
+Correção:
+
+```tsx
+import { MapPin } from 'lucide-react';
+```
+
+Observação: `vite build` pode passar mesmo com esse erro se não houver typecheck completo. Validar também a rota em runtime.

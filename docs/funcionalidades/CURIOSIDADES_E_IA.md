@@ -773,3 +773,20 @@ mas a IA deve interpretá-los como pets/tutela, não como filhos humanos.
 | `AI-002` | filtrar telefone/rede social antes de montar contexto | privacidade |
 | `AI-003` | adicionar teste unitário para perguntas de ascendência sem gênero explícito | QA |
 | `AI-004` | revisar `api/ai.ts` para reforçar regra de não inventar fatos | segurança |
+
+## Atualização 2026-06-22 — Prompts 7A e 7D
+
+### Prompt 7A + 7D — questionário, geração e limites
+
+- O questionário de perfil em `/meus-dados` é a fonte principal para geração de Mini Bio e Curiosidades.
+- A pergunta inicial é `Qual é o seu estilo?`.
+- `Nostálgico` é apenas um tom. Ele não define sozinho que a pessoa é falecida.
+- O modo memorial é controlado pelo toggle `Você está escrevendo o perfil de uma pessoa falecida?`.
+- Qualquer tom deve funcionar para pessoa falecida; nesse caso a IA deve escrever com verbos no passado e evitar primeira pessoa.
+- Etapas `Outras características` e `Perguntas opcionais` foram removidas. O fluxo tem 8 etapas.
+- A última etapa não exibe botão `Avançar`; o fechamento ocorre por `Confirmar meus dados`.
+- Mini Bio e Curiosidades aceitam até 500 caracteres cada.
+- A IA deve tentar gerar cerca de 400–450 caracteres por campo.
+- Os textos não precisam iniciar com `Sou [Nome]` ou `[Nome] foi`, porque o nome já aparece no perfil.
+- O contexto de IA pode considerar, quando disponível e seguro: idade aproximada, nascimento/falecimento, profissão, relacionamentos, fatos históricos e respostas do questionário.
+- Não enviar telefone, endereço, WhatsApp, redes sociais privadas, URLs de storage, base64 ou metadados sensíveis para a IA.

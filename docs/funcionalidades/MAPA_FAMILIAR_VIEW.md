@@ -503,3 +503,16 @@ Pendências relacionadas aos mapas mobile usam prefixo `MAP-MOB` para não confl
 | `MAP-MOB-004` | confirmar mapeamento do overview da horizontal por geração ativa/visível |
 | `MAP-MOB-005` | confirmar overlay opaco do painel `+` em iPhone/Safari |
 | `MAP-MOB-006` | decidir destino de `mobileFamilyMapOverviewNavigationBridge.ts`, hoje existente mas não carregado |
+
+## Atualização 2026-06-22 — Prompt 6A
+
+### Prompt 6A — mapa familiar desktop
+
+- Dropdown do painel deve exibir `Família de [Nome]`, priorizando a pessoa vinculada/visualizada.
+- Seleção manual via query string ou seletor deve ser preservada.
+- Card `Cadastrados` deve usar `user_person_links` como fonte conceitual. Não usar fallback silencioso para `1` caso RLS limite leitura.
+- Tour revisado:
+  - `Inteligência artificial e datas importantes` cobre Curiosidades + Calendário.
+  - `Guarde os seus destaques` cobre Favoritos/estrela.
+- Layout compacto existe somente para árvores pequenas e simples no desktop vertical. Árvores complexas seguem layout padrão.
+- Scripts mobile e `index.html` permanecem fora do escopo.

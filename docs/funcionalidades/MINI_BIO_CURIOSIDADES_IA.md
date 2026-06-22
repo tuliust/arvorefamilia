@@ -1322,3 +1322,20 @@ A geração de Mini Bio e Curiosidades deve seguir estas restrições:
 | Sensibilidade | Evitar detalhar conflitos, doenças, uso de substâncias, finanças ou temas íntimos se o usuário não pedir explicitamente. |
 
 A IA pode melhorar redação, tom e concisão, mas não deve aumentar o conteúdo factual além do que foi informado.
+
+## Atualização 2026-06-22 — Prompts 7A e 7D
+
+### Prompt 7A + 7D — questionário, geração e limites
+
+- O questionário de perfil em `/meus-dados` é a fonte principal para geração de Mini Bio e Curiosidades.
+- A pergunta inicial é `Qual é o seu estilo?`.
+- `Nostálgico` é apenas um tom. Ele não define sozinho que a pessoa é falecida.
+- O modo memorial é controlado pelo toggle `Você está escrevendo o perfil de uma pessoa falecida?`.
+- Qualquer tom deve funcionar para pessoa falecida; nesse caso a IA deve escrever com verbos no passado e evitar primeira pessoa.
+- Etapas `Outras características` e `Perguntas opcionais` foram removidas. O fluxo tem 8 etapas.
+- A última etapa não exibe botão `Avançar`; o fechamento ocorre por `Confirmar meus dados`.
+- Mini Bio e Curiosidades aceitam até 500 caracteres cada.
+- A IA deve tentar gerar cerca de 400–450 caracteres por campo.
+- Os textos não precisam iniciar com `Sou [Nome]` ou `[Nome] foi`, porque o nome já aparece no perfil.
+- O contexto de IA pode considerar, quando disponível e seguro: idade aproximada, nascimento/falecimento, profissão, relacionamentos, fatos históricos e respostas do questionário.
+- Não enviar telefone, endereço, WhatsApp, redes sociais privadas, URLs de storage, base64 ou metadados sensíveis para a IA.

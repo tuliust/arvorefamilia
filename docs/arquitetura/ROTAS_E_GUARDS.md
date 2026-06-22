@@ -524,3 +524,15 @@ Alterações em `routes.tsx`, `treeViewMode.ts`, `HomeTreeSection.tsx`, `HomeMob
 ```
 
 Não usar `/minha-arvore`, `/genealogia` ou `/visao-completa` como fallback operacional.
+
+## Atualização 2026-06-22 — Onboarding e headers
+
+Rotas do onboarding com header sem ações à direita:
+
+- `/meus-dados`
+- `/meus-vinculos`
+- `/arquivos-historicos`
+- `/preferencias`
+- `/revisao-dados`
+
+Pessoa falecida continua pulando `/preferencias` e seguindo para `/revisao-dados`.

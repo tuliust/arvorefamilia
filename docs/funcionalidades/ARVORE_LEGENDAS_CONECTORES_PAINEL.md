@@ -584,3 +584,10 @@ Regras:
 - conectores devem permanecer visualmente legÃ­veis;
 - destaque de linhas deve auxiliar leitura sem competir com os cards;
 - qualquer dica/sticker deve ser contextual e nÃ£o permanente quando atrapalhar navegaÃ§Ã£o.
+
+## Atualização 2026-06-22 — Painel do mapa
+
+- Dropdown de visualização deve mostrar `Família de [Nome]`.
+- Contagem `Cadastrados` depende de `user_person_links`.
+- Layout compacto de árvore pequena é regra de apresentação, não de dados.
+- Tour passa a ter etapa separada para favoritos.

@@ -646,3 +646,23 @@ Pendências:
 ### Admin e pessoa falecida
 
 - A decisão sobre ocultar ou manter contato/privacidade de pessoa falecida no admin ainda deve refletir o código atual antes de virar regra definitiva.
+
+## Atualização 2026-06-22 — Pendências após fechamento funcional
+
+### Concluído neste ciclo
+
+- Mapa familiar desktop: dropdown, tour, cadastrados, layout compacto.
+- Questionário e geração de Mini Bio/Curiosidades.
+- Pets separados de filhos.
+- Cônjuge ativo único no estado local.
+- Fatos sem arquivo integrados à timeline.
+- Headers de onboarding sem ações.
+- Limite de 500 caracteres para textos de perfil.
+
+### Pendências recomendadas
+
+1. QA visual completo em mobile e desktop para `/meus-dados` e `/meus-vinculos`.
+2. Confirmar em produção/preview que migrations foram aplicadas.
+3. Validar RLS de `user_person_links`, `person_profile_questionnaire_answers` e `arquivos_historicos`.
+4. Avaliar typecheck dedicado (`tsc --noEmit`) para capturar erros como import ausente de ícone.
+5. Definir se o seletor `Visualizar como...` do mapa vira recurso final ou permanece debug/QA (`TREE-005`).

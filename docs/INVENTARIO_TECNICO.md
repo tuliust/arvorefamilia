@@ -487,3 +487,14 @@ Na branch auditada:
 | `/arquivos-historicos` | Ainda exige arquivo na UI atual; evolução para fatos sem arquivo depende de alteração/migration. |
 | `arquivosHistoricosService.ts` | Possui fallback para ausência de `participante_ids`; não tratar participantes como obrigatório sem migration e QA. |
 | `MemberOnboardingSteps` | Pode permitir clique direto em `/preferencias`; pessoa falecida deve continuar sendo corrigida pela própria página de preferências/guard. |
+
+## Atualização 2026-06-22 — Arquivos impactados no ciclo
+
+### Principais arquivos alterados por frente
+
+- Mapa/painel: `Home.tsx`, `DesktopTreeVisualizationPanel.tsx`, `HomeTreeSection.tsx`, `FirstLoginTutorial.tsx`, `DesktopFamilyMapView.tsx`, `memberProfileService.ts`, `home-sidebar-unified.css`.
+- Questionário/IA: `MeusDados.tsx`, `MeusVinculosWithProfileBio.tsx`, `profileQuestionnaireService.ts`, `profileQuestionnaireConfig.ts`, `api/ai.ts`.
+- Vínculos: `MeusVinculos.tsx`, `RelationshipGroupPanel.tsx`, `RelationshipOverview.tsx`, `RelativeCard.tsx`, `meusVinculosUtils.ts`, `dataService.ts`, `relationshipChangeRequestService.ts`.
+- Fatos/timeline: `ArquivosHistoricos.tsx`, `ArquivosHistoricosPage.tsx`, `RevisaoDados.tsx`, `arquivosHistoricosService.ts`, `PersonTimeline.tsx`, `buildPersonTimeline.ts`.
+- Header/onboarding: `MemberPageHeader.tsx`, páginas de onboarding.
+- Migrations: questionário de perfil e fatos sem arquivo.

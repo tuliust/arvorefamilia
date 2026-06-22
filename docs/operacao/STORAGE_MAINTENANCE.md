@@ -361,3 +361,10 @@ Com upload opcional, há três casos distintos:
 | upload concluído e formulário abandonado | objeto possivelmente órfão | sem registro correspondente |
 
 Apenas o terceiro caso deve aparecer como possível órfão em diagnóstico.
+
+## Atualização 2026-06-22 — Fatos sem arquivo
+
+- Storage é opcional para `arquivos_historicos`.
+- Fatos sem arquivo não devem tentar upload nem limpeza de bucket.
+- Arquivos com imagem/PDF continuam usando bucket `historical-files`.
+- Registros sem anexo podem ter `url`, `storage_bucket`, `storage_path` e `mime_type` nulos.

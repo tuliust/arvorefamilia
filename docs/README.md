@@ -372,3 +372,15 @@ docs/operacao/QA_MAPAS_MOBILE_2026_06_21.md
 ```
 
 Se o Prompt 6 não for explicitamente mobile-safe, tratar como risco de regressão.
+
+## Atualização 2026-06-22 — ciclo de fechamento funcional
+
+Este ciclo consolidou o onboarding de perfil, vínculos, fatos históricos e mapa familiar. A documentação atualizada cobre:
+
+- levantamento de commits e frentes em `docs/historico/LEVANTAMENTO_AJUSTES_CHAT_20260622.md`;
+- Mini Bio/Curiosidades e IA;
+- Meus Vínculos;
+- Fatos e Arquivos Históricos;
+- Revisão de Dados;
+- Mapa Familiar View;
+- QA manual e operação/deploy.

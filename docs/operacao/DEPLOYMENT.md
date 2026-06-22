@@ -545,3 +545,22 @@ Mesmo assim, a causa operacional deve ser corrigida:
 - fallback SPA não respondendo HTML para JS inexistente;
 - Vercel/preview apontando para commit esperado;
 - Safari/iOS testado em janela privada quando necessário.
+
+## Atualização 2026-06-22 — Deploy pós-ciclo
+
+Antes do deploy:
+
+```powershell
+git diff --check
+npm run build
+```
+
+Depois do deploy:
+
+- validar `/meus-dados` em runtime;
+- validar geração de IA para pessoa viva e falecida;
+- validar `/meus-vinculos` e salvamento ao avançar;
+- validar fato sem arquivo em timeline;
+- validar `/mapa-familiar` com árvore pequena.
+
+O erro `MapPin is not defined` deve ser testado em runtime porque pode não quebrar `vite build`.

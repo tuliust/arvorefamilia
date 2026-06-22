@@ -427,3 +427,14 @@ Pendência operacional relacionada:
 - tabela de cidades;
 - backfill;
 - geocoding posterior.
+
+## Atualização 2026-06-22 — Migrations aplicadas no ciclo
+
+- `20260622120000_create_person_profile_questionnaire_answers.sql`: tabela de respostas do questionário de perfil com RLS por vínculo editável.
+- `20260622170000_allow_historical_facts_without_file.sql`: permite fatos históricos sem anexo em `arquivos_historicos`.
+
+Regras:
+
+- Não criar nova tabela para fatos históricos enquanto `arquivos_historicos` atender ao caso.
+- Não tornar `participante_ids` obrigatório sem migration/backfill.
+- Sempre aplicar migrations antes de validar fluxo em preview/produção.

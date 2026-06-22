@@ -781,3 +781,56 @@ Regra planejada para `/arquivos-historicos`:
 - o usuário deve poder registrar fato/memória sem arquivo;
 - upload de imagem/PDF deve continuar disponível, mas opcional;
 - não exibir obrigação visual de arquivo quando o schema já aceitar item sem arquivo.
+
+## Atualização 2026-06-22 — Prompt 7D
+
+### Prompt 7D — headers do onboarding
+
+Nas páginas abaixo, `MemberPageHeader` não deve exibir ações à direita durante o fluxo de onboarding:
+
+- `/meus-dados`
+- `/meus-vinculos`
+- `/arquivos-historicos`
+- `/preferencias`
+- `/revisao-dados`
+
+O header deve preservar somente:
+
+- ícone/imagem à esquerda;
+- título;
+- subtítulo.
+
+A capacidade foi consolidada com propriedade específica no componente de header para ocultar ações nesse contexto, sem afetar headers das páginas finais do produto.
+
+
+
+### Prompt 7A + 7D — questionário, geração e limites
+
+- O questionário de perfil em `/meus-dados` é a fonte principal para geração de Mini Bio e Curiosidades.
+- A pergunta inicial é `Qual é o seu estilo?`.
+- `Nostálgico` é apenas um tom. Ele não define sozinho que a pessoa é falecida.
+- O modo memorial é controlado pelo toggle `Você está escrevendo o perfil de uma pessoa falecida?`.
+- Qualquer tom deve funcionar para pessoa falecida; nesse caso a IA deve escrever com verbos no passado e evitar primeira pessoa.
+- Etapas `Outras características` e `Perguntas opcionais` foram removidas. O fluxo tem 8 etapas.
+- A última etapa não exibe botão `Avançar`; o fechamento ocorre por `Confirmar meus dados`.
+- Mini Bio e Curiosidades aceitam até 500 caracteres cada.
+- A IA deve tentar gerar cerca de 400–450 caracteres por campo.
+- Os textos não precisam iniciar com `Sou [Nome]` ou `[Nome] foi`, porque o nome já aparece no perfil.
+- O contexto de IA pode considerar, quando disponível e seguro: idade aproximada, nascimento/falecimento, profissão, relacionamentos, fatos históricos e respostas do questionário.
+- Não enviar telefone, endereço, WhatsApp, redes sociais privadas, URLs de storage, base64 ou metadados sensíveis para a IA.
+
+
+
+### Prompt 7B + 7D — vínculos, pets, cônjuges e UX
+
+- `Pets` é grupo próprio e não deve ser misturado com `Filhos`.
+- Pessoa com `humano_ou_pet: 'Pet'` deve ser removida de grupos humanos durante a normalização.
+- Criação manual de pet deve usar `humano_ou_pet: 'Pet'`.
+- Estado local deve manter no máximo um cônjuge ativo. Ao marcar/adicionar um cônjuge ativo, os demais ficam inativos no estado local.
+- Badge `Cadastrado` depende de vínculo real em `user_person_links`; caso contrário, usar `Pré-cadastrado`.
+- Alterações de vínculo seguem como solicitação pendente em `relationship_change_requests`, não como relacionamento definitivo direto.
+- Botões inferiores de adicionar em estado vazio foram removidos; manter apenas botão superior do grupo.
+- `Sobre mim` fica fora do box de textos gerados, com maior hierarquia visual e ícone.
+- `Familiares de [Nome]` fica fora do container, com maior hierarquia visual e ícone/avatar.
+- Botão `Salvar textos` foi removido; textos editados são salvos quando o usuário avança.
+- Rótulo de irmã deve respeitar gênero feminino (`Irmã`), evitando `Irmão(a)` quando houver sinal de gênero.

@@ -566,3 +566,27 @@ docs/arquitetura/MAPA_FAMILIAR_MOBILE_ARQUITETURA.md
 - `url`, `storage_bucket`, `storage_path` e `mime_type` não devem ser assumidos como obrigatórios depois da migration correspondente;
 - scripts de limpeza de Storage não devem apagar ou tentar reconciliar registros sem arquivo;
 - migration deve ser aplicada antes do frontend depender do comportamento.
+
+## ADR-016 — Questionário de perfil em 8 etapas e memorial por toggle
+
+**Decisão:** o tom `Nostálgico` deixa de ser gatilho de pessoa falecida. O modo memorial passa a ser definido pelo toggle `Você está escrevendo o perfil de uma pessoa falecida?`.
+
+**Motivo:** permitir qualquer estilo textual para pessoa falecida e evitar acoplamento semântico entre tom e estado civil/vital.
+
+**Consequências:**
+
+- IA deve respeitar modo memorial independentemente do tom.
+- Textos para pessoa falecida usam passado e terceira pessoa.
+- Textos para pessoa viva seguem em primeira pessoa, salvo nova decisão de produto.
+
+## ADR-017 — Fatos históricos sem arquivo em `arquivos_historicos`
+
+**Decisão:** não criar tabela nova para fatos históricos neste ciclo. Usar `arquivos_historicos` com campos de anexo opcionais.
+
+**Motivo:** reduzir escopo e aproveitar a integração já existente com perfil, revisão e timeline.
+
+**Consequências:**
+
+- UI deve distinguir `Fato` de `Arquivo` pela presença de `url`.
+- Storage é opcional.
+- Migration deve permitir anexo nulo.

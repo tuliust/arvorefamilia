@@ -938,3 +938,12 @@ QA manual mínimo:
 - Componentes visuais nÃ£o devem embutir decisÃµes de schema.
 - Componentes de mapas precisam preservar separaÃ§Ã£o entre desktop, mobile e tablet.
 - Slots de aÃ§Ã£o sÃ£o preferÃ­veis a duplicar cards quando um bloco precisa receber favoritar/compartilhar.
+
+## Atualização 2026-06-22 — Componentes impactados
+
+- `MemberPageHeader`: suporta ocultação de ações no onboarding.
+- `RelationshipGroupPanel`: estado vazio sem botão inferior duplicado.
+- `RelationshipOverview`: título/introdução deslocados para fora do container.
+- `MeusVinculosWithProfileBio`: limite de 500 caracteres, sem botão `Salvar textos`, salvamento ao avançar.
+- `MeusDados`: questionário reduzido para 8 etapas e pergunta inicial alterada.
+- `PersonTimeline`: diferencia `Fato` de `Arquivo` para registros históricos.

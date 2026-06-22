@@ -628,3 +628,33 @@ Checklist específico:
 - [ ] se mostrar, registrar como comportamento atual do código;
 - [ ] se a decisão de produto for remover, abrir frente de código específica;
 - [ ] não aprovar documentação dizendo “sem Exportar” se a UI continuar exibindo Exportar.
+
+## Atualização 2026-06-22 — Roteiro de QA pós-7D
+
+### Onboarding
+
+1. `/meus-dados`: validar pergunta `Qual é o seu estilo?`.
+2. `/meus-dados`: validar que `Nostálgico` não força modo memorial.
+3. `/meus-dados`: marcar toggle de pessoa falecida e validar geração em passado com qualquer tom.
+4. `/meus-dados`: confirmar que existem 8 etapas e que a última não tem `Avançar`.
+5. `/meus-dados`: validar limite visual e funcional de 500 caracteres.
+6. `/meus-vinculos`: validar ausência de `Salvar textos` e salvamento ao avançar.
+7. `/meus-vinculos`: validar títulos fora dos cards.
+8. `/meus-vinculos`: validar grupos vazios sem botão inferior duplicado.
+9. `/meus-vinculos`: validar `Irmã` para pessoa feminina.
+10. Todas as páginas de onboarding: validar header sem ações à direita.
+
+### Mapa familiar
+
+1. Validar dropdown `Família de [Nome]`.
+2. Validar contagem de `Cadastrados`.
+3. Validar tour por `?tutorial=1`.
+4. Validar layout compacto para árvore pequena.
+
+### Fatos e arquivos
+
+1. Salvar fato sem arquivo.
+2. Salvar imagem histórica.
+3. Salvar PDF histórico.
+4. Confirmar exibição correta em `/revisao-dados`.
+5. Confirmar integração à timeline do perfil.
