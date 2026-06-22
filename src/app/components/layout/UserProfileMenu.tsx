@@ -391,10 +391,23 @@ export function UserProfileMenu({ variant = 'avatar' }: UserProfileMenuProps) {
 
                 <div className="my-2 border-t border-gray-100" />
 
-                <button type="button" className={`${itemClassName} text-red-700 hover:bg-red-50 hover:text-red-800`} onClick={handleSignOut}>
-                  <LogOut className="h-5 w-5" />
-                  Sair
-                </button>
+                <div className="flex items-center justify-between gap-3 px-1 pt-1">
+                  <button
+                    type="button"
+                    className="rounded-xl px-3 py-2 text-sm font-semibold text-gray-800 transition hover:bg-blue-50 hover:text-blue-800"
+                    onClick={() => goTo('/duvidas')}
+                  >
+                    Dúvidas?
+                  </button>
+                  <button
+                    type="button"
+                    className="inline-flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold text-red-700 transition hover:bg-red-50 hover:text-red-800"
+                    onClick={handleSignOut}
+                  >
+                    <LogOut className="h-5 w-5" />
+                    Sair
+                  </button>
+                </div>
               </div>
             )}
           </div>
