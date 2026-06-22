@@ -293,7 +293,6 @@ export function DesktopTreeVisualizationPanel({
 
               <div className="desktop-tree-family-group-row-list">
                 {section.rows.map((row) => {
-                  const Icon = row.icon;
                   const active = getGroupActive(directRelativeFilters, row.keys);
 
                   return (
@@ -306,9 +305,6 @@ export function DesktopTreeVisualizationPanel({
                       onClick={() => handleGroupToggle(row.keys)}
                       title={active ? `Ocultar ${row.label}` : `Mostrar ${row.label}`}
                     >
-                      <span className="desktop-tree-family-group-icon">
-                        <Icon />
-                      </span>
                       <span>{row.label}</span>
                       <strong>{getGroupCount(directRelationCounts, row.keys)}</strong>
                     </button>

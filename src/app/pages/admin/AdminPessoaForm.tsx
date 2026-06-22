@@ -25,7 +25,6 @@ import {
 } from '../../services/arquivosHistoricosService';
 import {
   listarEventosDaPessoa,
-  salvarEventosDaPessoa,
 } from '../../services/personEventsService';
 import {
   buildSocialProfilesFromRows,
@@ -65,7 +64,6 @@ import { PersonBasicInfoFields } from '../../components/person/PersonBasicInfoFi
 import { PersonBioFields } from '../../components/person/PersonBioFields';
 import { PersonContactFields } from '../../components/person/PersonContactFields';
 import { PersonDatesLocationsFields } from '../../components/person/PersonDatesLocationsFields';
-import { PersonEventsEditor } from '../../components/person/PersonEventsEditor';
 import { PersonPrivacyFields } from '../../components/person/PersonPrivacyFields';
 import {
   createEmptyMarriageDetails,
@@ -539,12 +537,6 @@ export function AdminPessoaForm() {
         toast.error(Object.values(validationErrors)[0] ?? 'Revise os campos antes de salvar.');
         return;
       }
-      const invalidEvent = personEvents.find((event) => !event.titulo.trim());
-      if (invalidEvent) {
-        toast.error('Informe o título de todos os eventos da vida ou remova os eventos vazios.');
-        return;
-      }
-
       let pessoaCriada: Pessoa | undefined;
 
       if (isEdit && id) {
@@ -611,8 +603,6 @@ export function AdminPessoaForm() {
             : 'Pessoa salva, mas não foi possível salvar redes sociais versionadas.',
         );
       }
-      await salvarEventosDaPessoa(pessoaCriada.id, personEvents);
-
       const snapshotAtual = JSON.stringify({
         formData: {
           ...formData,
@@ -635,11 +625,6 @@ export function AdminPessoaForm() {
     } finally {
       setIsSubmitting(false);
     }
-  };
-
-  const handlePersonEventsChange = (eventos: PersonEvent[]) => {
-    markDraftDirty();
-    setPersonEvents(eventos);
   };
 
   const handleChange = (field: string, value: string | boolean | ArquivoHistorico[]) => {
@@ -1030,18 +1015,6 @@ export function AdminPessoaForm() {
             }))}
             draftStorageKey={`admin-pessoa-arquivo-historico:${id ?? 'nova'}`}
           />
-
-            <Card className="min-w-0">
-              <CardHeader>
-                <CardTitle className="break-words">Eventos da vida</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <PersonEventsEditor
-                eventos={personEvents}
-                onChange={handlePersonEventsChange}
-              />
-            </CardContent>
-          </Card>
 
           {!isEdit && (
             <Card className="min-w-0">

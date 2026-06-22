@@ -520,7 +520,12 @@ export function ArquivosHistoricos({
         {(showTitle || !readOnly || onRequestAdd) && (
           <CardHeader>
             <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-              {showTitle ? <CardTitle className="break-words">Fatos e Arquivos Históricos</CardTitle> : <div />}
+              {showTitle ? (
+                <CardTitle className="flex items-center gap-2 break-words">
+                  <ScrollText className="h-5 w-5 shrink-0 text-blue-600" />
+                  Fatos e Arquivos Históricos
+                </CardTitle>
+              ) : <div />}
               {variant === 'default' && (!readOnly || onRequestAdd) && (
                 <Button
                   type="button"

@@ -226,7 +226,7 @@ function toServiceRecord(row: ProfileQuestionnaireRow): PersonProfileQuestionnai
     answers: row.answers,
     memorialMode: row.memorial_mode,
     lastGeneratedHash: row.last_generated_hash,
-  });
+  } as ProfileQuestionnairePersistedPayload);
 
   return {
     ...normalized,
@@ -271,6 +271,37 @@ export async function getProfileQuestionnaireAnswers(
   return {
     error: undefined,
     data: data ? toServiceRecord(data as ProfileQuestionnaireRow) : null,
+  };
+}
+
+export async function getProfileQuestionnaireSelectedBadges(
+  pessoaId: string,
+): Promise<ServiceResult<ProfileQuestionnaireSelectableOption[]>> {
+  const { data: rpcData, error: rpcError } = await supabase.rpc('get_person_profile_selected_badges', {
+    target_pessoa_id: pessoaId,
+  });
+
+  if (!rpcError) {
+    return {
+      error: undefined,
+      data: normalizeBadges(rpcData),
+    };
+  }
+
+  const { data, error } = await supabase
+    .from(PROFILE_QUESTIONNAIRE_TABLE)
+    .select('selected_badges')
+    .eq('pessoa_id', pessoaId)
+    .limit(1)
+    .maybeSingle();
+
+  if (error) {
+    return { error: rpcError.message || error.message, data: [] };
+  }
+
+  return {
+    error: undefined,
+    data: normalizeBadges((data as Pick<ProfileQuestionnaireRow, 'selected_badges'> | null)?.selected_badges),
   };
 }
 

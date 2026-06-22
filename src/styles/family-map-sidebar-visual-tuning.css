@@ -15,6 +15,8 @@
     order: 2 !important;
     appearance: none !important;
     -webkit-appearance: none !important;
+    color: #0f2348 !important;
+    line-height: 1.15 !important;
     padding-right: clamp(2.35rem, 5vh, 2.85rem) !important;
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='%230f2348' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E") !important;
     background-repeat: no-repeat !important;
@@ -23,7 +25,7 @@
   }
 
   .desktop-tree-view-select:has(option[value='']:checked) {
-    color: transparent !important;
+    color: #0f2348 !important;
   }
 
   .desktop-tree-view-select option {
@@ -35,7 +37,9 @@
   }
 
   .desktop-tree-visualization-panel:has(.desktop-tree-view-select option[value='']:checked)::before {
-    content: 'Família de Tulius';
+    content: none !important;
+    display: none !important;
+    /*
     position: absolute;
     left: calc(clamp(0.46rem, 1.02vh, 0.68rem) + 0.78rem);
     right: calc(clamp(0.46rem, 1.02vh, 0.68rem) + 2.75rem);
@@ -54,6 +58,7 @@
     text-overflow: ellipsis;
     white-space: nowrap;
     pointer-events: none;
+    */
   }
 
   .desktop-tree-palette-row {
@@ -462,4 +467,51 @@ html[data-tree-color-palette='visual'] [data-family-map-color-key='netos'] {
 html[data-tree-color-palette='visual'] [data-family-map-color-key='pets'] {
   --family-map-card-bg-spouse: linear-gradient(180deg, #a7f3d0 0%, #059669 100%);
   --family-map-card-border-spouse: rgba(167, 243, 208, 0.9);
+}
+
+@media (min-width: 768px) {
+  .desktop-tree-family-groups {
+    gap: clamp(0.32rem, 0.64vw, 0.72rem) !important;
+  }
+
+  .desktop-tree-family-group-card {
+    padding: clamp(0.34rem, 0.7vh, 0.54rem) !important;
+  }
+
+  .desktop-tree-family-group-card h4 {
+    margin-bottom: clamp(0.18rem, 0.42vh, 0.32rem) !important;
+    font-size: clamp(0.68rem, 1.34vh, 0.86rem) !important;
+    font-weight: 720 !important;
+  }
+
+  .desktop-tree-family-group-row-list {
+    gap: clamp(0.14rem, 0.36vh, 0.28rem) !important;
+  }
+
+  .desktop-tree-family-group-row {
+    grid-template-columns: minmax(0, 1fr) auto !important;
+    min-height: clamp(1.12rem, 2.28vh, 1.36rem) !important;
+    gap: clamp(0.18rem, 0.36vw, 0.34rem) !important;
+    padding: 0.08rem 0.12rem !important;
+  }
+
+  .desktop-tree-family-group-icon {
+    display: none !important;
+  }
+
+  .desktop-tree-family-group-row span:not(.desktop-tree-family-group-icon) {
+    overflow: visible !important;
+    font-size: clamp(0.58rem, 1.12vh, 0.72rem) !important;
+    font-weight: 520 !important;
+    line-height: 1.08 !important;
+    text-overflow: clip !important;
+    white-space: normal !important;
+  }
+
+  .desktop-tree-family-group-row strong {
+    min-width: 1.1em !important;
+    font-size: clamp(0.62rem, 1.18vh, 0.76rem) !important;
+    font-weight: 720 !important;
+    text-align: right !important;
+  }
 }

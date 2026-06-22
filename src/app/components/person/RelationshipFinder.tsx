@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 
 type RelationshipFinderProps = {
   pessoaBase: Pessoa;
+  linkedPessoaId?: string | null;
   pessoas: Pessoa[];
   relacionamentos?: Relacionamento[];
   dataScopeNotice?: string;
@@ -15,6 +16,7 @@ type RelationshipFinderProps = {
 
 export function RelationshipFinder({
   pessoaBase,
+  linkedPessoaId,
   pessoas,
   relacionamentos = [],
   dataScopeNotice,
@@ -41,18 +43,47 @@ export function RelationshipFinder({
   }, [pessoaBase.id, pessoas, relacionamentos, selectedPersonId]);
 
   const nomeBaseCurto = pessoaBase.nome_completo.trim().split(/\s+/)[0] || 'esta pessoa';
+  const pronoun = pessoaBase.genero === 'mulher' ? 'ela' : 'ele';
+  const selfRelationshipResult = useMemo(() => {
+    if (!linkedPessoaId) return null;
+
+    return calculateRelationshipDegree({
+      originPersonId: linkedPessoaId,
+      targetPersonId: pessoaBase.id,
+      people: pessoas,
+      relationships: relacionamentos,
+    });
+  }, [linkedPessoaId, pessoaBase.id, pessoas, relacionamentos]);
+
+  const selfRelationshipSentence = selfRelationshipResult
+    ? getRelationshipResultSentence(selfRelationshipResult, pessoas).replace(/^.+?(\s+(?:e|é|foi|são)\s+)/, (match) => match.replace(/^[^\s]+/, 'Você'))
+    : null;
 
   return (
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Users className="h-5 w-5 text-blue-600" />
-          Qual o seu parentesco com {nomeBaseCurto}
+          Seu parentesco com {pronoun}
         </CardTitle>
       </CardHeader>
 
       <CardContent>
-        <div className="rounded-lg border border-blue-100 bg-blue-50 p-4">
+        <div className="space-y-4 rounded-lg border border-blue-100 bg-blue-50 p-4">
+          <div className="rounded-lg bg-white/80 p-3 text-sm text-gray-700">
+            {selfRelationshipSentence ? (
+              <p className="font-semibold text-gray-900">{selfRelationshipSentence}</p>
+            ) : (
+              <p>Não foi possível calcular seu parentesco com {nomeBaseCurto} agora.</p>
+            )}
+          </div>
+
+          <div>
+            <h3 className="text-sm font-semibold text-gray-900">
+              Veja qual a relação {pronoun === 'ela' ? 'dela' : 'dele'} com outra pessoa
+            </h3>
+          </div>
+
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <div className="space-y-3">
               <Select

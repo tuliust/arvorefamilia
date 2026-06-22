@@ -79,6 +79,10 @@ export type PersonProfileResetResult = {
   deleted_insights: number;
   deleted_favorites: number;
   deleted_historical_files: number;
+  deleted_person_events: number;
+  deleted_social_profiles: number;
+  deleted_questionnaire_answers: number;
+  deleted_activity_logs: number;
   deleted_user_links: number;
   deleted_auth_users: number;
   notification_preferences_reset: number;
@@ -389,6 +393,10 @@ export async function resetarPerfilPessoa(id: string): Promise<PersonProfileRese
     deleted_insights: Number(data?.deleted_insights ?? 0),
     deleted_favorites: Number(data?.deleted_favorites ?? 0),
     deleted_historical_files: Number(data?.deleted_historical_files ?? 0),
+    deleted_person_events: Number(data?.deleted_person_events ?? 0),
+    deleted_social_profiles: Number(data?.deleted_social_profiles ?? 0),
+    deleted_questionnaire_answers: Number(data?.deleted_questionnaire_answers ?? 0),
+    deleted_activity_logs: Number(data?.deleted_activity_logs ?? 0),
     deleted_user_links: Number(data?.deleted_user_links ?? 0),
     deleted_auth_users: Number(data?.deleted_auth_users ?? 0),
     notification_preferences_reset: Number(data?.notification_preferences_reset ?? 0),

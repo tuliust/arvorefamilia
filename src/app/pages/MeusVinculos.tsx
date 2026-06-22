@@ -37,6 +37,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { adicionarPessoa, obterRelacionamentosDaPessoa, obterTodosRelacionamentos } from '../services/dataService';
 import {
   CreateRelationshipChangeRequestInput,
+  RelationshipChangeRequestDetails,
   createRelationshipChangeRequest,
   findPendingDuplicateRelationshipChangeRequest,
 } from '../services/relationshipChangeRequestService';
@@ -1101,7 +1102,7 @@ export function MeusVinculos() {
     existingRelationship?: Relacionamento
   ): CreateRelationshipChangeRequestInput => {
     const relationshipType = existingRelationship?.tipo_relacionamento ?? getRelationshipTypeForGroup(group, person);
-    const details = group === 'conjuges'
+    const details: RelationshipChangeRequestDetails = group === 'conjuges'
       ? {
           data_casamento: marriageDetails[person.id]?.data_casamento || null,
           local_casamento: marriageDetails[person.id]?.local_casamento || null,
