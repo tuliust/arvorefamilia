@@ -1,78 +1,160 @@
-# Levantamento de ajustes realizados no chat — 2026-06-22
+# Levantamento dos ajustes realizados no chat — 2026-06-22
 
-## Levantamento consolidado — ciclo funcional 2026-06-22
+> Última revisão: 2026-06-22  
+> Escopo: consolidação funcional e documental do ciclo 6A–7D.
 
-### Commits confirmados no branch `feature/questionario-ia-vinculos-pets`
+## Commits confirmados
 
-| Frente | Commit | Status | Resultado funcional |
-|---|---:|---|---|
-| Prompt 6A — mapa familiar, tour e painel | `5e64d74` | Build e push confirmados | Dropdown `Família de [Nome]`, contagem de `Cadastrados`, tour revisado e layout compacto desktop para árvore pequena. |
-| Prompt 7A — questionário e geração de perfil | `4a1a995` | Build e push confirmados | Questionário persistido refinado; hash de geração só após geração concluída; contexto de IA sanitizado. |
-| Prompt 7B — vínculos, pets e cônjuges | `c9a8f27` | Build e push confirmados | Pets separados de filhos; cônjuge ativo único no estado local; badges e solicitações pendentes preservados. |
-| Prompt 7C — fatos e arquivos históricos | `6185b6d` | Build e push confirmados | Fatos sem arquivo integrados a `arquivos_historicos` e à timeline do perfil; migration para anexo opcional. |
-| Prompt 7D — UX final de onboarding | `de4f60f` | Build e push confirmados | Questionário reduzido a 8 etapas, headers sem ações no onboarding, textos IA até 500 caracteres, títulos fora de containers e ajustes de rótulos. |
 
-### Hotfix incorporado ao ciclo
+| Frente | Commit | Status |
+|---|---:|---|
+| Prompt 6A — mapa familiar, tour e painel | `5e64d74` | Implementado e pushado |
+| Prompt 7A — questionário, IA e privacidade | `4a1a995` | Implementado e pushado |
+| Prompt 7B — vínculos, pets, cônjuges e badges | `c9a8f27` | Implementado e pushado |
+| Prompt 7C — fatos/arquivos históricos na timeline | `6185b6d` | Implementado e pushado |
+| Prompt 7D — UX final do onboarding e IA 500 caracteres | `de4f60f` | Implementado e pushado |
 
-- `MeusDados.tsx`: correção do `ReferenceError: MapPin is not defined` com import explícito de `MapPin` em `lucide-react`.
-- O build posterior passou, indicando que o erro de runtime foi removido no estado final aplicado.
 
-### Frentes consolidadas neste ciclo
+## Prompt 6A — Mapa familiar, tour e painel
 
-1. **Mapa familiar desktop**
-   - Dropdown do painel passa a priorizar a pessoa vinculada/visualizada e exibir `Família de [Nome]`.
-   - Contagem de `Cadastrados` usa `user_person_links` como fonte conceitual.
-   - Tour separa IA/datas importantes de favoritos.
-   - Layout compacto para árvore pequena vertical desktop.
+### Commit
 
-2. **Questionário de perfil e IA**
-   - A pergunta inicial passa a ser `Qual é o seu estilo?`.
-   - `Nostálgico` volta a ser apenas um tom; não define pessoa falecida.
-   - O modo memorial depende do toggle `Você está escrevendo o perfil de uma pessoa falecida?`.
-   - Removidas etapas 9 e 10.
-   - Última etapa não exibe `Avançar`; fechamento ocorre por `Confirmar meus dados`.
-   - Mini Bio e Curiosidades passam a aceitar até 500 caracteres.
-   - IA deve gerar cerca de 400–450 caracteres por campo, sem iniciar necessariamente com o nome da pessoa.
-   - IA pode considerar campos estruturados seguros: idade aproximada, nascimento/falecimento, profissão, vínculos e fatos históricos, sem dados sensíveis ou URLs/storage.
+```text
+5e64d74 Improve family map tour and compact layout
+```
 
-3. **Meus Vínculos**
-   - Pets permanecem em grupo próprio, não em `Filhos`.
-   - Pet criado manualmente usa `humano_ou_pet: 'Pet'`.
-   - Estado local mantém no máximo um cônjuge ativo.
-   - Removidos botões redundantes em estado vazio dos grupos.
-   - `Sobre mim` e `Familiares de [Nome]` foram deslocados para fora dos cards, com hierarquia visual maior.
-   - `Salvar textos` foi removido; textos são salvos no avanço da etapa.
-   - Rótulo feminino de irmã passa a ser `Irmã` quando houver indicação de gênero feminino.
+### Ajustes
 
-4. **Fatos e Arquivos Históricos**
-   - Registro histórico pode existir com ou sem anexo.
-   - Registro sem anexo é `Fato`/`Memória`; registro com imagem/PDF continua como `Arquivo`.
-   - Timeline do perfil integra ambos.
-   - `ano` ordena cronologicamente; sem `ano` fica ao final.
-   - Storage continua opcional e só é acionado quando há upload real.
+- Dropdown do painel desktop passou a usar `Família de X`.
+- Seleção manual preservada.
+- Card `Cadastrados` passou a usar `user_person_links`.
+- Tour revisado:
+  - `Inteligência artificial e datas importantes`;
+  - `Guarde os seus destaques`.
+- Layout compacto para árvore pequena e simples.
+- Scripts mobile e `index.html` não foram alterados.
 
-5. **Headers do onboarding**
-   - Nas páginas `/meus-dados`, `/meus-vinculos`, `/arquivos-historicos`, `/preferencias` e `/revisao-dados`, o header não exibe ações à direita.
-   - Mantém apenas ícone, título e subtítulo do lado esquerdo.
+## Prompt 7A — Questionário e geração de perfil
 
-### Fora do escopo e preservado
+### Commit
 
-- Scripts mobile de mapa familiar.
-- `index.html`.
-- Documentação mobile 3x3 como contrato já consolidado.
-- Alterações adicionais de schema fora das migrations já aplicadas para questionário e fatos sem arquivo.
+```text
+4a1a995 Refine profile questionnaire generation flow
+```
 
-## Checklist pós-merge/deploy recomendado
+### Ajustes
 
-1. Abrir `/meus-dados` e validar que não há erro `MapPin is not defined`.
-2. Validar questionário com pessoa viva: qualquer estilo gera textos no presente/primeira pessoa.
-3. Validar questionário com toggle de pessoa falecida: qualquer estilo gera textos no passado/terceira pessoa.
-4. Confirmar que Mini Bio e Curiosidades aceitam até 500 caracteres.
-5. Abrir `/meus-vinculos` e confirmar ausência do botão `Salvar textos`.
-6. Validar salvamento dos textos ao avançar em `/meus-vinculos`.
-7. Validar grupos vazios sem botão inferior duplicado.
-8. Validar `Irmã` para pessoa feminina em irmãos.
-9. Criar fato histórico sem arquivo e confirmar exibição em `/revisao-dados` e na timeline do perfil.
-10. Criar arquivo histórico com PDF/imagem e confirmar exibição como `Arquivo`.
-11. Validar `/mapa-familiar` com árvore pequena e com árvore complexa.
-12. Rodar `git diff --check`, `npm run build` e QA manual das rotas de onboarding.
+- Refinado fluxo de questionário IA.
+- `lastGeneratedHash` só representa geração salva.
+- Contexto de IA sanitizado no frontend.
+- Contexto de IA sanitizado no backend.
+- Migration/tabela `person_profile_questionnaire_answers` usada para persistência.
+
+## Prompt 7B — Vínculos, pets e cônjuges
+
+### Commit
+
+```text
+c9a8f27 Refine relationship review rules for pets and spouses
+```
+
+### Ajustes
+
+- Pets reforçados como grupo próprio.
+- Pet não entra em Filhos.
+- Pessoa humana não entra em Pets.
+- Criação de pet com `humano_ou_pet: 'Pet'`.
+- Cônjuges limitados a um ativo no estado local.
+- Badge `Cadastrado` baseado em vínculo real.
+- Alterações seguem como solicitação pendente.
+
+## Prompt 7C — Fatos e Arquivos Históricos na timeline
+
+### Commit
+
+```text
+6185b6d Integrate historical facts into person timeline
+```
+
+### Ajustes
+
+- Fatos sem arquivo implementados.
+- Upload tornou-se opcional.
+- Migration `20260622170000_allow_historical_facts_without_file.sql` criada.
+- `url`, `storage_bucket`, `storage_path`, `mime_type` podem ser nulos.
+- Timeline do perfil passou a receber fatos/arquivos.
+- Badge `Fato` para registro sem anexo.
+- Badge `Arquivo` para registro com anexo.
+- `/revisao-dados` diferencia Fato sem arquivo, Imagem e PDF.
+
+## Hotfix — MapPin
+
+### Ajuste
+
+- Corrigido `ReferenceError: MapPin is not defined` em `/meus-dados`.
+- Causa: ícone usado sem import.
+- Lição: Vite build pode passar sem detectar todos os erros de runtime; typecheck explícito é recomendado.
+
+## Prompt 7D — UX final do onboarding
+
+### Commit
+
+```text
+de4f60f Refine onboarding profile and relationship UX
+```
+
+### Ajustes em `/meus-dados`
+
+- Pergunta da etapa 1 virou `Qual é o seu estilo?`.
+- `Nostálgico` deixou de ser gatilho de memorial.
+- Toggle virou `Você está escrevendo o perfil de uma pessoa falecida?`.
+- Qualquer tom pode gerar memorial se o toggle estiver em `Sim`.
+- Removidas etapas 9 e 10.
+- Última etapa sem botão `Avançar`.
+
+### Ajustes em IA
+
+- Limite aumentado para 500 caracteres por campo.
+- IA orientada a gerar 400–450 caracteres.
+- Texto não precisa começar com nome da pessoa.
+- IA pode considerar dados estruturados seguros além do questionário.
+
+### Ajustes em `/meus-vinculos`
+
+- Removido botão `Salvar textos`.
+- Textos salvos ao avançar.
+- `Sobre mim` fora do box.
+- `Familiares de X` fora do container.
+- Botões inferiores de adicionar removidos.
+- Label feminina de irmã corrigida.
+
+### Ajustes em headers
+
+Header sem ações em:
+
+- `/meus-dados`;
+- `/meus-vinculos`;
+- `/arquivos-historicos`;
+- `/preferencias`;
+- `/revisao-dados`.
+
+## Documentação corrigida
+
+Esta revisão documental removeu contradições sobre:
+
+- 300 vs 500 caracteres;
+- 10 vs 8 etapas;
+- `Nostálgico` como memorial;
+- fatos históricos sem arquivo como pendência;
+- layout antigo de `/meus-vinculos`;
+- botões duplicados;
+- headers com ações no onboarding;
+- trechos corrompidos por encoding/mojibake.
+
+## Pendências reais restantes
+
+- QA manual pós-deploy.
+- Aplicação/validação das migrations no Supabase remoto.
+- Decisão de produto sobre `Visualizar como...`.
+- Typecheck explícito no pipeline.
+- QA mobile dedicada.

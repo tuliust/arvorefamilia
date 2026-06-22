@@ -1,25 +1,77 @@
 # Revisão de Dados
 
-Última revisão: 2026-06-22
+> Última revisão: 2026-06-22  
+> Escopo: `/revisao-dados` após Prompts 7B, 7C e 7D.
 
 ## Objetivo
 
-`/revisao-dados` consolida as informações preenchidas durante o onboarding antes de confirmar o perfil e seguir para o mapa familiar.
+Permitir que o usuário revise as informações finais antes de concluir o onboarding e acessar o mapa familiar.
 
-## Contratos atuais
+## Header
 
-- Deve ler dados pessoais, vínculos, redes sociais, privacidade e fatos/arquivos históricos.
-- Deve considerar rascunhos de `/meus-vinculos`, incluindo `pets` separados de `filhos`.
-- Deve exibir fatos históricos mesmo quando não houver anexo.
-- Deve diferenciar registros históricos em `Fato sem arquivo`, `Imagem` e `PDF`.
-- Para pessoa falecida, fluxos de preferências/notificações são pulados conforme regra já consolidada.
-- Header da página não exibe ações à direita durante o onboarding.
+Não exibe ações no header.
 
-## Pontos de QA
+Exibe apenas:
 
-1. Pessoa viva com filhos, pets e cônjuge.
-2. Pessoa falecida sem passar por `/preferencias`.
-3. Fato histórico sem arquivo.
-4. Arquivo histórico com imagem.
-5. Arquivo histórico com PDF.
-6. Rascunho de vínculos com pet não deve aparecer em filhos.
+- ícone;
+- título;
+- subtítulo.
+
+## Seções revisadas
+
+- Dados pessoais.
+- História / Mini Bio / Curiosidades.
+- Contato.
+- Privacidade.
+- Vínculos familiares.
+- Pets.
+- Fatos e arquivos históricos.
+
+## Pets
+
+Pets aparecem em grupo próprio.
+
+Não devem ser misturados com Filhos.
+
+## Fatos e Arquivos Históricos
+
+A seção diferencia:
+
+- `Fato sem arquivo`;
+- `Imagem`;
+- `PDF`.
+
+Fatos sem arquivo são registros válidos.
+
+## Edição inline
+
+Seções editáveis usam controles locais de edição/salvamento.
+
+A validação deve impedir dados pessoais inválidos sem bloquear seções não relacionadas.
+
+## Pessoa falecida
+
+Para pessoa falecida:
+
+- local atual deve ser limpo/desconsiderado quando aplicável;
+- WhatsApp/notificações pessoais não devem ser habilitados;
+- textos devem poder estar em modo memorial.
+
+## Conclusão
+
+Ao finalizar:
+
+- dados confirmados devem ser marcados quando aplicável;
+- o usuário segue para `/mapa-familiar`.
+
+## QA
+
+1. Acessar `/revisao-dados` como pessoa viva.
+2. Acessar `/revisao-dados` como pessoa falecida.
+3. Conferir header sem ações.
+4. Conferir pets separados.
+5. Conferir fatos sem arquivo.
+6. Conferir imagem/PDF.
+7. Editar seção pessoal.
+8. Salvar seção.
+9. Finalizar fluxo.
