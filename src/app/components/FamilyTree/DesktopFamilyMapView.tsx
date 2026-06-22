@@ -761,6 +761,143 @@ function makeDirectLayout(config: GroupConfig, top: number, height: number, peop
   } satisfies ResolvedGroup;
 }
 
+type CompactLineageItem = {
+  id: string;
+  layout: PositionedLayout & { title: string };
+  person: Pessoa;
+  central?: boolean;
+  tone?: 'spouse';
+};
+
+type CompactLineageLayout = {
+  canvasWidth: number;
+  canvasHeight: number;
+  items: CompactLineageItem[];
+  connectors: Connector[];
+};
+
+function getOnlyPerson(people: Pessoa[]) {
+  return people.length === 1 ? people[0] : undefined;
+}
+
+function buildCompactLineageLayout({
+  central,
+  father,
+  mother,
+  children,
+  pets,
+  siblings,
+  nephews,
+  grandchildren,
+  mainSpouses,
+  additionalSpouses,
+  sourcePeople,
+}: {
+  central?: Pessoa;
+  father?: Pessoa;
+  mother?: Pessoa;
+  children: Pessoa[];
+  pets: Pessoa[];
+  siblings: Pessoa[];
+  nephews: Pessoa[];
+  grandchildren: Pessoa[];
+  mainSpouses: Pessoa[];
+  additionalSpouses: Pessoa[];
+  sourcePeople: Record<string, Pessoa[]>;
+}): CompactLineageLayout | undefined {
+  if (!central) return undefined;
+
+  const parent = getOnlyPerson([father, mother].filter((person): person is Pessoa => Boolean(person)));
+  const directDescendant = getOnlyPerson([...children, ...pets]);
+  const hasParentBranching = Boolean(father && mother);
+  const hasComplexAncestors = [
+    sourcePeople.paternalGreatGreatGrandparents,
+    sourcePeople.paternalGreatGrandparents,
+    sourcePeople.paternalGrandparents,
+    sourcePeople.maternalGreatGreatGrandparents,
+    sourcePeople.maternalGreatGrandparents,
+    sourcePeople.maternalGrandparents,
+  ].some((people) => people.length > 0);
+  const hasComplexCollateral = [
+    sourcePeople.paternalUncles,
+    sourcePeople.paternalCousins,
+    sourcePeople.maternalUncles,
+    sourcePeople.maternalCousins,
+    siblings,
+    nephews,
+    grandchildren,
+  ].some((people) => people.length > 0);
+  const hasComplexSpouses = mainSpouses.length > 0 || additionalSpouses.length > 0;
+  const hasDescendantBranching = children.length + pets.length > 1;
+
+  if (
+    hasParentBranching
+    || hasComplexAncestors
+    || hasComplexCollateral
+    || hasComplexSpouses
+    || hasDescendantBranching
+  ) {
+    return undefined;
+  }
+
+  const rawItems: Array<{ id: string; title: string; person: Pessoa; central?: boolean }> = [];
+  if (parent) rawItems.push({ id: 'compact-parent', title: parent.id === father?.id ? 'Pai' : 'Mãe', person: parent });
+  rawItems.push({ id: 'compact-central', title: '', person: central, central: true });
+  if (directDescendant) {
+    rawItems.push({
+      id: 'compact-descendant',
+      title: pets.some((pet) => pet.id === directDescendant.id) ? 'Pet' : 'Filho',
+      person: directDescendant,
+    });
+  }
+
+  if (rawItems.length <= 1 || rawItems.length > 3) return undefined;
+
+  const canvasWidth = 520;
+  const cardWidth = 240;
+  const topStart = 46;
+  const gap = 58;
+  const left = (canvasWidth - cardWidth) / 2;
+  let nextTop = topStart;
+
+  const items = rawItems.map((item) => {
+    const height = item.central ? FAMILY_MAP_LAYOUT_BASE.metrics.centralCardHeight : FAMILY_MAP_LAYOUT_BASE.metrics.parentCardHeight;
+    const layout = {
+      id: item.id,
+      title: item.title,
+      left,
+      top: nextTop,
+      width: cardWidth,
+      height,
+    };
+    nextTop += height + gap;
+
+    return {
+      id: item.id,
+      layout,
+      person: item.person,
+      central: item.central,
+    };
+  });
+
+  const connectors = items.slice(0, -1).map((item, index) => {
+    const nextItem = items[index + 1];
+    const from: Point = [item.layout.left + item.layout.width / 2, item.layout.top + item.layout.height];
+    const to: Point = [nextItem.layout.left + nextItem.layout.width / 2, nextItem.layout.top];
+    return {
+      id: `${item.id}-${nextItem.id}`,
+      points: [from, to],
+    } satisfies Connector;
+  });
+
+  return {
+    canvasWidth,
+    canvasHeight: Math.max(680, nextTop - gap + topStart),
+    items,
+    connectors,
+  };
+}
+
 function DesktopFamilyMapViewComponent({
   pessoas,
   relacionamentos,
@@ -873,6 +1010,32 @@ function DesktopFamilyMapViewComponent({
     nephews,
     pets,
     siblings,
+  ]);
+
+  const compactLineageLayout = React.useMemo(() => buildCompactLineageLayout({
+    central,
+    father,
+    mother,
+    children: groupedChildren.primaryChildren,
+    pets,
+    siblings,
+    nephews,
+    grandchildren,
+    mainSpouses,
+    additionalSpouses,
+    sourcePeople,
+  }), [
+    additionalSpouses,
+    central,
+    father,
+    grandchildren,
+    groupedChildren.primaryChildren,
+    mainSpouses,
+    mother,
+    nephews,
+    pets,
+    siblings,
+    sourcePeople,
   ]);
 
   const composedGroups = React.useMemo(() => {
@@ -1120,6 +1283,9 @@ function DesktopFamilyMapViewComponent({
   );
   const exportCanvasWidth = contentMaxX - contentMinX + EXPORT_HORIZONTAL_PADDING * 2;
   const renderOffsetX = -contentMinX + EXPORT_HORIZONTAL_PADDING;
+  const activeExportCanvasWidth = compactLineageLayout?.canvasWidth ?? exportCanvasWidth;
+  const activeCanvasHeight = compactLineageLayout?.canvasHeight ?? canvasHeight;
+  const activeCanvasMinHeight = compactLineageLayout?.canvasHeight ?? familyMapLayout.canvas.minHeight;
 
   const connectors: Connector[] = [];
   const addConnector = (connector?: Connector) => {
@@ -1195,15 +1361,15 @@ function DesktopFamilyMapViewComponent({
     const viewport = viewportRef.current;
     if (!viewport) return undefined;
     const updateScale = () => {
-      const widthScale = viewport.clientWidth / exportCanvasWidth;
-      const heightScale = viewport.clientHeight / familyMapLayout.canvas.minHeight;
+      const widthScale = viewport.clientWidth / activeExportCanvasWidth;
+      const heightScale = viewport.clientHeight / activeCanvasMinHeight;
       setResponsiveScale(Math.min(1, Math.max(familyMapLayout.canvas.minScale, Math.min(widthScale, heightScale))));
     };
     const observer = new ResizeObserver(updateScale);
     observer.observe(viewport);
     updateScale();
     return () => observer.disconnect();
-  }, [canvasHeight, exportCanvasWidth, familyMapLayout, layoutRevision]);
+  }, [activeCanvasHeight, activeCanvasMinHeight, activeExportCanvasWidth, familyMapLayout, layoutRevision]);
 
   React.useEffect(() => {
     setManualZoom(1);
@@ -1384,90 +1550,128 @@ nephews,
       <div
         ref={exportRootRef}
         data-family-map-export-root="true"
+        data-family-map-compact-lineage={compactLineageLayout ? 'true' : undefined}
         className="relative z-10 mx-auto"
-        style={{ width: exportCanvasWidth * effectiveScale, height: canvasHeight * effectiveScale }}
+        style={{ width: activeExportCanvasWidth * effectiveScale, height: activeCanvasHeight * effectiveScale }}
       >
         <div
           className="absolute left-0 top-0 origin-top-left"
-          style={{ width: exportCanvasWidth, height: canvasHeight, transform: `scale(${effectiveScale})` }}
+          style={{ width: activeExportCanvasWidth, height: activeCanvasHeight, transform: `scale(${effectiveScale})` }}
         >
-          <svg
-            data-family-map-connectors="true"
-            className="pointer-events-none absolute inset-0 z-0 h-full w-full"
-            viewBox={`0 0 ${exportCanvasWidth} ${canvasHeight}`}
-            aria-hidden="true"
-          >
-            <g
-              fill="none"
-              stroke={familyMapLayout.connectors.color}
-              strokeWidth={familyMapLayout.connectors.width}
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              {connectors.map((connector) => (
-                <path key={connector.id} d={connectorPath(getOffsetConnectorPoints(connector.points, renderOffsetX))} />
-              ))}
-            </g>
-          </svg>
-
-          {groupLayouts.map((layout) => (
-            <PositionedGroup
-              key={layout.id}
-              layout={getOffsetLayout(layout, renderOffsetX)}
-              vitalMode={isWideLayout ? 'full' : 'year'}
-              expanded={expandedGroups.has(layout.id)}
-              hideChrome={hideGroupChrome}
-              onExpandedChange={handleExpandedChange}
-              onPersonClick={onPersonClick}
-            />
-          ))}
-
-          {directRelativeFilters.pais && (
+          {compactLineageLayout ? (
             <>
-              <DirectPersonCard
-                layout={getOffsetLayout(fatherLayout, renderOffsetX)}
-                person={father}
-                emptyLabel="Pai"
-                showLabel={!hideGroupChrome}
-                onPersonClick={onPersonClick}
-              />
-              <DirectPersonCard
-                layout={getOffsetLayout(motherLayout, renderOffsetX)}
-                person={mother}
-                emptyLabel="Mãe"
-                showLabel={!hideGroupChrome}
-                onPersonClick={onPersonClick}
-              />
+              <svg
+                data-family-map-connectors="true"
+                className="pointer-events-none absolute inset-0 z-0 h-full w-full"
+                viewBox={`0 0 ${compactLineageLayout.canvasWidth} ${compactLineageLayout.canvasHeight}`}
+                aria-hidden="true"
+              >
+                <g
+                  fill="none"
+                  stroke={familyMapLayout.connectors.color}
+                  strokeWidth={familyMapLayout.connectors.width}
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  {compactLineageLayout.connectors.map((connector) => (
+                    <path key={connector.id} d={connectorPath(connector.points)} />
+                  ))}
+                </g>
+              </svg>
+
+              {compactLineageLayout.items.map((item) => (
+                <DirectPersonCard
+                  key={item.id}
+                  layout={item.layout}
+                  person={item.person}
+                  central={item.central}
+                  tone={item.tone}
+                  showLabel={Boolean(item.layout.title) && !hideGroupChrome}
+                  onPersonClick={onPersonClick}
+                />
+              ))}
+            </>
+          ) : (
+            <>
+              <svg
+                data-family-map-connectors="true"
+                className="pointer-events-none absolute inset-0 z-0 h-full w-full"
+                viewBox={`0 0 ${exportCanvasWidth} ${canvasHeight}`}
+                aria-hidden="true"
+              >
+                <g
+                  fill="none"
+                  stroke={familyMapLayout.connectors.color}
+                  strokeWidth={familyMapLayout.connectors.width}
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  {connectors.map((connector) => (
+                    <path key={connector.id} d={connectorPath(getOffsetConnectorPoints(connector.points, renderOffsetX))} />
+                  ))}
+                </g>
+              </svg>
+
+              {groupLayouts.map((layout) => (
+                <PositionedGroup
+                  key={layout.id}
+                  layout={getOffsetLayout(layout, renderOffsetX)}
+                  vitalMode={isWideLayout ? 'full' : 'year'}
+                  expanded={expandedGroups.has(layout.id)}
+                  hideChrome={hideGroupChrome}
+                  onExpandedChange={handleExpandedChange}
+                  onPersonClick={onPersonClick}
+                />
+              ))}
+
+              {directRelativeFilters.pais && (
+                <>
+                  <DirectPersonCard
+                    layout={getOffsetLayout(fatherLayout, renderOffsetX)}
+                    person={father}
+                    emptyLabel="Pai"
+                    showLabel={!hideGroupChrome}
+                    onPersonClick={onPersonClick}
+                  />
+                  <DirectPersonCard
+                    layout={getOffsetLayout(motherLayout, renderOffsetX)}
+                    person={mother}
+                    emptyLabel="Mãe"
+                    showLabel={!hideGroupChrome}
+                    onPersonClick={onPersonClick}
+                  />
+                </>
+              )}
+              {central && (
+                <DirectPersonCard
+                  layout={getOffsetLayout(centralLayout, renderOffsetX)}
+                  person={central}
+                  central
+                  showLabel={false}
+                  onPersonClick={onPersonClick}
+                />
+              )}
+              {mainSpouse && spouseLayout && (
+                <DirectPersonCard
+                  layout={getOffsetLayout(spouseLayout, renderOffsetX)}
+                  person={mainSpouse}
+                  tone="spouse"
+                  showLabel={!hideGroupChrome}
+                  onPersonClick={onPersonClick}
+                />
+              )}
+              {additionalBranches.map((branch) => (
+                <DirectPersonCard
+                  key={branch.spouseLayout.id}
+                  layout={getOffsetLayout(branch.spouseLayout, renderOffsetX)}
+                  person={branch.spouse}
+                  tone="spouse"
+                  showLabel={!hideGroupChrome}
+                  onPersonClick={onPersonClick}
+                />
+              ))}
             </>
           )}
-          {central && (
-            <DirectPersonCard
-              layout={getOffsetLayout(centralLayout, renderOffsetX)}
-              person={central}
-              central
-              showLabel={false}
-              onPersonClick={onPersonClick}
-            />
-          )}
-          {mainSpouse && spouseLayout && (
-            <DirectPersonCard
-              layout={getOffsetLayout(spouseLayout, renderOffsetX)}
-              person={mainSpouse}
-              tone="spouse"
-              showLabel={!hideGroupChrome}
-              onPersonClick={onPersonClick}
-            />
-          )}
-          {additionalBranches.map((branch) => (
-            <DirectPersonCard
-              key={branch.spouseLayout.id}
-              layout={getOffsetLayout(branch.spouseLayout, renderOffsetX)}
-              person={branch.spouse}
-              tone="spouse"
-              showLabel={!hideGroupChrome}
-              onPersonClick={onPersonClick}
-            />
-          ))}
         </div>
         {isAreaSelectionOpen && (
           <TreeAreaSelectionOverlay

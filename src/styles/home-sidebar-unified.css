@@ -398,6 +398,7 @@ html[data-tree-highlight-groups='true']
 }
 
 .desktop-tree-view-select {
+  height: clamp(2.55rem, 4.8vh, 4.15rem);
   min-height: clamp(2.55rem, 4.8vh, 4.15rem);
   width: 100%;
   border: 1px solid #cfd9e8;
@@ -407,6 +408,7 @@ html[data-tree-highlight-groups='true']
   color: #0f2348;
   font-size: clamp(0.92rem, 1.95vh, 1.55rem);
   font-weight: 500;
+  line-height: 1.2;
   outline: none;
 }
 

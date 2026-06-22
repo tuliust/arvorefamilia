@@ -120,6 +120,7 @@ function getGroupCount(counts: DirectRelationCounts, keys: DirectRelativeGroup[]
 export function DesktopTreeVisualizationPanel({
   showViewAsSelector = true,
   viewAsPersonValue = '',
+  defaultViewAsPersonLabel = 'Sua view padrão',
   viewAsPersonOptions,
   onViewAsPersonChange,
   totalPeople,
@@ -134,6 +135,7 @@ export function DesktopTreeVisualizationPanel({
 }: {
   showViewAsSelector?: boolean;
   viewAsPersonValue?: string;
+  defaultViewAsPersonLabel?: string;
   viewAsPersonOptions: ViewAsPersonOption[];
   onViewAsPersonChange: (value: string) => void;
   totalPeople: number;
@@ -204,7 +206,7 @@ export function DesktopTreeVisualizationPanel({
             className="desktop-tree-view-select"
             aria-label="Visualizar árvore como outra pessoa"
           >
-            <option value="">Sua view padrão</option>
+            <option value="">{defaultViewAsPersonLabel}</option>
             {viewAsPersonOptions.map((pessoa) => (
               <option key={pessoa.id} value={pessoa.id}>
                 {pessoa.label}

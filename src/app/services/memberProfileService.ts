@@ -797,6 +797,8 @@ export async function getLinkedPersonIds(pessoaIds: string[]) {
     return { error: undefined, data: new Set<string>() };
   }
 
+  // A contagem de “Cadastrados” deve refletir vínculos reais acessíveis em user_person_links.
+  // Se RLS limitar a leitura ao usuário atual, não aplicar fallback silencioso para 1.
   const { data, error } = await supabase
     .from('user_person_links')
     .select('pessoa_id')

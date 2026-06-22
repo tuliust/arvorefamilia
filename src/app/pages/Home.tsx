@@ -127,11 +127,13 @@ type PersonStatusFilters = {
   pets: boolean;
 };
 
-function getShortPersonName(pessoa: Pessoa) {
-  const source = String(pessoa.nome_completo || pessoa.id || '').trim();
-  const parts = source.split(/\s+/).filter(Boolean);
+function getFirstPersonName(value?: string | null) {
+  const clean = String(value ?? '').trim();
+  return clean.split(/\s+/).filter(Boolean)[0] || 'Pessoa';
+}
 
-  return parts.slice(0, 2).join(' ') || pessoa.id;
+function getFamilyViewOptionLabel(pessoa?: Pessoa) {
+  return pessoa ? `Família de ${getFirstPersonName(pessoa.nome_completo || pessoa.id)}` : 'Sua view padrão';
 }
 
 function isVisibleByLifeStatusFilter(
@@ -718,7 +720,7 @@ export function Home() {
     let cancelled = false;
 
     async function loadRegisteredPeopleCount() {
-      const pessoaIds = pessoas.map((pessoa) => pessoa.id).filter(Boolean);
+      const pessoaIds = Array.from(new Set(pessoas.map((pessoa) => pessoa.id).filter(Boolean)));
 
       if (pessoaIds.length === 0) {
         setRegisteredPeopleCount(0);
@@ -1133,6 +1135,13 @@ export function Home() {
   const shouldShowDebugViewer = canRenderTree && (
     treeViewMode === 'mapa-familiar' || treeViewMode === 'mapa-familiar-horizontal'
   );
+  const defaultViewAsPersonLabel = useMemo(() => {
+    const linkedReferencePerson = linkedPersonId
+      ? pessoas.find((pessoa) => pessoa.id === linkedPersonId)
+      : undefined;
+
+    return getFamilyViewOptionLabel(linkedReferencePerson);
+  }, [linkedPersonId, pessoas]);
   const hasBlockingTutorialDialog = aiDialogOpen || mobileTipOpen || Boolean(selectedMarriage) || Boolean(connectionTarget);
 
   useEffect(() => {
@@ -1163,7 +1172,7 @@ export function Home() {
       .filter((pessoa) => Boolean(pessoa.id))
       .map((pessoa) => ({
         id: pessoa.id,
-        label: getShortPersonName(pessoa),
+        label: getFamilyViewOptionLabel(pessoa),
       }))
       .sort((a, b) => a.label.localeCompare(b.label, 'pt-BR', { sensitivity: 'base' }));
   }, [pessoas]);
@@ -1280,6 +1289,7 @@ export function Home() {
                   <DesktopTreeVisualizationPanel
                     showViewAsSelector={shouldShowDebugViewer}
                     viewAsPersonValue={queryPersonId ?? ''}
+                    defaultViewAsPersonLabel={defaultViewAsPersonLabel}
                     viewAsPersonOptions={debugViewPersonOptions}
                     onViewAsPersonChange={handleDesktopViewAsPersonChange}
                     totalPeople={stats.totalPessoas}
