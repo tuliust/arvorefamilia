@@ -138,7 +138,10 @@ export function getChildRelationshipLabel(person: Pessoa) {
 
 
 export function isPetPerson(person: Pessoa) {
-  return String(person.humano_ou_pet ?? '').trim().toLowerCase() === 'pet';
+  const entityType = String(person.humano_ou_pet ?? '').trim().toLowerCase();
+  const gender = String(person.genero ?? '').trim().toLowerCase();
+
+  return entityType === 'pet' || gender === 'pet' || gender === 'animal' || gender === 'mascote';
 }
 
 export function getPetRelationshipLabel(person: Pessoa) {

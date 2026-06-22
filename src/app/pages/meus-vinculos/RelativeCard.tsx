@@ -1,5 +1,5 @@
 import React from 'react';
-import { Trash2, Undo2 } from 'lucide-react';
+import { PawPrint, Trash2, Undo2 } from 'lucide-react';
 import { Button } from '../../components/ui/button';
 import { cn } from '../../lib/utils';
 import { Pessoa } from '../../types';
@@ -10,6 +10,7 @@ import {
   getRelationshipCardClassName,
   getRelationshipCardLabel,
   getRelationshipStatusBadgeConfig,
+  isPetPerson,
 } from './meusVinculosUtils';
 import { RelationshipGroupKey, RelationshipReviewStatus } from './types';
 
@@ -35,11 +36,16 @@ type RelativeCardProps = {
 
 function PersonAvatar({ person, avatarSrc }: { person: Pessoa; avatarSrc?: string | null }) {
   const photo = String(avatarSrc || person.foto_principal_url || '').trim();
+  const pet = isPetPerson(person);
 
   return (
     <div className="flex h-12 w-12 shrink-0 overflow-hidden rounded-full bg-blue-50 text-blue-700 ring-1 ring-blue-100">
       {photo ? (
         <img src={photo} alt={person.nome_completo} className="h-full w-full object-cover" />
+      ) : pet ? (
+        <span className="inline-flex h-full w-full items-center justify-center">
+          <PawPrint className="h-5 w-5" aria-hidden="true" />
+        </span>
       ) : (
         <span className="inline-flex h-full w-full items-center justify-center text-sm font-semibold">
           {getInitials(person.nome_completo)}

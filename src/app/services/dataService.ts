@@ -153,6 +153,13 @@ function toRelacionamento(row: any): Relacionamento {
   } as Relacionamento;
 }
 
+function isPetPessoa(pessoa?: Pessoa | null) {
+  const entityType = String(pessoa?.humano_ou_pet ?? '').trim().toLowerCase();
+  const gender = String(pessoa?.genero ?? '').trim().toLowerCase();
+
+  return entityType === 'pet' || gender === 'pet' || gender === 'animal' || gender === 'mascote';
+}
+
 function pickDefined<T extends readonly string[]>(source: Record<string, any>, keys: T) {
   return keys.reduce<Record<string, any>>((payload, key) => {
     if (source[key] !== undefined) {
@@ -542,18 +549,22 @@ export async function obterRelacionamentosDaPessoa(pessoaId: string) {
       .map(id => pessoasMap.get(id))
       .filter((p): p is Pessoa => !!p);
 
-    const filhos = Array.from(filhosSet)
+    const childrenAndPets = Array.from(filhosSet)
       .map(id => pessoasMap.get(id))
       .filter((p): p is Pessoa => !!p);
+
+    const filhos = childrenAndPets.filter((person) => !isPetPessoa(person));
+    const pets = childrenAndPets.filter(isPetPessoa);
 
     const irmaos = Array.from(irmaosSet)
       .map(id => pessoasMap.get(id))
-      .filter((p): p is Pessoa => !!p);
+      .filter((p): p is Pessoa => !!p)
+      .filter((person) => !isPetPessoa(person));
 
-    return { pais, maes, conjuges, filhos, irmaos };
+    return { pais, maes, conjuges, filhos, pets, irmaos };
   } catch (error) {
     console.error('Erro na requisição obterRelacionamentosDaPessoa:', error);
-    return { pais: [], maes: [], conjuges: [], filhos: [], irmaos: [] };
+    return { pais: [], maes: [], conjuges: [], filhos: [], pets: [], irmaos: [] };
   }
 }
 

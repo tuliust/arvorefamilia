@@ -150,10 +150,14 @@ function splitChildrenAndPets(people: Pessoa[]) {
 
 function normalizeRelationshipGroups(groups: RelationshipGroups): RelationshipGroups {
   const split = splitChildrenAndPets(uniquePeople([...(groups.filhos ?? []), ...(groups.pets ?? [])]));
+
   return {
-    ...groups,
+    pais: uniquePeople(groups.pais ?? []).filter((person) => !split.pets.some((pet) => pet.id === person.id)),
+    maes: uniquePeople(groups.maes ?? []).filter((person) => !split.pets.some((pet) => pet.id === person.id)),
+    conjuges: uniquePeople(groups.conjuges ?? []).filter((person) => !split.pets.some((pet) => pet.id === person.id)),
     filhos: split.filhos,
     pets: split.pets,
+    irmaos: uniquePeople(groups.irmaos ?? []).filter((person) => !split.pets.some((pet) => pet.id === person.id)),
   };
 }
 
@@ -623,19 +627,48 @@ export function MeusVinculos() {
       }
     }
 
-    markDraftDirty();
     if (addDialog.group === 'pets' && person && !isPetPerson(person)) {
       toast.error('Selecione um cadastro de pet ou crie um novo pet.');
       return;
     }
 
+    if (addDialog.group === 'filhos' && person && isPetPerson(person)) {
+      toast.error('Pets devem ser adicionados no grupo Pets, não em Filhos.');
+      return;
+    }
+
+    markDraftDirty();
+
     const relativePerson = person ?? createLocalPerson(addForm, addDialog.group === 'pets' ? 'Pet' : 'Humano');
 
     setRelationships((current) => {
-      if (addDialog.group === 'pais' && addForm.parentRole === 'mae') {
+      if (addDialog.group === 'pais') {
+        return addForm.parentRole === 'mae'
+          ? {
+              ...current,
+              pais: current.pais.filter((item) => item.id !== relativePerson.id),
+              maes: uniquePeople([...current.maes, relativePerson]),
+            }
+          : {
+              ...current,
+              pais: uniquePeople([...current.pais, relativePerson]),
+              maes: current.maes.filter((item) => item.id !== relativePerson.id),
+            };
+      }
+
+      if (addDialog.group === 'pets') {
         return {
           ...current,
-          maes: uniquePeople([...current.maes, relativePerson]),
+          filhos: current.filhos.filter((item) => item.id !== relativePerson.id),
+          pets: uniquePeople([...current.pets, { ...relativePerson, humano_ou_pet: 'Pet' }]),
+        };
+      }
+
+      if (addDialog.group === 'filhos') {
+        return {
+          ...current,
+          filhos: uniquePeople([...current.filhos, { ...relativePerson, humano_ou_pet: 'Humano' }]),
+          pets: current.pets.filter((item) => item.id !== relativePerson.id),
         };
       }
 
@@ -644,10 +677,14 @@ export function MeusVinculos() {
         [addDialog.group]: uniquePeople([...current[addDialog.group], relativePerson]),
       };
     });
-    setLocalRelationshipRoles((current) => ({
-      ...current,
-      [relativePerson.id]: addForm.parentRole,
-    }));
+
+    if (addDialog.group === 'filhos' || addDialog.group === 'pets') {
+      setLocalRelationshipRoles((current) => ({
+        ...current,
+        [relativePerson.id]: addForm.parentRole,
+      }));
+    }
+
     setRemovedRelationshipIds((current) => ({
       ...current,
       [addDialog.group]: current[addDialog.group].filter((id) => id !== relativePerson.id),
@@ -655,13 +692,28 @@ export function MeusVinculos() {
 
     if (addDialog.group === 'conjuges') {
       const defaultActive = !isPersonDeceased({ ...pessoa, falecido: pessoa?.falecido }) && !isPersonDeceased(relativePerson);
-      setMarriageDetails((current) => ({
-        ...current,
-        [relativePerson.id]: {
+      setMarriageDetails((current) => {
+        const nextDetails = {
           ...createEmptyMarriageDetails(),
           ativo: defaultActive,
-        },
-      }));
+        };
+
+        if (!defaultActive) {
+          return {
+            ...current,
+            [relativePerson.id]: nextDetails,
+          };
+        }
+
+        return Object.fromEntries(
+          Object.entries({ ...current, [relativePerson.id]: nextDetails }).map(([id, value]) => [
+            id,
+            id === relativePerson.id
+              ? nextDetails
+              : { ...normalizeMarriageDetails(value), ativo: false },
+          ])
+        );
+      });
     }
 
     setHasLocalRelationshipChanges(true);
@@ -847,7 +899,8 @@ export function MeusVinculos() {
     if (group === 'pais') {
       return relationships.maes.some((mae) => mae.id === person.id) ? 'mae' : 'pai';
     }
-    if (group === 'filhos' || group === 'pets') return localRelationshipRoles[person.id] ?? 'pai';
+    if (group === 'filhos') return localRelationshipRoles[person.id] ?? 'pai';
+    if (group === 'pets') return localRelationshipRoles[person.id] ?? 'pai';
     if (group === 'conjuges') return 'conjuge';
     return 'irmao';
   };
@@ -1056,7 +1109,13 @@ export function MeusVinculos() {
           data_separacao: marriageDetails[person.id]?.data_separacao || null,
           local_separacao: marriageDetails[person.id]?.local_separacao || null,
         }
-      : { ativo: true };
+      : {
+          ativo: true,
+          relationshipGroup: group === 'pets' ? 'pets' : group === 'filhos' ? 'filhos' : undefined,
+          otherParentId: childOtherParent[person.id] && childOtherParent[person.id] !== '__none__'
+            ? childOtherParent[person.id]
+            : null,
+        };
 
     return {
       requester_pessoa_id: pessoa?.id,
@@ -1065,7 +1124,7 @@ export function MeusVinculos() {
       related_pessoa_id: group === 'filhos' || group === 'pets' ? pessoa?.id : person.id,
       relationship_id: relationshipId,
       relationship_type: relationshipType,
-      relationship_subtype: existingRelationship?.subtipo_relacionamento ?? (group === 'conjuges' ? 'casamento' : 'sangue'),
+      relationship_subtype: existingRelationship?.subtipo_relacionamento ?? (group === 'conjuges' ? 'casamento' : group === 'pets' ? 'adotivo' : 'sangue'),
       details: group === 'filhos' || group === 'pets' ? { ...details, inverseTipoForFilho: relationshipType as 'pai' | 'mae' } : details,
       changes,
     };
