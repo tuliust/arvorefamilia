@@ -7,6 +7,7 @@ import {
   ChevronRight,
   ImagePlus,
   Info,
+  MapPin,
   Save,
   Sparkles,
   Trash2,
