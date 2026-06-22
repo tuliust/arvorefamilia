@@ -81,7 +81,7 @@ function useProfileBioPortalHost() {
   useEffect(() => {
     if (host) return undefined;
 
-    let animationFrame = window.requestAnimationFrame(() => {
+    const animationFrame = window.requestAnimationFrame(() => {
       const nextHost = ensurePortalHost();
       if (nextHost) setHost(nextHost);
     });
@@ -154,10 +154,12 @@ function MeusVinculosProfileBioSection() {
     dirtyRef.current = false;
     if (data) {
       setPessoa(data);
-      setProfileText({
-        minibio: limitProfileText(data.minibio),
-        curiosidades: limitProfileText(data.curiosidades),
-      });
+      if (!quiet) {
+        setProfileText({
+          minibio: limitProfileText(data.minibio),
+          curiosidades: limitProfileText(data.curiosidades),
+        });
+      }
     }
 
     if (!quiet) toast.success('Mini Bio e Curiosidades salvas.');
