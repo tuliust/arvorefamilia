@@ -1,9 +1,9 @@
 # Documentação — Árvore Família
 
-> Última revisão: 2026-06-21  
+> Última revisão: 2026-06-22  
 > Local canônico: `docs/README.md`  
 > Projeto: `tuliust/arvorefamilia`  
-> Status: índice canônico atualizado para mapas familiares mobile, Zoom, filtros de cônjuges e mapa completo em tela única.
+> Status: índice canônico atualizado para separar estado implementado, pendências de IA/privacidade, debug viewer e riscos mobile antes do Prompt 6.
 
 Este diretório concentra a documentação técnica, funcional, operacional e histórica do projeto **Árvore Família**.
 
@@ -35,7 +35,7 @@ A baseline funcional atual registra:
 - pessoa falecida pula `/preferencias`, tem notificações desativadas e permissões de visualização ativadas por padrão;
 - `/meus-dados` possui assistente de IA para Mini Bio e Curiosidades, com modo padrão e modo nostálgico/memorial;
 - `/meus-vinculos` funciona como revisão guiada de vínculos familiares, com busca de pessoa existente, criação manual, estados de análise e solicitação de controle de perfil;
-- Arquivos Históricos pertencem à Etapa 3 em `/arquivos-historicos`;
+- Arquivos Históricos pertencem à Etapa 3 em `/arquivos-historicos`; a evolução para **Fatos e Arquivos Históricos** sem arquivo é pendência enquanto o código/migration não forem aplicados;
 - Preferências de notificação e Permissões de exibição pertencem à Etapa 4 em `/preferencias`, somente para pessoa viva;
 - `/revisao-dados` é revisão final em layout de perfil, com edição inline e finalização;
 - `MemberOnboardingSteps` é o indicador visual reutilizável do fluxo e pode ocultar Preferências;
@@ -45,7 +45,7 @@ A baseline funcional atual registra:
   - `mapa-familiar`;
   - `mapa-familiar-horizontal`;
 - `/mapa-familiar` usa `DesktopFamilyMapView` no desktop/tablet e `MobileFamilyTreeView` no mobile;
-- `/mapa-familiar-horizontal` usa `DesktopFamilyHorizontalMapView` no desktop/tablet e `MobileFamilyHorizontalMapView` no mobile;
+- `/mapa-familiar-horizontal` usa `DesktopFamilyHorizontalMapFilteredView` no desktop/tablet e `MobileFamilyHorizontalMapFilteredView` no mobile;
 - `/mapa-familiar` mobile usa grade 3x3 com telas de ancestrais, tios, núcleo, primos e descendentes;
 - o Zoom mobile de `/mapa-familiar` possui overview 3x3 e botão **Exibir mapa completo**;
 - o mapa completo mobile abre mosaico único com conectores, pinça, arraste e reenquadramento;
@@ -53,7 +53,7 @@ A baseline funcional atual registra:
 - cônjuges estendidos em grupos mobile suportados podem ser exibidos/ocultados por toggle e usam cor tonal diferente;
 - tios paternos/maternos mobile possuem conectores laterais para pai/mãe e conectores verticais para primos;
 - o painel desktop não possui mais a barra `Filtros | Legendas | Ações`;
-- o modal mobile é reduzido e não exibe Restaurar visualização ou Exportar;
+- o modal mobile `Controles` é reduzido e não exibe Restaurar visualização ou Exportar; a toolbar fixa mobile mantém `Zoom` como ação separada;
 - a horizontal mobile opera com uma geração por tela, botões `Ger X`, swipe lateral e scroll vertical interno;
 - exportação cobre Área, Imagem/PNG, PDF e Imprimir nas views oficiais;
 - a referência visual de paletas é o desktop, com adaptação mobile por tokens/overrides escopados;
@@ -336,3 +336,39 @@ Código atual da main > commits confirmados > docs canônicos existentes > levan
 ```
 
 Scripts não confirmados, prints sem commit verificável e propostas que envolvam Supabase/RLS/RPC/migration não devem ser registrados como baseline.
+
+---
+
+## 12. Atualização complementar — 2026-06-22
+
+Esta revisão registra pontos que devem ser mantidos claros antes de qualquer Prompt 6 ou alteração em mapas:
+
+### Estado implementado na branch auditada
+
+- `index.html` carrega scripts mobile recentes de grade 3x3, Zoom, mapa completo, mosaico, cônjuges estendidos, filtros e stability lock.
+- `HomeTreeSection.tsx` usa os componentes horizontais filtrados.
+- A toolbar fixa mobile contém `Formato`, `Cor`, `Filtros`, `Zoom` e `+`.
+- O modal mobile `Controles` permanece separado da toolbar e não deve virar lugar para Exportar/Restaurar/Zoom +/-.
+- `Home.tsx` ainda contém `Visualizar como...`; o item `TREE-005` continua aberto.
+
+### Pendências que não devem virar baseline por engano
+
+- `/revisao-dados` ainda precisa separar Pets de Filhos.
+- `/arquivos-historicos` ainda precisa de frente própria para salvar fatos sem arquivo.
+- `homeAiContext.ts` ainda precisa remover inferência por nome/sufixo e filtrar campos sensíveis antes de enviar contexto à IA.
+- `participante_ids` em arquivos históricos não deve ser tratado como obrigatório sem migration.
+
+### Regra para Prompt 6
+
+Qualquer Prompt 6 que toque mapa deve começar pela leitura destes documentos:
+
+```txt
+docs/funcionalidades/MAPA_FAMILIAR_MOBILE.md
+docs/REGRAS_DE_NAO_REGRESSAO.md
+docs/funcionalidades/MAPA_FAMILIAR_VIEW.md
+docs/arquitetura/MAPA_FAMILIAR_MOBILE_ARQUITETURA.md
+docs/operacao/NAO_REGRESSAO_MAPAS_MOBILE.md
+docs/operacao/QA_MAPAS_MOBILE_2026_06_21.md
+```
+
+Se o Prompt 6 não for explicitamente mobile-safe, tratar como risco de regressão.

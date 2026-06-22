@@ -1,10 +1,10 @@
 # Inventário técnico — Árvore Família
 
-> Última revisão: 2026-06-15
+> Última revisão: 2026-06-22
 > Local canônico: `docs/INVENTARIO_TECNICO.md`
 > Projeto: `tuliust/arvorefamilia`
 > Tipo: inventário técnico
-> Status: atualizado com Mini Bio/Curiosidades com IA, revisão de vínculos modularizada, busca de pessoa existente, controle de perfil e onboarding de membro em 5 etapas.
+> Status: atualizado com a auditoria da branch `feature/questionario-ia-vinculos-pets`, mapas mobile recentes, Home debug viewer, riscos de IA e pendências de revisão/arquivos históricos.
 
 ---
 
@@ -129,8 +129,8 @@ legendOpen controla modal de controles, não aba de legenda.
 |---|---|---|---|
 | `DesktopFamilyMapView.tsx` | `/mapa-familiar` desktop/tablet | Vigente crítico | Alto |
 | `MobileFamilyTreeView.tsx` | `/mapa-familiar` mobile | Vigente crítico | Alto |
-| `DesktopFamilyHorizontalMapView.tsx` | `/mapa-familiar-horizontal` desktop/tablet | Vigente crítico | Alto |
-| `MobileFamilyHorizontalMapView.tsx` | `/mapa-familiar-horizontal` mobile | Vigente crítico | Alto |
+| `DesktopFamilyHorizontalMapFilteredView.tsx` | `/mapa-familiar-horizontal` desktop/tablet | Vigente crítico | Alto |
+| `MobileFamilyHorizontalMapFilteredView.tsx` | `/mapa-familiar-horizontal` mobile | Vigente crítico | Alto |
 | `FamilyTreeVisualCards.tsx` | cards e avatares compartilhados | Vigente crítico | Alto |
 | `TreeAreaSelectionOverlay.tsx` | seleção/exportação por área | Vigente crítico | Alto |
 | `TreeExportLoadingOverlay.tsx` | loading de exportação | Vigente | Médio |
@@ -401,3 +401,89 @@ Além disso:
 - não versionar secrets;
 - registrar pendências no `PLANO_PROXIMOS_PASSOS.md`;
 - validar visualmente se tocar árvore, CSS, painel, modal ou exportação.
+
+---
+
+## 17. Sincronização técnica — 2026-06-22
+
+### 17.1 Scripts mobile carregados no `index.html`
+
+Arquivos vigentes carregados diretamente:
+
+```txt
+src/mobileFamilyTreeMutationPerformanceGuard.ts
+src/main.tsx
+src/firstLoginMobileTutorialFixes.ts
+src/mobileCuriositiesNavigationFix.ts
+src/mobileTreePanelViewportFix.ts
+src/staticMobileFamilyTreeScreens.ts
+src/mobileFamilyTreeScreenStateGuards.ts
+src/mobileFamilyTreeGrandparentScreens.ts
+src/mobileFamilyTreeSwipeHints.ts
+src/mobileFamilyTreeAncestorConnectorsFix.ts
+src/mobileFamilyTreeDescendantConnectorsFix.ts
+src/mobileFamilyTreeCoreDescendantConnector.ts
+src/mobileFamilyTreeGroupTitleVisibilityFix.ts
+src/mobileFamilyHorizontalZoomOverview.ts
+src/mobileFamilyMapUncleSwipeNavigationGuard.ts
+src/mobileFamilyMapStableMobileFix.ts
+src/mobileFamilyMapDirectionalNavigationFix.ts
+src/mobileFamilyMapCoreConnectorFix.ts
+src/mobileVisualizationPanelFamilyStatsFix.ts
+src/mobileFamilyMapZoomOverviewVisualFix.ts
+src/mobileFamilyMapDescendantsStabilityLock.ts
+src/mobileFamilyMapExtendedSpouseCards.ts
+src/mobileFamilyMapFilterButtonsBehaviorFix.ts
+src/mobileFamilyMapFullOverview.ts
+src/mobileFamilyMapFullOverviewMosaicFix.ts
+```
+
+Categoria: **Vigente crítico**. Remoção, reorder ou substituição exige QA visual mobile.
+
+### 17.2 Horizontal filtrada
+
+A renderização atual da horizontal usa:
+
+```txt
+DesktopFamilyHorizontalMapFilteredView
+MobileFamilyHorizontalMapFilteredView
+```
+
+Não documentar `DesktopFamilyHorizontalMapView`/`MobileFamilyHorizontalMapView` como componentes efetivamente renderizados pelo shell atual sem validar imports e uso.
+
+### 17.3 Home e debug viewer
+
+`Home.tsx` permanece como **Vigente com dívida alta**. Além de dados, filtros, exportação e modais, ele ainda controla:
+
+```txt
+debugViewPersonId
+showViewAsSelector
+handleDebugViewPersonChange
+handleDesktopViewAsPersonChange
+```
+
+Categoria do recurso: **Temporário/debug ou decisão pendente**. Risco alto se alterado junto com mapa mobile.
+
+### 17.4 IA da Home
+
+`homeAiContext.ts` deve ser inventariado como **Vigente com dívida de privacidade/inferência**.
+
+Riscos técnicos:
+
+| Risco | Evidência | Tratamento |
+|---|---|---|
+| Inferência por nomes/sufixos para pai/mãe | `inferParentLabelByName` | Remover ou restringir em frente própria; priorizar `relacionamentos` explícitos. |
+| Dados de contato no contexto | `telefone` e `redeSocial` em `selectedCuriosityPerson` | Filtrar por permissões antes de enviar ao endpoint. |
+| Uso de IDs no contexto | IDs entram no JSON para cálculo | Instruir IA a não exibir IDs; idealmente reduzir contexto. |
+
+### 17.5 Onboarding e revisão
+
+Na branch auditada:
+
+| Área | Estado |
+|---|---|
+| `/meus-vinculos` | Já recebeu separação visual de pets, regras de cônjuges e badges ajustados no Prompt 4. |
+| `/revisao-dados` | Ainda precisa separar pets de filhos; `relationshipSummary` usa `relationships.filhos` sem filtro. |
+| `/arquivos-historicos` | Ainda exige arquivo na UI atual; evolução para fatos sem arquivo depende de alteração/migration. |
+| `arquivosHistoricosService.ts` | Possui fallback para ausência de `participante_ids`; não tratar participantes como obrigatório sem migration e QA. |
+| `MemberOnboardingSteps` | Pode permitir clique direto em `/preferencias`; pessoa falecida deve continuar sendo corrigida pela própria página de preferências/guard. |

@@ -1,10 +1,10 @@
 # Baseline do produto atual — Árvore Família
 
-> Última revisão: 2026-06-16
+> Última revisão: 2026-06-22
 > Local canônico: `docs/BASELINE_PRODUTO_ATUAL.md`
 > Projeto: `tuliust/arvorefamilia`
 > Tipo: baseline funcional
-> Status: revisado para incluir onboarding condicional, pessoa falecida, revisão final com edição inline e regras de badges.
+> Status: revisado para consolidar mapas mobile, toolbar/Zoom/Exportar, riscos de IA, estado real de `/revisao-dados` e arquivos históricos na branch auditada.
 
 ---
 
@@ -122,8 +122,8 @@ docs/
 |---|---|---|
 | `/mapa-familiar` | desktop/tablet | `DesktopFamilyMapView` |
 | `/mapa-familiar` | mobile | `MobileFamilyTreeView` |
-| `/mapa-familiar-horizontal` | desktop/tablet | `DesktopFamilyHorizontalMapView` |
-| `/mapa-familiar-horizontal` | mobile | `MobileFamilyHorizontalMapView` |
+| `/mapa-familiar-horizontal` | desktop/tablet | `DesktopFamilyHorizontalMapFilteredView` |
+| `/mapa-familiar-horizontal` | mobile | `MobileFamilyHorizontalMapFilteredView` |
 
 Títulos funcionais/exportáveis:
 
@@ -145,7 +145,7 @@ Observação: rótulos de navegação podem usar texto mais curto, mas não deve
 | Guards | `TreeAccessRoute`, `MemberRoute` e `ProtectedRoute` permanecem como contratos de acesso. |
 | Shell da árvore | `Home` orquestra carregamento, pessoa central, filtros, painel, modal, exportação e debug temporário. |
 | Painel desktop | Implementado sem barra `Filtros | Legendas | Ações`; controles e filtros ficam diretos ou em flyouts. |
-| Modal mobile | Implementado como versão reduzida de controles; não deve expor Zoom, Restaurar ou Exportar. |
+| Modal mobile `Controles` | Implementado como versão reduzida de controles; não deve expor Zoom +/-, Restaurar ou Exportar. A toolbar fixa mobile possui botão `Zoom` separado. |
 | Exportação | Implementada nas duas views oficiais para Área, PNG, PDF e Imprimir. |
 | Paletas | `white`, `visual`, `orange`, `brown`; desktop é a referência visual. |
 | Calendário | Implementado em `/calendario-familiar`, com categorias e layout mobile específico. |
@@ -259,18 +259,26 @@ Regras:
 
 ### Mobile
 
-Controles vigentes:
+Toolbar fixa vigente dos mapas familiares:
 
 ```txt
-Vertical
-Horizontal
-Cores
-Grupos
-Destacar
+Formato
+Cor
 Filtros
+Zoom
++
 ```
 
-Não exibir no modal mobile:
+Regras de interpretação:
+
+- `Zoom` é ação da toolbar fixa, não item do modal mobile `Controles`;
+- em `/mapa-familiar`, `Zoom` abre o overview 3x3 e pode expor a ação **Exibir mapa completo**;
+- em `/mapa-familiar-horizontal`, `Zoom` abre overview por gerações;
+- o botão circular `+` abre o painel completo de visualização;
+- `Exportar` não deve ser reintroduzido como botão fixo da toolbar sem decisão explícita;
+- ações de salvar/exportar podem existir no painel completo, mas devem ser tratadas como fluxo diferente do modal `Controles`.
+
+Não exibir no modal mobile `Controles`:
 
 ```txt
 Zoom +
@@ -360,7 +368,7 @@ sem scroll horizontal manual como navegação principal
 
 Regras:
 
-- horizontal mobile usa `MobileFamilyHorizontalMapView`;
+- horizontal mobile usa `MobileFamilyHorizontalMapFilteredView`;
 - não usa barra `Paterno | Central | Materno`;
 - não cria subrotas por geração;
 - deve preservar safe area e bottom nav;
@@ -530,121 +538,168 @@ Na rota `/mapa-familiar-horizontal`:
 - A regra n?o cria nem infere v?nculos inexistentes; depende de relacionamentos expl?citos de `conjuge` e filia??o j? persistidos.
 
 <!-- BASELINE-CONSOLIDADO-2026-06-18 -->
-## Baseline consolidado â€” ajustes recentes confirmados
+## Baseline consolidado — ajustes recentes confirmados
 
-Esta seÃ§Ã£o registra somente frentes citadas no levantamento que tiveram confirmaÃ§Ã£o de commit, merge ou push na `main`.
+Esta seção registra somente frentes citadas no levantamento que tiveram confirmação de commit, merge ou push na `main`.
 
-| Frente | Status | ReferÃªncia |
+| Frente | Status | Referência |
 |---|---|---|
 | Ajustes finais do onboarding do membro | Confirmado | `5ef555c` |
-| PadronizaÃ§Ã£o de formulÃ¡rios de ediÃ§Ã£o/criaÃ§Ã£o de pessoas | Confirmado | `1b64790` |
-| Cards do Admin Dashboard como botÃµes | Confirmado | `b84d101` |
-| Dropdown â€œVisualizar comoâ€ no header | Confirmado por merge | `4fecf05` |
+| Padronização de formulários de edição/criação de pessoas | Confirmado | `1b64790` |
+| Cards do Admin Dashboard como botões | Confirmado | `b84d101` |
+| Dropdown “Visualizar como” no header | Confirmado por merge | `4fecf05` |
 | Ajustes mobile do onboarding e menus inferiores | Confirmado | `2627820` |
 
 ### Estado funcional confirmado
 
-- O onboarding do membro estÃ¡ organizado em etapas para dados pessoais, vÃ­nculos, arquivos histÃ³ricos, preferÃªncias e revisÃ£o.
-- Pessoa falecida tem fluxo condicional: nÃ£o passa pela etapa de preferÃªncias, tem notificaÃ§Ãµes/mensagens desativadas e revisÃ£o sem contatos ativos.
-- A revisÃ£o final usa estrutura de perfil, cards e ediÃ§Ã£o inline para blocos editÃ¡veis.
-- Arquivos histÃ³ricos suportam categoria, metadados, rascunho local e participantes em camada visual/metadados locais, sem assumir persistÃªncia definitiva se o schema nÃ£o existir.
-- FormulÃ¡rios de pessoa reaproveitam seletivamente padrÃµes do onboarding sem transformar `/minha-arvore/editar` ou admin em onboarding.
-- O dropdown â€œVisualizar comoâ€ pertence ao header das views de Ã¡rvore, nÃ£o a um seletor flutuante/debug.
-- A frente mobile corrigiu auto-zoom de inputs, steps do onboarding, tooltips por toque, header mobile e espaÃ§amentos de menus inferiores.
+- O onboarding do membro está organizado em etapas para dados pessoais, vínculos, arquivos históricos, preferências e revisão.
+- Pessoa falecida tem fluxo condicional: não passa pela etapa de preferências, tem notificações/mensagens desativadas e revisão sem contatos ativos.
+- A revisão final usa estrutura de perfil, cards e edição inline para blocos editáveis.
+- Arquivos históricos suportam categoria, metadados, rascunho local e participantes em camada visual/metadados locais, sem assumir persistência definitiva se o schema não existir.
+- Formulários de pessoa reaproveitam seletivamente padrões do onboarding sem transformar `/minha-arvore/editar` ou admin em onboarding.
+- O dropdown “Visualizar como” pertence ao header das views de árvore, não a um seletor flutuante/debug.
+- A frente mobile corrigiu auto-zoom de inputs, steps do onboarding, tooltips por toque, header mobile e espaçamentos de menus inferiores.
 
 ### Fora do baseline
 
-NÃ£o fazem parte deste baseline atÃ© confirmaÃ§Ã£o no Git:
+Não fazem parte deste baseline até confirmação no Git:
 
 - scripts apenas gerados;
 - tentativas de patch com erro;
 - ajustes sugeridos apenas por print;
 - reset ampliado de perfil com RPC/migration;
-- mudanÃ§as em favoritos, timeline, notificaÃ§Ãµes e perfil de pessoa sem commit verificÃ¡vel.
+- mudanças em favoritos, timeline, notificações e perfil de pessoa sem commit verificável.
 
 <!-- RODADA2-BASELINE-2026-06-18 -->
-## Baseline complementar â€” mapas, painel, mobile e Curiosidades
+## Baseline complementar — mapas, painel, mobile e Curiosidades
 
-Esta segunda rodada consolida complementos posteriores do levantamento. Diferente da primeira rodada, aqui entram frentes ligadas a Ã¡rvore/mapas, painel lateral, toolbar mobile, Curiosidades, Favoritos, NotificaÃ§Ãµes e CalendÃ¡rio.
+Esta segunda rodada consolida complementos posteriores do levantamento. Diferente da primeira rodada, aqui entram frentes ligadas a árvore/mapas, painel lateral, toolbar mobile, Curiosidades, Favoritos, Notificações e Calendário.
 
-### Painel/header/tour da Ã¡rvore
+### Painel/header/tour da árvore
 
-| ReferÃªncia | Frente | Status Git local |
+| Referência | Frente | Status Git local |
 |---|---|---|
 | $(System.Collections.Hashtable.Sha) | dica/destaque de linhas no mapa horizontal | Encontrado |
-| $(System.Collections.Hashtable.Sha) | tour inicial, favoritos, alvos e controles da Ã¡rvore | Encontrado |
+| $(System.Collections.Hashtable.Sha) | tour inicial, favoritos, alvos e controles da árvore | Encontrado |
 | $(System.Collections.Hashtable.Sha) | dropdown Visualizar como no painel lateral | Encontrado |
 | $(System.Collections.Hashtable.Sha) | header e painel lateral | Encontrado |
-| $(System.Collections.Hashtable.Sha) | painel de visualizaÃ§Ã£o compacto | Encontrado |
+| $(System.Collections.Hashtable.Sha) | painel de visualização compacto | Encontrado |
 
 Estado consolidado:
 
-- O seletor **Visualizar como** migrou do header para o painel lateral/Ã¡rea de visualizaÃ§Ã£o.
-- A Ã¡rvore passou a ter painel lateral com modos de visualizaÃ§Ã£o, controles, favoritos/alertas e aÃ§Ãµes principais.
-- O tour inicial e o holofote foram ajustados para apontar corretamente para Ã¡reas da Ã¡rvore e controles.
-- O painel de visualizaÃ§Ã£o recebeu refinamentos de largura e comportamento compacto.
+- O seletor **Visualizar como** migrou do header para o painel lateral/área de visualização.
+- A árvore passou a ter painel lateral com modos de visualização, controles, favoritos/alertas e ações principais.
+- O tour inicial e o holofote foram ajustados para apontar corretamente para áreas da árvore e controles.
+- O painel de visualização recebeu refinamentos de largura e comportamento compacto.
 
 ### Ajustes mobile realizados via conector/GitHub
 
-| ReferÃªncia | Frente | Status Git local |
+| Referência | Frente | Status Git local |
 |---|---|---|
-| $(System.Collections.Hashtable.Sha) | placeholder de profissÃ£o no cadastro mobile | Encontrado |
+| $(System.Collections.Hashtable.Sha) | placeholder de profissão no cadastro mobile | Encontrado |
 | $(System.Collections.Hashtable.Sha) | redes sociais no mobile | Encontrado |
-| $(System.Collections.Hashtable.Sha) | acabamento mobile da ediÃ§Ã£o da Ã¡rvore | Encontrado |
-| $(System.Collections.Hashtable.Sha) | correÃ§Ãµes mobile da ediÃ§Ã£o de perfil | Encontrado |
-| $(System.Collections.Hashtable.Sha) | calendÃ¡rio familiar mobile | Encontrado |
+| $(System.Collections.Hashtable.Sha) | acabamento mobile da edição da árvore | Encontrado |
+| $(System.Collections.Hashtable.Sha) | correções mobile da edição de perfil | Encontrado |
+| $(System.Collections.Hashtable.Sha) | calendário familiar mobile | Encontrado |
 | $(System.Collections.Hashtable.Sha) | dashboard admin mobile | Encontrado |
 | $(System.Collections.Hashtable.Sha) | favoritos mobile | Encontrado |
-| $(System.Collections.Hashtable.Sha) | notificaÃ§Ãµes mobile | Encontrado |
+| $(System.Collections.Hashtable.Sha) | notificações mobile | Encontrado |
 | $(System.Collections.Hashtable.Sha) | desativa dica mobile de desktop | Encontrado |
 
 Estado consolidado:
 
-- /minha-arvore/editar recebeu ajustes mobile de placeholder, redes sociais, cabeÃ§alhos, arquivos histÃ³ricos, eventos e alertas.
-- /calendario-familiar recebeu filtros mobile em cards horizontais, Ã­cones e melhor tratamento de nomes longos.
+- /minha-arvore/editar recebeu ajustes mobile de placeholder, redes sociais, cabeçalhos, arquivos históricos, eventos e alertas.
+- /calendario-familiar recebeu filtros mobile em cards horizontais, ícones e melhor tratamento de nomes longos.
 - /admin teve painel mobile refinado para cadastros.
-- /meus-favoritos recebeu busca e filtros compactos, alÃ©m de remoÃ§Ã£o por estrela ativa.
+- /meus-favoritos recebeu busca e filtros compactos, além de remoção por estrela ativa.
 - /notificacoes teve cards simplificados.
 - O modal **Fica a dica** deixou de abrir automaticamente em mobile.
 
 ### Curiosidades, mural e rota familiar
 
-| ReferÃªncia | Frente | Status Git local |
+| Referência | Frente | Status Git local |
 |---|---|---|
-| $(System.Collections.Hashtable.Sha) | testes para utilitÃ¡rios de curiosidades | Encontrado |
+| $(System.Collections.Hashtable.Sha) | testes para utilitários de curiosidades | Encontrado |
 | $(System.Collections.Hashtable.Sha) | typecheck TypeScript | Encontrado |
-| $(System.Collections.Hashtable.Sha) | utilitÃ¡rio de distÃ¢ncia geogrÃ¡fica | Encontrado |
-| $(System.Collections.Hashtable.Sha) | grÃ¡ficos reais em curiosidades | Encontrado |
-| $(System.Collections.Hashtable.Sha) | correÃ§Ã£o de typecheck TypeScript | Encontrado |
-| $(System.Collections.Hashtable.Sha) | utilitÃ¡rios compartilhados de curiosidades | Encontrado |
+| $(System.Collections.Hashtable.Sha) | utilitário de distância geográfica | Encontrado |
+| $(System.Collections.Hashtable.Sha) | gráficos reais em curiosidades | Encontrado |
+| $(System.Collections.Hashtable.Sha) | correção de typecheck TypeScript | Encontrado |
+| $(System.Collections.Hashtable.Sha) | utilitários compartilhados de curiosidades | Encontrado |
 | $(System.Collections.Hashtable.Sha) | fluxo Descubra mais sobre | Encontrado |
-| $(System.Collections.Hashtable.Sha) | mural persistente de lembranÃ§as | Encontrado |
+| $(System.Collections.Hashtable.Sha) | mural persistente de lembranças | Encontrado |
 | $(System.Collections.Hashtable.Sha) | favoritos e compartilhamento em descobertas | Encontrado |
-| $(System.Collections.Hashtable.Sha) | distÃ¢ncia real na rota familiar | Encontrado |
-| $(System.Collections.Hashtable.Sha) | correÃ§Ã£o de textos de curiosidades | Encontrado |
+| $(System.Collections.Hashtable.Sha) | distância real na rota familiar | Encontrado |
+| $(System.Collections.Hashtable.Sha) | correção de textos de curiosidades | Encontrado |
 
 Estado consolidado:
 
-- Curiosidades passou a ter utilitÃ¡rios testados, typecheck dedicado e grÃ¡ficos reais.
-- A frente adicionou cÃ¡lculo de distÃ¢ncia geogrÃ¡fica, rota familiar com distÃ¢ncia real quando hÃ¡ coordenadas, mural persistente de lembranÃ§as, favoritos e compartilhamento de descobertas.
+- Curiosidades passou a ter utilitários testados, typecheck dedicado e gráficos reais.
+- A frente adicionou cálculo de distância geográfica, rota familiar com distância real quando há coordenadas, mural persistente de lembranças, favoritos e compartilhamento de descobertas.
 - O levantamento registra migrations aplicadas e QA real autenticado OK para a frente de Curiosidades.
-- Persistem pendÃªncias sobre origem Ãºnica e backfill de coordenadas de cidades.
+- Persistem pendências sobre origem única e backfill de coordenadas de cidades.
 
 ### Toolbar mobile dos mapas familiares
 
-| ReferÃªncia | Frente | Status Git local |
+| Referência | Frente | Status Git local |
 |---|---|---|
 | $(System.Collections.Hashtable.Sha) | PR #13 toolbar mobile dos mapas familiares | Encontrado |
-| $(System.Collections.Hashtable.Sha) | PR #14 opÃ§Ãµes de visualizaÃ§Ã£o | Encontrado |
+| $(System.Collections.Hashtable.Sha) | PR #14 opções de visualização | Encontrado |
 | $(System.Collections.Hashtable.Sha) | PR #15 popover mobile de cores | Encontrado |
-| $(System.Collections.Hashtable.Sha) | PR #16 visualizaÃ§Ã£o e formato | Encontrado |
-| $(System.Collections.Hashtable.Sha) | PR #17 exportaÃ§Ã£o mobile | Encontrado |
+| $(System.Collections.Hashtable.Sha) | PR #16 visualização e formato | Encontrado |
+| $(System.Collections.Hashtable.Sha) | PR #17 exportação mobile | Encontrado |
 | $(System.Collections.Hashtable.Sha) | PR #18 filtros e painel extra mobile | Encontrado |
 | $(System.Collections.Hashtable.Sha) | PR #19 painel mobile de controles | Encontrado |
 
 Estado consolidado:
 
 - A toolbar mobile dos mapas familiares foi padronizada.
-- AÃ§Ãµes foram separadas em **VisualizaÃ§Ã£o**, **Formato**, **Cor**, **Filtros**, **Exportar** e botÃ£o circular +.
-- O botÃ£o + abre painel mobile completo de controles, inspirado no painel desktop.
-- As alteraÃ§Ãµes foram registradas no levantamento como PRs #13 a #19, mergeados em main.
+- Ações foram separadas em **Visualização**, **Formato**, **Cor**, **Filtros**, **Exportar** e botão circular +.
+- O botão + abre painel mobile completo de controles, inspirado no painel desktop.
+- As alterações foram registradas no levantamento como PRs #13 a #19, mergeados em main.
+
+---
+
+## Apêndice — auditoria complementar 2026-06-22
+
+### A. Mapas mobile, toolbar e Exportar
+
+A documentação vigente deve resolver a tensão entre três superfícies diferentes:
+
+| Superfície | Estado observado | Regra documental |
+|---|---|---|
+| Toolbar fixa mobile | `Formato`, `Cor`, `Filtros`, `Zoom` e botão `+` | Deve ser preservada. |
+| Modal mobile `Controles` | painel reduzido acionado por `legendOpen` | Não deve exibir Zoom +/-, Restaurar ou Exportar. |
+| Painel completo do botão `+` | contém seletor de visualizador, formato, paleta, resumo, grupos e ação de salvar/exportar quando disponível | Não deve ser confundido com o modal `Controles`. |
+
+Ação proibida: remover ou alterar scripts e CSS mobile para “limpar” a documentação sem QA real em `/mapa-familiar` e `/mapa-familiar-horizontal`.
+
+### B. `Home.tsx` e `Visualizar como...`
+
+`Home.tsx` ainda mantém `debugViewPersonId`, `showViewAsSelector` e handlers de troca de visualizador. Isso não está resolvido. A decisão permanece:
+
+```txt
+TREE-005 — remover, esconder por flag/admin ou transformar em funcionalidade oficial.
+```
+
+Até decisão explícita, a documentação deve tratar `Visualizar como...` como recurso temporário/de QA com impacto alto.
+
+### C. IA e privacidade
+
+`homeAiContext.ts` ainda prepara contexto com campos sensíveis possíveis, incluindo telefone e rede social da pessoa selecionada, e contém inferência por nome/sufixo para rotular pai/mãe quando o relacionamento não está explícito.
+
+Regra de baseline:
+
+- não ampliar esse padrão sem revisão de privacidade;
+- não usar inferência por nome como fonte de verdade;
+- não expor contato/rede social em resposta de IA sem checar permissões;
+- não pedir ao modelo que complete lacunas genealógicas.
+
+### D. Estado real de `/revisao-dados` e arquivos históricos
+
+Na branch auditada:
+
+- `/revisao-dados` ainda lista `relationships.filhos` como um único grupo, sem separar pets;
+- `/arquivos-historicos` ainda exibe título `Arquivos históricos`;
+- o componente de arquivos históricos ainda exige título + arquivo/url para adicionar item.
+
+Esses pontos devem permanecer como pendências até alteração de código, build e validação.

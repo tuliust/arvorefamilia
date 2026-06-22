@@ -1,9 +1,9 @@
 # Curiosidades e IA - modal, conexão familiar e perguntas assistidas
 
-> Última revisão: 2026-06-15
+> Última revisão: 2026-06-22
 > Local canônico: `docs/funcionalidades/CURIOSIDADES_E_IA.md`
 > Tipo: documentação funcional e técnica das abas de Curiosidades, conexão familiar e IA na Home.
-> Status: atualizado para registrar que a geração assistida de Mini Bio e Curiosidades permanece na Etapa 1 `/meus-dados` do novo fluxo em 5 etapas.
+> Status: revisado contra `homeAiContext.ts` para registrar riscos de inferência por nome/sufixo e minimização de dados no contexto da IA.
 
 ## 1. Função deste documento
 
@@ -603,18 +603,18 @@ docs/funcionalidades/ARVORE_LEGENDAS_CONECTORES_PAINEL.md
 <!-- CURIOSIDADES-IA-CONSOLIDACAO-2026-06-18 -->
 ## Pontos recentes a documentar quando confirmados
 
-Registrar nesta funcionalidade, somente quando houver commit verificÃ¡vel:
+Registrar nesta funcionalidade, somente quando houver commit verificável:
 
-- grÃ¡ficos reais;
-- cÃ¡lculo de distÃ¢ncia geogrÃ¡fica;
-- mural persistente de lembranÃ§as;
+- gráficos reais;
+- cálculo de distância geográfica;
+- mural persistente de lembranças;
 - favoritar descoberta;
 - compartilhar descoberta;
-- rota familiar com distÃ¢ncia real;
-- fluxo â€œDescubra mais sobreâ€;
-- testes de utilitÃ¡rios relacionados.
+- rota familiar com distância real;
+- fluxo “Descubra mais sobre”;
+- testes de utilitários relacionados.
 
-PendÃªncias e ideias sem commit devem ficar em `PLANO_PROXIMOS_PASSOS.md`.
+Pendências e ideias sem commit devem ficar em `PLANO_PROXIMOS_PASSOS.md`.
 
 <!-- RODADA2-CURIOSIDADES-2026-06-18 -->
 ## Curiosidades, mural, descobertas e rota familiar
@@ -623,16 +623,16 @@ PendÃªncias e ideias sem commit devem ficar em `PLANO_PROXIMOS_PASSOS.md`.
 
 A frente de Curiosidades evoluiu para incluir:
 
-- testes de utilitÃ¡rios;
+- testes de utilitários;
 - typecheck TypeScript;
-- utilitÃ¡rio de distÃ¢ncia geogrÃ¡fica;
-- grÃ¡ficos reais;
-- extraÃ§Ã£o de utilitÃ¡rios compartilhados;
-- fluxo â€œDescubra mais sobreâ€;
-- mural persistente de lembranÃ§as;
+- utilitário de distância geográfica;
+- gráficos reais;
+- extração de utilitários compartilhados;
+- fluxo “Descubra mais sobre”;
+- mural persistente de lembranças;
 - favoritos e compartilhamento de descobertas;
-- rota familiar com distÃ¢ncia real;
-- correÃ§Ãµes de texto/encoding.
+- rota familiar com distância real;
+- correções de texto/encoding.
 
 ### Commits citados no levantamento
 
@@ -673,38 +673,103 @@ updated_at
 
 Regras:
 
-- `body` obrigatÃ³rio, entre 1 e 1200 caracteres;
-- `author_name` obrigatÃ³rio, entre 1 e 120 caracteres;
+- `body` obrigatório, entre 1 e 1200 caracteres;
+- `author_name` obrigatório, entre 1 e 120 caracteres;
 - `visibility`: `family`, `close_relatives`, `private`;
 - `status`: `published`, `hidden`.
 
 ### Descobertas
 
-Descobertas do fluxo â€œDescubra mais sobreâ€ podem ser:
+Descobertas do fluxo “Descubra mais sobre” podem ser:
 
 - favoritedas como `curiosity_discovery`;
 - compartilhadas via `navigator.share`;
-- copiadas para a Ã¡rea de transferÃªncia como fallback desktop.
+- copiadas para a área de transferência como fallback desktop.
 
-### Rota familiar com distÃ¢ncia real
+### Rota familiar com distância real
 
 A rota familiar:
 
-- usa cidades de residÃªncia atual;
-- calcula distÃ¢ncia aproximada quando hÃ¡ coordenadas suficientes;
+- usa cidades de residência atual;
+- calcula distância aproximada quando há coordenadas suficientes;
 - usa fallback textual quando faltam coordenadas;
-- mostra rota, trechos, distÃ¢ncia aproximada e aviso de limitaÃ§Ã£o.
+- mostra rota, trechos, distância aproximada e aviso de limitação.
 
-DecisÃ£o funcional:
+Decisão funcional:
 
 ```txt
-Coordenadas devem estar associadas Ã  cidade de residÃªncia atual cadastrada/selecionada, nÃ£o soltas em cada pessoa.
+Coordenadas devem estar associadas à cidade de residência atual cadastrada/selecionada, não soltas em cada pessoa.
 ```
 
-### PendÃªncias
+### Pendências
 
-- garantir origem Ãºnica das coordenadas;
-- normalizar/backfill de cidades jÃ¡ cadastradas;
+- garantir origem única das coordenadas;
+- normalizar/backfill de cidades já cadastradas;
 - preservar coordenadas no cadastro de cidade;
-- validar famÃ­lias com e sem coordenadas;
-- evoluir compartilhamento para fÃ³rum se essa for a decisÃ£o de produto.
+- validar famílias com e sem coordenadas;
+- evoluir compartilhamento para fórum se essa for a decisão de produto.
+
+---
+
+## 24. Auditoria do código atual — 2026-06-22
+
+### 24.1 Inferência parental por nome/sufixo
+
+O código atual de `homeAiContext.ts` contém a função `inferParentLabelByName`, usada como fallback em `findFatherLink` e `findMotherLink`.
+
+Essa função usa:
+
+- listas fixas de primeiros nomes;
+- sufixos comuns para tentar distinguir `pai` e `mãe`;
+- fallback final para `pai`.
+
+Essa implementação deve ser tratada como **dívida técnica**, não como regra funcional.
+
+Regra documental vigente:
+
+```txt
+Quando houver risco, não inferir pai/mãe por nome.
+Usar primeiro `tipo_relacionamento`.
+Usar gênero cadastrado apenas como apoio quando disponível e coerente.
+Se o dado não estiver claro, responder "não informado" ou "não consegui determinar com segurança".
+```
+
+### 24.2 Dados privados no contexto da IA
+
+O contexto atual da pessoa selecionada pode incluir:
+
+```txt
+telefone
+redeSocial
+bio
+curiosidades
+localAtual
+localNascimento
+```
+
+Regras de minimização:
+
+- telefone e rede social não devem ser enviados ao endpoint de IA sem checagem explícita das permissões de exibição;
+- dados de contato não devem aparecer em respostas da IA por padrão;
+- campos sensíveis devem ser omitidos quando não forem necessários para a pergunta;
+- a resposta final não deve revelar dados privados apenas porque existem no payload.
+
+### 24.3 Pets no contexto semântico
+
+A separação atual entre `filhosHumanos` e `pets` no contexto semântico é correta e deve ser preservada.
+
+Regra:
+
+```txt
+Pets podem usar relacionamento parental por compatibilidade técnica,
+mas a IA deve interpretá-los como pets/tutela, não como filhos humanos.
+```
+
+### 24.4 Ações recomendadas
+
+| ID | Ação | Tipo |
+|---|---|---|
+| `AI-001` | remover ou restringir inferência parental por nome/sufixo | correção |
+| `AI-002` | filtrar telefone/rede social antes de montar contexto | privacidade |
+| `AI-003` | adicionar teste unitário para perguntas de ascendência sem gênero explícito | QA |
+| `AI-004` | revisar `api/ai.ts` para reforçar regra de não inventar fatos | segurança |

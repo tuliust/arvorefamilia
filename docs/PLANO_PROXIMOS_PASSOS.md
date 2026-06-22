@@ -1,9 +1,9 @@
 # Plano de próximos passos — Árvore Família
 
-> Última revisão: 2026-06-16
+> Última revisão: 2026-06-22
 > Local canônico: `docs/PLANO_PROXIMOS_PASSOS.md`
 > Tipo: backlog técnico/documental vivo
-> Status: atualizado para refletir Mini Bio/Curiosidades com IA, revisão de vínculos familiares como comportamento consolidado e registrar apenas QA, persistência futura, automação e documentação ainda abertos.
+> Status: revisado para consolidar pendências reais de mapas mobile, debug viewer, IA/privacidade, pets em revisão e arquivos históricos sem arquivo.
 
 ---
 
@@ -64,6 +64,79 @@ Regras:
 ---
 
 ## 3. Itens abertos
+
+### Itens abertos adicionados em 2026-06-22
+
+#### ID: TREE-006
+
+**Título:** Consolidar documentação e QA dos scripts mobile carregados no `index.html`.  
+**Tipo:** não regressão | documentação técnica  
+**Prioridade:** alta  
+**Contexto:** a estrutura mobile dos mapas familiares depende de React + scripts auxiliares carregados diretamente no `index.html`. A lista vigente inclui scripts recentes de Zoom visual, stability lock, cônjuges estendidos, filtros mobile, mapa completo e mosaico.  
+**Arquivos relacionados:** `index.html`, `src/mobileFamilyMap*.ts`, `src/mobileFamilyTree*.ts`, `docs/funcionalidades/MAPA_FAMILIAR_MOBILE.md`, `docs/arquitetura/MAPA_FAMILIAR_MOBILE_ARQUITETURA.md`.  
+**Ação recomendada:** antes de alterar qualquer script mobile, comparar contra o contrato vigente e executar QA mobile em 320px, 375px, 390px e 430px.  
+**Status:** aberto.
+
+#### ID: TREE-007
+
+**Título:** Resolver ambiguidade de `Exportar` no mobile.  
+**Tipo:** decisão de produto | QA  
+**Prioridade:** média  
+**Contexto:** a toolbar fixa mobile expõe `Formato`, `Cor`, `Filtros`, `Zoom` e `+`. O código ainda possui estruturas para exportação em `HomeMobileNav`, mas `Exportar` não é botão fixo da toolbar. O modal `Controles` não deve expor Exportar.  
+**Arquivos relacionados:** `src/app/pages/home/HomeMobileNav.tsx`, `src/app/components/FamilyTree/MobileFamilyMapToolbar.tsx`, `src/app/pages/Home.tsx`.  
+**Ação recomendada:** decidir se exportação mobile fica apenas no painel completo `+`, se vira fluxo oficial separado ou se permanece oculto.  
+**Status:** aberto.
+
+#### ID: AI-001
+
+**Título:** Remover inferência parental por nomes/sufixos do contexto da IA.  
+**Tipo:** privacidade | qualidade de dados  
+**Prioridade:** alta  
+**Contexto:** `homeAiContext.ts` usa `inferParentLabelByName` como fallback para pai/mãe. Isso conflita com a regra de não inferir parentesco por nome quando houver risco.  
+**Arquivos relacionados:** `src/app/pages/home/homeAiContext.ts`, `docs/funcionalidades/CURIOSIDADES_E_IA.md`.  
+**Ação recomendada:** usar apenas `tipo_relacionamento` explícito ou gênero cadastrado quando disponível; quando não houver dado, responder “não informado”.  
+**Status:** aberto.
+
+#### ID: AI-002
+
+**Título:** Filtrar contato e rede social antes de enviar contexto para IA.  
+**Tipo:** privacidade | segurança  
+**Prioridade:** alta  
+**Contexto:** `homeAiContext.ts` inclui telefone e rede social da pessoa selecionada no payload de contexto. O envio deve respeitar permissões de exibição e minimização de dados.  
+**Arquivos relacionados:** `src/app/pages/home/homeAiContext.ts`, `src/app/types/index.ts`, `api/ai.ts`.  
+**Ação recomendada:** remover esses campos do contexto ou enviá-los somente com checagem explícita de permissões.  
+**Status:** aberto.
+
+#### ID: REV-001
+
+**Título:** Separar Pets de Filhos em `/revisao-dados`.  
+**Tipo:** correção funcional  
+**Prioridade:** alta  
+**Contexto:** a revisão final atual agrupa `relationships.filhos` sem filtrar `humano_ou_pet === 'Pet'`. Isso pode fazer pet aparecer como filho humano.  
+**Arquivos relacionados:** `src/app/pages/RevisaoDados.tsx`, `src/app/services/dataService.ts`, `src/app/types/index.ts`.  
+**Ação recomendada:** filtrar filhos humanos e exibir grupo `Pets` separado; preservar drafts antigos.  
+**Status:** aberto.
+
+#### ID: HIST-001
+
+**Título:** Transformar `/arquivos-historicos` em `Fatos e Arquivos Históricos` sem exigir arquivo.  
+**Tipo:** melhoria funcional | possível migration  
+**Prioridade:** média  
+**Contexto:** a UI atual exige título + arquivo/url para adicionar item. Tornar memória/fato sem arquivo exige alteração em componente, service e eventualmente migration para permitir `url`, `storage_bucket`, `storage_path` e `mime_type` nulos.  
+**Arquivos relacionados:** `src/app/pages/ArquivosHistoricosPage.tsx`, `src/app/components/ArquivosHistoricos.tsx`, `src/app/services/arquivosHistoricosService.ts`, `supabase/migrations/*`.  
+**Ação recomendada:** implementar em lote próprio, com migration mínima se o banco exigir arquivo.  
+**Status:** aberto.
+
+#### ID: DB-001
+
+**Título:** Não tornar `participante_ids` obrigatório sem migration aplicada.  
+**Tipo:** banco de dados | compatibilidade  
+**Prioridade:** média  
+**Contexto:** `arquivosHistoricosService.ts` possui fallback para ausência da coluna `participante_ids`. Qualquer regra que torne participantes obrigatórios exige migration, RLS e backfill.  
+**Arquivos relacionados:** `src/app/services/arquivosHistoricosService.ts`, `docs/operacao/MIGRATIONS_SUPABASE.md`.  
+**Ação recomendada:** manter participantes como opcional até schema confirmado.  
+**Status:** aberto.
+
 
 ### Documentação
 
@@ -480,40 +553,40 @@ docs/QA_MANUAL.md
 ```
 
 <!-- PENDENCIAS-LEVANTAMENTO-2026-06-18 -->
-## PendÃªncias e verificaÃ§Ãµes herdadas do levantamento recente
+## Pendências e verificações herdadas do levantamento recente
 
-Estas frentes aparecem no levantamento como scripts gerados, execuÃ§Ã£o nÃ£o confirmada, tentativa falha, visual sugerido por print ou decisÃ£o pendente. Elas nÃ£o devem ser registradas como baseline atÃ© verificaÃ§Ã£o no cÃ³digo/Git.
+Estas frentes aparecem no levantamento como scripts gerados, execução não confirmada, tentativa falha, visual sugerido por print ou decisão pendente. Elas não devem ser registradas como baseline até verificação no código/Git.
 
 ### Verificar antes de documentar como implementado
 
-- Contagem de cÃ´njuges no `/mapa-familiar-horizontal`.
-- ReorganizaÃ§Ã£o de `/pessoa/:id` com timeline lateral.
-- Relacionamentos abaixo de acontecimentos histÃ³ricos.
+- Contagem de cônjuges no `/mapa-familiar-horizontal`.
+- Reorganização de `/pessoa/:id` com timeline lateral.
+- Relacionamentos abaixo de acontecimentos históricos.
 - Textos narrativos da timeline.
-- RemoÃ§Ã£o de badge secundÃ¡ria e â€œData desconhecidaâ€ da timeline.
-- Subida de grupos no mapa familiar vertical quando a Ã¡rvore for esparsa.
-- `/meus-favoritos` com botÃ£o Filtros.
+- Remoção de badge secundária e “Data desconhecida” da timeline.
+- Subida de grupos no mapa familiar vertical quando a árvore for esparsa.
+- `/meus-favoritos` com botão Filtros.
 - `/meus-favoritos` com estrela ativa para remover favorito.
-- Header e `/notificacoes` com contador de nÃ£o lidas, textos e datas.
-- OcultaÃ§Ã£o de contato/privacidade de falecidos no admin.
+- Header e `/notificacoes` com contador de não lidas, textos e datas.
+- Ocultação de contato/privacidade de falecidos no admin.
 - Fase 2 de `/minha-arvore/editar`.
-- EdiÃ§Ã£o de casamento/cÃ´njuge sob demanda.
-- SeparaÃ§Ã£o de containers em `/minha-arvore/editar`.
-- PainÃ©is, popovers, toolbar mobile e exportaÃ§Ã£o da Ã¡rvore quando nÃ£o houver commit confirmado.
+- Edição de casamento/cônjuge sob demanda.
+- Separação de containers em `/minha-arvore/editar`.
+- Painéis, popovers, toolbar mobile e exportação da árvore quando não houver commit confirmado.
 
-### Bloqueado para revisÃ£o operacional
+### Bloqueado para revisão operacional
 
-- Reset ampliado de perfil admin removendo mini bio, curiosidades, arquivos histÃ³ricos e usuÃ¡rio em `auth.users`.
+- Reset ampliado de perfil admin removendo mini bio, curiosidades, arquivos históricos e usuário em `auth.users`.
 
 Motivo:
 
 - envolve Supabase;
 - envolve RPC/migration;
-- pode afetar dados sensÃ­veis e autenticaÃ§Ã£o;
-- nÃ£o deve ser aplicado por script documental;
-- sÃ³ deve entrar em `docs/operacao/MIGRATIONS_SUPABASE.md` se houver migration real confirmada.
+- pode afetar dados sensíveis e autenticação;
+- não deve ser aplicado por script documental;
+- só deve entrar em `docs/operacao/MIGRATIONS_SUPABASE.md` se houver migration real confirmada.
 
-### Comandos recomendados para verificaÃ§Ã£o
+### Comandos recomendados para verificação
 
 ```powershell
 git log --oneline -- src/app/pages/MeusFavoritos.tsx
@@ -525,19 +598,19 @@ git log --oneline -- src/app/pages/admin/AdminPessoaForm.tsx
 ```
 
 <!-- RODADA2-PENDENCIAS-2026-06-18 -->
-## PendÃªncias remanescentes â€” segunda rodada
+## Pendências remanescentes — segunda rodada
 
 ### Coordenadas e rota familiar
 
-A frente de Curiosidades implementou cÃ¡lculo de rota com coordenadas quando disponÃ­veis, mas ainda exige consolidaÃ§Ã£o da fonte canÃ´nica de coordenadas.
+A frente de Curiosidades implementou cálculo de rota com coordenadas quando disponíveis, mas ainda exige consolidação da fonte canônica de coordenadas.
 
-PendÃªncias:
+Pendências:
 
-- definir se latitude/longitude vÃªm de autocomplete, tabela de cidades, backfill ou geocoding;
-- normalizar cidades jÃ¡ cadastradas;
-- tratar variaÃ§Ãµes de grafia;
-- resolver cidades homÃ´nimas por UF/paÃ­s;
-- garantir preservaÃ§Ã£o de coordenadas ao salvar cidade de residÃªncia;
+- definir se latitude/longitude vêm de autocomplete, tabela de cidades, backfill ou geocoding;
+- normalizar cidades já cadastradas;
+- tratar variações de grafia;
+- resolver cidades homônimas por UF/país;
+- garantir preservação de coordenadas ao salvar cidade de residência;
 - validar massa real com:
   - nenhuma coordenada;
   - uma cidade coordenada;
@@ -547,29 +620,29 @@ PendÃªncias:
 
 ### Curiosidades
 
-- Evoluir compartilhamento de descobertas para o fÃ³rum, se essa for a decisÃ£o de produto.
-- Encerrar/atualizar issue tÃ©cnica da rodada, se existir.
-- Manter testes de utilitÃ¡rios atualizados quando novos cÃ¡lculos forem adicionados.
+- Evoluir compartilhamento de descobertas para o fórum, se essa for a decisão de produto.
+- Encerrar/atualizar issue técnica da rodada, se existir.
+- Manter testes de utilitários atualizados quando novos cálculos forem adicionados.
 
 ### Mapas e painel
 
 - Executar QA visual mobile em 320px, 375px, 390px e 430px.
-- Confirmar que popovers da toolbar nÃ£o extrapolam a largura.
-- Confirmar que desktop/tablet nÃ£o foram afetados pelos PRs mobile.
-- Validar exportaÃ§Ã£o por Ãrea, Imagem, PDF e Imprimir.
-- Confirmar comportamento do botÃ£o `+` e do painel mobile completo.
+- Confirmar que popovers da toolbar não extrapolam a largura.
+- Confirmar que desktop/tablet não foram afetados pelos PRs mobile.
+- Validar exportação por Área, Imagem, PDF e Imprimir.
+- Confirmar comportamento do botão `+` e do painel mobile completo.
 
 ### Painel/header
 
 - Confirmar se o painel lateral compacto atende visualmente ao alvo final.
-- Confirmar se exportaÃ§Ã£o ficou no local final previsto.
-- Registrar qualquer divergÃªncia visual em `QA_POS_CONSOLIDACAO_2026_06_18.md`.
+- Confirmar se exportação ficou no local final previsto.
+- Registrar qualquer divergência visual em `QA_POS_CONSOLIDACAO_2026_06_18.md`.
 
-### NotificaÃ§Ãµes
+### Notificações
 
-- Se o contador de nÃ£o lidas no header ainda nÃ£o estiver implementado, manter como pendÃªncia separada.
-- NÃ£o confundir a simplificaÃ§Ã£o visual dos cards com implementaÃ§Ã£o de contador global.
+- Se o contador de não lidas no header ainda não estiver implementado, manter como pendência separada.
+- Não confundir a simplificação visual dos cards com implementação de contador global.
 
 ### Admin e pessoa falecida
 
-- A decisÃ£o sobre ocultar ou manter contato/privacidade de pessoa falecida no admin ainda deve refletir o cÃ³digo atual antes de virar regra definitiva.
+- A decisão sobre ocultar ou manter contato/privacidade de pessoa falecida no admin ainda deve refletir o código atual antes de virar regra definitiva.
