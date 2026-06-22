@@ -17,7 +17,6 @@ import {
 import { useNavigate } from 'react-router';
 import { toast } from 'sonner';
 import {
-  HEADER_ACTION_ICONS,
   MemberPageHeader,
   PAGE_CONTAINER_CLASS,
 } from '../components/layout/MemberPageHeader';
@@ -450,11 +449,8 @@ export function RevisaoDados() {
         title="Revisão final"
         subtitle="Etapa 5 de 5: confira e ajuste seus dados antes de acessar a árvore."
         icon={ClipboardCheck}
-        actions={[
-          { label: 'Meus dados', to: '/meus-dados', icon: HEADER_ACTION_ICONS.Settings },
-          { label: 'Meus vínculos', to: '/meus-vinculos', icon: HEADER_ACTION_ICONS.Network },
-          { label: 'Mapa Familiar', to: '/mapa-familiar', icon: HEADER_ACTION_ICONS.Network },
-        ]}
+        hideHeaderActions
+        hideMobileHeaderActions
       />
 
       <MemberOnboardingSteps activeStep={5} hidePreferences={pessoa.falecido === true} />

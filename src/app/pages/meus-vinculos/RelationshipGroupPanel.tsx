@@ -29,7 +29,7 @@ export function RelationshipGroupPanel({
   emptyDescription,
   addButtonLabel,
   onAdd,
-  showEmptyAddButton = true,
+  showEmptyAddButton = false,
   children,
 }: RelationshipGroupPanelProps) {
   return (

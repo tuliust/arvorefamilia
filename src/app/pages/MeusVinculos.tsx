@@ -12,7 +12,6 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import {
-  HEADER_ACTION_ICONS,
   MemberPageHeader,
 } from '../components/layout/MemberPageHeader';
 import { MemberOnboardingSteps } from '../components/member/MemberOnboardingSteps';
@@ -64,6 +63,7 @@ import {
   getRelationshipChangeNoticeText,
   getRelationshipControlNoticeText,
   getRelationshipFinalButtonLabel,
+  getSiblingRelationshipLabel,
   getRelationshipOverviewGroupLabel,
   isPetPerson,
   relationshipStatusHasPending,
@@ -1225,6 +1225,24 @@ export function MeusVinculos() {
 
     setFinishing(true);
 
+    const profileTextSavePromises: Promise<boolean>[] = [];
+    window.dispatchEvent(new CustomEvent('meus-vinculos:save-profile-text', {
+      detail: {
+        register: (promise: Promise<boolean>) => profileTextSavePromises.push(promise),
+      },
+    }));
+
+    try {
+      const profileTextResults = await Promise.all(profileTextSavePromises);
+      if (profileTextResults.some((saved) => saved === false)) {
+        throw new Error('Não foi possível salvar a Mini Bio e as Curiosidades antes de continuar.');
+      }
+    } catch (error) {
+      setFinishing(false);
+      toast.error(error instanceof Error ? error.message : 'Não foi possível salvar os textos antes de continuar.');
+      return;
+    }
+
     let requestSummary = { created: 0, skipped: 0 };
 
     try {
@@ -1286,11 +1304,8 @@ export function MeusVinculos() {
         title="Confirmar vínculos familiares"
         subtitle="Revise quem são seus pais, filhos, pets, cônjuges e irmãos antes de seguir."
         icon={Users}
-        actions={[
-          { label: 'Árvore geral', to: '/', icon: HEADER_ACTION_ICONS.Home },
-          { label: 'Mapa Familiar', to: '/mapa-familiar', icon: HEADER_ACTION_ICONS.Network },
-          { label: 'Meus dados', to: '/meus-dados', icon: HEADER_ACTION_ICONS.Settings },
-        ]}
+        hideHeaderActions
+        hideMobileHeaderActions
       />
 
       <MemberOnboardingSteps activeStep={2} hidePreferences={pessoa?.falecido === true} />
@@ -1615,7 +1630,7 @@ export function MeusVinculos() {
                     key={`irmaos-${person.id}-${status}`}
                     person={person}
                     relationshipGroup="irmaos"
-                    relationshipLabel="Irmão(ã)"
+                    relationshipLabel={getSiblingRelationshipLabel(person)}
                     status={status}
                     hasAuthUser={linkedPersonIds.has(person.id)}
                     canRequestControl={canRequestProfileControl(person, pessoa.id, hasProfileControlRequest(person.id), status)}

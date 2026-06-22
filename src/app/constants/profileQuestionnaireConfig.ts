@@ -41,7 +41,7 @@ export const AI_TONES: ProfileQuestionnaireToneOption[] = [
   { id: 'simples', label: 'Simples e direto', description: 'Claro, breve e sem floreios.', icon: Pencil },
   { id: 'divertido', label: 'Divertido', description: 'Leve, bem-humorado e natural.', icon: Smile },
   { id: 'elegante', label: 'Elegante', description: 'Cuidado, discreto e polido.', icon: Star },
-  { id: 'nostalgico', label: 'Nostálgico', description: 'Para homenagens e memórias de quem já faleceu.', icon: Camera },
+  { id: 'nostalgico', label: 'Nostálgico', description: 'Saudosista, afetivo e voltado a memórias.', icon: Camera },
   { id: 'inspirador', label: 'Inspirador', description: 'Positivo, sem exagerar conquistas.', icon: Sparkles },
   { id: 'familiar', label: 'Familiar', description: 'Voltado a vínculos e lembranças.', icon: Users },
   { id: 'emocional', label: 'Emocional', description: 'Sensível e acolhedor.', icon: Gift },
@@ -50,7 +50,7 @@ export const AI_TONES: ProfileQuestionnaireToneOption[] = [
 ];
 
 export const AI_STEPS = [
-  'Tom do texto',
+  'Estilo',
   'Personalidade',
   'Família e vínculos',
   'Trabalho e trajetória',
@@ -58,8 +58,6 @@ export const AI_STEPS = [
   'Momentos marcantes',
   'Hobbies e paixões',
   'Marcas pessoais e curiosidades',
-  'Outras características',
-  'Perguntas opcionais',
 ];
 
 function makeBadges(

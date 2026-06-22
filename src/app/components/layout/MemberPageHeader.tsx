@@ -41,6 +41,7 @@ interface MemberPageHeaderProps {
   mobileCustomActions?: React.ReactNode;
   hideFavoriteButton?: boolean;
   hideMobileHeaderActions?: boolean;
+  hideHeaderActions?: boolean;
   className?: string;
 }
 
@@ -275,6 +276,7 @@ export function MemberPageHeader({
   mobileCustomActions,
   hideFavoriteButton,
   hideMobileHeaderActions = false,
+  hideHeaderActions = false,
   className = '',
 }: MemberPageHeaderProps) {
   const location = useLocation();
@@ -439,11 +441,11 @@ export function MemberPageHeader({
             </div>
           </div>
           <div className="flex shrink-0 items-center justify-end gap-2 md:hidden">
-            {mobileCustomActions}
-            {!hideMobileHeaderActions && <UserProfileMenu />}
+            {!hideHeaderActions && mobileCustomActions}
+            {!hideHeaderActions && !hideMobileHeaderActions && <UserProfileMenu />}
           </div>
 
-          {isAdminSection ? (
+          {!hideHeaderActions && (isAdminSection ? (
             <div className="hidden min-w-0 shrink-0 flex-row flex-nowrap items-center justify-end gap-1.5 overflow-visible sm:gap-2 md:flex">
               {ADMIN_HEADER_ACTIONS.map((action) => (
                 <HeaderActionButton key={`${action.label}-${action.to ?? 'button'}`} action={action} />
@@ -459,7 +461,7 @@ export function MemberPageHeader({
               {customActions}
               <UserProfileMenu />
             </div>
-          )}
+          ))}
         </div>
       </header>
       <MemberMobileBottomNav unreadNotificationsCount={unreadNotificationsCount} />

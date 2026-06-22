@@ -202,6 +202,15 @@ export function getRelationshipCardLabel(group: RelationshipGroupKey, isMother =
   return 'Irmão(ã)';
 }
 
+export function getSiblingRelationshipLabel(person: Pessoa) {
+  const normalizedGender = String(person.genero ?? '').trim().toLowerCase();
+
+  if (['mulher', 'feminino', 'female', 'feminina', 'woman'].includes(normalizedGender)) return 'Irmã';
+  if (['homem', 'masculino', 'male', 'masculina', 'man'].includes(normalizedGender)) return 'Irmão';
+
+  return 'Irmão(ã)';
+}
+
 export function getRelationshipOverviewGroupLabel(group: RelationshipGroupKey) {
   if (group === 'pais') return 'Pais';
   if (group === 'filhos') return 'Filhos';

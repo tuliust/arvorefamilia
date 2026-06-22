@@ -17,7 +17,6 @@ import {
 import { toast } from 'sonner';
 import { Button } from '../components/ui/button';
 import {
-  HEADER_ACTION_ICONS,
   MemberPageHeader,
 } from '../components/layout/MemberPageHeader';
 import { MemberOnboardingSteps } from '../components/member/MemberOnboardingSteps';
@@ -58,7 +57,6 @@ import {
   AI_BADGE_GROUPS,
   AI_STEPS,
   AI_TONES,
-  buildAiProfileQuestions,
   getAiBadgeDisplayLabel,
   getAiBadgeGroupDisplayText,
   type AiBadge,
@@ -474,24 +472,9 @@ export function MeusDados() {
     () => aiAllBadges.filter((badge) => aiSelectedBadges.includes(badge.id)),
     [aiAllBadges, aiSelectedBadges],
   );
-  const aiHasAnsweredGeneratedQuestion = aiGeneratedQuestions.some((question) => question.answer.trim().length > 0);
-  const aiHasMinimumQuestionnaireInput = Boolean(aiTone) && (
-    aiSelectedBadgeItems.length > 0 ||
-    aiCustomTraits.trim().length > 0 ||
-    aiHasAnsweredGeneratedQuestion
-  );
+  const aiHasMinimumQuestionnaireInput = Boolean(aiTone) && aiSelectedBadgeItems.length > 0;
   const aiProgressPercent = Math.round(((aiStep + 1) / AI_STEPS.length) * 100);
-  const aiIsMemorialMode = aiTone === 'nostalgico' || form.falecido === true;
-
-  useEffect(() => {
-    setAiGeneratedQuestions((currentQuestions) => {
-      const nextQuestions = buildAiProfileQuestions(aiSelectedBadgeItems, aiCustomTraits, aiIsMemorialMode);
-      return nextQuestions.map((question) => ({
-        ...question,
-        answer: currentQuestions.find((item) => item.id === question.id)?.answer ?? '',
-      }));
-    });
-  }, [aiSelectedBadgeItems, aiCustomTraits, aiIsMemorialMode]);
+  const aiIsMemorialMode = form.falecido === true;
 
   const markFormDirty = () => {
     isDirtyRef.current = true;
@@ -744,7 +727,7 @@ export function MeusDados() {
     }
 
     if (!aiHasMinimumQuestionnaireInput) {
-      return 'Selecione ao menos uma característica, preencha outras características ou responda uma pergunta antes de continuar.';
+      return 'Selecione ao menos uma característica antes de continuar.';
     }
 
     return null;
@@ -794,6 +777,7 @@ export function MeusDados() {
   };
 
   const handleQuestionnaireNext = async () => {
+    if (aiStep >= AI_STEPS.length - 1) return;
     await saveProfileQuestionnaire({ quiet: true });
     updateAiStep(aiStep + 1);
   };
@@ -1000,9 +984,9 @@ export function MeusDados() {
       return (
         <div className="space-y-4">
           <div>
-            <h3 className="break-words text-lg font-semibold text-gray-900">Escolha o tom do texto</h3>
+            <h3 className="break-words text-lg font-semibold text-gray-900">Qual é o seu estilo?</h3>
             <p className="mt-1 break-words text-sm leading-relaxed text-gray-600">
-              Como você quer que sua Mini Bio e suas Curiosidades soem? O tom Nostálgico cria uma homenagem em memória de quem já faleceu.
+              Escolha o estilo da Mini Bio e das Curiosidades. Se o perfil for de uma pessoa falecida, os textos serão escritos no passado com o estilo selecionado.
             </p>
           </div>
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
@@ -1042,71 +1026,6 @@ export function MeusDados() {
       return renderAiBadgeGroup(AI_BADGE_GROUPS[aiStep - 1]);
     }
 
-    if (aiStep === 8) {
-      return (
-        <div className="space-y-4">
-          <div>
-            <h3 className="break-words text-lg font-semibold text-gray-900">
-              {aiIsMemorialMode ? 'Outras lembranças sobre essa pessoa' : 'Outras características'}
-            </h3>
-            <p className="mt-1 break-words text-sm leading-relaxed text-gray-600">
-              {aiIsMemorialMode
-                ? 'Quer acrescentar algo que ajude a contar sua história?'
-                : 'Quer acrescentar algo que não apareceu nas opções?'}
-            </p>
-          </div>
-          <Textarea
-            value={aiCustomTraits}
-            onChange={(event) => {
-              markQuestionnaireDirty();
-              setAiCustomTraits(event.target.value);
-            }}
-            placeholder={
-              aiIsMemorialMode
-                ? 'Ex: adorava cozinhar aos domingos, era conhecido pelo bom humor, morou em três cidades, gostava de reunir a família...'
-                : 'Ex: gosto de fazer pão aos domingos, sou conhecido por contar histórias antigas, morei em três cidades...'
-            }
-            maxLength={1600}
-            className="min-h-32 border-gray-300 bg-white text-sm focus-visible:ring-blue-600"
-          />
-        </div>
-      );
-    }
-
-    if (aiStep === 9) {
-      return (
-        <div className="space-y-4">
-          <div>
-            <h3 className="break-words text-lg font-semibold text-gray-900">Perguntas opcionais</h3>
-            <p className="mt-1 break-words text-sm leading-relaxed text-gray-600">
-              {aiIsMemorialMode
-                ? 'As respostas ajudam a IA a criar uma homenagem mais fiel à memória da pessoa. Você pode deixar em branco.'
-                : 'As respostas ajudam a IA a deixar o texto menos genérico. Você pode deixar em branco.'}
-            </p>
-          </div>
-          <div className="space-y-3">
-            {aiGeneratedQuestions.map((item) => (
-              <div key={item.id} className="space-y-2 rounded-lg border border-gray-200 bg-white p-3">
-                <Label className="break-words text-sm text-gray-800">{item.question}</Label>
-                <Textarea
-                  value={item.answer}
-                  onChange={(event) => {
-                    const answer = event.target.value;
-                    markQuestionnaireDirty();
-                    setAiGeneratedQuestions((current) => current.map((question) => (
-                      question.id === item.id ? { ...question, answer } : question
-                    )));
-                  }}
-                  maxLength={800}
-                  className="min-h-20 border-gray-300 bg-white text-sm focus-visible:ring-blue-600"
-                />
-              </div>
-            ))}
-          </div>
-        </div>
-      );
-    }
-
     return null;
   };
 
@@ -1144,10 +1063,7 @@ export function MeusDados() {
         title="Revisar meus dados"
         subtitle="Confira suas informações antes de acessar a árvore principal."
         icon={UserCircle2}
-        actions={[
-          { label: 'Árvore geral', to: '/', icon: HEADER_ACTION_ICONS.Home },
-          { label: 'Mapa Familiar', to: '/mapa-familiar', icon: HEADER_ACTION_ICONS.Network },
-        ]}
+        hideHeaderActions
         hideMobileHeaderActions
       />
 
@@ -1398,15 +1314,17 @@ export function MeusDados() {
                   <ChevronLeft className="h-4 w-4" />
                   Voltar
                 </Button>
-                <Button
-                  type="button"
-                  onClick={handleQuestionnaireNext}
-                  disabled={aiStep === AI_STEPS.length - 1 || questionnaireSaving}
-                  className="w-full sm:w-auto"
-                >
-                  {questionnaireSaving ? 'Salvando...' : 'Avançar'}
-                  <ChevronRight className="h-4 w-4" />
-                </Button>
+                {aiStep < AI_STEPS.length - 1 && (
+                  <Button
+                    type="button"
+                    onClick={handleQuestionnaireNext}
+                    disabled={questionnaireSaving}
+                    className="w-full sm:w-auto"
+                  >
+                    {questionnaireSaving ? 'Salvando...' : 'Avançar'}
+                    <ChevronRight className="h-4 w-4" />
+                  </Button>
+                )}
               </div>
             </div>
           </section>
@@ -1669,8 +1587,8 @@ function DeathStatusSelector({
 }) {
   return (
     <div className="min-w-0 space-y-3">
-      <p className="break-words text-sm font-medium text-gray-900">A pessoa é falecida?</p>
-      <div className="inline-flex w-full max-w-xs rounded-lg border border-gray-200 bg-white p-1" role="group" aria-label="A pessoa é falecida?">
+      <p className="break-words text-sm font-medium text-gray-900">Você está escrevendo o perfil de uma pessoa falecida?</p>
+      <div className="inline-flex w-full max-w-xs rounded-lg border border-gray-200 bg-white p-1" role="group" aria-label="Você está escrevendo o perfil de uma pessoa falecida?">
         <button
           type="button"
           onClick={() => onChange(true)}
