@@ -19,7 +19,7 @@ const Privacidade = React.lazy(() => import('./pages/Privacidade').then((module)
 const Termos = React.lazy(() => import('./pages/Termos').then((module) => ({ default: module.Termos })));
 const MinhaArvore = React.lazy(() => import('./pages/MinhaArvore').then((module) => ({ default: module.MinhaArvore })));
 const MeusDados = React.lazy(() => import('./pages/MeusDados').then((module) => ({ default: module.MeusDados })));
-const MeusVinculos = React.lazy(() => import('./pages/MeusVinculos').then((module) => ({ default: module.MeusVinculos })));
+const MeusVinculos = React.lazy(() => import('./pages/MeusVinculosWithProfileBio').then((module) => ({ default: module.MeusVinculosWithProfileBio })));
 const ArquivosHistoricosPage = React.lazy(() => import('./pages/ArquivosHistoricosPage').then((module) => ({ default: module.ArquivosHistoricosPage })));
 const PreferenciasPage = React.lazy(() => import('./pages/PreferenciasPage').then((module) => ({ default: module.PreferenciasPage })));
 const RevisaoDados = React.lazy(() => import('./pages/RevisaoDados').then((module) => ({ default: module.RevisaoDados })));
