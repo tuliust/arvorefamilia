@@ -4,6 +4,28 @@ function limitText(value: unknown, maxLength = 300) {
   return String(value ?? "").trim().slice(0, maxLength);
 }
 
+function safeContextText(value: unknown, maxLength = 160) {
+  const text = String(value ?? "").trim();
+  return text ? text.slice(0, maxLength) : null;
+}
+
+function sanitizeProfileTextContext(context: unknown, memorialMode: boolean) {
+  if (!context || typeof context !== "object") return {};
+
+  const record = context as Record<string, unknown>;
+
+  return {
+    nome_completo: safeContextText(record.nome_completo),
+    data_nascimento: safeContextText(record.data_nascimento, 40),
+    local_nascimento: safeContextText(record.local_nascimento),
+    data_falecimento: safeContextText(record.data_falecimento, 40),
+    local_falecimento: safeContextText(record.local_falecimento),
+    local_atual: memorialMode ? null : safeContextText(record.local_atual),
+    profissao: safeContextText(record.profissao),
+    falecido: record.falecido === true,
+  };
+}
+
 export default async function handler(req: any, res: any) {
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Método não permitido" });
@@ -57,7 +79,7 @@ export default async function handler(req: any, res: any) {
             }))
             .slice(0, 6)
           : [],
-        context: context && typeof context === "object" ? context : {},
+        context: sanitizeProfileTextContext(context, isMemorialMode),
       };
       const compactProfileContext = JSON.stringify(profilePayload).slice(0, 9000);
       const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });

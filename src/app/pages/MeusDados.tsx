@@ -66,6 +66,7 @@ import {
   type AiTone,
 } from '../constants/profileQuestionnaireConfig';
 import {
+  buildProfileQuestionnaireHash,
   getProfileQuestionnaireAnswers,
   normalizeProfileQuestionnairePayload,
   upsertProfileQuestionnaireAnswers,
@@ -260,6 +261,8 @@ export function MeusDados() {
   const { user } = useAuth();
   const hasInitializedFormRef = useRef(false);
   const initializedPessoaIdRef = useRef<string | null>(null);
+  const loadedQuestionnaireHashRef = useRef<string | null>(null);
+  const loadedLastGeneratedHashRef = useRef<string | null>(null);
   const isDirtyRef = useRef(false);
   const [link, setLink] = useState<(UserPersonLinkRecord & { pessoa: Pessoa | null }) | null>(null);
   const [linkedPeople, setLinkedPeople] = useState<Array<UserPersonLinkRecord & { pessoa: Pessoa | null }>>([]);
@@ -294,6 +297,8 @@ export function MeusDados() {
       if (!user) return;
 
       setLoading(true);
+      loadedQuestionnaireHashRef.current = null;
+      loadedLastGeneratedHashRef.current = null;
       await resolveFirstAccessLinkForUser(user);
       const { data: linksData, error } = await getCurrentUserLinkedPeople();
 
@@ -357,6 +362,11 @@ export function MeusDados() {
           }
         }
       }
+
+      loadedQuestionnaireHashRef.current = loadedQuestionnaire
+        ? buildProfileQuestionnaireHash(loadedQuestionnaire)
+        : null;
+      loadedLastGeneratedHashRef.current = loadedQuestionnaire?.lastGeneratedHash ?? null;
 
       if (!shouldPreserveDraft) {
         setForm(draft?.form ?? buildEditablePersonFormState(data?.pessoa));
@@ -463,7 +473,12 @@ export function MeusDados() {
     () => aiAllBadges.filter((badge) => aiSelectedBadges.includes(badge.id)),
     [aiAllBadges, aiSelectedBadges],
   );
-  const aiHasMinimumQuestionnaireInput = Boolean(aiTone) && (aiSelectedBadgeItems.length > 0 || aiCustomTraits.trim().length > 0);
+  const aiHasAnsweredGeneratedQuestion = aiGeneratedQuestions.some((question) => question.answer.trim().length > 0);
+  const aiHasMinimumQuestionnaireInput = Boolean(aiTone) && (
+    aiSelectedBadgeItems.length > 0 ||
+    aiCustomTraits.trim().length > 0 ||
+    aiHasAnsweredGeneratedQuestion
+  );
   const aiProgressPercent = Math.round(((aiStep + 1) / AI_STEPS.length) * 100);
   const aiIsMemorialMode = aiTone === 'nostalgico' || form.falecido === true;
 
@@ -704,7 +719,7 @@ export function MeusDados() {
       return nextAnswers;
     }, {});
 
-    return normalizeProfileQuestionnairePayload({
+    const normalized = normalizeProfileQuestionnairePayload({
       tone: aiTone,
       selectedBadges: aiSelectedBadgeItems,
       customTraits: aiCustomTraits,
@@ -712,6 +727,14 @@ export function MeusDados() {
       answers,
       memorialMode: aiIsMemorialMode,
     });
+    const currentHash = buildProfileQuestionnaireHash(normalized);
+
+    return {
+      ...normalized,
+      lastGeneratedHash: currentHash === loadedQuestionnaireHashRef.current
+        ? loadedLastGeneratedHashRef.current
+        : null,
+    };
   };
 
   const validateQuestionnaire = () => {
@@ -720,7 +743,7 @@ export function MeusDados() {
     }
 
     if (!aiHasMinimumQuestionnaireInput) {
-      return 'Selecione ao menos uma característica ou preencha outras características antes de continuar.';
+      return 'Selecione ao menos uma característica, preencha outras características ou responda uma pergunta antes de continuar.';
     }
 
     return null;
@@ -752,6 +775,11 @@ export function MeusDados() {
 
       if (result.error) {
         throw new Error(result.error);
+      }
+
+      if (result.data) {
+        loadedQuestionnaireHashRef.current = buildProfileQuestionnaireHash(result.data);
+        loadedLastGeneratedHashRef.current = result.data.lastGeneratedHash;
       }
 
       return { ok: true };
@@ -1037,6 +1065,7 @@ export function MeusDados() {
                 ? 'Ex: adorava cozinhar aos domingos, era conhecido pelo bom humor, morou em três cidades, gostava de reunir a família...'
                 : 'Ex: gosto de fazer pão aos domingos, sou conhecido por contar histórias antigas, morei em três cidades...'
             }
+            maxLength={1600}
             className="min-h-32 border-gray-300 bg-white text-sm focus-visible:ring-blue-600"
           />
         </div>
@@ -1067,6 +1096,7 @@ export function MeusDados() {
                       question.id === item.id ? { ...question, answer } : question
                     )));
                   }}
+                  maxLength={800}
                   className="min-h-20 border-gray-300 bg-white text-sm focus-visible:ring-blue-600"
                 />
               </div>

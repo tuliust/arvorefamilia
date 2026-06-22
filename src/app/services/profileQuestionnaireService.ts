@@ -285,7 +285,9 @@ export async function upsertProfileQuestionnaireAnswers(
   }
 
   const normalized = normalizeProfileQuestionnairePayload(payload);
-  const lastGeneratedHash = normalized.lastGeneratedHash ?? buildProfileQuestionnaireHash(normalized);
+  // `lastGeneratedHash` is set only after a successful IA generation. Normal questionnaire
+  // saves must not mark the current answers as already generated.
+  const lastGeneratedHash = normalized.lastGeneratedHash;
 
   const { data, error } = await supabase
     .from(PROFILE_QUESTIONNAIRE_TABLE)

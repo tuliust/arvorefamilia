@@ -49,13 +49,17 @@ function hasQuestionnaireSource(questionnaire: PersonProfileQuestionnaireAnswers
 function buildSafeProfileContext(pessoa: Pessoa | null) {
   if (!pessoa) return {};
 
+  const falecido = pessoa.falecido === true;
+
   return {
     nome_completo: pessoa.nome_completo ?? null,
     data_nascimento: pessoa.data_nascimento ?? null,
     local_nascimento: pessoa.local_nascimento ?? null,
-    local_atual: pessoa.local_atual ?? null,
+    data_falecimento: pessoa.data_falecimento ?? null,
+    local_falecimento: pessoa.local_falecimento ?? null,
+    local_atual: falecido ? null : pessoa.local_atual ?? null,
     profissao: pessoa.profissao ?? null,
-    falecido: pessoa.falecido === true,
+    falecido,
   };
 }
 
@@ -202,7 +206,10 @@ function MeusVinculosProfileBioSection() {
 
       setProfileText(generatedValues);
       dirtyRef.current = true;
-      await saveProfileTextValues(generatedValues, { quiet: !manual });
+      const textSaved = await saveProfileTextValues(generatedValues, { quiet: !manual });
+      if (!textSaved) {
+        throw new Error('Os textos foram gerados, mas não foi possível salvá-los no perfil.');
+      }
 
       const currentHash = buildProfileQuestionnaireHash(sourceQuestionnaire);
       const questionnaireUpdate = await upsertProfileQuestionnaireAnswers(pessoa.id, {
@@ -310,7 +317,6 @@ function MeusVinculosProfileBioSection() {
   const hasOutdatedSuggestion = Boolean(
     questionnaire &&
     currentQuestionnaireHash &&
-    questionnaire.lastGeneratedHash &&
     questionnaire.lastGeneratedHash !== currentQuestionnaireHash &&
     (profileText.minibio.trim() || profileText.curiosidades.trim())
   );
