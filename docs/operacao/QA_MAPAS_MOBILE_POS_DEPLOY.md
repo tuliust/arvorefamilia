@@ -1,6 +1,6 @@
 # QA pós-deploy — mapas familiares mobile
 
-> Última revisão: 2026-06-20  
+> Última revisão: 2026-06-22  
 > Local: `docs/operacao/QA_MAPAS_MOBILE_POS_DEPLOY.md`  
 > Escopo: validação operacional pós-deploy das rotas `/mapa-familiar` e `/mapa-familiar-horizontal` em mobile.  
 > Status: checklist atualizado conforme baseline `baseline/mapas-mobile-padrao-2026-06-20`.
@@ -27,6 +27,19 @@ Use este checklist depois de mudanças em:
 - listeners de touch, swipe, `MutationObserver` ou `data-mobile-family-tree-active-screen`.
 
 ---
+
+Complemento de scripts vigentes da rodada mais recente:
+
+```txt
+src/mobileFamilyMapCoreConnectorFix.ts
+src/mobileVisualizationPanelFamilyStatsFix.ts
+src/mobileFamilyMapZoomOverviewVisualFix.ts
+src/mobileFamilyMapDescendantsStabilityLock.ts
+src/mobileFamilyMapExtendedSpouseCards.ts
+src/mobileFamilyMapFilterButtonsBehaviorFix.ts
+src/mobileFamilyMapFullOverview.ts
+src/mobileFamilyMapFullOverviewMosaicFix.ts
+```
 
 ## 2. Preparação
 
@@ -239,16 +252,17 @@ Checklist:
 
 Checklist:
 
-- [ ] botão `Zoom` abre overview 3x3;
-- [ ] botão de fechar fecha o overview;
-- [ ] tocar em cada card fecha o overview;
-- [ ] cada card navega para a tela correta da grade 3x3;
-- [ ] card atual é identificado visualmente;
-- [ ] ao navegar, a tela de destino não aparece deslocada ou vazia;
+- [ ] botão **Zoom** da toolbar superior abre overview 3x3;
+- [ ] overview exibe 9 cards;
+- [ ] cada card leva à tela correta;
+- [ ] card atual aparece destacado;
+- [ ] `descendants` aparece como destino válido;
+- [ ] abrir Zoom a partir de `descendants` não causa tremor;
 - [ ] overview não entra na exportação;
-- [ ] overview não deixa `body` travado após fechar.
-
----
+- [ ] botão **Exibir mapa completo** aparece quando aplicável;
+- [ ] **Exibir mapa completo** abre mosaico único em overlay;
+- [ ] pinça, arraste e reenquadramento do mosaico funcionam;
+- [ ] fechar overview/mosaico destrava `body`.
 
 ## 14. `/mapa-familiar-horizontal`
 
@@ -268,43 +282,43 @@ Checklist:
 
 Checklist:
 
-- [ ] botão `Zoom` abre janela própria por gerações;
-- [ ] a janela não usa cards da grade 3x3;
-- [ ] aparecem gerações disponíveis com label e contagem;
-- [ ] `Geração 1` mostra `Tataravós` quando disponível;
-- [ ] `Geração 2` mostra `Bisavós` quando disponível;
-- [ ] `Geração 3` mostra `Avós` quando disponível;
-- [ ] `Geração 4` mostra `Pais` quando disponível;
-- [ ] `Geração 5` mostra `Núcleo` quando disponível;
-- [ ] `Geração 6` mostra `Descendentes` quando disponível;
-- [ ] tocar em uma geração fecha a janela e navega para `Ger N`;
-- [ ] fechar a janela destrava scroll, swipe e bottom nav;
-- [ ] abrir/fechar repetidamente não trava a página.
-
----
+- [ ] botão **Zoom** abre overview por gerações;
+- [ ] não abre grade 3x3;
+- [ ] cards/botões representam gerações disponíveis;
+- [ ] selecionar uma geração navega para a geração correta;
+- [ ] o overview fecha após seleção;
+- [ ] botões `Ger X` continuam funcionando;
+- [ ] swipe lateral continua funcionando;
+- [ ] scroll vertical da geração ativa continua funcionando;
+- [ ] overview não entra na exportação.
 
 ## 16. Painéis superiores e botão `+`
 
-### `Formato`, `Cor`, `Filtros`
+### Toolbar superior
 
-- [ ] `Formato` abre painel sem altura excessiva;
-- [ ] `Cor` abre painel sem grande espaço branco abaixo das opções;
-- [ ] `Filtros` abre painel sem grande espaço branco abaixo das opções;
-- [ ] alternar entre painéis não desloca permanentemente a tela ativa;
-- [ ] fechar painel não trava scroll/swipe.
+Checklist:
+
+- [ ] toolbar mostra `Formato`, `Cor`, `Filtros` e `Zoom`;
+- [ ] toolbar não mostra `Exportar` como item fixo;
+- [ ] `Formato` alterna entre rotas oficiais e preserva `?pessoa=`;
+- [ ] `Cor` aplica paleta;
+- [ ] `Filtros` altera cônjuges estendidos;
+- [ ] `Zoom` abre overview adequado à rota ativa.
 
 ### Botão `+`
 
-- [ ] botão `+` abre painel;
+Checklist:
+
+- [ ] botão `+` abre painel completo de **Visualização**;
 - [ ] overlay escurece o fundo;
 - [ ] painel principal é branco/opaco;
-- [ ] conteúdo interno tem scroll;
-- [ ] fechar pelo overlay funciona;
-- [ ] fechar por ação interna funciona;
-- [ ] body destrava ao fechar;
-- [ ] painel não aparece na exportação.
-
----
+- [ ] painel tem rolagem interna;
+- [ ] seletor de visualizador/família funciona e preserva/altera `?pessoa=`;
+- [ ] alternância de formato preserva query string;
+- [ ] resumo/estatísticas são exibidos sem quebrar layout;
+- [ ] ação de salvar/exportar funciona conforme código vigente;
+- [ ] painel não entra na exportação;
+- [ ] fechar painel destrava `body`.
 
 ## 17. Critérios de aprovação
 

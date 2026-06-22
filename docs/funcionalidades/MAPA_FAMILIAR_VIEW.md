@@ -1,6 +1,6 @@
 # Mapa Familiar — views Vertical e Horizontal
 
-> Última revisão: 2026-06-20  
+> Última revisão: 2026-06-22  
 > Local canônico: `docs/funcionalidades/MAPA_FAMILIAR_VIEW.md`  
 > Tipo: documentação funcional/técnica das duas views oficiais da árvore  
 > Status: revisado contra o código atual. Implementações mobile sensíveis devem ser tratadas como compostas por React + scripts auxiliares e validadas em QA real.
@@ -105,18 +105,20 @@ Regras:
 
 | Rota | Desktop/tablet | Mobile |
 |---|---|---|
-| `/mapa-familiar` | `DesktopFamilyMapView` | `MobileFamilyTreeView` + scripts auxiliares `mobileFamilyTree*` |
-| `/mapa-familiar-horizontal` | `DesktopFamilyHorizontalMapView` | `MobileFamilyHorizontalMapView` |
+| `/mapa-familiar` | `DesktopFamilyMapView` | `MobileFamilyTreeView` + scripts auxiliares `mobileFamilyTree*` e `mobileFamilyMap*` |
+| `/mapa-familiar-horizontal` | `DesktopFamilyHorizontalMapFilteredView` | `MobileFamilyHorizontalMapFilteredView` + scripts auxiliares de apoio |
 
-Arquivos principais:
+Arquivos principais observados no código atual:
 
 ```txt
 src/app/pages/Home.tsx
 src/app/pages/home/HomeTreeSection.tsx
+src/app/pages/home/HomeMobileNav.tsx
 src/app/components/FamilyTree/DesktopFamilyMapView.tsx
 src/app/components/FamilyTree/MobileFamilyTreeView.tsx
-src/app/components/FamilyTree/DesktopFamilyHorizontalMapView.tsx
-src/app/components/FamilyTree/MobileFamilyHorizontalMapView.tsx
+src/app/components/FamilyTree/DesktopFamilyHorizontalMapFilteredView.tsx
+src/app/components/FamilyTree/MobileFamilyHorizontalMapFilteredView.tsx
+src/app/components/FamilyTree/MobileFamilyMapToolbar.tsx
 src/app/components/FamilyTree/FamilyTreeVisualCards.tsx
 src/app/components/FamilyTree/mobileFamilyTreeModel.ts
 src/app/components/FamilyTree/treeColorPalettes.ts
@@ -125,7 +127,7 @@ src/styles/family-map-horizontal.css
 src/styles/family-map-mobile-palettes.css
 ```
 
----
+Regra: não substituir os wrappers `*FilteredView` da horizontal por componentes antigos sem validar filtros, contagens, cônjuges e preservação de `?pessoa=`.
 
 ## 5. Títulos
 
@@ -409,47 +411,41 @@ Regras:
 
 ## 14. Zoom/overview mobile
 
-O botão `Zoom` da toolbar mobile deve abrir um overview com 9 cards.
+Contrato vigente:
 
-Em `/mapa-familiar`:
+| Rota | Comportamento do botão `Zoom` |
+|---|---|
+| `/mapa-familiar` | overview 3x3 da grade mobile; cada card leva à tela da grade; pode abrir **Exibir mapa completo** |
+| `/mapa-familiar-horizontal` | overview por gerações; cada card leva à geração correspondente |
 
-- cada card deve levar à tela correspondente da grade;
-- o stage é posicionado por `transform`;
-- a tela ativa é registrada em `data-mobile-family-tree-active-screen`.
+Regras:
 
-Em `/mapa-familiar-horizontal`:
-
-- o overview também deve abrir;
-- cada card tenta direcionar para a geração horizontal correspondente;
-- se a geração de destino não estiver ativa/visível, o botão `Ger N` pode não existir e a navegação deve ser validada em QA.
-
-Arquivo ativo principal:
-
-```txt
-src/mobileFamilyTreeZoomOverviewFix.ts
-```
-
-Arquivo existente mas não carregado no `index.html` atual:
-
-```txt
-src/mobileFamilyMapOverviewNavigationBridge.ts
-```
-
----
+- `Zoom` não é `Zoom +`/`Zoom -` no mobile;
+- `Zoom +`, `Zoom -` e `Restaurar` são controles desktop/canvas, não toolbar mobile fixa;
+- `Exportar` não é botão fixo da toolbar mobile atual;
+- ações de salvar/exportar podem aparecer no painel completo aberto por `+`;
+- overview não entra na exportação;
+- abertura/fechamento do overview não deve quebrar scroll interno nem `body.style.overflow`.
 
 ## 15. Botão `+` mobile
 
-O botão `+` abre o painel mobile completo de visualização.
+O botão `+` da toolbar mobile abre o painel completo de **Visualização**.
 
-Contrato observado no código atual:
+Contrato atual:
 
-- o ajuste de fundo/opacidade está em `src/mobileFamilyMapFullPanelStyleFix.ts`;
-- esse ajuste é importado em `src/main.tsx`;
-- overlay deve ficar escurecido;
-- painel principal deve ficar branco/opaco;
-- painel deve permanecer excluído da exportação.
+- painel em overlay;
+- fundo escurecido;
+- `section` branca/opaca;
+- rolagem interna;
+- seletor de visualizador/família;
+- alternância entre as duas rotas oficiais;
+- paletas;
+- resumo/estatísticas;
+- grupos familiares;
+- filtros de cônjuges;
+- ação de salvar/exportar imagem conforme código vigente.
 
----
+Regra documental: não tratar o painel `+` como substituto do Zoom. Zoom abre overview; `+` abre controles completos.
 
 ## 16. Exportação
 
@@ -475,6 +471,12 @@ docs/QA_MANUAL.md
 ```
 
 ---
+
+## 17.1. Decisões pendentes observadas no código
+
+- `Home.tsx` mantém `debugViewPersonId`, seletor de visualizador e fluxo `Visualizar como...`; isso segue como decisão de produto pendente.
+- O seletor mobile de visualizador preserva `?pessoa=` e usa rótulo `Família de {primeiro nome}`.
+- `homeAiContext.ts` ainda usa inferência por nomes/sufixos para distinguir pai/mãe quando o relacionamento não é explícito; qualquer correção disso deve ocorrer em frente própria de IA/privacidade.
 
 ## 17. QA e pendências
 

@@ -1,6 +1,6 @@
 # Auditoria do código atual — mapas familiares mobile
 
-> Última revisão: 2026-06-20  
+> Última revisão: 2026-06-22  
 > Local: `docs/funcionalidades/MAPA_FAMILIAR_MOBILE_AUDITORIA_CODIGO_ATUAL.md`  
 > Escopo: conferência do código atual antes de tratar implementações mobile como consolidadas.  
 > Status: atualizado após baseline `baseline/mapas-mobile-padrao-2026-06-20`.
@@ -28,7 +28,9 @@ A documentação funcional deve separar:
 
 ## 2. Scripts carregados atualmente
 
-O `index.html` carrega, para os mapas mobile, os seguintes scripts auxiliares relevantes:
+Fonte auditada: `index.html` na branch `feature/questionario-ia-vinculos-pets`.
+
+O `index.html` carrega atualmente:
 
 ```txt
 src/mobileFamilyTreeMutationPerformanceGuard.ts
@@ -45,14 +47,20 @@ src/mobileFamilyTreeDescendantConnectorsFix.ts
 src/mobileFamilyTreeCoreDescendantConnector.ts
 src/mobileFamilyTreeGroupTitleVisibilityFix.ts
 src/mobileFamilyHorizontalZoomOverview.ts
+src/mobileFamilyMapUncleSwipeNavigationGuard.ts
 src/mobileFamilyMapStableMobileFix.ts
 src/mobileFamilyMapDirectionalNavigationFix.ts
 src/mobileFamilyMapCoreConnectorFix.ts
+src/mobileVisualizationPanelFamilyStatsFix.ts
+src/mobileFamilyMapZoomOverviewVisualFix.ts
+src/mobileFamilyMapDescendantsStabilityLock.ts
+src/mobileFamilyMapExtendedSpouseCards.ts
+src/mobileFamilyMapFilterButtonsBehaviorFix.ts
+src/mobileFamilyMapFullOverview.ts
+src/mobileFamilyMapFullOverviewMosaicFix.ts
 ```
 
-Consequência documental: comportamento vigente deve ser auditado nesses arquivos, não nos patches antigos removidos do `index.html`.
-
----
+Consequência documental: comportamento vigente deve ser auditado nesses arquivos, não nos patches antigos removidos do carregamento. O carregamento inclui a rodada mais recente de tios, cônjuges estendidos, filtros, Zoom visual, stability lock de descendentes, mapa completo e mosaico.
 
 ## 3. Arquivos substituídos ou legados
 
@@ -73,8 +81,6 @@ src/mobileFamilyMapOverviewNavigationBridge.ts
 ```
 
 Regra: ao encontrar comportamento documentado nesses arquivos, verificar se ainda está carregado antes de tratá-lo como vigente.
-
----
 
 ## 4. Import global pelo `main.tsx`
 
@@ -347,6 +353,30 @@ Comportamento esperado:
 - preserva fonte compacta.
 
 ---
+
+## 13.1. Toolbar, Zoom, Exportar e painel `+`
+
+Código observado:
+
+- `MobileFamilyMapToolbar.tsx` declara as ações possíveis: `visualizacao`, `formato`, `cor`, `grupos`, `exportar`, `zoom`;
+- porém `TOOLBAR_ITEMS` renderiza apenas `Formato`, `Cor`, `Filtros` e `Zoom`;
+- `+` chama `openFullControlsPanel`;
+- `activeToolbarAction === 'exportar'` ainda existe como painel técnico, mas não é acionado pela toolbar fixa atual;
+- o painel completo do `+` traz **Visualização** e ação de **Salvar**.
+
+Conclusão documental:
+
+- não documentar `Exportar` como botão fixo da toolbar superior mobile;
+- documentar exportação/salvar como funcionalidade do painel completo aberto pelo `+`;
+- manter `Zoom` como overview, não como zoom incremental;
+- `/mapa-familiar`: overview 3x3;
+- `/mapa-familiar-horizontal`: overview por gerações.
+
+## 13.2. Riscos de código adjacentes
+
+- `Home.tsx` mantém seleção de visualizador/`Visualizar como...`; docs que tratem TREE-005 como pendência continuam corretos.
+- `homeAiContext.ts` contém inferência por nomes/sufixos para pai/mãe e inclui contato/rede social no contexto de IA; isso deve ser documentado como risco, não como contrato aprovado de privacidade.
+- `HomeTreeSection.tsx` renderiza `MobileFamilyHorizontalMapFilteredView` e `DesktopFamilyHorizontalMapFilteredView`, não os nomes antigos sem `Filtered`.
 
 ## 14. Pendências documentais/QA
 

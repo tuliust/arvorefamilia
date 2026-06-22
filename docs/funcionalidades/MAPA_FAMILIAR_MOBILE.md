@@ -1,6 +1,6 @@
 # Mapa Familiar Mobile — contrato vigente da grade 3x3 e horizontal
 
-> Última revisão: 2026-06-20  
+> Última revisão: 2026-06-22  
 > Local canônico: `docs/funcionalidades/MAPA_FAMILIAR_MOBILE.md`  
 > Escopo: comportamento mobile de `/mapa-familiar` e `/mapa-familiar-horizontal`  
 > Status: contrato funcional atualizado após baseline padrão `baseline/mapas-mobile-padrao-2026-06-20`.
@@ -58,7 +58,9 @@ Uso recomendado:
 
 ## 3. Carregamento mobile vigente
 
-O `index.html` carrega hoje estes scripts relevantes para os mapas mobile:
+Fonte de verdade técnica: `index.html` da branch `feature/questionario-ia-vinculos-pets`.
+
+O carregamento atual dos scripts relevantes para os mapas mobile é:
 
 ```txt
 src/mobileFamilyTreeMutationPerformanceGuard.ts
@@ -75,10 +77,24 @@ src/mobileFamilyTreeDescendantConnectorsFix.ts
 src/mobileFamilyTreeCoreDescendantConnector.ts
 src/mobileFamilyTreeGroupTitleVisibilityFix.ts
 src/mobileFamilyHorizontalZoomOverview.ts
+src/mobileFamilyMapUncleSwipeNavigationGuard.ts
 src/mobileFamilyMapStableMobileFix.ts
 src/mobileFamilyMapDirectionalNavigationFix.ts
 src/mobileFamilyMapCoreConnectorFix.ts
+src/mobileVisualizationPanelFamilyStatsFix.ts
+src/mobileFamilyMapZoomOverviewVisualFix.ts
+src/mobileFamilyMapDescendantsStabilityLock.ts
+src/mobileFamilyMapExtendedSpouseCards.ts
+src/mobileFamilyMapFilterButtonsBehaviorFix.ts
+src/mobileFamilyMapFullOverview.ts
+src/mobileFamilyMapFullOverviewMosaicFix.ts
 ```
+
+Regra operacional:
+
+- só tratar como contrato ativo scripts carregados pelo `index.html` ou importados por arquivos carregados;
+- se um arquivo existir no repositório, mas não estiver carregado, ele é legado ou candidato a remoção;
+- qualquer alteração na ordem de carregamento deve ser documentada neste arquivo, em `MAPA_FAMILIAR_MOBILE_AUDITORIA_CODIGO_ATUAL.md`, em `NAO_REGRESSAO_MAPAS_MOBILE.md` e no QA pós-deploy.
 
 Arquivos legados ou substituídos que não devem ser tratados como contrato ativo se não estiverem carregados:
 
@@ -96,26 +112,37 @@ src/mobileFamilyMapMicroLayoutFix.ts
 src/mobileFamilyMapOverviewNavigationBridge.ts
 ```
 
----
-
 ## 4. Responsabilidades dos scripts vigentes
 
 | Arquivo | Responsabilidade vigente |
 |---|---|
-| `mobileFamilyHorizontalZoomOverview.ts` | cria o Zoom específico de `/mapa-familiar-horizontal`, com navegação por gerações |
-| `mobileFamilyMapStableMobileFix.ts` | estabiliza `descendants`, tios, primos, painéis compactos e Zoom 3x3 de `/mapa-familiar` |
-| `mobileFamilyMapDirectionalNavigationFix.ts` | aplica e bloqueia direções de swipe da grade 3x3 em `/mapa-familiar` |
-| `mobileFamilyMapCoreConnectorFix.ts` | oculta linha central abaixo da pessoa principal, linhas acima dos tios e fonte visual duplicada dos descendentes no `core` |
-| `mobileFamilyTreeGrandparentScreens.ts` | cria/apoia telas dinâmicas de ancestrais profundos |
-| `mobileFamilyTreeAncestorConnectorsFix.ts` | ajusta conectores de avós e ancestrais |
-| `mobileFamilyTreeDescendantConnectorsFix.ts` | ajusta conectores internos da área descendente |
-| `mobileFamilyTreeCoreDescendantConnector.ts` | apoia conectores do núcleo e da área descendente |
-| `mobileFamilyTreeGroupTitleVisibilityFix.ts` | preserva títulos escuros e legíveis no mobile |
-| `mobileFamilyTreeMutationPerformanceGuard.ts` | reduz risco de loops por `MutationObserver` |
+| `mobileFamilyTreeMutationPerformanceGuard.ts` | reduz risco de loops de `MutationObserver` em conectores e ajustes DOM. |
+| `main.tsx` | carrega React e importa ajustes globais como `mobileFamilyMapFullPanelStyleFix.ts`. |
+| `firstLoginMobileTutorialFixes.ts` | ajustes do tutorial/primeiro acesso no mobile. |
+| `mobileCuriositiesNavigationFix.ts` | ajustes de navegação mobile em curiosidades. |
+| `mobileTreePanelViewportFix.ts` | correções de viewport/painel no mobile. |
+| `staticMobileFamilyTreeScreens.ts` | suporte a telas estáticas/estrutura de telas mobile. |
+| `mobileFamilyTreeScreenStateGuards.ts` | guards de estado de tela e stage. |
+| `mobileFamilyTreeGrandparentScreens.ts` | cria/apoia telas laterais superiores de ancestrais profundos. |
+| `mobileFamilyTreeSwipeHints.ts` | hints/apoio visual de swipe. |
+| `mobileFamilyTreeAncestorConnectorsFix.ts` | ajusta conectores de avós e ancestrais. |
+| `mobileFamilyTreeDescendantConnectorsFix.ts` | ajusta conectores internos de descendentes. |
+| `mobileFamilyTreeCoreDescendantConnector.ts` | apoia conectores do núcleo e da área descendente. |
+| `mobileFamilyTreeGroupTitleVisibilityFix.ts` | preserva títulos escuros, compactos e legíveis no mobile. |
+| `mobileFamilyHorizontalZoomOverview.ts` | cria o Zoom específico de `/mapa-familiar-horizontal`, com cards por geração. |
+| `mobileFamilyMapUncleSwipeNavigationGuard.ts` | protege gestos nas telas de tios para evitar navegação indevida. |
+| `mobileFamilyMapStableMobileFix.ts` | estabiliza `descendants`, tios, primos, painéis compactos e overview 3x3. |
+| `mobileFamilyMapDirectionalNavigationFix.ts` | aplica e bloqueia direções de swipe da grade 3x3. |
+| `mobileFamilyMapCoreConnectorFix.ts` | oculta duplicações no `core`, linha central abaixo da pessoa principal e conectores indevidos. |
+| `mobileVisualizationPanelFamilyStatsFix.ts` | ajusta estatísticas/resumo do painel mobile de visualização. |
+| `mobileFamilyMapZoomOverviewVisualFix.ts` | refina aparência/funcionamento visual do Zoom 3x3. |
+| `mobileFamilyMapDescendantsStabilityLock.ts` | trava estabilidade de `descendants`, pausando interferências durante Zoom/overview. |
+| `mobileFamilyMapExtendedSpouseCards.ts` | marca e expande visualmente cônjuges estendidos. |
+| `mobileFamilyMapFilterButtonsBehaviorFix.ts` | separa comportamento dos filtros mobile de cônjuges. |
+| `mobileFamilyMapFullOverview.ts` | adiciona `Exibir mapa completo`, overlay com pinça/arraste e mosaico único. |
+| `mobileFamilyMapFullOverviewMosaicFix.ts` | refina mosaico completo, filhos/netos e conectores extras. |
 
-Regra: antes de criar outro script global de touch, Zoom, conector ou scroll, auditar primeiro os quatro scripts principais desta seção.
-
----
+Regra: antes de criar outro script global de touch, Zoom, conector, filtro, painel ou scroll, auditar primeiro os scripts desta tabela. O risco maior é criar disputa de `transform`, `MutationObserver`, `touchmove`, `pointermove`, `data-mobile-family-tree-active-screen` ou `body.style.overflow`.
 
 ## 5. Estrutura padrão de `/mapa-familiar`
 
@@ -328,52 +355,90 @@ Ela deve listar gerações disponíveis e, ao tocar em uma geração, acionar o 
 
 ## 12. Zoom/overview
 
+A palavra **Zoom** tem dois contratos diferentes no mobile, conforme a rota.
+
 ### `/mapa-familiar`
 
-O botão `Zoom` abre overview da grade 3x3.
+Contrato vigente:
 
-Ao tocar em um card:
+- botão **Zoom** da toolbar mobile abre uma janela de **Visão geral** com 9 cards da grade 3x3;
+- cada card representa uma tela técnica da grade;
+- tocar em um card reposiciona o stage na tela correspondente;
+- a janela de Zoom não deve entrar na exportação;
+- a janela de Zoom pode expor o botão **Exibir mapa completo**;
+- **Exibir mapa completo** abre um overlay separado em mosaico único, com pinça, arraste e reenquadramento.
 
-- overview fecha;
-- tela correspondente é posicionada no stage;
-- `data-mobile-family-tree-active-screen` é atualizado;
-- scroll interno da tela destino é resetado.
-
-Implementação:
+Telas esperadas no overview:
 
 ```txt
-src/mobileFamilyMapStableMobileFix.ts
+paternal-ancestors
+ancestors
+maternal-ancestors
+paternal-uncles
+core
+maternal-uncles
+paternal-cousins
+descendants
+maternal-cousins
 ```
 
 ### `/mapa-familiar-horizontal`
 
-O botão `Zoom` abre overview de gerações, não overview 3x3.
+Contrato vigente:
 
-Ao tocar em uma geração:
+- botão **Zoom** abre overview por **gerações**, não a grade 3x3;
+- cada card/botão representa uma geração disponível;
+- selecionar uma geração fecha o overview e navega para a geração correspondente;
+- não deve reintroduzir Paterno/Central/Materno;
+- não deve usar scroll horizontal manual como navegação principal.
 
-- overview fecha;
-- a página navega para o botão `Ger N`;
-- scroll/swipe/bottom nav permanecem funcionais.
+### Regra de conflito resolvida
 
-Implementação:
-
-```txt
-src/mobileFamilyHorizontalZoomOverview.ts
-```
-
----
+- A toolbar mobile visível tem `Formato`, `Cor`, `Filtros` e `Zoom`.
+- O botão `+` abre o painel completo de **Visualização**.
+- Exportação/salvar pode existir no painel completo aberto pelo `+`.
+- **Exportar não deve ser documentado como botão fixo da toolbar superior mobile**, porque não está em `TOOLBAR_ITEMS`.
+- O painel mobile de visualização e os popovers devem manter `data-tree-export-ignore="true"`.
 
 ## 13. Painéis superiores e botão `+`
 
+Toolbar mobile vigente:
+
+```txt
+Formato
+Cor
+Filtros
+Zoom
++
+```
+
 Contrato:
 
-- `Formato`, `Cor` e `Filtros` abrem painel abaixo da toolbar sem espaço branco excessivo;
-- abrir/fechar painel não deve deslocar permanentemente a tela ativa;
-- abrir/fechar painel não deve travar `body`;
-- opções devem permanecer tocáveis em Safari/iOS;
-- botão `+` abre painel completo com overlay escuro, painel branco/opaco e scroll próprio.
+- `Formato` alterna entre `/mapa-familiar` e `/mapa-familiar-horizontal` preservando a query string, especialmente `?pessoa=...`;
+- `Cor` altera a paleta global da árvore;
+- `Filtros` controla a exibição de cônjuges estendidos;
+- `Zoom` abre o overview adequado à rota ativa;
+- `+` abre o painel completo de **Visualização**.
 
----
+O painel completo aberto pelo `+` pode conter:
+
+- seletor de visualizador/família;
+- alternância de formato;
+- paleta;
+- resumo/estatísticas;
+- grupos familiares;
+- filtros de cônjuges;
+- ação de salvar/exportar imagem, conforme o código vigente.
+
+Regras:
+
+- overlay deve escurecer o fundo;
+- painel principal deve ser branco/opaco;
+- conteúdo interno deve ter rolagem própria;
+- `body` deve destravar ao fechar;
+- painel não entra na exportação;
+- não documentar `Exportar` como item fixo da toolbar superior enquanto não existir em `TOOLBAR_ITEMS`;
+- não remover `+` sem substituir as funções do painel completo.
 
 ## 14. Títulos dos grupos
 
@@ -438,6 +503,16 @@ Checklist mínimo:
 - [ ] `Cor` e `Filtros` abrem painéis sem espaço branco excessivo.
 
 ---
+
+## 15.1. Riscos adjacentes que não pertencem a Prompt 6
+
+Antes de qualquer Prompt 6 ou alteração futura nos mapas, registrar estes pontos como **risco de regressão**, não como tarefa automática de mapa:
+
+- `Home.tsx` ainda mantém seleção de visualizador/`Visualizar como...` em mobile e desktop. A decisão de produto segue pendente; não remover sem frente própria.
+- `homeAiContext.ts` ainda contém inferência por nomes/sufixos para rótulos de pai/mãe e envia alguns campos sensíveis no contexto. Não ampliar IA nem dados privados sem revisão específica.
+- `/meus-vinculos` deve manter pets separados de filhos humanos e mudanças de vínculo como pedidos pendentes.
+- `arquivosHistoricosService.ts` trata `participante_ids` como coluna opcional com fallback; não tornar obrigatório sem migration aplicada.
+- o stepper pode permitir clique direto em `/preferencias`; pessoa falecida deve ser protegida pela própria página de preferências.
 
 ## 16. Pendências conhecidas
 

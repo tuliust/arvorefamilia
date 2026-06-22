@@ -1,6 +1,6 @@
 # Regras de não regressão — Árvore Família
 
-> Última revisão: 2026-06-20  
+> Última revisão: 2026-06-22  
 > Local canônico: `docs/REGRAS_DE_NAO_REGRESSAO.md`  
 > Projeto: `tuliust/arvorefamilia`  
 > Tipo: regras técnicas e contratos de prevenção de regressão  
@@ -267,29 +267,43 @@ Regras:
 
 ## 11. Zoom/overview mobile
 
-Regras:
+Regras por rota:
 
-- botão `Zoom` deve abrir overview com 9 cards em `/mapa-familiar`;
-- botão `Zoom` deve abrir overview com 9 cards em `/mapa-familiar-horizontal`;
+| Rota | Contrato do botão `Zoom` |
+|---|---|
+| `/mapa-familiar` | abre overview com 9 cards da grade 3x3 e pode oferecer **Exibir mapa completo** |
+| `/mapa-familiar-horizontal` | abre overview por gerações disponíveis, não a grade 3x3 |
+
+Regras comuns:
+
 - cada card do overview deve responder a toque/click;
 - em `/mapa-familiar`, o card leva à tela correspondente da grade;
 - em `/mapa-familiar-horizontal`, o card leva à geração correspondente;
 - overview deve fechar ao escolher destino;
-- overview não entra na exportação.
+- overview não entra na exportação;
+- abrir/fechar Zoom não pode deixar `body` travado;
+- abrir Zoom a partir de `descendants` não pode causar tremor ou disputa de `transform`.
 
----
+Regra de toolbar:
+
+- a toolbar mobile fixa contém `Formato`, `Cor`, `Filtros` e `Zoom`;
+- `Exportar` não é item fixo da toolbar mobile vigente;
+- ações de salvar/exportar podem existir no painel completo aberto pelo botão `+`;
+- não reintroduzir `Zoom +`, `Zoom -`, `Restaurar` ou `Exportar` como itens fixos da toolbar mobile sem decisão explícita e QA.
 
 ## 12. Painel mobile do botão `+`
 
 Regras:
 
+- botão `+` abre painel completo de **Visualização**;
 - overlay deve escurecer o fundo;
 - painel principal deve ser branco/opaco;
 - conteúdo interno deve ter rolagem própria;
-- body deve destravar ao fechar;
-- painel não entra na exportação.
-
----
+- `body` deve destravar ao fechar;
+- painel não entra na exportação;
+- pode conter seletor de visualizador/família, alternância de formato, paleta, resumo, grupos e filtros;
+- pode conter ação de salvar/exportar imagem, conforme o código vigente;
+- não confundir o painel completo do `+` com os popovers compactos da toolbar.
 
 ## 13. Painel desktop
 
@@ -426,6 +440,27 @@ Regras resumidas:
 - revisão final mantém edição inline e badges por gênero/status.
 
 ---
+
+## 19.1. Regras específicas do onboarding recente
+
+Após os prompts do fluxo de onboarding:
+
+- `/meus-dados` coleta o questionário de perfil e não deve voltar a exibir Mini Bio/Curiosidades como campos principais nessa etapa.
+- `/meus-vinculos` exibe Mini Bio/Curiosidades editáveis e geradas por IA com base no questionário.
+- Pets devem ficar separados de filhos humanos em `/meus-vinculos` e `/revisao-dados`.
+- Cônjuge ativo deve permanecer limitado a no máximo 1.
+- Cônjuge falecido deve permanecer inativo.
+- Mudanças em vínculos de membros devem criar solicitação pendente quando esse for o fluxo vigente, não relacionamento definitivo direto.
+- Rascunhos em `sessionStorage`/`localStorage` não devem ser quebrados sem migração defensiva.
+- `/arquivos-historicos` passa a aceitar fatos/memórias sem arquivo quando a migration correspondente estiver aplicada.
+- Não tornar colunas opcionais como `participante_ids` obrigatórias sem migration e fallback removidos de forma controlada.
+
+## 19.2. Regras de IA, privacidade e inferência
+
+- IA não pode inventar fatos fora dos dados enviados.
+- IA não deve receber telefone, endereço, contato ou rede social privada sem respeitar permissões explícitas.
+- Inferência de pai/mãe por nome, sufixo ou gênero aparente é risco técnico; quando houver ambiguidade, documentar como inferência e não como verdade factual.
+- `homeAiContext.ts` deve ser tratado como frente sensível: alterações exigem revisão de privacidade, prompt e payload.
 
 ## 20. Operação, banco e secrets
 
