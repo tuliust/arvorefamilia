@@ -115,7 +115,7 @@ const SIDE_GROUPS_TOP = 170;
 const SIDE_GROUPS_BOTTOM = FRAME_BOTTOM;
 const CENTRAL_GROUP_TOP = SIDE_GROUPS_TOP;
 const DIRECT_FILTER_PANEL_BOTTOM_ALIGNMENT_Y = SIDE_GROUPS_BOTTOM;
-// Extra logical room used only by Minha 羠vore so lower groups reach the filter panel's visual base.
+// Extra logical room used only by Minha 脕rvore so lower groups reach the filter panel's visual base.
 const DIRECT_GROUPS_BOTTOM_ALIGNMENT_OFFSET = 140;
 const DIRECT_GROUPS_BOTTOM_ALIGNMENT_Y =
   DIRECT_FILTER_PANEL_BOTTOM_ALIGNMENT_Y + DIRECT_GROUPS_BOTTOM_ALIGNMENT_OFFSET;
@@ -872,11 +872,11 @@ function visibleGroupHeight(ids: string[], maxPerRow: number, index?: Relationsh
   return ids.length > 0 ? groupHeight(ids, maxPerRow, index, spec) : 0;
 }
 
-// Helpers legados de alinhamento vertical. A area central inferior da Minha 羠vore
+// Helpers legados de alinhamento vertical. A area central inferior da Minha 脕rvore
 // nao deve usar alinhamento pelo bottom logico da view: Irmaos, Sobrinhos,
 // Conjuge, Filhos e Netos devem permanecer compactados a partir de
 // compactLowerGroupTopPositions(). Qualquer mudanca nesse comportamento precisa
-// ser deliberada e testada visualmente na view Minha 羠vore.
+// ser deliberada e testada visualmente na view Minha 脕rvore.
 function lowerGroupTopPositions(
   groups: GroupSpec[],
   minTopY: number,
@@ -1337,7 +1337,7 @@ function shiftPlacedGroupY(
 }
 
 // Helper auxiliar legado para casos pontuais de alinhamento ao bottom.
-// Nao aplicar aos grupos inferiores centrais da Minha 羠vore.
+// Nao aplicar aos grupos inferiores centrais da Minha 脕rvore.
 function alignGroupToBottom(
   nodes: Node[],
   spec: GroupSpec,
@@ -1352,7 +1352,7 @@ function alignGroupToBottom(
 
 // Helper auxiliar legado para pilhas alinhadas ao bottom.
 // Nao usar para Irmaos, Sobrinhos, Conjuge, Filhos e Netos na area central
-// inferior da Minha 羠vore; esses grupos devem continuar com
+// inferior da Minha 脕rvore; esses grupos devem continuar com
 // compactLowerGroupTopPositions(), sem serem empurrados para o bottom logico.
 function alignGroupStackToBottom(
   nodes: Node[],
@@ -2002,17 +2002,17 @@ export function directFamilyDistributedLayout(
   };
 
   const paternalGroups: GroupSpec[] = resolveDirectGroups([
-    { key: 'tataravos-paternos', label: 'Tatarav髎 paternos', ids: filters.tataravos ? sides.paternal.greatGreatGrandparents : [], variant: 'greatGreatGrandparent', maxPerRow: ANCESTOR_GROUP_COLUMNS, centerX: PATERNAL_CENTER_X, side: 'paternal', laneWidth: PATERNAL_GROUP_LANE_WIDTH, cardWidth: SIDE_ANCESTOR_CARD_WIDTH, cardHeight: SIDE_ANCESTOR_CARD_HEIGHT, columnGap: ANCESTOR_COLUMN_GAP, rowGap: ANCESTOR_ROW_GAP, alignBoundary: { side: 'left', x: PATERNAL_SIDE_AREA_LEFT } },
-    { key: 'bisavos-paternos', label: 'Bisav髎 paternos', ids: filters.bisavos ? sides.paternal.greatGrandparents : [], variant: 'greatGrandparent', maxPerRow: ANCESTOR_GROUP_COLUMNS, centerX: PATERNAL_CENTER_X, side: 'paternal', laneWidth: PATERNAL_GROUP_LANE_WIDTH, cardWidth: SIDE_ANCESTOR_CARD_WIDTH, cardHeight: SIDE_ANCESTOR_CARD_HEIGHT, columnGap: ANCESTOR_COLUMN_GAP, rowGap: ANCESTOR_ROW_GAP, alignBoundary: { side: 'left', x: PATERNAL_SIDE_AREA_LEFT } },
-    { key: 'avos-paternos', label: 'Av髎 paternos', ids: filters.avos ? sides.paternal.grandparents : [], variant: 'grandparent', maxPerRow: ANCESTOR_GROUP_COLUMNS, centerX: PATERNAL_CENTER_X, side: 'paternal', laneWidth: PATERNAL_GROUP_LANE_WIDTH, cardWidth: SIDE_ANCESTOR_CARD_WIDTH, cardHeight: SIDE_ANCESTOR_CARD_HEIGHT, columnGap: ANCESTOR_COLUMN_GAP, rowGap: ANCESTOR_ROW_GAP, alignBoundary: { side: 'left', x: PATERNAL_SIDE_AREA_LEFT } },
+    { key: 'tataravos-paternos', label: 'Tatarav贸s paternos', ids: filters.tataravos ? sides.paternal.greatGreatGrandparents : [], variant: 'greatGreatGrandparent', maxPerRow: ANCESTOR_GROUP_COLUMNS, centerX: PATERNAL_CENTER_X, side: 'paternal', laneWidth: PATERNAL_GROUP_LANE_WIDTH, cardWidth: SIDE_ANCESTOR_CARD_WIDTH, cardHeight: SIDE_ANCESTOR_CARD_HEIGHT, columnGap: ANCESTOR_COLUMN_GAP, rowGap: ANCESTOR_ROW_GAP, alignBoundary: { side: 'left', x: PATERNAL_SIDE_AREA_LEFT } },
+    { key: 'bisavos-paternos', label: 'Bisav贸s paternos', ids: filters.bisavos ? sides.paternal.greatGrandparents : [], variant: 'greatGrandparent', maxPerRow: ANCESTOR_GROUP_COLUMNS, centerX: PATERNAL_CENTER_X, side: 'paternal', laneWidth: PATERNAL_GROUP_LANE_WIDTH, cardWidth: SIDE_ANCESTOR_CARD_WIDTH, cardHeight: SIDE_ANCESTOR_CARD_HEIGHT, columnGap: ANCESTOR_COLUMN_GAP, rowGap: ANCESTOR_ROW_GAP, alignBoundary: { side: 'left', x: PATERNAL_SIDE_AREA_LEFT } },
+    { key: 'avos-paternos', label: 'Av贸s paternos', ids: filters.avos ? sides.paternal.grandparents : [], variant: 'grandparent', maxPerRow: ANCESTOR_GROUP_COLUMNS, centerX: PATERNAL_CENTER_X, side: 'paternal', laneWidth: PATERNAL_GROUP_LANE_WIDTH, cardWidth: SIDE_ANCESTOR_CARD_WIDTH, cardHeight: SIDE_ANCESTOR_CARD_HEIGHT, columnGap: ANCESTOR_COLUMN_GAP, rowGap: ANCESTOR_ROW_GAP, alignBoundary: { side: 'left', x: PATERNAL_SIDE_AREA_LEFT } },
     { key: 'tios-paternos', label: 'Tios paternos', ids: filters.tios ? sides.paternal.uncles : [], variant: 'uncleAunt', maxPerRow: SIDE_GROUP_COLUMNS, centerX: PATERNAL_CENTER_X, side: 'paternal', laneWidth: PATERNAL_GROUP_LANE_WIDTH, cardWidth: SIDE_COLLATERAL_CARD_WIDTH, cardHeight: SIDE_COLLATERAL_CARD_HEIGHT, columnGap: IN_GROUP_SIBLING_COLUMN_GAP, rowGap: IN_GROUP_SIBLING_ROW_GAP, alignBoundary: { side: 'left', x: PATERNAL_SIDE_AREA_LEFT } },
     { key: 'primos-paternos', label: 'Primos paternos', ids: filters.primos ? sides.paternal.cousins : [], variant: 'cousin', maxPerRow: 3, centerX: PATERNAL_CENTER_X, side: 'paternal', laneWidth: PATERNAL_GROUP_LANE_WIDTH, cardWidth: SIDE_COLLATERAL_CARD_WIDTH, cardHeight: SIDE_COLLATERAL_CARD_HEIGHT, columnGap: IN_GROUP_SIBLING_COLUMN_GAP, rowGap: IN_GROUP_SIBLING_ROW_GAP, alignBoundary: { side: 'left', x: PATERNAL_SIDE_AREA_LEFT } },
   ]);
 
   const maternalGroups: GroupSpec[] = resolveDirectGroups([
-    { key: 'tataravos-maternos', label: 'Tatarav髎 maternos', ids: filters.tataravos ? sides.maternal.greatGreatGrandparents : [], variant: 'greatGreatGrandparent', maxPerRow: ANCESTOR_GROUP_COLUMNS, centerX: MATERNAL_CENTER_X, side: 'maternal', laneWidth: MATERNAL_GROUP_LANE_WIDTH, cardWidth: SIDE_ANCESTOR_CARD_WIDTH, cardHeight: SIDE_ANCESTOR_CARD_HEIGHT, columnGap: ANCESTOR_COLUMN_GAP, rowGap: ANCESTOR_ROW_GAP, alignBoundary: { side: 'right', x: MATERNAL_SIDE_AREA_RIGHT } },
-    { key: 'bisavos-maternos', label: 'Bisav髎 maternos', ids: filters.bisavos ? sides.maternal.greatGrandparents : [], variant: 'greatGrandparent', maxPerRow: ANCESTOR_GROUP_COLUMNS, centerX: MATERNAL_CENTER_X, side: 'maternal', laneWidth: MATERNAL_GROUP_LANE_WIDTH, cardWidth: SIDE_ANCESTOR_CARD_WIDTH, cardHeight: SIDE_ANCESTOR_CARD_HEIGHT, columnGap: ANCESTOR_COLUMN_GAP, rowGap: ANCESTOR_ROW_GAP, alignBoundary: { side: 'right', x: MATERNAL_SIDE_AREA_RIGHT } },
-    { key: 'avos-maternos', label: 'Av髎 maternos', ids: filters.avos ? sides.maternal.grandparents : [], variant: 'grandparent', maxPerRow: ANCESTOR_GROUP_COLUMNS, centerX: MATERNAL_CENTER_X, side: 'maternal', laneWidth: MATERNAL_GROUP_LANE_WIDTH, cardWidth: SIDE_ANCESTOR_CARD_WIDTH, cardHeight: SIDE_ANCESTOR_CARD_HEIGHT, columnGap: ANCESTOR_COLUMN_GAP, rowGap: ANCESTOR_ROW_GAP, alignBoundary: { side: 'right', x: MATERNAL_SIDE_AREA_RIGHT } },
+    { key: 'tataravos-maternos', label: 'Tatarav贸s maternos', ids: filters.tataravos ? sides.maternal.greatGreatGrandparents : [], variant: 'greatGreatGrandparent', maxPerRow: ANCESTOR_GROUP_COLUMNS, centerX: MATERNAL_CENTER_X, side: 'maternal', laneWidth: MATERNAL_GROUP_LANE_WIDTH, cardWidth: SIDE_ANCESTOR_CARD_WIDTH, cardHeight: SIDE_ANCESTOR_CARD_HEIGHT, columnGap: ANCESTOR_COLUMN_GAP, rowGap: ANCESTOR_ROW_GAP, alignBoundary: { side: 'right', x: MATERNAL_SIDE_AREA_RIGHT } },
+    { key: 'bisavos-maternos', label: 'Bisav贸s maternos', ids: filters.bisavos ? sides.maternal.greatGrandparents : [], variant: 'greatGrandparent', maxPerRow: ANCESTOR_GROUP_COLUMNS, centerX: MATERNAL_CENTER_X, side: 'maternal', laneWidth: MATERNAL_GROUP_LANE_WIDTH, cardWidth: SIDE_ANCESTOR_CARD_WIDTH, cardHeight: SIDE_ANCESTOR_CARD_HEIGHT, columnGap: ANCESTOR_COLUMN_GAP, rowGap: ANCESTOR_ROW_GAP, alignBoundary: { side: 'right', x: MATERNAL_SIDE_AREA_RIGHT } },
+    { key: 'avos-maternos', label: 'Av贸s maternos', ids: filters.avos ? sides.maternal.grandparents : [], variant: 'grandparent', maxPerRow: ANCESTOR_GROUP_COLUMNS, centerX: MATERNAL_CENTER_X, side: 'maternal', laneWidth: MATERNAL_GROUP_LANE_WIDTH, cardWidth: SIDE_ANCESTOR_CARD_WIDTH, cardHeight: SIDE_ANCESTOR_CARD_HEIGHT, columnGap: ANCESTOR_COLUMN_GAP, rowGap: ANCESTOR_ROW_GAP, alignBoundary: { side: 'right', x: MATERNAL_SIDE_AREA_RIGHT } },
     { key: 'tios-maternos', label: 'Tios maternos', ids: filters.tios ? sides.maternal.uncles : [], variant: 'uncleAunt', maxPerRow: SIDE_GROUP_COLUMNS, centerX: MATERNAL_CENTER_X, side: 'maternal', laneWidth: MATERNAL_GROUP_LANE_WIDTH, cardWidth: SIDE_COLLATERAL_CARD_WIDTH, cardHeight: SIDE_COLLATERAL_CARD_HEIGHT, columnGap: IN_GROUP_SIBLING_COLUMN_GAP, rowGap: IN_GROUP_SIBLING_ROW_GAP, alignBoundary: { side: 'right', x: MATERNAL_SIDE_AREA_RIGHT } },
     { key: 'primos-maternos', label: 'Primos maternos', ids: filters.primos ? sides.maternal.cousins : [], variant: 'cousin', maxPerRow: 3, centerX: MATERNAL_CENTER_X, side: 'maternal', laneWidth: MATERNAL_GROUP_LANE_WIDTH, cardWidth: SIDE_COLLATERAL_CARD_WIDTH, cardHeight: SIDE_COLLATERAL_CARD_HEIGHT, columnGap: IN_GROUP_SIBLING_COLUMN_GAP, rowGap: IN_GROUP_SIBLING_ROW_GAP, alignBoundary: { side: 'right', x: MATERNAL_SIDE_AREA_RIGHT } },
   ]);
@@ -2056,7 +2056,7 @@ export function directFamilyDistributedLayout(
 
   const motherGroup: GroupSpec = {
     key: 'mae',
-    label: 'M肊',
+    label: 'M脙E',
     ids: sides.maternal.parent,
     variant: 'parent',
     maxPerRow: 1,
@@ -2147,7 +2147,7 @@ export function directFamilyDistributedLayout(
 
   const siblingGroup: GroupSpec = {
     key: 'irmaos',
-    label: 'Irm鉶s',
+    label: 'Irm茫os',
     ids: siblings,
     variant: 'sibling',
     maxPerRow: options.isMobile ? 1 : 2,
@@ -2165,7 +2165,7 @@ export function directFamilyDistributedLayout(
   };
   const spouseGroup: GroupSpec = {
     key: 'conjuge',
-    label: 'C鬾juge',
+    label: 'C么njuge',
     ids: spouses,
     variant: 'spouse',
     maxPerRow: 1,
