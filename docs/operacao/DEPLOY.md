@@ -1,122 +1,77 @@
-﻿# Deploy
+# Deploy
 
-> Última revisão: 2026-06-14
-> Local canônico: `docs/operacao/DEPLOY.md`
-> Tipo: atalho operacional de deploy.
-> Status: complementar; o procedimento completo está em `docs/operacao/DEPLOYMENT.md`.
+> Última revisão: 2026-06-23  
+> Escopo: checklist operacional de validação, publicação e QA pós-deploy.  
+> Status: canônico.
 
----
+## Objetivo
 
-## 1. Objetivo
+Concentrar o procedimento de deploy em um único documento operacional. Este arquivo substitui o antigo `docs/operacao/DEPLOYMENT.md` e o antigo índice local de operação.
 
-Este arquivo é um atalho rápido para publicação.
-
-Para detalhes de variáveis, cache SPA, Supabase, Edge Functions, OAuth, rotas `/api/*`, troubleshooting e QA pós-deploy, use:
-
-```txt
-docs/operacao/DEPLOYMENT.md
-```
-
----
-
-## 2. Checklist mínimo
-
-Antes de publicar:
+## Checklist antes do deploy
 
 ```bash
+npm run typecheck
+npm run build
 git status --short
 git diff --check
-npm run build
 ```
 
-Quando houver alteração funcional:
+A saída esperada é:
 
-```bash
-npm test
-npm run test:e2e
-```
+- typecheck sem erros;
+- build concluído;
+- nenhuma alteração fora do escopo planejado;
+- nenhum erro de whitespace no diff.
 
-Quando houver banco:
+## Publicação
 
-```bash
-supabase migration list
-```
+1. Confirmar branch correta.
+2. Confirmar que a `main` está atualizada.
+3. Executar validações locais.
+4. Fazer commit com mensagem objetiva.
+5. Fazer push.
+6. Conferir deploy na plataforma configurada.
+7. Executar QA manual mínimo.
 
-Quando houver Edge Functions:
+## Integrações relacionadas
 
-```bash
-supabase functions list
-```
+Detalhes específicos ficam em:
 
----
+- `operacao/OAUTH_GOOGLE.md`;
+- `operacao/STORAGE_MAINTENANCE.md`;
+- `operacao/MIGRATIONS_SUPABASE.md`.
 
-## 3. Regras rápidas
+## QA mínimo pós-deploy
 
-- Publicar `dist/`.
-- Não commitar `.env.local`.
-- Não expor service role.
-- Não usar secret com prefixo `VITE_`.
-- Não aplicar migration junto do deploy sem autorização.
-- Não cachear `index.html` como imutável.
-- Preservar rewrite de `/api/(.*)` antes do fallback SPA.
-- Validar rotas críticas após deploy.
-- Tratar warning de chunk grande como alerta de performance, não como falha, se o build concluiu.
+Validar manualmente:
 
----
+- home pública;
+- login;
+- `/mapa-familiar`;
+- `/mapa-familiar-horizontal`;
+- `/minha-arvore` e `/minha-arvore/editar`;
+- `/meus-dados`;
+- `/meus-vinculos`;
+- `/revisao-dados`;
+- `/curiosidades`;
+- `/arquivos-historicos`;
+- `/forum`;
+- `/meus-favoritos`;
+- `/notificacoes`;
+- `/preferencias`;
+- área administrativa.
 
-## 4. Rotas mínimas para QA
+## Troubleshooting
 
-```txt
-/entrar
-/mapa-familiar
-/mapa-familiar-horizontal
-/calendario-familiar
-/forum
-/meus-favoritos
-/notificacoes
-/admin
-```
+| Sintoma | Verificação |
+|---|---|
+| Página 404 ao recarregar rota interna | Conferir fallback SPA da hospedagem. |
+| Erro de autenticação | Conferir configuração do provedor e callback. |
+| Falha em upload ou leitura de arquivos | Conferir buckets, policies e `STORAGE_MAINTENANCE.md`. |
+| Erro em IA | Conferir `api/ai.ts` e limites de payload. |
+| Tela protegida inacessível | Conferir guards, sessão e perfil do usuário. |
 
-Confirmar que estas rotas antigas não voltaram como views ativas:
+## Regra de manutenção
 
-```txt
-/minha-arvore
-/genealogia
-/visao-completa
-```
-
-Exceção vigente:
-
-```txt
-/minha-arvore/editar
-```
-
----
-
-## 5. QA mobile mínimo da árvore
-
-Breakpoints:
-
-```txt
-320px
-375px
-390px
-430px
-```
-
-Validar:
-
-- `/mapa-familiar` mobile usa `MobileFamilyTreeView`;
-- `/mapa-familiar-horizontal` mobile usa `MobileFamilyHorizontalMapView`;
-- horizontal mobile mostra uma geração por tela;
-- horizontal mobile não usa barra `Paterno | Central | Materno`;
-- modal mobile de controles não exibe Zoom, Restaurar nem Exportar;
-- paletas não caem em fallback azul indevido.
-
----
-
-## 6. Documento completo
-
-```txt
-docs/operacao/DEPLOYMENT.md
-```
+Não recriar documentos paralelos de deploy. Se o processo mudar, atualizar este arquivo e os documentos específicos de operação quando necessário.
