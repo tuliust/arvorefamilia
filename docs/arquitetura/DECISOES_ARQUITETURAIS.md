@@ -1,196 +1,68 @@
-# Arquitetura
+# Decisões arquiteturais
 
-> Última revisão: 2026-06-22
+> Última revisão: 2026-06-23  
+> Escopo: arquitetura final documentada após consolidação dos documentos técnicos anteriores.  
+> Status: canônico.
 
 ## Camadas
 
 ```text
 React/Vite UI
-  ↓
-Services de domínio
-  ↓
-Supabase Auth / DB / Storage / RLS
-  ↓
-APIs serverless, incluindo api/ai.ts
+Rotas, guards e layouts
+Componentes de domínio
+Services de aplicação
+Supabase Auth, Database, Storage e RLS
+APIs serverless
 ```
 
 ## Frontend
 
-- Páginas de membro ficam em `src/app/pages`.
-- Componentes compartilhados ficam em `src/app/components`.
-- Services ficam em `src/app/services`.
-- Tipos centrais ficam em `src/app/types`.
-- Utilitários ficam em `src/app/utils`.
+- Páginas: `src/app/pages`.
+- Componentes compartilhados: `src/app/components`.
+- Componentes da árvore: `src/app/components/FamilyTree`.
+- Services: `src/app/services`.
+- Tipos centrais: `src/app/types`.
+- Utilitários: `src/app/utils` quando aplicável.
 
-## Backend/Supabase
+## Rotas e guards
 
-Supabase provê:
+A fonte de verdade é `src/app/routes.tsx`.
 
-- autenticação;
-- tabelas relacionais;
-- RLS;
-- storage público para arquivos;
-- RPCs/policies administrativas;
-- migrations versionadas.
+- Rotas públicas: home, login, termos, privacidade e perfis públicos.
+- Rotas de membro: mapa, árvore, dados, vínculos, revisão, curiosidades, fórum, favoritos, notificações, preferências e calendário.
+- Rotas administrativas: `/admin` e subrotas.
+- Guards principais: `ProtectedRoute`, `MemberRoute`, `TreeAccessRoute` e checagens administrativas.
+
+Detalhes operacionais ficam em `arquitetura/ROTAS_E_GUARDS.md`.
+
+## Supabase e dados
+
+A aplicação usa Supabase para autenticação, pessoas, relacionamentos, solicitações de vínculo, arquivos históricos, favoritos, notificações, fórum, preferências e storage.
+
+Regras de banco e migrations ficam em `operacao/MIGRATIONS_SUPABASE.md`. SQLs antigos foram consolidados em `historico/LEGADO_TECNICO.md` apenas para rastreabilidade.
 
 ## IA
 
-Endpoint:
+A IA é funcionalidade de apoio e não substitui revisão humana dos dados.
 
-```text
-api/ai.ts
-```
+- Endpoint principal: `api/ai.ts`.
+- Textos de perfil: `purpose === "profile_text"`.
+- Documentação funcional: `funcionalidades/MINI_BIO_CURIOSIDADES_IA.md`.
 
-Uso atual:
+## Mapa familiar e árvore
 
-- geração de Mini Bio;
-- geração de Curiosidades.
+- `funcionalidades/MAPA_FAMILIAR_VIEW.md`: contrato das views `/mapa-familiar` e `/mapa-familiar-horizontal`.
+- `funcionalidades/ARVORE_LEGENDAS_CONECTORES_PAINEL.md`: painéis, conectores, legendas, seletor de visualização e edição da árvore.
 
-Contrato de segurança:
+Documentos antigos de mobile, baseline e ajustes por rodada foram removidos porque o contrato vigente passou a estar nos documentos canônicos.
 
-- sanitizar contexto client-side;
-- sanitizar novamente server-side;
-- não enviar dados sensíveis;
-- retornar JSON válido;
-- aplicar limite de 500 caracteres no backend.
+## Decisões de documentação
 
-## Onboarding
+- Documentos datados de rodada não são contrato operacional.
+- Histórico técnico fragmentado fica em `historico/LEGADO_TECNICO.md`.
+- Funcionalidades menores ficam em `funcionalidades/FUNCIONALIDADES_COMPLEMENTARES.md`.
+- `docs/README.md` e `docs/INVENTARIO_TECNICO.md` são as fontes de navegação documental.
 
-Fluxo:
+## Regra de atualização
 
-```text
-/meus-dados → /meus-vinculos → /arquivos-historicos → /preferencias → /revisao-dados → /mapa-familiar
-```
-
-Pessoa falecida pula `/preferencias`.
-
-## Dados de perfil
-
-Tabela central:
-
-```text
-pessoas
-```
-
-Campos relevantes:
-
-- dados básicos;
-- falecimento;
-- profissão;
-- foto;
-- Mini Bio;
-- Curiosidades;
-- contatos;
-- permissões de privacidade;
-- `humano_ou_pet`.
-
-## Questionário IA
-
-Tabela:
-
-```text
-person_profile_questionnaire_answers
-```
-
-Responsável por:
-
-- tom;
-- badges selecionados;
-- perguntas geradas;
-- respostas;
-- modo memorial;
-- hash da última geração salva.
-
-## Vínculos
-
-Tabelas:
-
-- `relacionamentos`;
-- `relationship_change_requests`;
-- `user_person_links`.
-
-Contrato:
-
-- membros propõem alterações;
-- alterações entram como solicitação pendente;
-- admin/regras futuras aprovam/rejeitam;
-- `user_person_links` identifica perfis cadastrados por usuários.
-
-## Pets
-
-Pets são pessoas com:
-
-```text
-humano_ou_pet = 'Pet'
-```
-
-Não exigem tabela separada.
-
-## Fatos e Arquivos Históricos
-
-Tabela:
-
-```text
-arquivos_historicos
-```
-
-Contratos:
-
-- arquivo é opcional;
-- registro pode ser fato sem arquivo;
-- storage fields podem ser nulos;
-- timeline consome a mesma fonte.
-
-## Timeline
-
-Builder:
-
-```text
-src/app/utils/buildPersonTimeline.ts
-```
-
-Componente:
-
-```text
-src/app/components/Timeline/PersonTimeline.tsx
-```
-
-Fontes:
-
-- pessoa;
-- relacionamentos;
-- filhos;
-- arquivos/fatos históricos;
-- eventos pessoais;
-- eventos familiares.
-
-## Mapa familiar
-
-A arquitetura do mapa tem duas partes:
-
-- componentes React principais;
-- scripts mobile complementares carregados em `index.html`.
-
-Regra: não modificar scripts mobile nem `index.html` fora de frente dedicada.
-
-## Build e validação
-
-Comando mínimo:
-
-```bash
-npm run build
-```
-
-Recomendado:
-
-```bash
-npx tsc --noEmit
-```
-
-## Riscos arquiteturais
-
-- excesso de correções mobile via DOM/script;
-- ausência de typecheck obrigatório;
-- RLS divergente entre local/produção;
-- docs e código ficarem fora de sincronia;
-- IA receber contexto demais sem sanitização.
+Sempre que uma decisão arquitetural mudar, atualizar este documento e, quando afetar rota, também atualizar `arquitetura/ROTAS_E_GUARDS.md` e `INVENTARIO_TECNICO.md`.
