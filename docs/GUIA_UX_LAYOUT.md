@@ -81,5 +81,6 @@ Pessoa marcada como falecida em `/meus-dados` pula `/preferencias` e segue para 
 
 - `/forum` mantém busca e filtros visíveis no desktop.
 - `/meus-favoritos` deve usar layout amplo para busca/filtros no desktop.
-- Notificações devem ter dropdown responsivo e rodapé que não corte ações.
+- O botão de notificações nos headers de mapa e páginas de membro deve abrir o dropdown, sem redirecionar diretamente para `/notificacoes` no desktop.
+- Notificações devem ter dropdown responsivo e rodapé em duas colunas iguais, com ações curtas sem quebra de linha.
 - O menu do avatar mantém atalhos de dúvidas e saída.
