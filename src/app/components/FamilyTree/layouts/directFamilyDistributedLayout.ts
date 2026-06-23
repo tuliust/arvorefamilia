@@ -235,6 +235,7 @@ const LOWER_LANE_WIDTH = 860;
 const LOWER_GROUP_GAP = 10;
 const LOWER_LEFT_GROUP_CENTER_X = FATHER_GROUP_CENTER_X;
 const LOWER_RIGHT_GROUP_CENTER_X = MOTHER_GROUP_CENTER_X;
+const LOWER_RIGHT_GROUP_SHIFT_X = 180;
 const MOBILE_LOWER_LEFT_GROUP_CENTER_X = VIEW_CENTER_X - 220;
 const MOBILE_LOWER_RIGHT_GROUP_CENTER_X = VIEW_CENTER_X + 220;
 const DIRECT_STRUCTURAL_EDGE_STYLE = {
@@ -2133,8 +2134,9 @@ export function directFamilyDistributedLayout(
     : Math.max(380, lowerLaneWidth / 2 - LOWER_GROUP_GAP);
   const hasChildrenAndPets = children.length > 0 && pets.length > 0;
   const lowerLeftGroupCenterX = options.isMobile ? MOBILE_LOWER_LEFT_GROUP_CENTER_X : LOWER_LEFT_GROUP_CENTER_X;
-  const lowerRightGroupCenterX = options.isMobile ? MOBILE_LOWER_RIGHT_GROUP_CENTER_X : LOWER_RIGHT_GROUP_CENTER_X;
-  const lowerGroupY = options.isMobile ? mobileLowerGroupY : LOWER_GROUP_Y;
+  const lowerRightGroupCenterX = options.isMobile
+    ? MOBILE_LOWER_RIGHT_GROUP_CENTER_X
+    : LOWER_RIGHT_GROUP_CENTER_X + LOWER_RIGHT_GROUP_SHIFT_X; const lowerGroupY = options.isMobile ? mobileLowerGroupY : LOWER_GROUP_Y;
   const childrenPetsLeftCenterX = hasChildrenAndPets
     ? lowerRightGroupCenterX - lowerLaneWidth / 4
     : lowerRightGroupCenterX;
@@ -2147,7 +2149,7 @@ export function directFamilyDistributedLayout(
     label: 'Irmãos',
     ids: siblings,
     variant: 'sibling',
-    maxPerRow: 1,
+    maxPerRow: options.isMobile ? 1 : 2,
     centerX: lowerLeftGroupCenterX,
     laneWidth: lowerLaneWidth, cardWidth: lowerCardWidth, cardHeight: lowerCardHeight, columnGap: IN_GROUP_SIBLING_COLUMN_GAP, rowGap: IN_GROUP_SIBLING_ROW_GAP,
   };
