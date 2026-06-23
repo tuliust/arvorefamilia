@@ -1,234 +1,53 @@
 # Curiosidades
 
+> Última revisão: 2026-06-23
+> Escopo: `/curiosidades`, estatísticas familiares, rankings, comparações e uso de badges.
+> Status: canônico.
+
 ## Objetivo
 
-A pagina /curiosidades transforma o antigo modal de Curiosidades em uma experiencia completa para explorar dados, historias, relacoes, datas e padroes da arvore familiar.
+Transformar os dados da árvore em exploração visual e textual: pessoas, locais, pets, memórias, casais, aniversários, perfis e padrões familiares.
 
-## Rota
+## Dados usados
 
-- /curiosidades
-- Rota protegida por MemberRoute.
-- Em sessao anonima, deve redirecionar para /entrar.
+A página depende principalmente de:
 
-## Header
+- pessoas;
+- relacionamentos;
+- datas de nascimento e falecimento;
+- locais de nascimento, falecimento e local atual;
+- profissão;
+- indicador humano/pet;
+- vínculos e badges de perfil quando disponíveis;
+- fatos históricos quando integrados ao contexto.
 
-A pagina usa MemberPageHeader.
+## Cards principais
 
-Comportamento esperado:
+A documentação canônica considera estes agrupamentos funcionais:
 
-- Exibir Arvore Familiar como primeiro botao.
-- Ocultar o botao Curiosidades, porque o usuario ja esta na pagina.
-- Manter os demais atalhos globais conforme padrao do projeto.
+- Pessoas;
+- Localização;
+- In memoriam;
+- Pets;
+- Casais.
 
-## Arquivos principais
+## Rankings e análises
 
-- src/app/pages/Curiosidades.tsx
-- src/app/pages/curiosidades/CuriosidadesHero.tsx
-- src/app/pages/curiosidades/CuriosidadesSectionNav.tsx
-- src/app/pages/curiosidades/CuriosidadesStats.tsx
-- src/app/pages/curiosidades/CuriosidadesToday.tsx
-- src/app/pages/curiosidades/CuriosidadesRankings.tsx
-- src/app/pages/curiosidades/CuriosidadesGenerations.tsx
-- src/app/pages/curiosidades/CuriosidadesCouples.tsx
-- src/app/pages/curiosidades/CuriosidadesDiscoverySection.tsx
-- src/app/pages/curiosidades/CuriosidadesAiSection.tsx
-- src/app/pages/curiosidades/CuriosidadesConnectionSection.tsx
-- src/app/pages/curiosidades/CuriosidadesQuizSection.tsx
-- src/app/pages/curiosidades/CuriosidadesRouteSection.tsx
-- src/app/pages/curiosidades/CuriosidadesInterestsSection.tsx
-- src/app/pages/curiosidades/CuriosidadesMemoryWall.tsx
-- src/app/pages/curiosidades/CuriosidadesAstrology.tsx
-- src/app/pages/curiosidades/curiosidadesUtils.ts
+- Nomes mais comuns.
+- Meses com mais aniversários.
+- Perfil dos familiares com base em badges quando disponíveis.
+- Cidades de nascimento mais recorrentes.
+- Faixas etárias.
+- Bodas e duração de casais, considerando falecimento quando aplicável.
 
-## Modulos implementados
+## Interações
 
-### Hero
+- Dropdowns dependentes de seleção iniciam em estado neutro.
+- Quiz familiar usa dados reais disponíveis.
+- Comparações de interesses devem usar badges ou características salvas, sem inventar informações.
 
-Apresentacao editorial da pagina com chamada para exploracao de historias, padroes, conexoes, lugares, datas e descobertas familiares.
+## Não regressão
 
-### Navegacao interna
-
-Componente CuriosidadesSectionNav com atalhos por ancora para as principais areas da pagina.
-
-### Numeros da familia
-
-Big numbers baseados em dados reais:
-
-- pessoas cadastradas
-- pessoas vivas
-- memorias preservadas
-- pets
-- datas de casamento
-
-### Hoje na familia
-
-Cards automaticos para acontecimentos da data atual:
-
-- aniversarios
-- memorias e falecimentos
-- aniversarios de casamento
-
-### Voce Sabia?
-
-Rankings e curiosidades automaticas:
-
-- nome mais repetido
-- mes com mais aniversarios
-- profissao mais repetida
-- cidade de nascimento mais comum
-
-### Geracoes da familia
-
-Classificacao por geracao social a partir do ano de nascimento:
-
-- Baby Boomer: 1946-1964
-- Geracao X: 1965-1980
-- Millennial / Y: 1981-1996
-- Geracao Z: 1997-2012
-- Geracao Alpha: 2013-2024
-- Geracao Beta: 2025-2039
-
-### Bodas e vinculos
-
-Lista casais com data de casamento cadastrada e identifica marcos:
-
-- Bodas de Papel
-- Bodas de Prata
-- Bodas de Ouro
-- Bodas de Diamante
-- Bodas de Platina
-- Bodas de Jequitiba
-
-### Descubra mais sobre
-
-Reaproveita o fluxo do modal para selecionar uma pessoa e topicos:
-
-- Dados e Contato
-- Biografia
-- Curiosidades
-- Fatos Historicos do Dia de Nascimento
-- O que diz a Astrologia
-- Arvore Genealogica
-
-Cada card de descoberta permite favoritar a descoberta e compartilhar um link para a secao.
-
-### Pergunte a IA
-
-Reaproveita AiQuestionPanel e monta contexto familiar estruturado com buildAiTreeContext.
-
-### Conexoes familiares
-
-Reaproveita ConnectionDiscoveryPanel e usa calculo de grau de parentesco para descobrir o caminho familiar entre duas pessoas.
-
-### Teste seus conhecimentos
-
-Quiz automatico com perguntas baseadas em dados cadastrados.
-
-### Rota da familia
-
-Modulo textual baseado em cidades de residencia cadastradas.
-
-Limitacao atual:
-
-- ainda nao calcula distancia real em quilometros
-- a rota e textual
-- depende de coordenadas ou integracao de mapas para calculo geografico confiavel
-
-### Comparar interesses
-
-Compara duas pessoas por campos disponiveis:
-
-- interesses
-- hobbies
-- preferencias
-- time
-- profissao
-- cidade atual
-- cidade de nascimento
-
-### Mural da familia
-
-Mural persistente para responder: Qual sua lembranca favorita da familia?
-
-Implementacao atual:
-
-- salva publicacoes em family_memory_wall_posts
-- exige usuario autenticado pelas policies de RLS
-- permite visibilidade por familia, parentes proximos ou privado
-- pode evoluir para integracao com forum ou acervo de memorias
-
-### Astrologia da familia
-
-Cruzamento recreativo de signos com base na data de nascimento.
-
-Regra de conteudo:
-
-- sempre apresentar como entretenimento
-- nao tratar como analise deterministica
-
-## Limitacoes conhecidas
-
-- Rota da familia ainda nao calcula quilometros.
-- Comparacao de interesses depende de campos existentes e bem preenchidos.
-- Astrologia depende de data de nascimento completa.
-- IA depende de disponibilidade do endpoint /api/ai.
-- Algumas secoes ficam vazias quando os perfis tem dados incompletos.
-
-## QA manual
-
-Validar:
-
-- /curiosidades carrega em sessao autenticada.
-- Sessao anonima redireciona para /entrar.
-- Header exibe Arvore Familiar e oculta Curiosidades.
-- Atalhos internos fazem scroll ate as secoes.
-- Big numbers nao quebram com dados vazios.
-- Hoje na familia mostra eventos ou estado vazio.
-- Rankings mostram dados reais ou fallback.
-- Geracoes exibem pessoas com avatar ou foto quando disponivel.
-- Bodas exibem casais ou estado vazio.
-- Descoberta por pessoa permite selecionar topicos e voltar.
-- Descobertas permitem favoritar e compartilhar.
-- IA aceita pergunta, exibe loading, resposta ou erro.
-- Conexoes impedem selecao da mesma pessoa.
-- Quiz permite responder e avancar.
-- Rota textual exibe cidades sem inventar distancia.
-- Comparacao de interesses nao quebra com campos ausentes.
-- Mural carrega publicacoes persistidas e permite publicar nova lembranca.
-- Astrologia informa que e recreativa.
-- Layout mobile nao causa overflow horizontal relevante.
-
-## Validacoes tecnicas
-
-Executar antes de commit:
-
-npm run build
-git diff --check
-npm test
-
-## Proximos incrementos
-
-- Evoluir compartilhamento de descoberta para criar topico no forum.
-- Calcular distancia real da rota com coordenadas.
-- Melhorar normalizacao de profissoes, cidades e interesses.
-- Adicionar graficos reais para meses, geracoes e idade media ao casar.
-- Adicionar testes unitarios para curiosidadesUtils.ts.
-
-<!-- RODADA2-CURIOSIDADES-2026-06-18 -->
-## ConsolidaÃ§Ã£o â€” Curiosidades, mural, descobertas e rota familiar
-
-A frente recente de Curiosidades passou a incluir grÃ¡ficos reais, utilitÃ¡rios compartilhados, fluxo â€œDescubra mais sobreâ€, mural persistente de lembranÃ§as, favoritos/compartilhamento de descobertas e rota familiar com distÃ¢ncia real quando hÃ¡ coordenadas disponÃ­veis.
-
-Migrations citadas:
-
-```txt
-supabase/migrations/20260618120000_create_family_memory_wall_posts.sql
-supabase/migrations/20260618123000_add_curiosity_discovery_favorites.sql
-```
-
-PendÃªncias principais:
-
-- origem Ãºnica das coordenadas das cidades;
-- backfill de cidades jÃ¡ cadastradas;
-- QA com massa real contendo coordenadas;
-- evoluÃ§Ã£o opcional do compartilhamento para o fÃ³rum.
+- Não reintroduzir modal antigo como experiência principal se a rota `/curiosidades` estiver ativa.
+- Não usar geração sociológica como substituto de faixa etária se a página implementada estiver usando faixa etária.
+- Não misturar pets em contagens de pessoas humanas.
