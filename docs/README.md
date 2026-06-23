@@ -1,13 +1,14 @@
 # Documentação do produto — Sua Família / arvorefamilia
 
-> Última revisão: 2026-06-22  
-> Estado documentado: branch `feature/questionario-ia-vinculos-pets`, após os commits 6A, 7A, 7B, 7C e 7D.  
-> Status: documentação canônica consolidada pós-onboarding, pós-fatos históricos e pós-ajustes de mapa familiar.
+> Última revisão: 2026-06-23  
+> Estado documentado: branch `feature/questionario-ia-vinculos-pets`, após os ciclos 6A–7D e ajustes pós-ciclo 7D.  
+> Status: documentação canônica consolidada pós-onboarding, pós-fatos históricos, pós-ajustes de mapa familiar, pós-revisão de `/curiosidades` e pós-atualizações de UX desktop.
 
 Este diretório concentra a documentação funcional, técnica, operacional, de UX, QA e histórico de decisões do produto.
 
-## Estado consolidado do ciclo 2026-06-22
+## Estado consolidado
 
+### Ciclo 2026-06-22
 
 | Frente | Commit | Status |
 |---|---:|---|
@@ -17,6 +18,15 @@ Este diretório concentra a documentação funcional, técnica, operacional, de 
 | Prompt 7C — fatos/arquivos históricos na timeline | `6185b6d` | Implementado e pushado |
 | Prompt 7D — UX final do onboarding e IA 500 caracteres | `de4f60f` | Implementado e pushado |
 
+### Ajustes pós-ciclo 7D — 2026-06-23
+
+| Frente | Commits | Status |
+|---|---:|---|
+| Revisão ampla de `/curiosidades` | `bf8f57a`, `ce80a00`, `62a6254` | Implementado e pushado |
+| Integração de badges do `/meus-dados` em `/curiosidades` | `ce80a00`, `62a6254` | Implementado e pushado |
+| Painel desktop, dropdowns, notificações, fórum e favoritos | `e70f8a7`, `dbcc09c` | Implementado e pushado |
+| Layout desktop do canvas da árvore | `5b69baf`, `3d228fa` | Implementado e pushado |
+| Documentação pós-ciclo 7D | `9f81d61` | Implementado e pushado |
 
 ## Contratos implementados
 
@@ -77,13 +87,48 @@ Regra especial:
 - Registros aparecem na timeline do perfil da pessoa.
 - Fato sem arquivo aparece como `Fato`; registro com anexo aparece como `Arquivo`.
 
+### `/curiosidades`
+
+- Cards principais revisados:
+  - `Pessoas`;
+  - `Localização`;
+  - `In memoriam`;
+  - `Pets`;
+  - `Casais`.
+- Rankings revisados:
+  - `Nomes mais comuns`;
+  - `Mês com mais aniversários`, agora em top 5 meses;
+  - `Perfil dos familiares`, baseado em badges do questionário quando disponíveis;
+  - `Principais cidades de nascimento`.
+- Gráficos agora incluem `Faixa Etária` em vez de geração sociológica.
+- Bodas consideram fim por falecimento quando um dos cônjuges morreu.
+- Comparações de interesses usam badges/características do `/meus-dados` quando disponíveis.
+- Dropdowns de interesses, astrologia e conexão iniciam em estado neutro.
+- Quiz familiar foi revisado para pessoa viva mais velha, pessoa mais jovem, cidade de nascimento e profissão.
+- `/curiosidades` consome `getProfileQuestionnaireSelectedBadges` e monta `profileBadgesByPersonId`.
+
 ### `/mapa-familiar`
 
-- Dropdown do painel desktop usa labels **“Família de X”**.
-- O card `Cadastrados` usa `user_person_links` como referência.
-- O tour foi revisado e separa IA/Calendário de Favoritos.
+- Dropdown do painel desktop mantém label fechado **“Família de X”**.
+- Dropdown aberto apresenta **“Visualize a árvore como...”** e lista pessoas com primeiro e segundo nome.
+- Card `Cadastrados` usa `user_person_links` como referência.
+- O tour separa IA/Calendário de Favoritos.
 - Layout compacto é usado para árvore pequena e simples no `DesktopFamilyMapView`.
+- Cards `Núcleo`, `Ascendentes` e `Colaterais` foram compactados no desktop.
+- O botão de cônjuges alterna entre:
+  - **Exibir cônjuges de tios, primos etc**;
+  - **Ocultar cônjuges de tios, primos etc**.
+- No canvas desktop, o grupo de irmãos permite até 2 cards por linha.
+- Cônjuge e pets foram deslocados para a direita no layout desktop.
+- Mobile foi preservado.
 - Scripts mobile e `index.html` permanecem protegidos contra alterações indiretas.
+
+### Header, notificações, fórum e favoritos
+
+- O menu do avatar inclui **Dúvidas?** à esquerda e **Sair** à direita.
+- O dropdown de notificações ganhou largura responsiva e rodapé flexível para evitar corte de botões.
+- A barra de pesquisa de `/forum` foi expandida no desktop.
+- A barra de pesquisa/filtros de `/meus-favoritos` foi expandida no desktop.
 
 ## Índice dos documentos
 
@@ -111,15 +156,17 @@ Regra especial:
 | Migrations Supabase | `operacao/MIGRATIONS_SUPABASE.md` |
 | Storage | `operacao/STORAGE_MAINTENANCE.md` |
 | Deploy | `operacao/DEPLOYMENT.md` |
-| Levantamento do ciclo | `historico/LEVANTAMENTO_AJUSTES_CHAT_20260622.md` |
+| Levantamento 2026-06-22 | `historico/LEVANTAMENTO_AJUSTES_CHAT_20260622.md` |
+| Levantamento 2026-06-23 | `historico/LEVANTAMENTO_AJUSTES_CHAT_20260623.md` |
 
-## Pendências ainda abertas
+## Pendências abertas
 
-A documentação considera resolvidas as frentes 6A, 7A, 7B, 7C e 7D. As pendências reais restantes são:
+As frentes 6A, 7A, 7B, 7C, 7D e os ajustes pós-ciclo 7D estão documentados como concluídos. As pendências reais restantes são:
 
 - validar manualmente o fluxo completo em ambiente de preview/produção;
 - aplicar e verificar migrations no Supabase remoto;
-- decidir o destino final do seletor/debug `Visualizar como...` (`TREE-005`);
+- validar RPC `get_person_profile_selected_badges` no ambiente remoto;
 - adicionar verificação de typecheck explícita ao pipeline, se ainda não existir;
-- fazer uma rodada visual em mobile e desktop após deploy;
-- continuar protegendo os scripts mobile e `index.html` contra regressões.
+- fazer rodada visual em mobile e desktop após deploy;
+- confirmar que não há regressão de encoding UTF-8 em arquivos alterados via PowerShell;
+- manter os scripts mobile e `index.html` protegidos contra regressões.

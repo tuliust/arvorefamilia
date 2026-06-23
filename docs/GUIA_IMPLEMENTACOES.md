@@ -1,11 +1,23 @@
 # Guia de implementações
 
-> Última revisão: 2026-06-22  
-> Escopo: comportamento implementado após 6A–7D.
+> Última revisão: 2026-06-23  
+> Escopo: comportamento implementado após 6A–7D e ajustes pós-ciclo 7D.
 
 ## Regra geral
 
 A documentação deve descrever o que está implementado. Pendências devem ser marcadas explicitamente como pendência. Não misturar comportamento antigo com contrato vigente.
+
+Antes de qualquer frente:
+
+1. Rodar `git status --short`.
+2. Confirmar branch.
+3. Isolar escopo.
+4. Evitar alterar scripts mobile sem pedido explícito.
+5. Rodar `git diff --check`.
+6. Rodar `npm run typecheck`.
+7. Rodar `npm run build`.
+8. Testar rota afetada no navegador.
+9. Conferir `git status --short` antes do commit.
 
 ## Prompt 6A — mapa familiar, tour e painel
 
@@ -118,6 +130,78 @@ Sem ações no header em:
 - `/preferencias`;
 - `/revisao-dados`.
 
+## Pós-ciclo 7D — `/curiosidades`
+
+### Implementado
+
+- Renomeação e recálculo dos cards principais:
+  - `Pessoas`;
+  - `Localização`;
+  - `In memoriam`;
+  - `Pets`;
+  - `Casais`.
+- Rankings revisados:
+  - `Nomes mais comuns`;
+  - top 5 meses com mais aniversários;
+  - `Perfil dos familiares`, baseado em badges;
+  - `Principais cidades de nascimento`.
+- Gráfico `Faixa Etária` no lugar de geração sociológica.
+- Bodas passam a encerrar contagem no falecimento de um dos cônjuges.
+- Cards de comparação usam badges/características do questionário quando disponíveis.
+- Dropdowns de comparação, astrologia e conexão iniciam neutros.
+- Quiz revisado para:
+  - pessoa viva com mais tempo de vida;
+  - pessoa mais jovem;
+  - cidade de nascimento;
+  - profissão.
+
+### Integração técnica
+
+- `Curiosidades.tsx` carrega `profileBadgesByPersonId`.
+- `profileQuestionnaireService.ts` expõe `getProfileQuestionnaireSelectedBadges`.
+- `curiosidadesUtils.ts` contém helpers para ranking de badges, faixa etária, bodas ajustadas e perguntas do quiz.
+
+## Pós-ciclo 7D — painel desktop, dropdowns e buscas
+
+### Implementado
+
+- Cards `Núcleo`, `Ascendentes` e `Colaterais` mais compactos no desktop.
+- Títulos e linhas internas de parentes com fonte menor.
+- Dropdown fechado mantém `Família de X`.
+- Dropdown aberto mostra `Visualize a árvore como...`.
+- Opções do dropdown usam primeiro e segundo nome.
+- Botão de cônjuges alterna entre `Exibir` e `Ocultar`.
+- Dropdown de notificações usa largura responsiva e rodapé flexível.
+- Barra de busca de `/forum` expandida no desktop.
+- Barra de busca/filtros de `/meus-favoritos` expandida no desktop.
+
+### Arquivos principais
+
+- `src/app/pages/Home.tsx`
+- `src/app/pages/home/DesktopTreeVisualizationPanel.tsx`
+- `src/app/components/layout/HeaderNotificationsDropdown.tsx`
+- `src/app/pages/MeusFavoritos.tsx`
+- `src/styles/prompt1-desktop-ui-overrides.css`
+- `src/styles/index.css`
+
+## Pós-ciclo 7D — layout do canvas
+
+### Implementado
+
+- `LOWER_RIGHT_GROUP_SHIFT_X = 180`.
+- `lowerRightGroupCenterX` preserva mobile e desloca grupos inferiores direitos no desktop.
+- `siblingGroup.maxPerRow` usa:
+  - `1` no mobile;
+  - `2` no desktop.
+- Cônjuge e pets acompanham deslocamento para a direita.
+- Encoding UTF-8 foi revisado após alteração via PowerShell.
+
+### Arquivo principal
+
+```text
+src/app/components/FamilyTree/layouts/directFamilyDistributedLayout.ts
+```
+
 ## Hotfix MapPin
 
 ### Problema
@@ -138,13 +222,13 @@ Adicionar `MapPin` ao import em `MeusDados.tsx`.
 
 ## Checklist de implementação futura
 
-Antes de qualquer frente:
-
-1. Rodar `git status --short`.
-2. Confirmar branch.
-3. Isolar escopo.
-4. Evitar alterar scripts mobile sem pedido explícito.
-5. Rodar `git diff --check`.
-6. Rodar `npm run build`.
-7. Idealmente rodar `npx tsc --noEmit`.
-8. Testar rota afetada no navegador.
+1. Confirmar branch.
+2. Rodar `git pull --ff-only origin feature/questionario-ia-vinculos-pets`.
+3. Rodar `git status --short`.
+4. Isolar a frente em poucos arquivos.
+5. Preferir commits pequenos.
+6. Rodar `npm run typecheck`.
+7. Rodar `npm run build`.
+8. Rodar `git diff --check`.
+9. Fazer QA visual da rota alterada.
+10. Commitar e fazer push.
