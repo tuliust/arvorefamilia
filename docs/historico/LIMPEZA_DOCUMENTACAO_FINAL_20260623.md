@@ -2,11 +2,11 @@
 
 > Última revisão: 2026-06-23  
 > Escopo: fechamento da limpeza física da documentação em `docs/`.  
-> Status: histórico de fechamento parcial.
+> > Status: histórico de fechamento final..
 
 ## Resumo executivo
 
-A documentação foi reduzida para um conjunto enxuto de arquivos canônicos, operacionais e históricos consolidados. Parte relevante dos arquivos redundantes foi removida fisicamente pelo usuário e pelo conector GitHub. Alguns arquivos residuais ainda precisam de remoção local porque o conector bloqueou exclusões específicas durante a execução.
+A documentação foi reduzida para um conjunto enxuto de arquivos canônicos, operacionais e históricos consolidados. Os arquivos redundantes, datados, duplicados ou substituídos por documentos canônicos foram removidos fisicamente. A branch de limpeza foi incorporada à main por fast-forward e a branch temporária foi removida.
 
 ## Branch
 
@@ -52,11 +52,9 @@ Somente arquivos dentro de `docs/` e subpastas.
 - Deploy e índice operacional antigo foram consolidados em `docs/operacao/DEPLOY.md`.
 - SQLs antigos, rotas removidas, imports colados e histórico antigo da árvore foram consolidados conceitualmente em `docs/historico/LEGADO_TECNICO.md`.
 
-## Remoções pendentes por bloqueio do conector
+## Remoções residuais concluídas
 
-Ainda precisam de remoção local os documentos residuais de mapa mobile, QA mobile, arquitetura mobile, estrutura antiga de banco, histórico técnico fragmentado, baselines antigas, levantamentos datados, QA pós-consolidação, rollback mobile e índice histórico antigo.
-
-A lista operacional deve ser gerada localmente comparando o conteúdo de `docs/` com a estrutura canônica de `docs/README.md`. Arquivos fora da estrutura canônica não devem ser usados como contrato operacional.
+Os documentos residuais de mapa mobile, QA mobile, arquitetura mobile, estrutura antiga de banco, histórico técnico fragmentado, baselines antigas, levantamentos datados, QA pós-consolidação, rollback mobile e índice histórico antigo foram removidos localmente e incorporados à main.
 
 ## Documentos finais fundamentais
 
