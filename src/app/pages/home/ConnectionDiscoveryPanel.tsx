@@ -189,6 +189,11 @@ export function ConnectionDiscoveryPanel({
   onDiscoverConnection,
   hideTitle = false,
 }: ConnectionDiscoveryPanelProps) {
+  const selectablePessoas = React.useMemo(
+    () => pessoas.filter((pessoa) => pessoa.id?.trim() && pessoa.nome_completo?.trim()),
+    [pessoas]
+  );
+
   return (
     <section className="space-y-4">
       {!hideTitle && (
@@ -209,7 +214,7 @@ export function ConnectionDiscoveryPanel({
             <SelectValue placeholder="Pessoa 1" />
           </SelectTrigger>
           <SelectContent>
-            {pessoas.map((pessoa) => (
+            {selectablePessoas.map((pessoa) => (
               <SelectItem key={pessoa.id} value={pessoa.id}>
                 {pessoa.nome_completo}
               </SelectItem>
@@ -225,7 +230,7 @@ export function ConnectionDiscoveryPanel({
             <SelectValue placeholder="Pessoa 2" />
           </SelectTrigger>
           <SelectContent>
-            {pessoas.map((pessoa) => (
+            {selectablePessoas.map((pessoa) => (
               <SelectItem key={pessoa.id} value={pessoa.id}>
                 {pessoa.nome_completo}
               </SelectItem>

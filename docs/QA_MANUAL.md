@@ -87,6 +87,8 @@ Confirmar que as alterações documentais ficaram restritas aos documentos canô
 
 - Cards e rankings carregam a partir dos dados reais.
 - Dropdowns iniciam neutros quando dependem de seleção.
+- O seletor de conexão entre duas pessoas não deve gerar erro Radix por item com valor vazio.
+- Ausência da RPC `get_person_profile_selected_badges` no Supabase remoto deve cair em fallback sem impedir o carregamento da página.
 - Estatísticas de pets, falecidos, casais e cidades devem ser coerentes com os dados.
 
 ### `/forum`

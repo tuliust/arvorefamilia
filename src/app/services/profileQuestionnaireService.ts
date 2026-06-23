@@ -11,6 +11,20 @@ import type {
 
 const PROFILE_QUESTIONNAIRE_TABLE = 'person_profile_questionnaire_answers';
 
+let selectedBadgesRpcUnavailable = false;
+
+function isMissingSelectedBadgesRpcError(error: unknown) {
+  const rpcError = error as { code?: string; message?: string; status?: number } | null | undefined;
+  const message = typeof rpcError?.message === 'string' ? rpcError.message : '';
+
+  return (
+    rpcError?.code === 'PGRST202' ||
+    rpcError?.status === 404 ||
+    message.includes('get_person_profile_selected_badges') ||
+    message.includes('Could not find the function')
+  );
+}
+
 type ProfileQuestionnaireRow = {
   id: string;
   pessoa_id: string;
@@ -277,15 +291,25 @@ export async function getProfileQuestionnaireAnswers(
 export async function getProfileQuestionnaireSelectedBadges(
   pessoaId: string,
 ): Promise<ServiceResult<ProfileQuestionnaireSelectableOption[]>> {
-  const { data: rpcData, error: rpcError } = await supabase.rpc('get_person_profile_selected_badges', {
-    target_pessoa_id: pessoaId,
-  });
+  let rpcFallbackErrorMessage: string | undefined;
 
-  if (!rpcError) {
-    return {
-      error: undefined,
-      data: normalizeBadges(rpcData),
-    };
+  if (!selectedBadgesRpcUnavailable) {
+    const { data: rpcData, error: rpcError } = await supabase.rpc('get_person_profile_selected_badges', {
+      target_pessoa_id: pessoaId,
+    });
+
+    if (!rpcError) {
+      return {
+        error: undefined,
+        data: normalizeBadges(rpcData),
+      };
+    }
+
+    rpcFallbackErrorMessage = rpcError.message;
+
+    if (isMissingSelectedBadgesRpcError(rpcError)) {
+      selectedBadgesRpcUnavailable = true;
+    }
   }
 
   const { data, error } = await supabase
@@ -296,7 +320,7 @@ export async function getProfileQuestionnaireSelectedBadges(
     .maybeSingle();
 
   if (error) {
-    return { error: rpcError.message || error.message, data: [] };
+    return { error: rpcFallbackErrorMessage || error.message, data: [] };
   }
 
   return {
