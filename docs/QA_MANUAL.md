@@ -23,7 +23,7 @@ npm run typecheck
 npm run build
 ```
 
-Confirmar que qualquer alteração nesta frente está restrita a `docs/`.
+Confirmar que as alterações documentais ficaram restritas aos documentos canônicos necessários.
 
 ## Rotas de árvore
 
