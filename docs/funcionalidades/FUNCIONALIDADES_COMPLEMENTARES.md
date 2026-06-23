@@ -95,6 +95,7 @@ Rotas principais:
 Função:
 
 - listar notificações do usuário;
+- abrir um dropdown de notificações recentes a partir do header desktop das páginas de mapa e membro;
 - permitir ajuste de preferências quando disponível;
 - apoiar fluxos de vínculo, fórum ou administração.
 
@@ -102,6 +103,8 @@ Não regressão mínima:
 
 - lista carrega;
 - estado vazio renderiza;
+- botão desktop de header abre o dropdown sem redirecionar imediatamente para `/notificacoes`;
+- ações do rodapé do dropdown permanecem em uma linha e com largura equivalente;
 - ajuste de preferência não quebra navegação.
 
 ## Onboarding de membro
