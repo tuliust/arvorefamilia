@@ -32,8 +32,11 @@ Confirmar que qualquer alteração nesta frente está restrita a `docs/`.
 - Abre a partir de `/`.
 - Carrega pessoas e relacionamentos.
 - Exibe pessoa de referência quando houver vínculo ou query `pessoa`.
+- O seletor de visualização não deve exibir mojibake em `Família de X` ou `Sua view padrão`.
+- O cabeçalho do painel desktop deve exibir ícone de olho sem borda e botão de recolher alinhado dentro do container na linha do título.
 - Permite alternar filtros de parentes diretos.
 - Permite alternar vivos, falecidos e pets.
+- Cards `Núcleo`, `Ascendentes` e `Colaterais` devem manter labels e contadores em uma linha, sem reticências.
 - Abre perfil em `/pessoa/:id`.
 - Mantém painel desktop sem cortar exportação.
 - Mobile não deve abrir painéis persistentes por padrão.
@@ -43,6 +46,7 @@ Confirmar que qualquer alteração nesta frente está restrita a `docs/`.
 - Preserva query `pessoa` ao alternar visualização.
 - Renderiza linha geracional horizontal.
 - Mantém filtros aplicáveis e contadores coerentes.
+- Replica no painel desktop os critérios visuais de seletor, cabeçalho, grupos e exportação validados em `/mapa-familiar`.
 
 ## Onboarding de membro
 
