@@ -52,6 +52,8 @@
 - `ProtectedRoute`: protege rotas administrativas.
 - `MemberRoute`: protege rotas de membro autenticado.
 - `TreeAccessRoute`: protege a experiência de árvore.
+- `MemberPageHeader`: cabeçalho das páginas de membro, com atalhos de navegação, busca e menu de notificações no desktop.
+- `HeaderNotificationsDropdown`: dropdown reutilizado por headers para listar notificações recentes, ações rápidas e atalhos para páginas de notificações e preferências.
 - `UserProfileMenu`: menu de avatar e ações do usuário.
 - Componentes de UI em `src/app/components/ui` devem permanecer genéricos e reutilizáveis.
 
