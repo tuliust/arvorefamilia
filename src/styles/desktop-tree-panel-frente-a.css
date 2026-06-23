@@ -101,9 +101,9 @@
   }
 
   .desktop-tree-export-action-button {
-    min-height: clamp(1.68rem, 3.34vh, 2.08rem) !important;
+    min-height: clamp(2.05rem, 4.1vh, 2.42rem) !important;
     gap: clamp(0.24rem, 0.48vw, 0.36rem) !important;
-    padding: 0.22rem 0.3rem !important;
+    padding: 0.32rem 0.42rem !important;
   }
 
   .desktop-tree-export-action-button svg {
@@ -113,7 +113,7 @@
 
   .desktop-tree-export-action-button span {
     font-size: clamp(0.62rem, 1.24vh, 0.74rem) !important;
-    line-height: 1 !important;
+    line-height: 1.12 !important;
     white-space: nowrap !important;
   }
 }
@@ -152,6 +152,44 @@
   }
 
   .desktop-tree-export-action-button {
-    min-height: 1.5rem !important;
+    min-height: 1.82rem !important;
+  }
+}
+
+@media (min-width: 768px) {
+  .desktop-tree-panel-header {
+    justify-content: space-between !important;
+    gap: clamp(0.5rem, 1vw, 0.75rem) !important;
+    padding-right: clamp(0.42rem, 0.9vw, 0.65rem) !important;
+  }
+
+  .desktop-tree-panel-title-group {
+    min-width: 0 !important;
+  }
+
+  .desktop-tree-panel-collapse-button {
+    display: inline-flex !important;
+    width: clamp(1.9rem, 3.8vh, 2.22rem) !important;
+    height: clamp(1.9rem, 3.8vh, 2.22rem) !important;
+    flex: 0 0 auto !important;
+    align-items: center !important;
+    justify-content: center !important;
+    border: 1px solid #cbd7ea !important;
+    border-radius: 0.72rem !important;
+    background: #ffffff !important;
+    color: #0f2348 !important;
+    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.10) !important;
+    transition: border-color 160ms ease, background-color 160ms ease, color 160ms ease !important;
+  }
+
+  .desktop-tree-panel-collapse-button:hover {
+    border-color: #93c5fd !important;
+    background: #eff6ff !important;
+    color: #1d4ed8 !important;
+  }
+
+  .desktop-tree-panel-collapse-button svg {
+    width: clamp(1rem, 2vh, 1.14rem) !important;
+    height: clamp(1rem, 2vh, 1.14rem) !important;
   }
 }

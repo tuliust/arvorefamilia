@@ -268,7 +268,7 @@ export function ForumHome() {
       />
 
       <main data-forum-page="true" className={`${PAGE_CONTAINER_CLASS} space-y-6 py-6`}>
-        <section className="relative flex min-w-0 w-full max-w-none items-center gap-1.5 sm:gap-2 lg:max-w-3xl" aria-label="Busca e filtros do fórum">
+        <section className="forum-desktop-search-toolbar relative flex min-w-0 w-full max-w-none items-center gap-1.5 sm:gap-2" aria-label="Busca e filtros do fórum">
           <div className="relative min-w-0 flex-1">
             <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4.5 w-4.5 -translate-y-1/2 text-gray-400 sm:left-4 sm:h-5 sm:w-5" />
             <input

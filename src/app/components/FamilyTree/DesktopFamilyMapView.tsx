@@ -175,7 +175,7 @@ const ADAPTIVE_UNCLES_GROUP_IDS = new Set<string>([
 
 const FAMILY_MAP_LAYOUT_BASE: FamilyMapLayout = {
   canvas: {
-    width: 1440,
+    width: 1620,
     minHeight: 1020,
     background: '#ecfeff',
     minScale: 0.62,
@@ -209,8 +209,8 @@ const FAMILY_MAP_LAYOUT_BASE: FamilyMapLayout = {
     maternalAncestors: { x: 745, width: 430 },
     right: { x: 1120, width: 480 },
     lowerLeft: { x: 340, width: 360 },
-    lowerMiddle: { x: 665, width: 180 },
-    lowerRight: { x: 940, width: 300 },
+    lowerMiddle: { x: 930, width: 210 },
+    lowerRight: { x: 1160, width: 300 },
   },
   groups: {
     paternalGreatGreatGrandparents: group('paternalGreatGreatGrandparents', 'Tataravós Paternos', 265, 430, 'double', 4, 'horizontal', true, 'always', 'ancestorSpouse'),
@@ -228,10 +228,10 @@ const FAMILY_MAP_LAYOUT_BASE: FamilyMapLayout = {
     maternalCousins: group('maternalCousins', 'Primos Maternos', 1120, 480, 'quad', 8, 'mini', true, 'filter', undefined, 250),
     siblings: group('siblings', 'Irmãos', 340, 360, 'double', 4, 'horizontal', true, 'filter', undefined, 260),
     nephews: group('nephews', 'Sobrinhos', 340, 300, 'double', 2, 'mini', true, 'filter', undefined, 220),
-    spouse: group('spouse', 'Cônjuge', 720, 210, 'single', 1, 'compact', false, 'always', 'spouse', undefined, true),
-    children: group('children', 'Filhos', 940, 300, 'double', 2, 'horizontal', true, 'filter', undefined, 260),
-    pets: group('pets', 'Pets', 665, 180, 'single', 2, 'mini', true, 'never', undefined, 180),
-    grandchildren: group('grandchildren', 'Netos', 940, 300, 'double', 2, 'mini', true, 'filter', undefined, 220),
+    spouse: group('spouse', 'C?njuge', 930, 210, 'single', 1, 'compact', false, 'always', 'spouse', undefined, true),
+    children: group('children', 'Filhos', 1160, 300, 'double', 2, 'horizontal', true, 'filter', undefined, 260),
+    pets: group('pets', 'Pets', 930, 210, 'single', 2, 'mini', true, 'never', undefined, 210),
+    grandchildren: group('grandchildren', 'Netos', 1160, 300, 'double', 2, 'mini', true, 'filter', undefined, 220),
   },
 };
 
@@ -285,10 +285,10 @@ function getWideLayout(): FamilyMapLayout {
     maternalCousins: { ...base.groups.maternalCousins, x: 1300, width: 560, singleWidth: 250 },
     siblings: { ...base.groups.siblings, x: 520, width: 360, singleWidth: 300 },
     nephews: { ...base.groups.nephews, x: 520, width: 360, singleWidth: 280 },
-    spouse: { ...base.groups.spouse, x: 950 },
-    children: { ...base.groups.children, x: 1190, width: 420, singleWidth: 300 },
-    pets: { ...base.groups.pets, x: 950, width: 210, singleWidth: 210 },
-    grandchildren: { ...base.groups.grandchildren, x: 1190, width: 420, singleWidth: 280 },
+    spouse: { ...base.groups.spouse, x: 1110 },
+    children: { ...base.groups.children, x: 1380, width: 420, singleWidth: 300 },
+    pets: { ...base.groups.pets, x: 1110, width: 210, singleWidth: 210 },
+    grandchildren: { ...base.groups.grandchildren, x: 1380, width: 420, singleWidth: 280 },
   };
 
   return {
@@ -302,8 +302,8 @@ function getWideLayout(): FamilyMapLayout {
       maternalAncestors: { x: 950, width: 430 },
       right: { x: 1300, width: 560 },
       lowerLeft: { x: 520, width: 360 },
-      lowerMiddle: { x: 950, width: 210 },
-      lowerRight: { x: 1190, width: 420 },
+      lowerMiddle: { x: 1110, width: 210 },
+      lowerRight: { x: 1380, width: 420 },
     },
     groups,
   };

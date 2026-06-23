@@ -2,6 +2,7 @@ import React from 'react';
 import { useLocation, useNavigate } from 'react-router';
 import {
   Baby,
+  ChevronLeft,
   ClipboardList,
   Cross,
   Eye,
@@ -132,6 +133,7 @@ export function DesktopTreeVisualizationPanel({
   directRelativeFilters,
   directRelationCounts,
   onToggleDirectRelative,
+  onCollapse,
 }: {
   showViewAsSelector?: boolean;
   viewAsPersonValue?: string;
@@ -147,6 +149,7 @@ export function DesktopTreeVisualizationPanel({
   directRelativeFilters: DirectRelativeFilters;
   directRelationCounts: DirectRelationCounts;
   onToggleDirectRelative: (key: DirectRelativeGroup) => void;
+  onCollapse?: () => void;
 }) {
   const location = useLocation();
   const navigate = useNavigate();
@@ -196,8 +199,21 @@ export function DesktopTreeVisualizationPanel({
             <span className="desktop-tree-panel-eye" aria-hidden="true">
               <Eye />
             </span>
-            <h2 className="desktop-tree-panel-title">Visualização</h2>
+            <h2 className="desktop-tree-panel-title">Visualiza\u00e7\u00e3o</h2>
           </div>
+
+          {onCollapse && (
+            <button
+              type="button"
+              className="desktop-tree-panel-collapse-button"
+              onClick={onCollapse}
+              title="Recolher painel lateral"
+              aria-label="Recolher painel lateral"
+              data-tour-target="tree-controls-collapse"
+            >
+              <ChevronLeft />
+            </button>
+          )}
         </div>
 
         {showViewAsSelector && (
