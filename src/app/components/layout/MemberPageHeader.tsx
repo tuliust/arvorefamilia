@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router';
 import { AppLink as Link } from '../AppLink';
 import { UserProfileMenu } from './UserProfileMenu';
+import { HeaderNotificationsDropdown } from './HeaderNotificationsDropdown';
 import { useAuth } from '../../contexts/AuthContext';
 import { contarNotificacoesNaoLidasSupabase } from '../../services/userEngagementService';
 import {
@@ -381,9 +382,13 @@ export function MemberPageHeader({
           </StandardToolbarLink>
         )}
         {currentHeaderSection !== 'notifications' && (
-          <StandardToolbarLink to="/notificacoes" title="Alertas" ariaLabel="Abrir alertas" icon={Bell} tourTarget="alerts" badgeCount={unreadNotificationsCount}>
-            Alertas
-          </StandardToolbarLink>
+          <HeaderNotificationsDropdown
+            wrapperClassName="relative hidden lg:inline-flex"
+            buttonClassName="h-9 shrink-0 items-center gap-2 rounded-xl border border-gray-200 bg-white px-3 text-slate-900 shadow-sm transition hover:border-blue-200 hover:bg-blue-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
+            iconClassName="h-4 w-4"
+            label="Alertas"
+            labelClassName={memberHeaderActionTextClassName}
+          />
         )}
       </div>
 
