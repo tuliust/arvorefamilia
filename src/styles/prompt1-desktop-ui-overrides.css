@@ -1,0 +1,69 @@
+@media (min-width: 768px) {
+  .desktop-tree-family-groups {
+    gap: clamp(0.18rem, 0.36vw, 0.34rem) !important;
+  }
+
+  .desktop-tree-family-group-card {
+    padding: clamp(0.3rem, 0.62vh, 0.48rem) !important;
+  }
+
+  .desktop-tree-family-group-card h4 {
+    margin-bottom: clamp(0.16rem, 0.36vh, 0.28rem) !important;
+    font-size: clamp(0.64rem, 1.22vh, 0.8rem) !important;
+    font-weight: 680 !important;
+    line-height: 1.02 !important;
+  }
+
+  .desktop-tree-family-group-row-list {
+    gap: clamp(0.08rem, 0.24vh, 0.18rem) !important;
+  }
+
+  .desktop-tree-family-group-row {
+    min-height: clamp(1rem, 2.02vh, 1.24rem) !important;
+    gap: clamp(0.14rem, 0.28vw, 0.28rem) !important;
+    padding: 0.06rem 0.1rem !important;
+  }
+
+  .desktop-tree-family-group-row span:not(.desktop-tree-family-group-icon) {
+    font-size: clamp(0.54rem, 1.02vh, 0.68rem) !important;
+    font-weight: 500 !important;
+    line-height: 1.02 !important;
+  }
+
+  .desktop-tree-family-group-row strong {
+    font-size: clamp(0.58rem, 1.08vh, 0.72rem) !important;
+    font-weight: 700 !important;
+  }
+}
+
+@media (max-height: 720px) and (min-width: 768px) {
+  .desktop-tree-family-groups {
+    gap: 0.12rem !important;
+  }
+
+  .desktop-tree-family-group-card {
+    padding: 0.22rem !important;
+  }
+
+  .desktop-tree-family-group-row-list {
+    gap: 0.05rem !important;
+  }
+
+  .desktop-tree-family-group-row {
+    min-height: 0.92rem !important;
+  }
+
+  .desktop-tree-family-group-row span:not(.desktop-tree-family-group-icon) {
+    font-size: 0.56rem !important;
+  }
+
+  .desktop-tree-family-group-row strong {
+    font-size: 0.58rem !important;
+  }
+}
+
+@media (min-width: 1024px) {
+  [data-forum-page='true'] > section[aria-label='Busca e filtros do fórum'] {
+    max-width: none !important;
+  }
+}

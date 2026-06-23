@@ -1,724 +1,350 @@
-# Guia de UX e Layout — Árvore Família
-
-> Última revisão: 2026-06-16
-> Local canônico: `docs/GUIA_UX_LAYOUT.md`
-> Projeto: `tuliust/arvorefamilia`
-> Tipo: guia de experiência, layout e responsividade
-> Status: revisado para documentar comportamento visual vigente da árvore, Mini Bio/Curiosidades com IA, revisão de vínculos em largura total, onboarding condicional e revisão final editável.
-
----
-
-## 1. Objetivo
-
-Este documento registra decisões de experiência e layout.
-
-Use para revisar:
-
-- navegação entre views;
-- shell da Home;
-- painel desktop;
-- modal mobile;
-- cards;
-- conectores;
-- paletas;
-- calendário;
-- onboarding do membro;
-- revisão final;
-- exportação;
-- QA visual.
-
-Não use este arquivo como inventário técnico; para isso, consulte `INVENTARIO_TECNICO.md`.
-
----
-
-## 2. Princípios de UX
-
-| Princípio | Regra prática |
-|---|---|
-| Clareza | Ações devem ter rótulos explícitos e previsíveis. |
-| Continuidade | Preservar pessoa central, query params e retorno de perfil. |
-| Escopo | Ajuste visual deve ser restrito ao container correto. |
-| Consistência | Desktop é referência visual; mobile adapta interação e escala. |
-| Separação | UI não substitui guard, RLS, service ou migration. |
-| Histórico controlado | Docs históricos não reabrem rotas ou padrões removidos. |
-| Exportação limpa | Captura não deve incluir controles, debug ou overlays transitórios. |
-
-Anti-padrões:
-
-```txt
-Reintroduzir /minha-arvore, /genealogia ou /visao-completa como views.
-Usar /visao-completa como sinônimo da horizontal.
-Restaurar a barra Filtros | Legendas | Ações.
-Usar cores hardcoded no mobile como fonte da verdade visual.
-Usar seletor global svg path.
-Corrigir layout criando dados fictícios.
-Exibir microcopy de dado ausente em card compacto mobile.
-```
-
----
-
-## 3. Navegação da árvore
-
-Views oficiais:
-
-| View | Rota | Papel |
-|---|---|---|
-| Árvore Familiar | `/mapa-familiar` | principal/default |
-| Mapa Genealógico | `/mapa-familiar-horizontal` | horizontal por gerações |
-
-Comportamento:
-
-```txt
-/ -> /mapa-familiar
-```
-
-preservando query string.
-
-A alternância Vertical/Horizontal deve preservar:
-
-```txt
-?pessoa=...
-?voltar=...
-outros search params relevantes
-```
-
-Rotas removidas como views:
-
-```txt
-/minha-arvore
-/genealogia
-/visao-completa
-```
-
-Exceção:
-
-```txt
-/minha-arvore/editar
-```
-
----
-
-## 4. Shell visual da Home
-
-Elementos:
-
-- `HomeHeader`;
-- área da árvore;
-- painel lateral desktop;
-- modal mobile de controles;
-- bottom nav mobile;
-- overlays de exportação/loading;
-- modais auxiliares;
-- debug temporário, quando habilitado.
-
-Regras:
-
-- header deve permanecer estável;
-- avatar não deve exibir nome/e-mail lateral fixo;
-- nome/e-mail ficam no menu;
-- árvore deve ocupar a área principal como canvas;
-- painel, modal, bottom nav, overlays e debug não entram na exportação;
-- a UI não deve perder contexto ao trocar vertical/horizontal.
-
----
-
-## 5. Árvore Familiar — `/mapa-familiar`
-
-### Desktop/tablet
-
-Componente:
-
-```txt
-DesktopFamilyMapView
-```
-
-Características de UX:
-
-- canvas panorâmico;
-- grupos familiares;
-- zoom e restauração;
-- conectores;
-- painel lateral;
-- paletas;
-- exportação;
-- suporte visual a múltiplos núcleos conjugais da pessoa central quando existem dados.
-
-### Mobile
-
-Componente:
-
-```txt
-MobileFamilyTreeView
-```
-
-Características de UX:
-
-- experiência segmentada;
-- navegação interna Paterno/Central/Materno;
-- cards compactos;
-- conectores HTML/CSS;
-- botão `Controles`;
-- paletas herdadas do desktop.
-
-Cards mobile:
-
-```txt
-NOME DA PESSOA
-★ AAAA
-✥ AAAA
-```
-
-Regras:
-
-- nascimento aparece apenas quando houver data/ano;
-- falecimento aparece apenas quando houver data/ano;
-- resultado visual não deve mostrar `Nascimento não informado` nem `Falecimento não informado`;
-- a implementação atual usa limpeza DOM em `src/main.tsx` para garantir esse resultado visual; a correção estrutural do componente permanece pendente.
-
----
-
-## 6. Mapa Genealógico — `/mapa-familiar-horizontal`
-
-### Desktop/tablet
-
-Componente:
-
-```txt
-DesktopFamilyHorizontalMapView
-```
-
-Características de UX:
-
-- colunas por geração;
-- colunas vazias ocultadas;
-- cônjuges adjacentes conforme suporte atual do código;
-- conectores SVG;
-- título `Mapa Genealógico de {primeiroNome}`;
-- exportação com título e paleta.
-
-Atenção:
-
-```txt
-Cônjuges de pais/Geração 4 não devem ser tratados como implementados até fechamento do TREE-003.
-```
-
-### Mobile
-
-Componente:
-
-```txt
-MobileFamilyHorizontalMapView
-```
-
-Contrato:
-
-```txt
-1 geração = 1 tela
-botões Ger X = atalhos
-swipe lateral = troca de geração
-scroll vertical = navegação dentro da geração
-sem scroll horizontal manual como navegação principal
-```
-
-Regras:
-
-- não usar barra Paterno/Central/Materno;
-- não criar subrotas por geração;
-- não usar setas laterais como navegação principal;
-- bottom nav e safe area devem permanecer estáveis;
-- botão de controles deve conviver com a linha `Ger X`;
-- paletas não azuis não podem cair em fallback azul.
-
----
-
-## 7. Painel desktop
-
-Estado vigente:
-
-| Área | Comportamento |
-|---|---|
-| Topo/controles | Zoom, Restaurar, Vertical, Horizontal, Cores, Exportar, Destacar |
-| Filtros | Grupos diretos e status visíveis sem aba |
-| Ações secundárias | Flyouts específicos |
-| Legendas | Não são aba persistente |
-
-A barra abaixo não é UI vigente:
-
-```txt
-Filtros | Legendas | Ações
-```
-
-Regras:
-
-- painel não entra na exportação;
-- botão ativo deve refletir a rota;
-- `Restaurar visualização` não é sinônimo de `Zoom -`;
-- cards do painel devem seguir a linguagem visual da paleta ativa;
-- estado inativo deve reduzir ênfase sem perder legibilidade.
-
----
-
-## 8. Modal mobile de controles
-
-Rotas:
-
-```txt
-/mapa-familiar
-/mapa-familiar-horizontal
-```
-
-Comportamento:
-
-- abre pelo botão `Controles`;
-- título: `Controles`;
-- sem subtítulo;
-- botão superior direito com `X`;
-- overlay fecha;
-- `Escape` fecha quando disponível;
-- body fica travado;
-- conteúdo interno rola;
-- modal não entra na exportação.
-
-Controles visíveis:
-
-```txt
-Vertical
-Horizontal
-Cores
-Grupos
-Destacar
-Filtros
-```
+# Guia de UX e layout
+
+> Última revisão: 2026-06-23  
+> Escopo: UX consolidada após 6A–7D e ajustes pós-ciclo em `/curiosidades`, `/mapa-familiar`, header, notificações, `/forum` e `/meus-favoritos`.  
+> Este arquivo substitui versões antigas com referências a 10 etapas, 300 caracteres, modo memorial acoplado ao tom Nostálgico e painel desktop sem os ajustes de 2026-06-23.
+
+## Princípios
+
+- Interfaces de onboarding devem ser limpas, progressivas e sem ações paralelas no header.
+- Títulos principais devem ficar fora de containers quando introduzem uma seção inteira.
+- Cards internos devem conter apenas o conteúdo operacional da seção.
+- Botões duplicados devem ser removidos.
+- Labels devem respeitar gênero quando há sinal disponível.
+- Fluxos de IA devem ser claros: tom textual não é o mesmo que estado de pessoa falecida.
+- Ajustes desktop não devem degradar mobile.
+- Mudanças visuais de mapa devem preservar legibilidade, conectores e seleção por query string.
+
+## Header do onboarding
+
+Nas páginas abaixo, o header exibe apenas ícone, título e subtítulo:
+
+- `/meus-dados`;
+- `/meus-vinculos`;
+- `/arquivos-historicos`;
+- `/preferencias`;
+- `/revisao-dados`.
 
 Não exibir:
 
-```txt
-Zoom +
-Zoom -
-Restaurar visualização
-Exportar
-```
+- Favoritos;
+- Notificações;
+- Voltar para árvore;
+- ações customizadas;
+- menus secundários de navegação.
 
-Regra de layout:
+## Menu do avatar do usuário
 
-- `Grupos` abre/fecha cards de grupos;
-- grupos não aparecem por padrão;
-- filtros permanecem sempre visíveis;
-- filtros devem caber em layout compacto, preferencialmente quatro colunas.
+### Rodapé do menu
 
----
+O menu do avatar deve manter:
 
-## 9. Paletas
+- `Dúvidas?` à esquerda, apontando para `/duvidas`;
+- `Sair` à direita, mantendo a ação de logout.
 
-Paletas:
+### Navegação
 
-| Nome | Chave |
-|---|---|
-| Branca | `white` |
-| Visual/Azul | `visual` |
-| Laranja | `orange` |
-| Marrom | `brown` |
+- `Curiosidades` deve estar disponível no menu desktop quando aplicável.
+- O botão `Dúvidas?` deve usar a mesma linguagem visual dos demais itens textuais do menu.
+- Não adicionar ícone ao botão `Dúvidas?` sem nova decisão de produto.
 
-Regras:
+## Dropdown de notificações
 
-- paleta altera CSS variables/tokens;
-- paleta não altera dados;
-- desktop é referência;
-- mobile deve consumir o mesmo contrato visual;
-- ícones internos não devem herdar estilos globais de conectores;
-- exportação deve preservar paleta ativa;
-- CSS novo deve ser escopado.
+### Layout
 
----
-
-## 10. Cards e avatares
-
-Contratos:
-
-| Caso | UI |
-|---|---|
-| Pessoa com foto | imagem real |
-| Pessoa sem foto | `User` |
-| Pet | `PawPrint` |
+O dropdown do sino deve ter largura responsiva e não deve cortar os botões do rodapé.
 
 Regras:
 
-- não diferenciar avatar sem foto por gênero;
-- preservar contraste;
-- manter crop estável;
-- datas só aparecem quando existem;
-- nomes devem permanecer legíveis em cards compactos;
-- estado selecionado/destaque não pode apagar informação principal.
+- usar largura segura baseada no viewport;
+- rodapé em `flex`, com empilhamento em telas menores e lado a lado em desktop;
+- botões com `whitespace-normal`, `text-center`, `leading-tight` e largura flexível.
 
----
+### Rodapé
 
-## 11. Conectores
+Botões obrigatórios:
 
-Regras gerais:
+- `Ver todas as notificações`, rota `/notificacoes`;
+- `Personalizar preferências`, rota `/ajustar-notificacoes`.
 
-- conector deve representar relação explícita;
-- não inferir casamento por proximidade visual;
-- não usar seletor global que afete ícones;
-- conectores devem seguir paleta ativa;
-- conectores devem continuar visíveis na exportação.
+Não alterar a lógica de listar, marcar ou remover notificações em ajustes puramente visuais.
 
-Por view:
+## `/meus-dados`
 
-| View | Regra |
-|---|---|
-| Vertical desktop | SVG por âncoras e grupos. |
-| Vertical mobile | HTML/CSS alinhado à hierarquia visual. |
-| Horizontal desktop | casal → filhos por geração. |
-| Horizontal mobile | conectores da geração ativa e scroll vertical até o fim visual. |
+### Questionário IA
 
----
+O questionário possui 8 etapas:
 
-## 12. Calendário familiar
+1. Qual é o seu estilo?
+2. Personalidade.
+3. Família e vínculos.
+4. Trabalho e trajetória.
+5. Lugares e mudanças de cidade.
+6. Momentos marcantes.
+7. Hobbies e paixões.
+8. Marcas pessoais e curiosidades.
 
-Rota:
+### Etapa 1
 
-```txt
-/calendario-familiar
+Título:
+
+```text
+Qual é o seu estilo?
 ```
 
-UX vigente:
+A etapa pergunta o estilo do texto, não se a pessoa é falecida.
 
-- categorias visuais claras;
-- filtros por categoria;
-- em mobile, cinco botões em linha quando possível;
-- bolinha colorida acima do título;
-- título do botão em uma linha;
-- sem overflow horizontal desnecessário.
+### Tons disponíveis
 
-Categorias:
+- Afetivo;
+- Simples e direto;
+- Divertido;
+- Elegante;
+- Nostálgico;
+- Inspirador;
+- Familiar;
+- Emocional;
+- Leve;
+- Formal.
 
-```txt
-Aniversário
-Casamento
-Falecimento
-Outros
-Reunião
+`Nostálgico` é apenas um tom. Ele não deve ativar memorial automaticamente.
+
+### Toggle memorial
+
+Label atual:
+
+```text
+Você está escrevendo o perfil de uma pessoa falecida?
 ```
 
----
+Se `Sim`:
 
-## 13. Exportação
+- a IA usa terceira pessoa;
+- verbos no passado;
+- tom respeitoso;
+- qualquer tom selecionado é adaptado para memorial.
 
-Regras de UX:
+Se `Não`:
 
-- exportar sem header/painel/modal/bottom nav/debug;
-- manter título;
-- manter paleta;
-- preservar conectores e cards;
-- mostrar loading enquanto a ação real ocorre;
-- erro de tamanho deve orientar o usuário a reduzir zoom ou usar área.
+- a IA usa primeira pessoa quando for o perfil do próprio usuário;
+- verbos no presente quando adequado.
 
-Ações:
+### Última etapa
 
-```txt
-Área
-Imagem
-PDF
-Imprimir
-```
+A última etapa é `Marcas pessoais e curiosidades`.
 
----
+Não exibir botão `Avançar` nessa etapa, porque o fluxo continua pelo botão principal `Confirmar meus dados`.
 
-## 14. Onboarding do membro
+### Badges do questionário
 
-Rotas do fluxo:
+As escolhas do questionário são persistidas em `person_profile_questionnaire_answers.selected_badges`.
 
-```txt
-/meus-dados
-/meus-vinculos
-/arquivos-historicos
-/preferencias
-/revisao-dados
-```
+Uso atual desses dados:
 
-### Etapa 1 — Meus dados
+- perfil individual;
+- cards e rankings de `/curiosidades`;
+- comparação de interesses;
+- geração de Mini Bio/Curiosidades com contexto seguro.
 
-Regras de layout:
+## Mini Bio e Curiosidades
 
-- os toggles `Estrangeiro` e `Exterior` devem ficar alinhados verticalmente ao campo correspondente;
-- `Local de nascimento` e seu toggle formam uma linha lógica no desktop;
-- `Cidade de residência` e seu toggle formam uma linha lógica no desktop;
-- em mobile, o layout pode empilhar campo e toggle, desde que a associação visual continue clara.
+### Limite
 
-Regras para pessoa viva:
+- 500 caracteres por campo.
+- Contadores devem refletir `0/500` até `500/500`.
 
-- exibir `Cidade de residência`;
-- exibir container `Contato, endereço e redes sociais`;
-- não exibir campos de falecimento.
+### Geração esperada
 
-Regras para pessoa falecida:
+- Aproximadamente 400–450 caracteres por campo.
+- Texto deve ser completo, mas não prolixo.
+- Não precisa começar com “Sou [Nome]” ou “[Nome] foi”.
+- Evitar repetição do nome, pois ele já aparece no perfil.
 
-- exibir `Dia ou Ano de Falecimento` e `Local de falecimento`;
-- ocultar `Cidade de residência`;
-- ocultar container `Contato, endereço e redes sociais`;
-- preparar defaults de notificações e permissões para pular a Etapa 4.
+## `/meus-vinculos`
 
-Regras para Mini Bio e Curiosidades com IA:
+### Bloco “Sobre mim”
 
-- o botão de IA fica na seção **Sobre Mim**;
-- o modal usa fluxo progressivo de 10 etapas;
-- etapa 1 de tom pode usar ícones nos cards;
-- etapas 2 a 8 usam cards compactos em até 3 colunas no desktop;
-- cards compactos não exibem ícones internos;
-- textos dos cards devem ficar centralizados e limitados visualmente a 2 linhas;
-- modo **Nostálgico** adapta títulos, labels e geração para memória de pessoa falecida;
-- campos gerados continuam editáveis e não são salvos automaticamente.
+Deve ficar acima do box de textos, não dentro dele.
 
+Layout recomendado:
 
-### Etapa 2 — Vínculos
+- ícone à esquerda;
+- título em fonte maior;
+- subtítulo explicativo abaixo;
+- box abaixo contendo Mini Bio/Curiosidades e botão `Regenerar com IA`.
 
-A tela de vínculos deve funcionar como revisão guiada em largura total.
+Não exibir botão `Salvar textos`.
 
-Estrutura visual vigente:
+Os textos são salvos quando o usuário avança na página.
 
-- sem botão `Voltar para meus dados` no topo;
-- sem painel lateral `Resumo da revisão`;
-- card superior simplificado com `Familiares de [Primeiro Nome]`;
-- sem rótulo `Pessoa em revisão`;
-- sem chips de nascimento/local no card superior;
-- cards-resumo de `Pais`, `Filhos`, `Cônjuges` e `Irmãos` com comportamento de âncora;
-- seções de vínculos em largura total;
-- botão principal no rodapé da revisão.
+### Bloco “Familiares de X”
 
-Pluralização dos cards-resumo:
+Deve ficar fora do container dos cards de vínculo.
 
-```txt
-Nenhum vínculo
-1 vínculo
-2 vínculos
-```
+Layout recomendado:
 
-Cards de familiares:
+- avatar/ícone à esquerda;
+- título em fonte maior;
+- subtítulo explicativo;
+- grid/resumo de grupos abaixo.
 
-- exibem avatar/iniciais, nome, relação e badge de status;
-- não exibem chips de nascimento/local;
-- usam botão compacto de remoção por ícone no topo direito;
-- preservam ação de desfazer quando há `Remoção em análise`;
-- podem exibir controles específicos, como `Outro pai/mãe` nos filhos;
-- podem exibir ação `Solicitar controle do perfil` quando aplicável.
+### Grupos de vínculos
 
-Badges de status:
+Cada grupo mantém apenas o botão superior de adicionar:
 
-| Caso | Badge |
-|---|---|
-| Pessoa cadastrada sem usuário vinculado | `Pré-cadastrado` |
-| Pessoa com usuário/auth user vinculado | `Ativo` |
-| Vínculo novo ou alterado | `Em análise` |
-| Remoção solicitada | `Remoção em análise` |
-| Solicitação de controle enviada | `Controle em análise` |
+- Adicionar pai ou mãe;
+- Adicionar filho;
+- Adicionar pet;
+- Adicionar cônjuge;
+- Adicionar irmão.
 
-Busca e criação de familiar:
+Quando o grupo está vazio, o box vazio mostra apenas:
 
-- antes de criar nova pessoa, o fluxo permite buscar pessoa existente;
-- resultados devem ajudar a diferenciar homônimos;
-- a própria pessoa em revisão não pode ser selecionada;
-- pessoa já vinculada no mesmo grupo não deve ser duplicada;
-- criação manual continua disponível quando a busca não encontra a pessoa correta;
-- vínculo selecionado ou criado entra no fluxo como alteração em análise.
+- título do estado vazio;
+- descrição;
+- sem botão inferior duplicado.
 
-Filhos e outro pai/mãe:
+## Labels de gênero
 
-- usar `Filho`, `Filha` ou `Filho(a)` conforme gênero disponível;
-- não inferir gênero pelo nome;
-- dropdown `Outro pai/mãe` deve tentar pré-selecionar outro responsável conhecido pelos relacionamentos existentes;
-- não usar hard-code de nomes específicos.
+Quando houver `genero` ou hint feminino:
 
-### Etapa 3 — Arquivos históricos
+- irmã deve aparecer como `Irmã`;
+- mãe como `Mãe`;
+- falecida/viva devem concordar com gênero.
 
-Regras de UX:
+Evitar labels genéricas como `Irmão(a)` quando a pessoa é identificada como mulher.
 
-- cards de categoria atualizam título e descrição da área de upload;
-- título e descrição são pré-preenchidos com título/subtítulo do card;
-- após adicionar arquivo, não exibir campos editáveis por padrão;
-- mostrar thumbnail, título, resumo e botões compactos `Editar`/`Remover`;
-- rascunho local deve preservar arquivos ao trocar aba, minimizar ou recarregar antes de salvar;
-- botão principal é `Salvar e Continuar`.
+## `/arquivos-historicos`
 
-### Etapa 4 — Preferências
+### Nome funcional
 
-Regras de UX:
+Usar **Fatos e Arquivos Históricos**.
 
-- etapa exibida para pessoa viva;
-- etapa pulada para pessoa falecida;
-- não exibir botão `Salvar permissões`;
-- não exibir botão `Voltar para arquivos históricos`;
-- manter apenas `Continuar para a revisão`.
+### Estados visuais
 
-### Etapa 5 — Revisão final
+- Fato sem arquivo: ícone de fato/memória, badge `Fato` ou `Fato sem arquivo`.
+- Imagem: thumbnail da imagem, badge `Imagem`.
+- PDF: ícone de documento/PDF, badge `PDF`.
 
-A revisão deve funcionar como perfil de conferência, não como formulário longo.
+Upload é opcional.
 
-Regras:
+## `/revisao-dados`
 
-- topo com avatar/iniciais, nome, badge de status, profissão e residência quando aplicável;
-- não exibir mini bio ao lado do nome;
-- botão `Finalizar e acessar árvore` fica na área superior ao lado de `Editar perfil`;
-- não exibir rodapé com `Voltar para preferências`;
-- boxes devem ter botões compactos com ícone de lápis para edição inline quando aplicável;
-- familiares e arquivos podem usar lápis para voltar à etapa específica;
-- `Informações pessoais` não exibe `Pessoa falecida`, `Nascimento no exterior` nem `Falecimento no exterior`;
-- pessoa falecida não exibe box `Notificações e permissões`.
+A revisão deve mostrar fatos e arquivos em uma seção única, diferenciando tipo:
 
+- `Fato sem arquivo`;
+- `Imagem`;
+- `PDF`.
 
-## 15. Debug temporário
+Pets devem aparecer em grupo próprio.
 
-`Visualizar como...` é ferramenta de QA/debug.
+## Timeline do perfil
 
-Regras:
+Na lateral do perfil:
 
-- não tratar como fluxo final;
-- não entrar na exportação;
-- não persistir dados reais;
-- decisão de manter/remover/flagar fica no `PLANO_PROXIMOS_PASSOS.md`.
+- registro histórico sem anexo aparece como `Fato`;
+- registro histórico com anexo aparece como `Arquivo`;
+- fatos com ano entram em ordem cronológica;
+- fatos sem ano ficam ao final;
+- não exibir URL, storage path ou dados técnicos.
 
----
+## `/pessoa/:id`
 
-## 16. Breakpoints e QA visual
+### Perfil individual
 
-Testar, no mínimo:
+- Contato deve aparecer junto ao cabeçalho/área superior quando permitido.
+- Para pessoa falecida, contatos pessoais não devem ser destacados.
+- Redes sociais versionadas devem ter prioridade sobre campos legacy.
+- Badges do questionário devem aparecer no card `Sobre`, agrupados por categoria.
 
-```txt
-320px
-375px
-390px
-430px
-768px
-1366px
-1440px
-1536px
-1920px
-```
+## `/curiosidades`
 
-Superfícies obrigatórias:
+### Cards principais
 
-```txt
-/mapa-familiar
-/mapa-familiar-horizontal
-/calendario-familiar
-/pessoa/:id
-/forum
-/notificacoes
-/admin
-```
+Cards atuais:
 
----
+- `Pessoas`: familiares humanos cadastrados no site;
+- `Localização`: cidades onde vivem;
+- `In memoriam`: familiares falecidos na árvore genealógica;
+- `Pets`: pets registrados;
+- `Casais`: relações de união ativas.
 
-## 17. Critério de aceitação
+### Rankings e listas
 
-Uma mudança de layout só deve ser aceita quando:
+- `Nomes mais comuns`: ranking de primeiros nomes.
+- `Mês com mais aniversários`: top 5 meses por quantidade de aniversários.
+- `Perfil dos familiares`: ranking por badges/estilo do questionário de `/meus-dados`.
+- `Principais cidades de nascimento`: ranking de cidades.
+- `Profissões mais comuns`: principais ocupações dos perfis.
+- `Faixa Etária`: distribuição por idade, não gerações sociológicas.
+- `Bodas`: considera fim por falecimento quando aplicável.
 
-- não reativa rotas removidas;
-- não quebra alternância Vertical/Horizontal;
-- não perde query string;
-- não altera dados para resolver visual;
-- não captura UI transitória na exportação;
-- preserva paletas em desktop e mobile;
-- passa em `npm run build`;
-- passa nos testes aplicáveis;
-- respeita o fluxo vivo/falecido do onboarding;
-- foi validada visualmente nos breakpoints relevantes.
+### Interações
 
-<!-- UX-MOBILE-CONSOLIDADO-2026-06-18 -->
-## PadrÃµes UX/mobile consolidados
+- Dropdowns de comparar interesses, astrologia e conexão devem iniciar com estado neutro, exibindo `Selecione`.
+- Quiz deve usar opções coerentes e aleatórias controladas:
+  - pessoa viva com mais tempo de vida;
+  - pessoa mais jovem;
+  - pessoa nascida em cidade específica;
+  - profissão cadastrada.
 
-### Inputs mobile
+## `/mapa-familiar`
 
-Inputs e textareas devem preservar fonte de pelo menos 16px no mobile para evitar auto-zoom do navegador ao focar campos. O padrÃ£o usado Ã© equivalente a:
+### Painel desktop
 
-```txt
-text-base md:text-sm
-```
+- Dropdown fechado: `Família de X`.
+- Dropdown aberto: primeira opção desabilitada `Visualize a árvore como...`.
+- Opções: primeiro e segundo nome da pessoa, por exemplo `Maria Acileide`, não `Família de Maria`.
+- Card `Cadastrados`: número baseado em `user_person_links`.
+- Cards `Núcleo`, `Ascendentes` e `Colaterais`: gap reduzido e tipografia compacta no desktop.
+- Botão de cônjuges:
+  - inativo: `Exibir cônjuges de tios, primos etc`;
+  - ativo: `Ocultar cônjuges de tios, primos etc`.
 
-NÃ£o usar `user-scalable=no`, `maximum-scale=1` ou bloqueios de acessibilidade.
+### Tour
 
-### Steps do onboarding
+- IA/Calendário em etapa específica.
+- Favoritos em etapa separada: `Guarde os seus destaques`.
 
-Em telas pequenas, os nÃºmeros das etapas devem permanecer visÃ­veis sem scroll horizontal. Labels podem ser compactados/truncados, mas a sequÃªncia visual das etapas deve continuar compreensÃ­vel.
+### Layout compacto
 
-Breakpoints mÃ­nimos de QA visual:
+Árvores pequenas e simples podem usar layout compacto no desktop.
 
-- 320px
-- 375px
-- 390px
-- 430px
+### Canvas desktop
 
-### Tooltips mobile
+A distribuição direta deve preservar:
 
-BotÃµes de informaÃ§Ã£o devem funcionar por toque, nÃ£o apenas por hover. O comportamento esperado inclui:
+- irmãos em até 2 colunas no desktop;
+- irmãos em 1 coluna no mobile;
+- cônjuge e pets deslocados para a direita no desktop quando necessário;
+- mobile sem alteração por ajustes de desktop.
 
-- abrir/fechar por toque;
-- fechar por Escape;
-- fechar por clique fora;
-- `aria-expanded`;
-- `role="tooltip"` quando aplicÃ¡vel.
+## `/forum`
 
-### Header e bottom nav
+### Busca desktop
 
-- Em rotas de fluxo, o header mobile pode ocultar aÃ§Ãµes laterais quando elas competem com a tarefa principal.
-- Menus inferiores nÃ£o devem cobrir botÃµes primÃ¡rios, CTAs finais ou aÃ§Ãµes de salvar/continuar.
-- Badges mÃ³veis devem ser discretos e nÃ£o deslocar o layout.
+- A barra de busca/filtros deve ocupar a largura do container.
+- O botão `Criar novo` deve alinhar com a lateral direita do container de `Tópicos recentes`.
+- Não aplicar alterações que quebrem o empilhamento mobile.
 
-### ConteÃºdo em cards
+## `/meus-favoritos`
 
-Cards em mobile devem reduzir padding e espaÃ§amento sem remover informaÃ§Ã£o essencial. Blocos longos devem priorizar hierarquia, agrupamento por categoria e CTAs persistentes apenas quando necessÃ¡rios.
+### Busca desktop
 
-<!-- RODADA2-UX-2026-06-18 -->
-## UX complementar â€” painel, mapas e pÃ¡ginas mobile
+- A barra de busca/filtros deve ocupar a largura dos cards.
+- O botão de filtros deve alinhar com o terceiro card no desktop.
+- Não aplicar alterações que quebrem mobile.
 
-### Painel lateral da Ã¡rvore
+## Não regressões de UX
 
-- O painel lateral Ã© o centro de controle da visualizaÃ§Ã£o da Ã¡rvore.
-- Deve manter largura compacta e previsÃ­vel.
-- Deve evitar voltar a ocupar largura excessiva em desktop.
-- Deve conter aÃ§Ãµes de visualizaÃ§Ã£o de forma agrupada e legÃ­vel.
-- O seletor â€œVisualizar comoâ€ pertence ao painel/Ã¡rea de visualizaÃ§Ã£o quando essa for a decisÃ£o vigente.
-
-### Toolbar mobile dos mapas
-
-A toolbar mobile deve expor aÃ§Ãµes diretas:
-
-| AÃ§Ã£o | Comportamento |
-|---|---|
-| VisualizaÃ§Ã£o | Abre box/dropdown de visualizador |
-| Formato | Abre cards `Linha Geracional` e `Ãrvore Familiar` |
-| Cor | Abre seletor compacto de paletas |
-| Filtros | Abre chips/opÃ§Ãµes de filtro |
-| Exportar | Abre aÃ§Ãµes `Ãrea`, `Imagem`, `PDF`, `Imprimir` |
-| `+` | Abre painel mobile completo de controles |
-
-Regras visuais:
-
-- os botÃµes devem caber em 320px, 375px, 390px e 430px;
-- popovers nÃ£o devem extrapolar a largura da tela;
-- espaÃ§amento entre botÃµes deve ser uniforme;
-- botÃ£o `+` deve ficar alinhado Ã  direita;
-- desktop/tablet nÃ£o devem sofrer regressÃ£o.
-
-### Favoritos mobile
-
-- Busca e filtro devem ficar lado a lado quando possÃ­vel.
-- BotÃ£o de filtro pode ser apenas Ã­cone, com `aria-label` e `title`.
-- Remover favorito deve usar estrela ativa/inativa, nÃ£o lixeira, quando a metÃ¡fora for desfavoritar.
-
-### NotificaÃ§Ãµes mobile
-
-- Evitar card dentro de card.
-- Um card branco por notificaÃ§Ã£o Ã© o padrÃ£o preferencial.
-- Estado nÃ£o lido deve ser indicado por badge/borda, nÃ£o por excesso de fundos coloridos.
-- AÃ§Ãµes devem ficar visÃ­veis no topo direito do card.
-
-### CalendÃ¡rio mobile
-
-- Filtros podem virar cards horizontais com Ã­cones.
-- Nomes longos devem quebrar sem truncamento agressivo.
-- Cards de memÃ³ria/falecimento devem diferenciar visualmente o contexto sem sobrecarregar a tela.
-
-### Dicas automÃ¡ticas
-
-- Modais informativos automÃ¡ticos no mobile nÃ£o devem bloquear o acesso inicial.
-- Se houver orientaÃ§Ã£o, preferir tour contextual ou dica dispensÃ¡vel.
+- Não voltar o questionário para 10 etapas.
+- Não voltar limite para 300 caracteres.
+- Não reintroduzir botão `Salvar textos` em `/meus-vinculos`.
+- Não duplicar botões de adicionar em estados vazios.
+- Não colocar títulos principais dentro dos containers operacionais.
+- Não usar `Nostálgico` como sinônimo de pessoa falecida.
+- Não exibir ações no header do onboarding.
+- Não listar opções do dropdown de visualização como `Família de Maria`; usar primeiro e segundo nome.
+- Não deixar o botão inferior do dropdown de notificações cortado.
+- Não misturar Faixa Etária com gerações sociológicas em `/curiosidades`.
+- Não contabilizar bodas após falecimento de um dos cônjuges.

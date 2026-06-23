@@ -1,7 +1,8 @@
-import { useEffect, useState } from 'react';
+﻿import { useEffect, useState } from 'react';
 import { Sparkles } from 'lucide-react';
 import { MemberPageHeader, PAGE_CONTAINER_CLASS } from '../components/layout/MemberPageHeader';
 import { obterTodasPessoas, obterTodosRelacionamentos } from '../services/dataService';
+import { getProfileQuestionnaireSelectedBadges } from '../services/profileQuestionnaireService';
 import type { Pessoa, Relacionamento } from '../types';
 import { CuriosidadesAiSection } from './curiosidades/CuriosidadesAiSection';
 import { CuriosidadesAstrology } from './curiosidades/CuriosidadesAstrology';
@@ -18,10 +19,50 @@ import { CuriosidadesRankings } from './curiosidades/CuriosidadesRankings';
 import { CuriosidadesRouteSection } from './curiosidades/CuriosidadesRouteSection';
 import { CuriosidadesStats } from './curiosidades/CuriosidadesStats';
 import { CuriosidadesToday } from './curiosidades/CuriosidadesToday';
+import type { ProfileBadgesByPersonId } from './curiosidades/curiosidadesUtils';
+
+async function loadProfileBadgesByPersonId(pessoas: Pessoa[]): Promise<ProfileBadgesByPersonId> {
+  if (pessoas.length === 0) {
+    return {};
+  }
+
+  const entries = await Promise.all(
+    pessoas.map(async (pessoa) => {
+      try {
+        const result = await getProfileQuestionnaireSelectedBadges(pessoa.id);
+
+        if (result.error || !Array.isArray(result.data) || result.data.length === 0) {
+          return [pessoa.id, []] as const;
+        }
+
+        return [
+          pessoa.id,
+          result.data.map((badge) => ({
+            id: badge.id,
+            label: badge.label,
+            category: badge.category,
+          })),
+        ] as const;
+      } catch (error) {
+        console.warn(`NÃ£o foi possÃ­vel carregar badges do perfil ${pessoa.id}:`, error);
+        return [pessoa.id, []] as const;
+      }
+    })
+  );
+
+  return entries.reduce<ProfileBadgesByPersonId>((accumulator, [pessoaId, badges]) => {
+    if (badges.length > 0) {
+      accumulator[pessoaId] = [...badges];
+    }
+
+    return accumulator;
+  }, {});
+}
 
 export function Curiosidades() {
   const [pessoas, setPessoas] = useState<Pessoa[]>([]);
   const [relacionamentos, setRelacionamentos] = useState<Relacionamento[]>([]);
+  const [profileBadgesByPersonId, setProfileBadgesByPersonId] = useState<ProfileBadgesByPersonId>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -40,15 +81,23 @@ export function Curiosidades() {
 
         if (cancelled) return;
 
-        setPessoas(Array.isArray(loadedPessoas) ? loadedPessoas : []);
-        setRelacionamentos(Array.isArray(loadedRelacionamentos) ? loadedRelacionamentos : []);
+        const normalizedPessoas = Array.isArray(loadedPessoas) ? loadedPessoas : [];
+        const normalizedRelacionamentos = Array.isArray(loadedRelacionamentos) ? loadedRelacionamentos : [];
+        const loadedProfileBadgesByPersonId = await loadProfileBadgesByPersonId(normalizedPessoas);
+
+        if (cancelled) return;
+
+        setPessoas(normalizedPessoas);
+        setRelacionamentos(normalizedRelacionamentos);
+        setProfileBadgesByPersonId(loadedProfileBadgesByPersonId);
       } catch (loadError) {
         if (cancelled) return;
 
         console.error('Erro ao carregar dados de curiosidades:', loadError);
-        setError(loadError instanceof Error ? loadError.message : 'Não foi possível carregar os dados familiares.');
+        setError(loadError instanceof Error ? loadError.message : 'NÃ£o foi possÃ­vel carregar os dados familiares.');
         setPessoas([]);
         setRelacionamentos([]);
+        setProfileBadgesByPersonId({});
       } finally {
         if (!cancelled) {
           setLoading(false);
@@ -66,6 +115,7 @@ export function Curiosidades() {
   const curiosityDataProps = {
     pessoas,
     relacionamentos,
+    profileBadgesByPersonId,
     loading,
     error,
   };
@@ -74,7 +124,7 @@ export function Curiosidades() {
     <div className="curiosidades-page min-h-screen overflow-x-hidden bg-gray-50 pb-24 md:pb-0">
       <MemberPageHeader
         title="Curiosidades"
-        subtitle="Descobertas, histórias e conexões da família"
+        subtitle="Descobertas, histÃ³rias e conexÃµes da famÃ­lia"
         icon={Sparkles}
       />
 
@@ -132,3 +182,4 @@ export function Curiosidades() {
     </div>
   );
 }
+

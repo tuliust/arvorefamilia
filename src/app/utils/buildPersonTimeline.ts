@@ -493,9 +493,55 @@ function createChildBirthItem(child: Pessoa, pessoaId: string, birthOrder: numbe
   }, parsedDate);
 }
 
+function arquivoHistoricoHasFile(arquivo: ArquivoHistorico) {
+  return Boolean(String(arquivo.url ?? '').trim());
+}
+
+function getHistoricalRecordBadgeLabel(arquivo: ArquivoHistorico) {
+  return arquivoHistoricoHasFile(arquivo) ? 'Arquivo' : 'Fato';
+}
+
+function getHistoricalRecordFallbackTitle(arquivo: ArquivoHistorico) {
+  return arquivoHistoricoHasFile(arquivo) ? 'Arquivo histórico' : 'Fato histórico';
+}
+
+function getHistoricalRecordRelatedPersonIds(arquivo: ArquivoHistorico) {
+  const ids = [
+    arquivo.pessoa_id,
+    ...(Array.isArray(arquivo.participante_ids) ? arquivo.participante_ids : []),
+  ]
+    .map((id) => String(id ?? '').trim())
+    .filter(Boolean);
+
+  return ids.length > 0 ? Array.from(new Set(ids)) : undefined;
+}
+
 function createHistoricalFileItem(arquivo: ArquivoHistorico, linkedTo: 'person' | 'relationship') {
   const parsedDate = parseTimelineDate(arquivo.ano);
-  return withParsedDate({ id: `historical-file:${arquivo.id}`, type: 'historical_file', title: arquivo.titulo?.trim() || 'Arquivo histórico', description: createTimelineDescription([arquivo.descricao]), source: 'historical_file', sourceId: arquivo.id, relatedPersonIds: arquivo.pessoa_id ? [arquivo.pessoa_id] : undefined, metadata: { file_type: arquivo.tipo, ano: arquivo.ano, linked_to: linkedTo, relationship_id: arquivo.relacionamento_id, pessoa_id: arquivo.pessoa_id, precision: parsedDate.precision } }, parsedDate);
+  const hasFile = arquivoHistoricoHasFile(arquivo);
+
+  return withParsedDate({
+    id: `historical-file:${arquivo.id}`,
+    type: 'historical_file',
+    badgeLabel: getHistoricalRecordBadgeLabel(arquivo),
+    title: arquivo.titulo?.trim() || getHistoricalRecordFallbackTitle(arquivo),
+    description: createTimelineDescription([arquivo.descricao]),
+    source: 'historical_file',
+    sourceId: arquivo.id,
+    relatedPersonIds: getHistoricalRecordRelatedPersonIds(arquivo),
+    metadata: {
+      record_kind: hasFile ? 'file' : 'fact',
+      has_file: hasFile,
+      file_type: hasFile ? arquivo.tipo : null,
+      categoria_evento: arquivo.categoria_evento ?? null,
+      ano: arquivo.ano,
+      linked_to: linkedTo,
+      relationship_id: arquivo.relacionamento_id,
+      pessoa_id: arquivo.pessoa_id,
+      participante_ids: getHistoricalRecordRelatedPersonIds(arquivo),
+      precision: parsedDate.precision,
+    },
+  }, parsedDate);
 }
 
 function createPersonEventItem(evento: PersonEvent) {

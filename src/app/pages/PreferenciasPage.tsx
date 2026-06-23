@@ -3,7 +3,6 @@ import { Settings } from 'lucide-react';
 import { useNavigate } from 'react-router';
 import { toast } from 'sonner';
 import {
-  HEADER_ACTION_ICONS,
   MemberPageHeader,
   PAGE_CONTAINER_CLASS,
 } from '../components/layout/MemberPageHeader';
@@ -181,11 +180,8 @@ export function PreferenciasPage() {
         title="Preferências"
         subtitle="Etapa 4 de 5: configure notificações e permissões de exibição."
         icon={Settings}
-        actions={[
-          { label: 'Meus dados', to: '/meus-dados', icon: HEADER_ACTION_ICONS.Settings },
-          { label: 'Meus vínculos', to: '/meus-vinculos', icon: HEADER_ACTION_ICONS.Network },
-          { label: 'Mapa Familiar', to: '/mapa-familiar', icon: HEADER_ACTION_ICONS.Network },
-        ]}
+        hideHeaderActions
+        hideMobileHeaderActions
       />
 
       <MemberOnboardingSteps activeStep={4} />

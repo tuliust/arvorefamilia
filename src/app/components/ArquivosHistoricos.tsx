@@ -92,6 +92,7 @@ function getExtensionFromDataUrl(url: string) {
 }
 
 function getExtensionFromUrl(url: string) {
+  if (!url) return null;
   if (url.startsWith('data:')) return getExtensionFromDataUrl(url);
 
   try {
@@ -106,20 +107,37 @@ function getExtensionFromUrl(url: string) {
   return null;
 }
 
+function hasArquivoFile(arquivo: Pick<ArquivoHistorico, 'url'>) {
+  return Boolean(String(arquivo.url ?? '').trim());
+}
+
 function getHistoricalFileName(arquivo: ArquivoHistorico) {
   const baseName = sanitizeFileName(arquivo.titulo || 'arquivo-historico') || 'arquivo-historico';
-  const extension = getExtensionFromUrl(arquivo.url) ?? (arquivo.tipo === 'pdf' ? 'pdf' : 'jpg');
+  const extension = getExtensionFromUrl(String(arquivo.url ?? '')) ?? (arquivo.tipo === 'pdf' ? 'pdf' : 'jpg');
 
   return baseName.endsWith(`.${extension}`) ? baseName : `${baseName}.${extension}`;
 }
 
 function openArquivoInNewTab(arquivo: ArquivoHistorico) {
-  window.open(arquivo.url, '_blank', 'noopener,noreferrer');
+  if (!hasArquivoFile(arquivo)) return;
+  window.open(String(arquivo.url ?? ''), '_blank', 'noopener,noreferrer');
 }
 
 function getHistoricalFileEventCategoryLabel(value: ArquivoHistorico['categoria_evento']) {
   return HISTORICAL_FILE_EVENT_CATEGORY_OPTIONS.find((option) => option.value === value)?.label;
 }
+function getHistoricalRecordKindLabel(arquivo: ArquivoHistorico) {
+  if (!hasArquivoFile(arquivo)) return 'Fato sem arquivo';
+  if (arquivo.tipo === 'pdf' || arquivo.mime_type === 'application/pdf') return 'Arquivo PDF';
+  return 'Imagem histórica';
+}
+
+function getHistoricalRecordKindClassName(arquivo: ArquivoHistorico) {
+  if (!hasArquivoFile(arquivo)) return 'border-blue-100 bg-blue-50 text-blue-700';
+  if (arquivo.tipo === 'pdf' || arquivo.mime_type === 'application/pdf') return 'border-red-100 bg-red-50 text-red-700';
+  return 'border-emerald-100 bg-emerald-50 text-emerald-700';
+}
+
 
 function createEmptyDraftHistoricalFile(): DraftHistoricalFile {
   return {
@@ -144,6 +162,17 @@ function normalizeSearchText(value: string) {
 }
 
 function ArquivoThumbnail({ arquivo }: { arquivo: Pick<ArquivoHistorico, 'tipo' | 'url' | 'titulo'> }) {
+  if (!hasArquivoFile(arquivo)) {
+    return (
+      <div className="flex h-16 w-16 items-center justify-center rounded bg-blue-50">
+        <div className="flex flex-col items-center gap-1">
+          <ScrollText className="h-7 w-7 text-blue-600" />
+          <span className="text-[10px] font-semibold text-blue-700">FATO</span>
+        </div>
+      </div>
+    );
+  }
+
   return arquivo.tipo === 'imagem' ? (
     <div className="flex h-16 w-16 items-center justify-center overflow-hidden rounded bg-gray-100">
       <img
@@ -424,22 +453,25 @@ export function ArquivosHistoricos({
   };
 
   const handleAddArquivo = () => {
-    if (!novoArquivo.titulo || !novoArquivo.url) {
-      alert('Por favor, preencha o título e selecione um arquivo');
+    const titulo = novoArquivo.titulo.trim();
+    const descricao = novoArquivo.descricao.trim();
+
+    if (!titulo && !descricao) {
+      alert('Informe pelo menos um título ou uma descrição para salvar o fato ou memória.');
       return;
     }
 
     const arquivo: ArquivoHistoricoWithParticipants = {
       id: `arquivo-${Date.now()}`,
       tipo: novoArquivo.tipo,
-      url: novoArquivo.url,
+      url: novoArquivo.url.trim(),
       storage_bucket: novoArquivo.storage_bucket || undefined,
       storage_path: novoArquivo.storage_path || undefined,
       mime_type: novoArquivo.mime_type || undefined,
-      titulo: novoArquivo.titulo,
+      titulo: titulo || 'Memória sem título',
       pessoa_id: pessoaId ?? null,
       relacionamento_id: relacionamentoId ?? null,
-      descricao: novoArquivo.descricao || undefined,
+      descricao: descricao || undefined,
       ano: novoArquivo.ano || undefined,
       categoria_evento: novoArquivo.categoria_evento || null,
       participante_ids: novoArquivo.participante_ids,
@@ -466,12 +498,14 @@ export function ArquivosHistoricos({
 
 
   const handleViewFile = (arquivo: ArquivoHistorico) => {
+    if (!hasArquivoFile(arquivo)) return;
     setPreviewFile(arquivo);
   };
 
   const handleDownloadArquivo = (arquivo: ArquivoHistorico) => {
+    if (!hasArquivoFile(arquivo)) return;
     const link = document.createElement('a');
-    link.href = arquivo.url;
+    link.href = String(arquivo.url ?? '');
     link.download = getHistoricalFileName(arquivo);
     link.target = '_blank';
     link.rel = 'noopener noreferrer';
@@ -486,7 +520,12 @@ export function ArquivosHistoricos({
         {(showTitle || !readOnly || onRequestAdd) && (
           <CardHeader>
             <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-              {showTitle ? <CardTitle className="break-words">Arquivos Históricos</CardTitle> : <div />}
+              {showTitle ? (
+                <CardTitle className="flex items-center gap-2 break-words">
+                  <ScrollText className="h-5 w-5 shrink-0 text-blue-600" />
+                  Fatos e Arquivos Históricos
+                </CardTitle>
+              ) : <div />}
               {variant === 'default' && (!readOnly || onRequestAdd) && (
                 <Button
                   type="button"
@@ -494,15 +533,15 @@ export function ArquivosHistoricos({
                   size="sm"
                   className={readOnly || addButtonVariant === 'icon' ? 'h-9 w-9 shrink-0 rounded-full p-0' : 'w-full sm:w-auto'}
                   onClick={handleToggleAddFile}
-                  aria-label={readOnly || addButtonVariant === 'icon' ? 'Inserir arquivo histórico' : undefined}
-                  title={readOnly || addButtonVariant === 'icon' ? 'Inserir arquivo histórico' : undefined}
+                  aria-label={readOnly || addButtonVariant === 'icon' ? 'Inserir fato ou arquivo histórico' : undefined}
+                  title={readOnly || addButtonVariant === 'icon' ? 'Inserir fato ou arquivo histórico' : undefined}
                 >
                   {readOnly || addButtonVariant === 'icon' ? (
                     <Plus className="h-4 w-4" />
                   ) : (
                     <>
                       <Upload className="h-4 w-4" />
-                      Adicionar Arquivo
+                      Adicionar fato ou arquivo
                     </>
                   )}
                 </Button>
@@ -514,8 +553,8 @@ export function ArquivosHistoricos({
           {variant === 'interactive' && !readOnly && (
             <div className="space-y-3">
               <div>
-                <h3 className="text-sm font-semibold text-gray-900">Que tipo de memória deseja adicionar?</h3>
-                <p className="mt-1 text-xs text-gray-500">Escolha uma categoria para abrir os campos do arquivo.</p>
+                <h3 className="text-sm font-semibold text-gray-900">Que tipo de fato, memória ou arquivo deseja adicionar?</h3>
+                <p className="mt-1 text-xs text-gray-500">Escolha uma categoria para registrar uma história em texto e, se quiser, anexar uma imagem ou PDF.</p>
               </div>
               <div className="grid grid-cols-1 gap-2 min-[390px]:grid-cols-2 lg:grid-cols-3">
                 {INTERACTIVE_CATEGORY_OPTIONS.map((option) => {
@@ -564,7 +603,7 @@ export function ArquivosHistoricos({
                 <>
                   <div>
                     <label className="mb-2 block text-sm font-medium text-gray-700">
-                      {variant === 'interactive' ? 'Arraste aqui uma imagem ou PDF' : 'Arquivo *'}
+                      {variant === 'interactive' ? 'Arquivo opcional' : 'Arquivo opcional'}
                     </label>
                     {variant === 'interactive' ? (
                       <label
@@ -576,8 +615,8 @@ export function ArquivosHistoricos({
                         }}
                       >
                         <Upload className="h-6 w-6 text-blue-600" />
-                        <span className="mt-2 text-sm font-medium text-gray-900">Arraste aqui uma imagem ou PDF</span>
-                        <span className="mt-1 text-xs text-gray-500">ou clique para selecionar</span>
+                        <span className="mt-2 text-sm font-medium text-gray-900">Anexe uma imagem ou PDF, se houver</span>
+                        <span className="mt-1 text-xs text-gray-500">Você também pode salvar apenas o texto do fato ou memória.</span>
                         <input
                           type="file"
                           accept="image/jpeg,image/png,image/webp,application/pdf"
@@ -610,7 +649,7 @@ export function ArquivosHistoricos({
                       type="text"
                       value={novoArquivo.titulo}
                       onChange={(e) => setNovoArquivo((prev) => ({ ...prev, titulo: e.target.value }))}
-                      placeholder="Ex: Certidão de casamento"
+                      placeholder="Ex: Chegada ao Brasil, casamento, primeira casa..."
                     />
                   </div>
 
@@ -623,7 +662,7 @@ export function ArquivosHistoricos({
                       onChange={(e) => setNovoArquivo((prev) => ({ ...prev, descricao: e.target.value }))}
                       rows={2}
                       className="flex w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm"
-                      placeholder="Informações adicionais sobre o arquivo..."
+                      placeholder="Conte a história, memória ou contexto deste registro..."
                     />
                   </div>
 
@@ -702,7 +741,7 @@ export function ArquivosHistoricos({
 
           {arquivos.length === 0 ? (
             <p className="py-4 text-center text-sm text-gray-500">
-              Nenhum arquivo histórico adicionado
+              Nenhum fato ou arquivo histórico adicionado
             </p>
           ) : (
             <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
@@ -719,9 +758,14 @@ export function ArquivosHistoricos({
                     <div className="min-w-0 flex-1">
                       {readOnly || editingArquivoId !== arquivo.id ? (
                         <>
-                          <h4 className="break-words text-sm font-medium text-gray-900">
-                            {arquivo.titulo}
-                          </h4>
+                          <div className="flex min-w-0 flex-wrap items-center gap-2">
+                            <h4 className="min-w-0 break-words text-sm font-medium text-gray-900">
+                              {arquivo.titulo}
+                            </h4>
+                            <span className={`inline-flex shrink-0 rounded-full border px-2 py-0.5 text-[10px] font-semibold ${getHistoricalRecordKindClassName(arquivo)}`}>
+                              {getHistoricalRecordKindLabel(arquivo)}
+                            </span>
+                          </div>
                           {arquivo.ano && (
                             <p className="mt-1 break-words text-xs text-gray-500">{arquivo.ano}</p>
                           )}
@@ -753,30 +797,39 @@ export function ArquivosHistoricos({
                                   relacionamentoId={relacionamentoId}
                                   className="h-8 w-8 border-gray-200"
                                 />
-                                <button
-                                  type="button"
-                                  onClick={() => handleViewFile(arquivo)}
-                                  className="inline-flex items-center gap-1 text-xs text-blue-600 hover:underline"
-                                >
-                                  <Eye className="h-3 w-3" />
-                                  Visualizar
-                                </button>
-                                <button
-                                  type="button"
-                                  onClick={() => handleDownloadArquivo(arquivo)}
-                                  className="inline-flex items-center gap-1 text-xs text-gray-700 hover:underline"
-                                >
-                                  <Download className="h-3 w-3" />
-                                  Baixar arquivo
-                                </button>
-                                <button
-                                  type="button"
-                                  onClick={() => openArquivoInNewTab(arquivo)}
-                                  className="inline-flex items-center gap-1 text-xs text-gray-700 hover:underline"
-                                >
-                                  <ExternalLink className="h-3 w-3" />
-                                  Abrir
-                                </button>
+                                {hasArquivoFile(arquivo) ? (
+                                  <>
+                                    <button
+                                      type="button"
+                                      onClick={() => handleViewFile(arquivo)}
+                                      className="inline-flex items-center gap-1 text-xs text-blue-600 hover:underline"
+                                    >
+                                      <Eye className="h-3 w-3" />
+                                      Visualizar
+                                    </button>
+                                    <button
+                                      type="button"
+                                      onClick={() => handleDownloadArquivo(arquivo)}
+                                      className="inline-flex items-center gap-1 text-xs text-gray-700 hover:underline"
+                                    >
+                                      <Download className="h-3 w-3" />
+                                      Baixar arquivo
+                                    </button>
+                                    <button
+                                      type="button"
+                                      onClick={() => openArquivoInNewTab(arquivo)}
+                                      className="inline-flex items-center gap-1 text-xs text-gray-700 hover:underline"
+                                    >
+                                      <ExternalLink className="h-3 w-3" />
+                                      Abrir
+                                    </button>
+                                  </>
+                                ) : (
+                                  <span className="inline-flex items-center gap-1 text-xs text-gray-500">
+                                    <ScrollText className="h-3 w-3" />
+                                    Fato ou memória sem arquivo anexado
+                                  </span>
+                                )}
                               </>
                             ) : (
                               <>
@@ -899,7 +952,7 @@ export function ArquivosHistoricos({
           </DialogHeader>
           {previewFile && (
             <div className="min-h-0 overflow-auto rounded-lg border bg-gray-50 p-3">
-              {previewFile.tipo === 'imagem' || previewFile.url.startsWith('data:image') ? (
+              {previewFile.url && (previewFile.tipo === 'imagem' || previewFile.url.startsWith('data:image')) ? (
                 <img
                   src={previewFile.url}
                   alt={previewFile.titulo || 'Arquivo histórico'}

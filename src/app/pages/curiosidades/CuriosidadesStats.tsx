@@ -1,7 +1,7 @@
-﻿import { CalendarDays, Flower2, HeartPulse, PawPrint, Users } from 'lucide-react';
+import { CalendarDays, Flower2, MapPin, PawPrint, Users } from 'lucide-react';
 import {
+  countDistinctCurrentCities,
   isDeceased,
-  isLivingPerson,
   isPet,
   type CuriosidadesDataProps,
 } from './curiosidadesUtils';
@@ -14,33 +14,33 @@ export function CuriosidadesStats({
 }: CuriosidadesDataProps) {
   const totalHumans = pessoas.filter((pessoa) => !isPet(pessoa)).length;
   const totalPets = pessoas.filter(isPet).length;
-  const totalLiving = pessoas.filter(isLivingPerson).length;
+  const totalCurrentCities = countDistinctCurrentCities(pessoas);
   const totalDeceased = pessoas.filter((pessoa) => !isPet(pessoa) && isDeceased(pessoa)).length;
   const totalWeddings = relacionamentos.filter((relacionamento) => Boolean(relacionamento.data_casamento)).length;
 
   const stats = [
     {
-      label: 'Pessoas cadastradas',
+      label: 'Pessoas',
       value: totalHumans,
-      description: 'Familiares humanos registrados na árvore.',
+      description: 'Familiares cadastrados no site',
       icon: Users,
       cardClassName: 'border-blue-100 bg-blue-50',
       iconClassName: 'bg-white text-blue-700',
       valueClassName: 'text-blue-900',
     },
     {
-      label: 'Pessoas vivas',
-      value: totalLiving,
-      description: 'Perfis sem registro de falecimento.',
-      icon: HeartPulse,
+      label: 'Localização',
+      value: totalCurrentCities,
+      description: 'Cidades onde vivem',
+      icon: MapPin,
       cardClassName: 'border-emerald-100 bg-emerald-50',
       iconClassName: 'bg-white text-emerald-700',
       valueClassName: 'text-emerald-900',
     },
     {
-      label: 'Memórias preservadas',
+      label: 'In memoriam',
       value: totalDeceased,
-      description: 'Familiares falecidos mantidos no acervo.',
+      description: 'Familiares falecidos na árvore genealógica',
       icon: Flower2,
       cardClassName: 'border-violet-100 bg-violet-50',
       iconClassName: 'bg-white text-violet-700',
@@ -56,9 +56,9 @@ export function CuriosidadesStats({
       valueClassName: 'text-orange-900',
     },
     {
-      label: 'Datas de casamento',
+      label: 'Casais',
       value: totalWeddings,
-      description: 'Vínculos com data de união registrada.',
+      description: 'Relações de união ativas',
       icon: CalendarDays,
       cardClassName: 'border-rose-100 bg-rose-50',
       iconClassName: 'bg-white text-rose-700',

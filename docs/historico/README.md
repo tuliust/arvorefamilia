@@ -1,9 +1,9 @@
 # Histórico consolidado
 
-> Última revisão: 2026-06-20  
+> Última revisão: 2026-06-22  
 > Local recomendado: `docs/historico/README.md`  
 > Tipo: índice e consolidação histórica.  
-> Status: atualizado com a baseline padrão dos mapas familiares mobile.
+> Status: atualizado para deixar explícito que o histórico não prevalece sobre documentação canônica, código atual e migrations oficiais.
 
 ---
 
@@ -29,12 +29,17 @@ docs/arquitetura/
 docs/funcionalidades/
 docs/operacao/
 supabase/migrations/
+src/
 ```
 
 Regra:
 
 ```txt
-Se houver divergência entre histórico e documentação canônica atual, prevalece a documentação canônica atual.
+Se houver divergência entre histórico e documentação canônica atual, prevalecem, nesta ordem:
+1. código atual;
+2. migrations oficiais em supabase/migrations/;
+3. documentos canônicos vigentes;
+4. documentos históricos.
 ```
 
 Para banco de dados:
@@ -123,13 +128,6 @@ Status atual:
 - mobile segmentado permanece útil em `/mapa-familiar` mobile;
 - `/minha-arvore/editar` continua vigente como edição.
 
-Documentos históricos:
-
-```txt
-docs/historico/MINHA_ARVORE_VIEW.md
-docs/historico/ROTAS_REMOVIDAS.md
-```
-
 ### 4.2 Antiga Genealogia
 
 A antiga `/genealogia` organizava pessoas por gerações em ReactFlow.
@@ -140,13 +138,6 @@ Status atual:
 - linguagem genealógica permanece como conceito visual da horizontal atual;
 - horizontal atual é `/mapa-familiar-horizontal`;
 - título atual: `Mapa Genealógico de {primeiroNome}`.
-
-Documentos históricos:
-
-```txt
-docs/historico/GENEALOGIA_VIEW.md
-docs/historico/ROTAS_REMOVIDAS.md
-```
 
 ### 4.3 Antiga Visão Completa
 
@@ -176,18 +167,13 @@ Regras preservadas nos docs atuais:
 - pet sem foto usa `PawPrint`;
 - não há distinção visual obrigatória por gênero para avatar sem foto.
 
-Documento histórico:
-
-```txt
-docs/historico/MINHA_ARVORE_FILTROS_E_PETS.md
-```
-
 Documentos atuais:
 
 ```txt
 docs/funcionalidades/MAPA_FAMILIAR_VIEW.md
 docs/funcionalidades/MAPA_FAMILIAR_MOBILE.md
 docs/funcionalidades/ARVORE_LEGENDAS_CONECTORES_PAINEL.md
+docs/funcionalidades/MEUS_VINCULOS.md
 docs/GUIA_UX_LAYOUT.md
 docs/GUIA_COMPONENTES.md
 docs/REGRAS_DE_NAO_REGRESSAO.md
@@ -207,9 +193,8 @@ docs/historico/ROLLBACK_E_AJUSTES_POS_RESTAURACAO_2026_06_20.md
 Uso:
 
 - rastrear a refatoração ampla da árvore mobile que foi tentada e abandonada como contrato vigente;
-- diferenciar `rollback/mobile-9-telas-d7385dc-v2` da base estável real;
-- registrar a restauração da `main` a partir de `52ee451`;
-- documentar ajustes pós-restauração em Zoom, conectores de `ancestors` e conectores de `descendants`.
+- diferenciar branches de rollback da base estável real;
+- registrar a restauração e os ajustes pós-restauração.
 
 ### 6.2 Complemento de navegação mobile
 
@@ -232,10 +217,9 @@ docs/historico/BASELINE_MAPA_FAMILIAR_MOBILE_2026_06_20_1631.md
 Uso:
 
 - preservar o estado imediatamente anterior aos ajustes consolidados;
-- registrar o commit de referência `a44fc4b2b63eaf5bc15fff956b1eca44ea88c8ad`;
 - permitir comparação visual ou rollback controlado.
 
-### 6.4 Ajuste consolidado vigente
+### 6.4 Ajuste consolidado vigente em 2026-06-20
 
 ```txt
 docs/historico/AJUSTES_MAPA_FAMILIAR_MOBILE_2026_06_20_STABLE_FIX.md
@@ -243,12 +227,12 @@ docs/historico/AJUSTES_MAPA_FAMILIAR_MOBILE_2026_06_20_STABLE_FIX.md
 
 Uso:
 
-- registrar a inclusão de vínculos diretos de tios/tias no modelo mobile;
+- registrar inclusão de vínculos diretos de tios/tias no modelo mobile;
 - registrar `mobileFamilyMapStableMobileFix.ts`;
-- registrar a redução de scripts concorrentes em `index.html`;
+- registrar redução de scripts concorrentes em `index.html`;
 - registrar checklist de QA pós-deploy.
 
-### 6.5 Baseline padrão final dos mapas mobile
+### 6.5 Baseline padrão final de 2026-06-20
 
 ```txt
 docs/historico/BASELINE_MAPAS_FAMILIARES_MOBILE_PADRAO_2026_06_20.md
@@ -262,13 +246,47 @@ baseline/mapas-mobile-padrao-2026-06-20
 
 Uso:
 
-- congelar a estrutura atual de `/mapa-familiar` e `/mapa-familiar-horizontal` como padrão de referência;
+- congelar a estrutura de `/mapa-familiar` e `/mapa-familiar-horizontal` como referência daquele momento;
 - registrar `core` sem descendentes visuais e `descendants` como tela dos grupos descendentes;
 - registrar Zoom horizontal por gerações;
-- registrar matriz de swipe e conectores atuais;
-- servir como base de comparação para regressões.
+- registrar matriz de swipe e conectores.
 
-### 6.6 Documentos canônicos atualizados
+Atenção:
+
+```txt
+Esse documento é histórico e não contém sozinho todos os scripts adicionados na rodada de 2026-06-21.
+Quando houver divergência, prevalecem código atual, MAPA_FAMILIAR_MOBILE.md, MAPA_FAMILIAR_MOBILE_ARQUITETURA.md e REGRAS_DE_NAO_REGRESSAO.md.
+```
+
+---
+
+## 7. Histórico de ajustes mobile em 2026-06-21
+
+Documento:
+
+```txt
+docs/historico/AJUSTES_MAPA_FAMILIAR_MOBILE_2026_06_21.md
+```
+
+Uso:
+
+- registrar a rodada de correções visuais e funcionais em mobile;
+- preservar a sequência de scripts adicionados;
+- documentar Zoom 3x3 visual, mapa completo em mosaico, filtros de cônjuges, cônjuges estendidos e stability lock;
+- servir como rastreabilidade, não como contrato canônico.
+
+Scripts citados nessa rodada incluem:
+
+```txt
+mobileFamilyMapZoomOverviewVisualFix.ts
+mobileFamilyMapDescendantsStabilityLock.ts
+mobileFamilyMapExtendedSpouseCards.ts
+mobileFamilyMapFilterButtonsBehaviorFix.ts
+mobileFamilyMapFullOverview.ts
+mobileFamilyMapFullOverviewMosaicFix.ts
+```
+
+Documentos canônicos atualizados devem prevalecer:
 
 ```txt
 docs/funcionalidades/MAPA_FAMILIAR_MOBILE.md
@@ -276,13 +294,12 @@ docs/funcionalidades/MAPA_FAMILIAR_MOBILE_AUDITORIA_CODIGO_ATUAL.md
 docs/arquitetura/MAPA_FAMILIAR_MOBILE_ARQUITETURA.md
 docs/operacao/QA_MAPAS_MOBILE_POS_DEPLOY.md
 docs/operacao/NAO_REGRESSAO_MAPAS_MOBILE.md
+docs/REGRAS_DE_NAO_REGRESSAO.md
 ```
-
-Esses documentos prevalecem sobre histórico em caso de divergência.
 
 ---
 
-## 7. Histórico de exportação
+## 8. Histórico de exportação
 
 A frente de exportação consolidou:
 
@@ -301,3 +318,40 @@ Documento atual:
 ```txt
 docs/funcionalidades/EXPORTACAO_ARVORE.md
 ```
+
+---
+
+## 9. Histórico de onboarding e IA
+
+Históricos de onboarding, Mini Bio, Curiosidades e IA devem ser tratados com cuidado porque o fluxo mudou para etapas protegidas:
+
+```txt
+/meus-dados
+/meus-vinculos
+/arquivos-historicos
+/preferencias
+/revisao-dados
+```
+
+Regras atuais:
+
+- `/meus-dados` concentra dados pessoais, Mini Bio e Curiosidades com IA;
+- `/meus-vinculos` concentra vínculos, pets e cônjuges;
+- `/arquivos-historicos` ainda deve ser validado contra a frente de fatos sem arquivo antes de ser documentado como implementado;
+- `/revisao-dados` deve ser conferido contra código atual antes de afirmar separação de Pets;
+- Home/Curiosidades/IA não deve expor dados privados ou inventar fatos.
+
+---
+
+## 10. Como usar histórico em novas frentes
+
+Antes de usar um arquivo histórico como base:
+
+1. verificar se há documento canônico mais recente;
+2. comparar com o código atual;
+3. verificar se o arquivo histórico cita scripts não carregados;
+4. verificar se a rota ainda existe;
+5. verificar se a frente depende de migration já aplicada;
+6. registrar no PR/commit qual documento prevalece.
+
+Não copiar diretamente texto histórico para documentação vigente sem revisão.

@@ -1,18 +1,14 @@
-﻿import { BriefcaseBusiness, CalendarDays, Lightbulb, MapPin, Signature } from 'lucide-react';
+import { CalendarDays, Heart, Lightbulb, MapPin, Signature } from 'lucide-react';
 import {
   curiositySectionCardClassName,
   curiosityStatusClassName,
   getBirthCityRanking,
   getMostRepeatedFirstNames,
-  getPersonDisplayName,
-  getProfessionRanking,
-  getTopBirthMonth,
-  parseFamilyDate,
+  getProfileStyleRanking,
+  getTopBirthMonths,
   type CuriosidadesDataProps,
   type TopCount,
 } from './curiosidadesUtils';
-
-const BIRTHDAY_MONTH_PEOPLE_LIMIT = 5;
 
 type RankingCard = {
   title: string;
@@ -20,7 +16,6 @@ type RankingCard = {
   description: string;
   items: TopCount[];
   icon: typeof Lightbulb;
-  people?: string[];
 };
 
 function formatRankingList(items: TopCount[]) {
@@ -29,27 +24,19 @@ function formatRankingList(items: TopCount[]) {
 
 export function CuriosidadesRankings({
   pessoas,
+  profileBadgesByPersonId,
   loading,
   error,
 }: CuriosidadesDataProps) {
   const names = getMostRepeatedFirstNames(pessoas, 5);
-  const professions = getProfessionRanking(pessoas, 5);
+  const profileStyles = getProfileStyleRanking(pessoas, profileBadgesByPersonId, 5);
   const cities = getBirthCityRanking(pessoas, 5);
-  const topBirthMonth = getTopBirthMonth(pessoas);
-  const topBirthMonthPeople = topBirthMonth
-    ? pessoas
-        .filter((pessoa) => {
-          const birthDate = parseFamilyDate(pessoa.data_nascimento);
-          return Boolean(birthDate && birthDate.getMonth() === topBirthMonth.monthIndex);
-        })
-        .map(getPersonDisplayName)
-        .sort((a, b) => a.localeCompare(b, 'pt-BR', { sensitivity: 'base' }))
-        .slice(0, BIRTHDAY_MONTH_PEOPLE_LIMIT)
-    : [];
+  const birthMonths = getTopBirthMonths(pessoas, 5);
+  const topBirthMonth = birthMonths[0];
 
   const cards: RankingCard[] = [
     {
-      title: 'Nome mais repetido',
+      title: 'Nomes mais comuns',
       headline: names[0]
         ? `O nome mais repetido na família é ${names[0].label}.`
         : 'Ainda não há nomes suficientes para calcular este ranking.',
@@ -67,23 +54,22 @@ export function CuriosidadesRankings({
       description: topBirthMonth
         ? `${topBirthMonth.count} ${topBirthMonth.count === 1 ? 'pessoa faz' : 'pessoas fazem'} aniversário nesse mês.`
         : 'Complete datas de nascimento para gerar este indicador.',
-      items: topBirthMonth ? [{ label: topBirthMonth.label, count: topBirthMonth.count }] : [],
+      items: birthMonths,
       icon: CalendarDays,
-      people: topBirthMonthPeople,
     },
     {
-      title: 'Profissão mais repetida',
-      headline: professions[0]
-        ? `A profissão mais repetida é ${professions[0].label}.`
-        : 'Ainda não há profissões suficientes para calcular este ranking.',
-      description: professions[0]
-        ? `${professions[0].count} ${professions[0].count === 1 ? 'pessoa tem' : 'pessoas têm'} essa profissão cadastrada.`
-        : 'Preencha profissões nos perfis para revelar padrões entre gerações.',
-      items: professions,
-      icon: BriefcaseBusiness,
+      title: 'Perfil dos familiares',
+      headline: profileStyles[0]
+        ? `O estilo mais comum é ${profileStyles[0].label}.`
+        : 'Ainda não há estilos suficientes para calcular este ranking.',
+      description: profileStyles[0]
+        ? `${profileStyles[0].count} ${profileStyles[0].count === 1 ? 'pessoa selecionou' : 'pessoas selecionaram'} esse estilo no perfil.`
+        : 'Preencha “Qual é o seu estilo?” em /meus-dados para revelar perfis predominantes.',
+      items: profileStyles,
+      icon: Heart,
     },
     {
-      title: 'Cidade de nascimento mais comum',
+      title: 'Principais cidades de nascimento',
       headline: cities[0]
         ? `${cities[0].label} aparece como cidade de nascimento principal.`
         : 'Ainda não há cidades suficientes para comparar os locais de nascimento.',
@@ -136,23 +122,7 @@ export function CuriosidadesRankings({
                 {loading ? 'Aguarde enquanto os dados são organizados.' : card.description}
               </p>
 
-              {!loading && card.people && card.people.length > 0 && (
-                <div className="mt-4 rounded-xl border border-blue-100 bg-blue-50/70 px-3 py-2">
-                  <p className="text-xs font-bold uppercase tracking-wide text-blue-700">
-                    Cerca de {card.people.length} aniversariante{card.people.length === 1 ? '' : 's'} do mês
-                  </p>
-                  <ul className="mt-2 space-y-1 text-sm leading-5 text-blue-950">
-                    {card.people.map((personName) => (
-                      <li key={personName} className="flex gap-2">
-                        <span aria-hidden="true">•</span>
-                        <span>{personName}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-
-              {!loading && ranking.length > 1 && (
+              {!loading && ranking.length > 0 && (
                 <ol className="mt-4 space-y-2">
                   {ranking.map((item, index) => (
                     <li key={`${card.title}-${item.label}`} className="flex items-center justify-between gap-3 rounded-lg bg-gray-50 px-3 py-2 text-sm">

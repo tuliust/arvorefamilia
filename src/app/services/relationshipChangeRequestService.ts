@@ -27,6 +27,8 @@ export type RelationshipChangeRequestDetails = {
   ativo?: boolean | null;
   observacoes?: string | null;
   inverseTipoForFilho?: 'pai' | 'mae';
+  relationshipGroup?: 'filhos' | 'pets';
+  otherParentId?: string | null;
 };
 
 export type CreateRelationshipChangeRequestInput = {

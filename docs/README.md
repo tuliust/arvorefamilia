@@ -1,338 +1,172 @@
-# Documentação — Árvore Família
+# Documentação do produto — Sua Família / arvorefamilia
 
-> Última revisão: 2026-06-21  
-> Local canônico: `docs/README.md`  
-> Projeto: `tuliust/arvorefamilia`  
-> Status: índice canônico atualizado para mapas familiares mobile, Zoom, filtros de cônjuges e mapa completo em tela única.
+> Última revisão: 2026-06-23  
+> Estado documentado: branch `feature/questionario-ia-vinculos-pets`, após os ciclos 6A–7D e ajustes pós-ciclo 7D.  
+> Status: documentação canônica consolidada pós-onboarding, pós-fatos históricos, pós-ajustes de mapa familiar, pós-revisão de `/curiosidades` e pós-atualizações de UX desktop.
 
-Este diretório concentra a documentação técnica, funcional, operacional e histórica do projeto **Árvore Família**.
+Este diretório concentra a documentação funcional, técnica, operacional, de UX, QA e histórico de decisões do produto.
 
-Use este arquivo como ponto de entrada. A documentação canônica deve registrar comportamento implementado, contratos vigentes ou pendências explicitamente classificadas.
+## Estado consolidado
 
----
+### Ciclo 2026-06-22
 
-## 1. Estado atual consolidado
+| Frente | Commit | Status |
+|---|---:|---|
+| Prompt 6A — mapa familiar, tour e painel | `5e64d74` | Implementado e pushado |
+| Prompt 7A — questionário, IA e privacidade | `4a1a995` | Implementado e pushado |
+| Prompt 7B — vínculos, pets, cônjuges e badges | `c9a8f27` | Implementado e pushado |
+| Prompt 7C — fatos/arquivos históricos na timeline | `6185b6d` | Implementado e pushado |
+| Prompt 7D — UX final do onboarding e IA 500 caracteres | `de4f60f` | Implementado e pushado |
 
-A baseline funcional atual registra:
+### Ajustes pós-ciclo 7D — 2026-06-23
 
-- `/entrar` funciona como home pública, login, cadastro, primeiro acesso e aceite legal;
-- `/` redireciona para `/mapa-familiar`, preservando `location.search`;
-- as views oficiais da árvore são:
-  - **Árvore Familiar** — `/mapa-familiar`;
-  - **Mapa Genealógico** — `/mapa-familiar-horizontal`;
-- as views antigas foram removidas do roteamento ativo:
-  - `/minha-arvore`;
-  - `/genealogia`;
-  - `/visao-completa`;
-- o histórico preventivo dessas rotas fica em `docs/historico/ROTAS_REMOVIDAS.md`;
-- `/minha-arvore/editar` continua vigente como rota protegida de edição completa do membro;
-- o cadastro inicial do membro usa fluxo protegido por `MemberRoute`:
-  1. `/meus-dados`;
-  2. `/meus-vinculos`;
-  3. `/arquivos-historicos`;
-  4. `/preferencias`, apenas para pessoa viva;
-  5. `/revisao-dados`;
-- pessoa falecida pula `/preferencias`, tem notificações desativadas e permissões de visualização ativadas por padrão;
-- `/meus-dados` possui assistente de IA para Mini Bio e Curiosidades, com modo padrão e modo nostálgico/memorial;
-- `/meus-vinculos` funciona como revisão guiada de vínculos familiares, com busca de pessoa existente, criação manual, estados de análise e solicitação de controle de perfil;
-- Arquivos Históricos pertencem à Etapa 3 em `/arquivos-historicos`;
-- Preferências de notificação e Permissões de exibição pertencem à Etapa 4 em `/preferencias`, somente para pessoa viva;
-- `/revisao-dados` é revisão final em layout de perfil, com edição inline e finalização;
-- `MemberOnboardingSteps` é o indicador visual reutilizável do fluxo e pode ocultar Preferências;
-- o modal de vínculos filtra pessoas automaticamente enquanto o usuário digita e não usa botão **Buscar**;
-- a revisão final usa badges por gênero/status: `Vivo`, `Viva`, `Falecido`, `Falecida` e `Em análise`;
-- `TreeViewMode` possui apenas:
-  - `mapa-familiar`;
-  - `mapa-familiar-horizontal`;
-- `/mapa-familiar` usa `DesktopFamilyMapView` no desktop/tablet e `MobileFamilyTreeView` no mobile;
-- `/mapa-familiar-horizontal` usa `DesktopFamilyHorizontalMapView` no desktop/tablet e `MobileFamilyHorizontalMapView` no mobile;
-- `/mapa-familiar` mobile usa grade 3x3 com telas de ancestrais, tios, núcleo, primos e descendentes;
-- o Zoom mobile de `/mapa-familiar` possui overview 3x3 e botão **Exibir mapa completo**;
-- o mapa completo mobile abre mosaico único com conectores, pinça, arraste e reenquadramento;
-- filtros mobile separam **Exibir cônjuges de tios, primos etc** de **Apenas meus familiares**;
-- cônjuges estendidos em grupos mobile suportados podem ser exibidos/ocultados por toggle e usam cor tonal diferente;
-- tios paternos/maternos mobile possuem conectores laterais para pai/mãe e conectores verticais para primos;
-- o painel desktop não possui mais a barra `Filtros | Legendas | Ações`;
-- o modal mobile é reduzido e não exibe Restaurar visualização ou Exportar;
-- a horizontal mobile opera com uma geração por tela, botões `Ger X`, swipe lateral e scroll vertical interno;
-- exportação cobre Área, Imagem/PNG, PDF e Imprimir nas views oficiais;
-- a referência visual de paletas é o desktop, com adaptação mobile por tokens/overrides escopados;
-- as paletas oficiais são `white`, `visual`, `orange` e `brown`;
-- cards mobile não devem exibir visualmente `Nascimento não informado` ou `Falecimento não informado`;
-- a vertical suporta núcleos conjugais adicionais quando há dados reais;
-- `/calendario-familiar` possui filtros mobile compactos por categoria;
-- `/duvidas` é página pública de FAQ/Ajuda, com conteúdo persistido no Supabase;
-- `/admin/duvidas` é área protegida de gestão administrativa de categorias, perguntas e respostas do FAQ;
-- `supabase/migrations/` é a fonte da verdade do schema;
-- SQLs soltos ou antigos ficam classificados em `docs/historico/SQLS_LEGADOS.md` quando não forem migrations oficiais;
-- ReactFlow/Dagre permanecem como legado ativo/dependência técnica e não devem ser removidos sem frente própria.
+| Frente | Commits | Status |
+|---|---:|---|
+| Revisão ampla de `/curiosidades` | `bf8f57a`, `ce80a00`, `62a6254` | Implementado e pushado |
+| Integração de badges do `/meus-dados` em `/curiosidades` | `ce80a00`, `62a6254` | Implementado e pushado |
+| Painel desktop, dropdowns, notificações, fórum e favoritos | `e70f8a7`, `dbcc09c` | Implementado e pushado |
+| Layout desktop do canvas da árvore | `5b69baf`, `3d228fa` | Implementado e pushado |
+| Documentação pós-ciclo 7D | `9f81d61` | Implementado e pushado |
 
----
+## Contratos implementados
 
-## 2. Como usar a documentação
+### Onboarding do membro
 
-| Necessidade | Documento principal |
+Fluxo principal:
+
+```text
+/meus-dados
+  → /meus-vinculos
+  → /arquivos-historicos
+  → /preferencias
+  → /revisao-dados
+  → /mapa-familiar
+```
+
+Regra especial:
+
+- pessoa marcada como falecida em `/meus-dados` pula `/preferencias` e segue para `/revisao-dados`;
+- páginas de onboarding não exibem botões de ação no header, apenas ícone, título e subtítulo à esquerda.
+
+### Mini Bio e Curiosidades com IA
+
+- O questionário em `/meus-dados` possui 8 etapas.
+- A etapa 1 pergunta **“Qual é o seu estilo?”**.
+- `Nostálgico` é apenas um tom textual, não define sozinho que a pessoa é falecida.
+- O modo memorial depende do toggle **“Você está escrevendo o perfil de uma pessoa falecida?”**.
+- Qualquer tom pode gerar texto no passado e em terceira pessoa quando o toggle memorial estiver ativo.
+- Mini Bio e Curiosidades aceitam até **500 caracteres** cada.
+- A IA deve buscar aproximadamente **400–450 caracteres** por campo.
+- Os textos não precisam começar com “Sou fulano...” ou “[Nome] foi...”, pois o nome já aparece no perfil.
+- A IA pode considerar, quando disponíveis, questionário, dados básicos, profissão, idade aproximada, locais, vínculos e fatos históricos, sem expor telefone, endereço, WhatsApp, redes sociais, URLs, storage paths, tokens ou conteúdo sensível.
+
+### `/meus-vinculos`
+
+- Pets são grupo próprio e não entram como Filhos.
+- Criação de pet usa `humano_ou_pet: 'Pet'`.
+- Pessoa humana não entra em Pets.
+- Badge `Cadastrado` depende de vínculo real em `user_person_links`.
+- Pessoa sem vínculo de usuário aparece como `Pré-cadastrado`.
+- Cônjuges têm no máximo um relacionamento ativo no estado local.
+- Alterações seguem como solicitações pendentes em `relationship_change_requests`, não como gravação definitiva direta.
+- O bloco “Sobre mim” fica fora do box de edição de textos.
+- O bloco “Familiares de X” fica fora do container de vínculos.
+- Botões inferiores de “Adicionar” em estados vazios foram removidos; permanece apenas o botão superior do grupo.
+- O texto de Mini Bio/Curiosidades é salvo ao avançar o fluxo; o botão “Salvar textos” foi removido.
+
+### `/arquivos-historicos`
+
+- A etapa representa **Fatos e Arquivos Históricos**.
+- Upload é opcional.
+- Registros podem ser:
+  - fato sem arquivo;
+  - imagem;
+  - PDF.
+- `arquivos_historicos` é a fonte única de fatos/arquivos ligados a uma pessoa ou relacionamento.
+- A migration `20260622170000_allow_historical_facts_without_file.sql` permite `url`, `storage_bucket`, `storage_path` e `mime_type` nulos.
+- Registros aparecem na timeline do perfil da pessoa.
+- Fato sem arquivo aparece como `Fato`; registro com anexo aparece como `Arquivo`.
+
+### `/curiosidades`
+
+- Cards principais revisados:
+  - `Pessoas`;
+  - `Localização`;
+  - `In memoriam`;
+  - `Pets`;
+  - `Casais`.
+- Rankings revisados:
+  - `Nomes mais comuns`;
+  - `Mês com mais aniversários`, agora em top 5 meses;
+  - `Perfil dos familiares`, baseado em badges do questionário quando disponíveis;
+  - `Principais cidades de nascimento`.
+- Gráficos agora incluem `Faixa Etária` em vez de geração sociológica.
+- Bodas consideram fim por falecimento quando um dos cônjuges morreu.
+- Comparações de interesses usam badges/características do `/meus-dados` quando disponíveis.
+- Dropdowns de interesses, astrologia e conexão iniciam em estado neutro.
+- Quiz familiar foi revisado para pessoa viva mais velha, pessoa mais jovem, cidade de nascimento e profissão.
+- `/curiosidades` consome `getProfileQuestionnaireSelectedBadges` e monta `profileBadgesByPersonId`.
+
+### `/mapa-familiar`
+
+- Dropdown do painel desktop mantém label fechado **“Família de X”**.
+- Dropdown aberto apresenta **“Visualize a árvore como...”** e lista pessoas com primeiro e segundo nome.
+- Card `Cadastrados` usa `user_person_links` como referência.
+- O tour separa IA/Calendário de Favoritos.
+- Layout compacto é usado para árvore pequena e simples no `DesktopFamilyMapView`.
+- Cards `Núcleo`, `Ascendentes` e `Colaterais` foram compactados no desktop.
+- O botão de cônjuges alterna entre:
+  - **Exibir cônjuges de tios, primos etc**;
+  - **Ocultar cônjuges de tios, primos etc**.
+- No canvas desktop, o grupo de irmãos permite até 2 cards por linha.
+- Cônjuge e pets foram deslocados para a direita no layout desktop.
+- Mobile foi preservado.
+- Scripts mobile e `index.html` permanecem protegidos contra alterações indiretas.
+
+### Header, notificações, fórum e favoritos
+
+- O menu do avatar inclui **Dúvidas?** à esquerda e **Sair** à direita.
+- O dropdown de notificações ganhou largura responsiva e rodapé flexível para evitar corte de botões.
+- A barra de pesquisa de `/forum` foi expandida no desktop.
+- A barra de pesquisa/filtros de `/meus-favoritos` foi expandida no desktop.
+
+## Índice dos documentos
+
+| Tema | Arquivo |
 |---|---|
-| Entender o estado funcional vigente | `BASELINE_PRODUTO_ATUAL.md` |
-| Ver mapa técnico de arquivos, services, CSS e legado | `INVENTARIO_TECNICO.md` |
-| Ver o que está implementado por frente | `GUIA_IMPLEMENTACOES.md` |
-| Entender responsabilidades de componentes | `GUIA_COMPONENTES.md` |
-| Revisar UX, layout, responsividade e paletas | `GUIA_UX_LAYOUT.md` |
-| Entender arquitetura dos mapas familiares mobile | `docs/arquitetura/MAPA_FAMILIAR_MOBILE_ARQUITETURA.md` |
-| Validar manualmente rotas, árvore, mobile, exportação e deploy | `QA_MANUAL.md` |
-| Validar a rodada mobile de 2026-06-21 | `docs/operacao/QA_MAPAS_MOBILE_2026_06_21.md` |
-| Conferir regras que não podem regredir | `REGRAS_DE_NAO_REGRESSAO.md` |
-| Ver pendências, riscos e decisões futuras | `PLANO_PROXIMOS_PASSOS.md` |
-| Ver decisões estruturais | `DECISOES_ARQUITETURAIS.md` |
-| Investigar erro por sintoma | `GUIA_CORRECAO_ERROS.md` |
-| Entender rotas antigas removidas | `docs/historico/ROTAS_REMOVIDAS.md` |
-| Classificar SQL solto ou documento antigo de banco | `docs/historico/SQLS_LEGADOS.md` |
-| Resgatar a rodada mobile de 2026-06-21 | `docs/historico/AJUSTES_MAPA_FAMILIAR_MOBILE_2026_06_21.md` |
+| Estado atual do produto | `BASELINE_PRODUTO_ATUAL.md` |
+| Inventário técnico | `INVENTARIO_TECNICO.md` |
+| Próximos passos e pendências reais | `PLANO_PROXIMOS_PASSOS.md` |
+| Componentes | `GUIA_COMPONENTES.md` |
+| Implementações | `GUIA_IMPLEMENTACOES.md` |
+| UX e layout | `GUIA_UX_LAYOUT.md` |
+| QA manual | `QA_MANUAL.md` |
+| Correção de erros | `GUIA_CORRECAO_ERROS.md` |
+| Decisões arquiteturais | `DECISOES_ARQUITETURAIS.md` |
+| Regras de não regressão | `REGRAS_DE_NAO_REGRESSAO.md` |
+| Arquitetura | `arquitetura/ARCHITECTURE.md` |
+| Rotas e guards | `arquitetura/ROTAS_E_GUARDS.md` |
+| Mapa familiar | `funcionalidades/MAPA_FAMILIAR_VIEW.md` |
+| Meus vínculos | `funcionalidades/MEUS_VINCULOS.md` |
+| Mini Bio/Curiosidades IA | `funcionalidades/MINI_BIO_CURIOSIDADES_IA.md` |
+| Curiosidades e IA | `funcionalidades/CURIOSIDADES_E_IA.md` |
+| Painel/legendas/conectores da árvore | `funcionalidades/ARVORE_LEGENDAS_CONECTORES_PAINEL.md` |
+| Fatos e Arquivos Históricos | `funcionalidades/ARQUIVOS_HISTORICOS.md` |
+| Revisão de dados | `funcionalidades/REVISAO_DADOS.md` |
+| Migrations Supabase | `operacao/MIGRATIONS_SUPABASE.md` |
+| Storage | `operacao/STORAGE_MAINTENANCE.md` |
+| Deploy | `operacao/DEPLOYMENT.md` |
+| Levantamento 2026-06-22 | `historico/LEVANTAMENTO_AJUSTES_CHAT_20260622.md` |
+| Levantamento 2026-06-23 | `historico/LEVANTAMENTO_AJUSTES_CHAT_20260623.md` |
 
-Regra:
+## Pendências abertas
 
-```txt
-Contrato vigente fica nos guias canônicos.
-QA manual fica em QA_MANUAL.md ou docs/operacao/.
-Pendência fica em PLANO_PROXIMOS_PASSOS.md.
-Operação fica em docs/operacao/.
-Histórico fica em docs/historico/.
-supabase/migrations/ é a fonte da verdade do schema.
-```
+As frentes 6A, 7A, 7B, 7C, 7D e os ajustes pós-ciclo 7D estão documentados como concluídos. As pendências reais restantes são:
 
----
-
-## 3. Guias oficiais na raiz de `docs/`
-
-| Arquivo | Uso | Status |
-|---|---|---|
-| `README.md` | Índice canônico da documentação. | Atualizado. |
-| `BASELINE_PRODUTO_ATUAL.md` | Estado funcional observado na `main`. | Manter sincronizado. |
-| `INVENTARIO_TECNICO.md` | Rotas, componentes, services, tipos, CSS, testes e documentação. | Manter sincronizado. |
-| `GUIA_IMPLEMENTACOES.md` | Inventário consolidado do que está implementado. | Manter sincronizado. |
-| `GUIA_COMPONENTES.md` | Componentes, responsabilidades, padrões e anti-regressões. | Manter sincronizado. |
-| `GUIA_UX_LAYOUT.md` | UX, layout, responsividade, árvore, menus, painéis, paletas, onboarding e microcopy. | Manter sincronizado. |
-| `QA_MANUAL.md` | Guia central de QA manual, onboarding e pós-deploy. | Manter sincronizado. |
-| `REGRAS_DE_NAO_REGRESSAO.md` | Regras e contratos mínimos para mudanças futuras. | Manter sincronizado. |
-| `PLANO_PROXIMOS_PASSOS.md` | Pendências reais, QA aberto, riscos e decisões futuras. | Manter sincronizado. |
-| `DECISOES_ARQUITETURAIS.md` | Decisões estruturais e justificativas. | Preservar. |
-| `GUIA_CORRECAO_ERROS.md` | Troubleshooting por sintoma, causa provável e correção. | Preservar. |
-| `ATTRIBUTIONS.md` | Licenças, atribuições e cuidados com assets externos. | Preservar. |
-| `ATUALIZACAO_DOCUMENTAL_2026_06_21.md` | Manifesto da consolidação documental da rodada mobile. | Histórico/apoio. |
-
----
-
-## 4. Arquitetura
-
-Pasta:
-
-```txt
-docs/arquitetura/
-```
-
-| Arquivo | Uso |
-|---|---|
-| `ARCHITECTURE.md` | Visão sintética da arquitetura atual, stack, camadas, shell da Home, duas views da árvore, exportação client-side, paletas e integrações. |
-| `ROTAS_E_GUARDS.md` | Rotas públicas, rotas de árvore, rotas de membro, onboarding em 5 etapas, rotas administrativas, guards, redirecionamentos e navegação. |
-| `ESTRUTURA_USUARIOS_BANCO_DADOS.md` | Modelo de usuários, pessoas, vínculos, permissões, favoritos, fórum, notificações, relacionamentos e objetos legados. |
-| `MAPA_FAMILIAR_MOBILE_ARQUITETURA.md` | Arquitetura técnica dos mapas familiares mobile, scripts auxiliares, Zoom, filtros de cônjuges e mapa completo. |
-
----
-
-## 5. Funcionalidades
-
-Pasta:
-
-```txt
-docs/funcionalidades/
-```
-
-| Arquivo | Escopo | Status |
-|---|---|---|
-| `MAPA_FAMILIAR_VIEW.md` | Documento canônico de `/mapa-familiar` e `/mapa-familiar-horizontal`. | Referência principal. |
-| `ARVORE_LEGENDAS_CONECTORES_PAINEL.md` | Painel, filtros, controles, destaques e conectores. | Preservar. |
-| `EXPORTACAO_ARVORE.md` | Exportação por Área, Imagem, PDF e Impressão. | Preservar. |
-| `FAVORITOS.md` | Favoritos de páginas, pessoas, fórum e integrações. | Revisão futura recomendada. |
-| `PESSOAS_PERFIL_ADMIN.md` | Perfil, reset, sugestões, privacidade, arquivos, eventos e relacionamento conjugal. | Revisão futura recomendada. |
-| `MINHA_ARVORE_EDITAR.md` | Edição completa da própria árvore; diferente do onboarding inicial. | Atualizado. |
-| `FORUM.md` | Fórum, tópicos, menções, respostas, reações, favoritos e notificações. | Preservar. |
-| `NOTIFICACOES.md` | Notificações internas/e-mail, preferências, logs, Edge Functions e cron futuro. | Atualizado para `/preferencias`. |
-| `CALENDARIO_FAMILIAR.md` | Calendário familiar, categorias, filtros mobile e Google Agenda. | Preservar. |
-| `TIMELINE.md` | Timeline de pessoa, eventos derivados, arquivos históricos, relacionamentos e pós-MVP. | Preservar. |
-| `CURIOSIDADES_E_IA.md` | Curiosidades, conexão familiar e perguntas à IA na Home. | Atualizado. |
-| `MINI_BIO_CURIOSIDADES_IA.md` | Geração assistida de Mini Bio e Curiosidades em `/meus-dados`. | Atualizado. |
-| `MEUS_VINCULOS.md` | Revisão guiada de vínculos familiares em `/meus-vinculos`. | Manter como documento canônico da Etapa 2. |
-| `DUVIDAS.md` | Página pública `/duvidas`, conteúdo QA no Supabase e gestão administrativa em `/admin/duvidas`. | Atualizado. |
-
-Documentos sobre antigas views da árvore devem permanecer apenas em `docs/historico/` ou marcados como legado.
-
----
-
-## 6. Operação
-
-Pasta:
-
-```txt
-docs/operacao/
-```
-
-| Arquivo | Uso |
-|---|---|
-| `README.md` | Índice operacional e regras gerais. |
-| `DEPLOY.md` | Atalho curto de deploy. |
-| `DEPLOYMENT.md` | Guia completo de deploy, cache, fallback SPA, Supabase, Edge Functions, `/api/*`, OAuth e troubleshooting. |
-| `MIGRATIONS_SUPABASE.md` | Fluxo seguro de migrations, schema, RLS, RPCs e schema cache. |
-| `OAUTH_GOOGLE.md` | Operação Google OAuth/Agenda, consent screen, test users, redirects e secrets. |
-| `STORAGE_MAINTENANCE.md` | Buckets, objetos órfãos, base64 legado e scripts administrativos. |
-| `QA_MAPAS_MOBILE_2026_06_21.md` | Checklist pós-deploy específico da rodada mobile de Zoom, tios, cônjuges e mapa completo. |
-
-Regra operacional:
-
-```txt
-Ajuste visual, layout, paleta, modal, exportação client-side ou documentação não exige migration.
-Mudança de schema, RLS, RPC, trigger, bucket/policy, Edge Function ou secret exige revisão operacional.
-supabase/migrations/ é a fonte da verdade do schema.
-```
-
----
-
-## 7. Histórico
-
-Pasta:
-
-```txt
-docs/historico/
-```
-
-Uso:
-
-- preservar contexto de decisões passadas;
-- manter documentação antiga sem confundi-la com contrato vigente;
-- guardar material sobre rotas removidas, SQLs legados, refatorações e auditorias já encerradas.
-
-| Arquivo | Uso |
-|---|---|
-| `README.md` | Índice histórico consolidado da pasta. |
-| `ROTAS_REMOVIDAS.md` | Histórico preventivo de `/minha-arvore`, `/genealogia` e `/visao-completa`. |
-| `SQLS_LEGADOS.md` | Inventário preventivo de SQLs soltos, dumps, diagnósticos e documentos antigos de banco. |
-| `AJUSTES_MAPA_FAMILIAR_MOBILE_2026_06_21.md` | Histórico da rodada mobile de tios, Zoom, cônjuges e mapa completo. |
-
-Regras:
-
-- conteúdo histórico não prevalece sobre documentação canônica;
-- histórico não deve reabrir `/minha-arvore`, `/genealogia` ou `/visao-completa`;
-- SQL histórico não substitui migration oficial;
-- material histórico útil deve apontar para o documento canônico atual;
-- dúvidas sobre ocorrências dessas rotas antigas devem ser conferidas em `docs/historico/ROTAS_REMOVIDAS.md`;
-- dúvidas sobre SQL solto devem ser conferidas em `docs/historico/SQLS_LEGADOS.md`.
-
----
-
-## 8. Onde registrar cada tipo de mudança
-
-| Tipo de informação | Onde registrar |
-|---|---|
-| Estado implementado | `BASELINE_PRODUTO_ATUAL.md` ou documento funcional específico |
-| Responsabilidade técnica | `INVENTARIO_TECNICO.md`, `GUIA_COMPONENTES.md` ou `docs/arquitetura/` |
-| UX/layout | `GUIA_UX_LAYOUT.md` |
-| QA manual | `QA_MANUAL.md` ou `docs/operacao/*` |
-| Regra que não pode regredir | `REGRAS_DE_NAO_REGRESSAO.md` |
-| Pendência ou risco | `PLANO_PROXIMOS_PASSOS.md` |
-| Deploy/operação | `docs/operacao/*` |
-| Banco/schema | `docs/operacao/MIGRATIONS_SUPABASE.md` e `docs/arquitetura/ESTRUTURA_USUARIOS_BANCO_DADOS.md` |
-| SQL legado, dump ou diagnóstico antigo | `docs/historico/SQLS_LEGADOS.md` |
-| História/legado | `docs/historico/*` |
-| Rodada ampla de ajustes mobile | manifesto em `docs/ATUALIZACAO_DOCUMENTAL_YYYY_MM_DD.md` + histórico em `docs/historico/` |
-
----
-
-## 9. Validação antes de alterar documentação
-
-Para mudança documental simples:
-
-```bash
-git diff --check
-npm run build
-```
-
-Para reorganização que altera contratos ou guias canônicos:
-
-```bash
-git diff --check
-npm run build
-npm test
-```
-
-Para mudança que afeta QA manual, árvore, rotas, deploy ou operação:
-
-```bash
-git diff --check
-npm run build
-npm test
-npm run test:e2e
-```
-
-Se `npm run test:e2e` não estiver configurado ou não for aplicável, registrar explicitamente essa limitação no PR/commit.
-
----
-
-## 10. Checklist documental do onboarding de membro
-
-Sempre que alterar `/meus-dados`, `/meus-vinculos`, `/arquivos-historicos`, `/preferencias` ou `/revisao-dados`, revisar:
-
-```txt
-docs/README.md
-docs/BASELINE_PRODUTO_ATUAL.md
-docs/arquitetura/ROTAS_E_GUARDS.md
-docs/funcionalidades/MINHA_ARVORE_EDITAR.md
-docs/funcionalidades/NOTIFICACOES.md
-docs/funcionalidades/CURIOSIDADES_E_IA.md
-docs/INVENTARIO_TECNICO.md
-docs/GUIA_IMPLEMENTACOES.md
-docs/GUIA_COMPONENTES.md
-docs/GUIA_UX_LAYOUT.md
-docs/QA_MANUAL.md
-docs/REGRAS_DE_NAO_REGRESSAO.md
-docs/PLANO_PROXIMOS_PASSOS.md
-```
-
-Critérios mínimos:
-
-- rotas novas ou alteradas registradas como `MemberRoute`;
-- etapa ativa coerente no `MemberOnboardingSteps`;
-- fluxo de pessoa viva e pessoa falecida descritos separadamente;
-- `/preferencias` descrita como etapa exclusiva de pessoa viva;
-- pessoa falecida documentada com notificações desativadas e permissões ativadas;
-- Arquivos Históricos documentados na Etapa 3;
-- rascunho local de arquivos históricos documentado quando mantido no código;
-- modal de vínculos documentado sem botão **Buscar** e com filtragem automática;
-- Notificações e Permissões documentadas na Etapa 4;
-- Revisão final documentada como tela editável inline, não apenas passiva;
-- badges `Vivo`, `Viva`, `Falecido`, `Falecida` e `Em análise` documentadas;
-- QA manual atualizado para pessoa viva, pessoa falecida, rascunho local, revisão inline e navegação condicional;
-- comandos de validação executados ou limitação registrada.
-
----
-
-## 11. Consolidação documental de ajustes recentes
-
-Esta documentação usa uma regra explícita de separação entre:
-
-| Tipo de informação | Destino documental |
-|---|---|
-| Estado implementado e confirmado na `main` | `BASELINE_PRODUTO_ATUAL.md` e documento funcional correspondente |
-| Padrão técnico ou componente reutilizável | `GUIA_COMPONENTES.md` |
-| Padrão visual, responsivo ou mobile | `GUIA_UX_LAYOUT.md` |
-| Roteiro de validação | `QA_MANUAL.md` ou `docs/operacao/*` |
-| Regra que não pode regredir | `REGRAS_DE_NAO_REGRESSAO.md` |
-| Rota, guard ou redirecionamento | `arquitetura/ROTAS_E_GUARDS.md` |
-| Pendência, script gerado sem confirmação ou decisão bloqueada | `PLANO_PROXIMOS_PASSOS.md` |
-| Tentativa substituída, script falho ou material de auditoria | `historico/` |
-
-Regra de prioridade para resolver conflitos:
-
-```txt
-Código atual da main > commits confirmados > docs canônicos existentes > levantamento recente > scripts planejados.
-```
-
-Scripts não confirmados, prints sem commit verificável e propostas que envolvam Supabase/RLS/RPC/migration não devem ser registrados como baseline.
+- validar manualmente o fluxo completo em ambiente de preview/produção;
+- aplicar e verificar migrations no Supabase remoto;
+- validar RPC `get_person_profile_selected_badges` no ambiente remoto;
+- adicionar verificação de typecheck explícita ao pipeline, se ainda não existir;
+- fazer rodada visual em mobile e desktop após deploy;
+- confirmar que não há regressão de encoding UTF-8 em arquivos alterados via PowerShell;
+- manter os scripts mobile e `index.html` protegidos contra regressões.

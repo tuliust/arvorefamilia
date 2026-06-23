@@ -1,575 +1,208 @@
-# Plano de próximos passos — Árvore Família
+# Plano de próximos passos
 
-> Última revisão: 2026-06-16
-> Local canônico: `docs/PLANO_PROXIMOS_PASSOS.md`
-> Tipo: backlog técnico/documental vivo
-> Status: atualizado para refletir Mini Bio/Curiosidades com IA, revisão de vínculos familiares como comportamento consolidado e registrar apenas QA, persistência futura, automação e documentação ainda abertos.
+> Última revisão: 2026-06-23  
+> Estado: frentes 6A, 7A, 7B, 7C, 7D e ajustes pós-ciclo de `/curiosidades`, `/mapa-familiar`, notificações, fórum e favoritos concluídos. Este documento lista pendências reais após os commits recentes.
 
----
+## Concluído no ciclo 6A–7D
 
-## 1. Objetivo
+| Frente | Commit | Status |
+|---|---:|---|
+| Prompt 6A — mapa familiar, tour e painel | `5e64d74` | Implementado e pushado |
+| Prompt 7A — questionário, IA e privacidade | `4a1a995` | Implementado e pushado |
+| Prompt 7B — vínculos, pets, cônjuges e badges | `c9a8f27` | Implementado e pushado |
+| Prompt 7C — fatos/arquivos históricos na timeline | `6185b6d` | Implementado e pushado |
+| Prompt 7D — UX final do onboarding e IA 500 caracteres | `de4f60f` | Implementado e pushado |
 
-Este documento registra o que **ainda precisa ser verificado, decidido, corrigido ou melhorado** no projeto.
+## Concluído no pós-ciclo
 
-Ele não deve duplicar:
+| Frente | Commit | Status |
+|---|---:|---|
+| Ajustes amplos de `/curiosidades` | `bf8f57a` | Implementado e pushado |
+| Integração de badges em `/curiosidades` | `ce80a00` | Implementado e pushado |
+| Correção de tipagem de badges e bodas | `62a6254` | Implementado e pushado |
+| Ajustes de painel, notificações, fórum e favoritos via overrides/conector | `e70f8a7` | Implementado e pushado |
+| Seletor de visualização e cônjuges no painel | `dbcc09c` | Implementado e pushado |
+| Distribuição de irmãos, cônjuge e pets no mapa | `5b69baf` | Implementado e pushado |
+| Correção UTF-8 em layout do mapa | `3d228fa` | Implementado e pushado |
 
-- documentação funcional consolidada;
-- regras de não regressão;
-- checklists longos de QA manual;
-- procedimentos operacionais completos.
+## Pendências fechadas
 
-Referências principais:
+| ID antigo | Tema | Status |
+|---|---|---|
+| `TREE-6A` | Dropdown `Família de X`, tour, cadastrados e layout compacto | Fechado |
+| `AI-7A` | Questionário IA, privacidade e hash de geração | Fechado |
+| `VINC-7B` | Pets separados, cônjuge ativo, badges, fluxo pendente | Fechado |
+| `HIST-7C` | Fatos sem arquivo e timeline do perfil | Fechado |
+| `UX-7D` | UX final do onboarding, headers sem ações e IA 500 caracteres | Fechado |
+| `REV-001` | Pets separados de Filhos em `/revisao-dados` | Fechado |
+| `HIST-001` | Fatos e Arquivos Históricos sem exigir arquivo | Fechado |
+| `CURI-001` | Cards e rankings de `/curiosidades` revisados | Fechado |
+| `CURI-002` | Badges de `/meus-dados` integrados a `/curiosidades` | Fechado |
+| `TREE-UI-001` | Painel desktop compacto e dropdown revisado | Fechado |
+| `TREE-LAYOUT-001` | Irmãos em 2 colunas, cônjuge/pets à direita | Fechado |
+| `NOTIF-001` | Rodapé do dropdown de notificações sem corte | Fechado |
+| `FORUM-001` | Busca desktop expandida | Fechado |
+| `FAV-001` | Busca/filtros de favoritos expandidos | Fechado |
 
-```txt
-docs/BASELINE_PRODUTO_ATUAL.md
-docs/GUIA_IMPLEMENTACOES.md
-docs/INVENTARIO_TECNICO.md
-docs/QA_MANUAL.md
-docs/REGRAS_DE_NAO_REGRESSAO.md
-docs/funcionalidades/*
-docs/arquitetura/*
-docs/operacao/*
+## Pendências reais abertas
+
+### `QA-001` — Rodada manual pós-deploy
+
+**Status:** aberto.
+
+Executar em preview/produção:
+
+- `/meus-dados` com pessoa viva;
+- `/meus-dados` com pessoa falecida;
+- geração de Mini Bio/Curiosidades com todos os tons;
+- `/meus-vinculos` com filhos, pets, cônjuges e irmãos;
+- `/arquivos-historicos` com fato sem arquivo, imagem e PDF;
+- `/revisao-dados`;
+- `/pessoa/:id` com timeline, contato e badges;
+- `/curiosidades`;
+- `/mapa-familiar` desktop e mobile;
+- dropdown de notificações;
+- `/forum` desktop/mobile;
+- `/meus-favoritos` desktop/mobile.
+
+### `DB-001` — Confirmar migrations no Supabase remoto
+
+**Status:** aberto até validação no ambiente remoto.
+
+Confirmar:
+
+- `person_profile_questionnaire_answers` criada;
+- policies aplicadas;
+- `selected_badges` persistido corretamente;
+- RPC `get_person_profile_selected_badges` disponível;
+- `admin_reset_person_profile` atualizado;
+- `arquivos_historicos.url/storage_bucket/storage_path/mime_type` aceitam nulo;
+- RLS permite leitura/escrita dos registros do usuário vinculado.
+
+### `CI-001` — Typecheck explícito
+
+**Status:** recomendado.
+
+O Vite build passou em vários ciclos, mas não substitui checagem completa de tipos. Recomenda-se manter como validação obrigatória:
+
+```bash
+npm run typecheck
+npm run build
+git diff --check
 ```
 
-Regras:
+Também avaliar CI para bloquear merge/push em caso de falha.
 
-- não registrar comportamento implementado como pendência;
-- não registrar pendência como se fosse comportamento vigente;
-- fechar item apenas após validação real, commit de correção ou decisão explícita;
-- mudanças visuais/documentais não exigem migration;
-- mudanças de schema, RPC, policy, trigger, bucket, Edge Function ou secret exigem documentação operacional;
-- procedimentos de QA manual ficam em `docs/QA_MANUAL.md`.
+### `MOBILE-001` — QA específica dos scripts mobile
 
----
-
-## 2. Situação consolidada
-
-| Área | Estado |
-|---|---|
-| `/mapa-familiar` | View vertical principal/default implementada. |
-| `/mapa-familiar-horizontal` | View horizontal/genealógica implementada. |
-| `/` | Redireciona para `/mapa-familiar`, preservando query string. |
-| `/minha-arvore/editar` | Rota vigente de edição do membro. |
-| `/minha-arvore`, `/genealogia`, `/visao-completa` | Removidas do roteamento ativo; só podem aparecer como histórico ou keywords. |
-| Painel desktop | Implementado sem barra `Filtros | Legendas | Ações`. |
-| Modal mobile | Implementado como painel reduzido, sem Zoom/Exportar. |
-| Exportação | Implementada para as views oficiais por Área, PNG, PDF e Impressão. |
-| Calendário | Implementado com filtros mobile compactos e integração Google Agenda quando configurada. |
-| Fórum, notificações e favoritos | Implementados, sujeitos a QA funcional recorrente. |
-| Onboarding do membro | Implementado em cinco etapas, com fluxo condicional para pessoa falecida, revisão final editável e Etapa 4 pulada quando aplicável. |
-| Mini Bio e Curiosidades com IA | Implementado em `/meus-dados`; requer QA recorrente de modo padrão e memorial. |
-| Revisão de vínculos familiares | Implementada em `/meus-vinculos`; busca pessoa existente, cria familiar, controla estados de análise e solicitação de controle visual/local. |
-| QA manual | Centralizado em `docs/QA_MANUAL.md`. |
-
----
-
-## 3. Itens abertos
-
-### Documentação
-
-#### ID: DOC-001
-
-**Título:** Conferir links cruzados após cada reorganização documental.
-**Tipo:** pendência
-**Prioridade:** média
-**Contexto:** a documentação está distribuída entre guias canônicos, funcionalidades, arquitetura, operação, QA e histórico. Reorganizações parciais podem deixar links quebrados ou documentos históricos parecendo vigentes.
-**Evidência:** os guias canônicos referenciam documentos em `docs/funcionalidades/`, `docs/arquitetura/`, `docs/operacao/`, `docs/historico/` e `docs/QA_MANUAL.md`.
-**Arquivos relacionados:** `docs/README.md`, `docs/QA_MANUAL.md`, `docs/historico/README.md`, `docs/funcionalidades/*`, `docs/arquitetura/*`, `docs/operacao/*`.
-**Ação recomendada:** antes de remover/mover documento, rodar `rg "NOME_DO_ARQUIVO" docs src README.md` e atualizar links no mesmo commit.
 **Status:** aberto.
 
-#### ID: DOC-002
+O ciclo recente preservou mobile por condicionais/overrides, mas ainda precisa QA visual:
 
-**Título:** Manter clara a diferença entre título funcional e rótulo de navegação da horizontal.
-**Tipo:** melhoria
-**Prioridade:** baixa
-**Contexto:** a view horizontal usa título funcional/exportável `Mapa Genealógico`, mas alguns atalhos podem usar rótulos como `Mapa Familiar Horizontal`.
-**Evidência:** a documentação funcional padroniza o título exportável como `Mapa Genealógico`; favoritos/busca podem usar rótulos de navegação.
-**Arquivos relacionados:** `docs/funcionalidades/MAPA_FAMILIAR_VIEW.md`, `src/app/pages/home/HomeTreeSection.tsx`, `src/app/constants/favoritePages.ts`, `src/app/services/globalSearchService.ts`.
-**Ação recomendada:** manter a distinção documentada; se o produto decidir unificar nomes, alterar código e documentação no mesmo lote.
-**Status:** aberto.
+- mapa vertical mobile;
+- mapa horizontal mobile;
+- zoom 3x3;
+- overview;
+- filtros;
+- painel `+`;
+- conectores;
+- cards de pets e pessoas;
+- dropdowns e botões sem overflow.
 
-#### ID: DOC-003
+### `ENC-001` — Monitorar encoding UTF-8
 
-**Título:** Revisar documentos operacionais após qualquer mudança em Supabase, OAuth ou deploy.
-**Tipo:** pendência
-**Prioridade:** média
-**Contexto:** mudanças em migrations, Edge Functions, Storage, service role, secrets e OAuth podem deixar documentação operacional desatualizada.
-**Evidência:** documentação operacional separa deploy, migrations, OAuth Google e Storage.
-**Arquivos relacionados:** `docs/operacao/*`, `supabase/migrations/*`, `supabase/functions/*`, `vercel.json`.
-**Ação recomendada:** em qualquer alteração operacional, atualizar o documento específico e não apenas o inventário técnico.
-**Status:** aberto.
+**Status:** monitoramento.
 
----
+Foi necessário corrigir encoding em `directFamilyDistributedLayout.ts`. Manter atenção a strings com mojibake:
 
-### Código/arquitetura
+- `FamÃ­lia`;
+- `cÃ´njuges`;
+- `VisualizaÃ§Ã£o`;
+- `Ãrvore`;
+- `Irmăos`.
 
-#### ID: ARCH-001
+Se aparecer, corrigir o arquivo em UTF-8 e validar no GitHub remoto.
 
-**Título:** Criar CI para build, testes unitários e E2E.
-**Tipo:** melhoria
-**Prioridade:** média
-**Contexto:** os comandos existem, mas a validação ainda depende de execução manual quando não há workflow configurado.
-**Evidência:** `package.json` declara `vite build`, `vitest run` e `playwright test`.
-**Arquivos relacionados:** `package.json`, `.github/workflows/*`, `docs/QA_MANUAL.md`.
-**Ação recomendada:** criar workflow para PR/push com build e Vitest; Playwright pode ser job separado.
-**Status:** backlog.
+### `DOC-001` — Aplicar documentação ao repositório
 
-#### ID: ARCH-002
+**Status:** aberto até commit dos arquivos `docs/`.
 
-**Título:** Separar responsabilidades transversais hoje concentradas em `src/main.tsx`.
-**Tipo:** refatoração futura
-**Prioridade:** média
-**Contexto:** o bootstrap do app concentra recuperação de chunk/CSS, atalhos de zoom e limpeza visual de linhas vitais mobile.
-**Evidência:** `src/main.tsx` contém lógica global e comportamento específico da árvore.
-**Arquivos relacionados:** `src/main.tsx`, `src/app/components/FamilyTree/MobileFamilyTreeView.tsx`.
-**Ação recomendada:** extrair comportamentos da árvore para hook/módulo próprio ou documentar explicitamente a responsabilidade transversal até refatoração.
-**Status:** aberto.
+Arquivos atualizados fora do repo devem ser copiados para:
 
-#### ID: ARCH-003
+- `docs/funcionalidades/`;
+- `docs/`;
+- `docs/historico/`;
+- `docs/operacao/`, quando aplicável.
 
-**Título:** Planejar remoção segura do legado ReactFlow.
-**Tipo:** refatoração futura
-**Prioridade:** baixa
-**Contexto:** ainda existem arquivos ReactFlow/legados que não são views públicas principais, mas podem conter tipos, imports ou compatibilidade.
-**Evidência:** inventário técnico classifica essa stack como legado ativo/candidato a remoção controlada.
-**Arquivos relacionados:** `src/app/components/FamilyTree/FamilyTree.tsx`, `PersonNode.tsx`, `MarriageNode.tsx`, `GenealogySpouseEdge.tsx`, `nodeTypes.ts`, `edgeTypes.ts`, `treeExport.ts`.
-**Ação recomendada:** abrir frente específica de inventário de imports, remoção em lote pequeno, build e E2E.
-**Status:** backlog.
+Commit sugerido:
 
----
-
-### Árvore
-
-#### ID: TREE-001
-
-**Título:** Validar visualmente `/mapa-familiar` com dados reais.
-**Tipo:** QA visual
-**Prioridade:** alta
-**Contexto:** a view vertical combina grupos, conectores, paletas, pets, cônjuges, zoom, painel e exportação.
-**Evidência:** `/mapa-familiar` usa `DesktopFamilyMapView` no desktop/tablet e `MobileFamilyTreeView` no mobile.
-**Arquivos relacionados:** `src/app/components/FamilyTree/DesktopFamilyMapView.tsx`, `src/app/components/FamilyTree/MobileFamilyTreeView.tsx`, `docs/QA_MANUAL.md`.
-**Ação recomendada:** executar o roteiro de Árvore Familiar vertical em `docs/QA_MANUAL.md`.
-**Status:** aberto.
-
-#### ID: TREE-002
-
-**Título:** Validar visualmente `/mapa-familiar-horizontal` com dados reais.
-**Tipo:** QA visual
-**Prioridade:** alta
-**Contexto:** a horizontal depende de gerações, colunas, cônjuges adjacentes, conectores casal → filhos e exportação.
-**Evidência:** `/mapa-familiar-horizontal` usa `DesktopFamilyHorizontalMapView` e `MobileFamilyHorizontalMapView`.
-**Arquivos relacionados:** `src/app/components/FamilyTree/DesktopFamilyHorizontalMapView.tsx`, `src/app/components/FamilyTree/MobileFamilyHorizontalMapView.tsx`, `docs/QA_MANUAL.md`.
-**Ação recomendada:** executar o roteiro de Mapa Genealógico horizontal em `docs/QA_MANUAL.md`.
-**Status:** aberto.
-
-#### ID: TREE-003
-
-**Título:** Verificar ausência de cônjuges de `pais`/Geração 4 na horizontal.
-**Tipo:** erro | pendência funcional
-**Prioridade:** alta
-**Contexto:** a regra desejada é que cônjuges de pessoas classificadas como `pais`/Geração 4 apareçam na horizontal quando o filtro `Cônjuges` estiver ativo. No código auditado, os grupos filtráveis não incluem `pais`.
-**Evidência:** `FILTERABLE_SPOUSE_ANCHOR_GROUPS` inclui `tios`, `primos`, `sobrinhos`, `filhos` e `netos`, mas não `pais`, em desktop e mobile horizontal.
-**Arquivos relacionados:** `src/app/components/FamilyTree/DesktopFamilyHorizontalMapView.tsx`, `src/app/components/FamilyTree/MobileFamilyHorizontalMapView.tsx`, `docs/funcionalidades/MAPA_FAMILIAR_VIEW.md`, `docs/QA_MANUAL.md`.
-**Ação recomendada:** reproduzir com dados reais; se confirmado, incluir `pais` no conjunto apropriado, validar contagens e adicionar teste/QA.
-**Status:** aberto.
-
-#### ID: TREE-004
-
-**Título:** Remover dependência de limpeza DOM para ocultar fallback de datas desconhecidas no mobile.
-**Tipo:** risco | refatoração futura
-**Prioridade:** média
-**Contexto:** o contrato visual é não exibir `Nascimento não informado` nem `Falecimento não informado` em cards mobile. Hoje a solução é indireta, via limpeza DOM em `src/main.tsx`.
-**Evidência:** `MobileFamilyTreeView.tsx` ainda pode montar fallback textual e `src/main.tsx` remove/oculta as linhas depois.
-**Arquivos relacionados:** `src/app/components/FamilyTree/MobileFamilyTreeView.tsx`, `src/main.tsx`, `docs/QA_MANUAL.md`.
-**Ação recomendada:** corrigir no componente React em frente própria e remover fallback DOM quando validado.
-**Status:** aberto.
-
-#### ID: TREE-005
-
-**Título:** Decidir destino do dropdown `Visualizar como...`.
-**Tipo:** decisão necessária
-**Prioridade:** média
-**Contexto:** o seletor auxilia QA, mas aparece sobre a árvore e não deve ser produto final sem decisão.
-**Evidência:** `Home.tsx` renderiza bloco com `data-tree-debug-viewer="true"` e `data-tree-export-ignore="true"`.
-**Arquivos relacionados:** `src/app/pages/Home.tsx`, `docs/DECISOES_ARQUITETURAIS.md`.
-**Ação recomendada:** remover, esconder por flag/admin ou converter em funcionalidade oficial com UX própria.
-**Status:** aberto.
-
----
-
-### Mobile
-
-#### ID: MOB-001
-
-**Título:** Validar modal mobile de controles em navegadores reais.
-**Tipo:** QA visual | QA funcional
-**Prioridade:** alta
-**Contexto:** o modal tem contrato específico: sem Zoom, sem Restaurar, sem Exportar, com `Grupos` sob demanda.
-**Evidência:** `SidebarPanelTabs` muda comportamento quando `mobileControls=true`; `Home` controla abertura/fechamento do modal.
-**Arquivos relacionados:** `src/app/pages/Home.tsx`, `src/app/pages/home/SidebarPanelTabs.tsx`, `src/styles/mobile-tree-controls.css`, `docs/QA_MANUAL.md`.
-**Ação recomendada:** executar roteiro de modal mobile em `docs/QA_MANUAL.md`.
-**Status:** aberto.
-
-#### ID: MOB-002
-
-**Título:** Validar horizontal mobile por geração.
-**Tipo:** QA visual | QA funcional
-**Prioridade:** alta
-**Contexto:** a horizontal mobile deve ter uma geração por tela, botões `Ger X`, swipe lateral e scroll vertical interno.
-**Evidência:** `MobileFamilyHorizontalMapView` é renderizado para `/mapa-familiar-horizontal` no mobile.
-**Arquivos relacionados:** `src/app/components/FamilyTree/MobileFamilyHorizontalMapView.tsx`, `docs/QA_MANUAL.md`.
-**Ação recomendada:** executar roteiro de horizontal mobile em `docs/QA_MANUAL.md`.
-**Status:** aberto.
-
----
-
-### Calendário
-
-#### ID: CAL-001
-
-**Título:** Validar filtros mobile do calendário.
-**Tipo:** QA visual
-**Prioridade:** alta
-**Contexto:** `/calendario-familiar` deve exibir 5 categorias em uma linha no mobile, com bolinha acima do texto.
-**Evidência:** `CalendarioFamiliar.tsx` define categorias e `calendar-mobile-category-buttons.css` controla layout compacto.
-**Arquivos relacionados:** `src/app/pages/CalendarioFamiliar.tsx`, `src/styles/calendar-mobile-category-buttons.css`, `docs/QA_MANUAL.md`.
-**Ação recomendada:** executar roteiro de calendário familiar em `docs/QA_MANUAL.md`.
-**Status:** aberto.
-
-#### ID: CAL-002
-
-**Título:** Validar Google Agenda após mudanças em calendário/eventos.
-**Tipo:** QA funcional | segurança
-**Prioridade:** média
-**Contexto:** a integração depende de OAuth, services e Edge Functions.
-**Evidência:** a página chama services de status, conexão, sincronização e desconexão.
-**Arquivos relacionados:** `src/app/pages/CalendarioFamiliar.tsx`, `src/app/services/googleCalendarService.ts`, `docs/operacao/OAUTH_GOOGLE.md`, `docs/QA_MANUAL.md`.
-**Ação recomendada:** testar conexão, callback, sincronização, desconexão, ausência de tokens no frontend e test users quando aplicável.
-**Status:** aberto.
-
----
-
-### Exportação
-
-#### ID: EXP-001
-
-**Título:** Validar exportação das duas views oficiais.
-**Tipo:** QA funcional
-**Prioridade:** alta
-**Contexto:** exportação deve funcionar por Área, PNG, PDF e Impressão em `/mapa-familiar` e `/mapa-familiar-horizontal`.
-**Evidência:** painel dispara `select-area`, `save-image`, `save-pdf` e `print`; views fornecem refs e ações.
-**Arquivos relacionados:** `src/app/components/FamilyTree/utils/treeExport.ts`, `TreeAreaSelectionOverlay.tsx`, `HomeTreeSection.tsx`, `SidebarPanelTabs.tsx`, `docs/QA_MANUAL.md`.
-**Ação recomendada:** executar roteiro de exportação em `docs/QA_MANUAL.md`.
-**Status:** aberto.
-
-#### ID: EXP-002
-
-**Título:** Validar exportação com avatares, SVGs e imagens externas.
-**Tipo:** QA funcional | risco
-**Prioridade:** média
-**Contexto:** `html2canvas` pode falhar ou renderizar SVGs/ícones de forma incorreta.
-**Evidência:** `treeExport.ts` contém sanitização/normalização para cores e SVGs.
-**Arquivos relacionados:** `src/app/components/FamilyTree/utils/treeExport.ts`, `FamilyTreeVisualCards.tsx`, `docs/QA_MANUAL.md`.
-**Ação recomendada:** testar pessoas com foto, pessoas sem foto, pets, ícones de nascimento/falecimento e CORS de imagens.
-**Status:** aberto.
-
----
-
-### Perfil/pessoas
-
-#### ID: PERF-001
-
-**Título:** Validar retorno seguro de perfil para as duas views.
-**Tipo:** QA funcional
-**Prioridade:** média
-**Contexto:** `?voltar=` deve aceitar apenas destinos internos seguros e cair no fallback canônico quando inválido.
-**Evidência:** perfil aceita retorno para `/`, `/mapa-familiar` e `/mapa-familiar-horizontal`.
-**Arquivos relacionados:** `src/app/pages/PersonProfile.tsx`, `src/app/pages/Home.tsx`, `docs/QA_MANUAL.md`.
-**Ação recomendada:** executar roteiro de perfil e retorno em `docs/QA_MANUAL.md`.
-**Status:** aberto.
-
-#### ID: PERF-002
-
-**Título:** Validar sugestões de alteração de perfil e permissões.
-**Tipo:** QA funcional | segurança
-**Prioridade:** média
-**Contexto:** perfil combina dados pessoais, vínculos, sugestões, arquivos, eventos e permissões.
-**Evidência:** perfil usa services de permissão e sugestões.
-**Arquivos relacionados:** `src/app/pages/PersonProfile.tsx`, `src/app/services/personProfileSuggestionService.ts`, `src/app/services/permissionService.ts`.
-**Ação recomendada:** testar usuário comum, pessoa vinculada, admin e usuário sem permissão.
-**Status:** aberto.
-
----
-
-### Onboarding do membro
-
-#### ID: ONB-001
-
-**Título:** Validar manualmente o onboarding completo para pessoa viva e pessoa falecida.
-**Tipo:** QA funcional | QA visual
-**Prioridade:** alta
-**Contexto:** o fluxo agora diverge conforme `falecido`: pessoa viva passa por `/preferencias`; pessoa falecida pula essa etapa, desativa notificações e ativa permissões de visualização.
-**Evidência:** mudanças recentes envolveram `MeusDados`, `MeusVinculos`, `ArquivosHistoricosPage`, `PreferenciasPage`, `RevisaoDados` e `MemberOnboardingSteps`.
-**Arquivos relacionados:** `src/app/pages/MeusDados.tsx`, `src/app/pages/MeusVinculos.tsx`, `src/app/pages/ArquivosHistoricosPage.tsx`, `src/app/pages/PreferenciasPage.tsx`, `src/app/pages/RevisaoDados.tsx`, `src/app/components/member/MemberOnboardingSteps.tsx`, `docs/QA_MANUAL.md`.
-**Ação recomendada:** executar o roteiro de onboarding em `docs/QA_MANUAL.md` nos breakpoints mobile e desktop.
-**Status:** aberto.
-
-#### ID: ONB-002
-
-**Título:** Criar cobertura automatizada mínima para o onboarding condicional.
-**Tipo:** teste futuro
-**Prioridade:** média
-**Contexto:** o comportamento depende de estado da pessoa, navegação entre rotas, defaults de preferências e exibição condicional de boxes.
-**Evidência:** regressões visuais e de navegação foram detectadas manualmente durante ajustes.
-**Arquivos relacionados:** `tests/e2e/*`, `src/app/pages/*`, `docs/REGRAS_DE_NAO_REGRESSAO.md`.
-**Ação recomendada:** criar smoke E2E para pessoa viva e pessoa falecida, cobrindo Etapas 1 a 5 e navegação direta para `/preferencias`.
-**Status:** backlog.
-
-#### ID: ONB-003
-
-**Título:** Criar documentação funcional dedicada para onboarding e arquivos históricos.
-**Tipo:** documentação
-**Prioridade:** média
-**Contexto:** o comportamento do onboarding ficou grande o suficiente para merecer documentos funcionais próprios, além dos guias gerais.
-**Evidência:** regras de pessoa viva/falecida, modal de vínculos, rascunho de arquivos e revisão inline estão hoje distribuídas entre vários guias.
-**Arquivos relacionados:** `docs/funcionalidades/ONBOARDING_MEMBRO.md`, `docs/funcionalidades/ARQUIVOS_HISTORICOS.md`, `docs/README.md`.
-**Ação recomendada:** criar os dois documentos em frente documental específica e apontar o índice para eles.
-**Status:** aberto.
-
-#### ID: ONB-004
-
-**Título:** Validar persistência temporária de arquivos históricos em navegadores reais.
-**Tipo:** QA funcional
-**Prioridade:** média
-**Contexto:** a Etapa 3 preserva rascunho local quando usuário troca aba, minimiza ou recarrega antes de salvar.
-**Evidência:** comportamento depende de armazenamento local e manipulação de arquivos no browser.
-**Arquivos relacionados:** `src/app/components/ArquivosHistoricos.tsx`, `src/app/pages/ArquivosHistoricosPage.tsx`, `docs/QA_MANUAL.md`.
-**Ação recomendada:** testar Chrome desktop, aba anônima e pelo menos um navegador mobile quando possível.
-**Status:** aberto.
-
-
-
-#### ID: ONB-005
-
-**Título:** Persistir solicitação de controle de perfil e criar análise administrativa.
-**Tipo:** evolução funcional | banco | admin
-**Prioridade:** alta
-**Contexto:** `/meus-vinculos` permite solicitar controle de perfil e exibir `Controle em análise`, mas a solicitação pode permanecer como estado local/draft visual até existir fluxo administrativo definitivo.
-**Evidência:** a experiência já possui botão, modal, justificativa e badge, mas a governança futura exige persistência, RLS/policies e tela ou fila de aprovação.
-**Arquivos relacionados:** `src/app/pages/MeusVinculos.tsx`, `src/app/pages/meus-vinculos/ProfileControlRequestDialog.tsx`, `src/app/services/memberProfileService.ts`, `docs/operacao/MIGRATIONS_SUPABASE.md`, `docs/funcionalidades/PESSOAS_PERFIL_ADMIN.md`.
-**Ação recomendada:** desenhar tabela/solicitação persistente, definir regras de aprovação, atualizar admin, RLS e documentação operacional antes de ativar como fluxo definitivo.
-**Status:** backlog.
-
-#### ID: ONB-006
-
-**Título:** Validar visualmente a revisão de vínculos após remoção do painel lateral.
-**Tipo:** QA visual | QA funcional
-**Prioridade:** alta
-**Contexto:** `/meus-vinculos` foi simplificada para largura total, com cards-resumo como âncoras, botão final no rodapé, badges `Pré-cadastrado`/`Ativo` e remoção compacta por ícone.
-**Evidência:** validações automáticas passaram, mas a checagem visual em browser in-app foi limitada por sandbox Windows em execuções anteriores.
-**Arquivos relacionados:** `src/app/pages/MeusVinculos.tsx`, `src/app/pages/meus-vinculos/*`, `docs/QA_MANUAL.md`.
-**Ação recomendada:** executar QA manual real em desktop e nos breakpoints 320px, 375px, 390px e 430px, incluindo busca, criação, remoção, desfazer, controle de perfil e pré-seleção de outro pai/mãe.
-**Status:** aberto.
-
-#### ID: ONB-007
-
-**Título:** Criar documento funcional dedicado para `/meus-vinculos`.
-**Tipo:** documentação
-**Prioridade:** média
-**Contexto:** a Etapa 2 ganhou busca de pessoa existente, estados de análise, solicitação de controle e componentes próprios; o comportamento merece documento canônico em `docs/funcionalidades/`.
-**Evidência:** regras hoje estão distribuídas entre guias gerais e QA.
-**Arquivos relacionados:** `docs/funcionalidades/MEUS_VINCULOS.md`, `docs/README.md`, `docs/GUIA_IMPLEMENTACOES.md`, `docs/GUIA_COMPONENTES.md`.
-**Ação recomendada:** manter `MEUS_VINCULOS.md` sincronizado sempre que a feature mudar.
-**Status:** aberto.
-
-### Fórum
-
-#### ID: FORUM-001
-
-**Título:** Rodar smoke test manual do fórum.
-**Tipo:** QA funcional
-**Prioridade:** média
-**Contexto:** fórum inclui tópicos, respostas, reações, favoritos e notificações.
-**Evidência:** rotas `/forum`, `/forum/novo`, `/forum/topico/:id` e `/forum/topico/:id/editar` existem sob `MemberRoute`.
-**Arquivos relacionados:** `src/app/pages/forum/*`, `src/app/services/forumService.ts`, `docs/QA_MANUAL.md`.
-**Ação recomendada:** executar roteiro de fórum em `docs/QA_MANUAL.md`.
-**Status:** aberto.
-
----
-
-### Notificações
-
-#### ID: NOTIF-001
-
-**Título:** Validar central e preferências de notificações.
-**Tipo:** QA funcional
-**Prioridade:** média
-**Contexto:** notificações dependem de páginas, preferências, logs e eventual dispatch por Edge Functions.
-**Evidência:** `/notificacoes`, `/ajustar-notificacoes` e `/admin/notificacoes` existem no roteamento atual.
-**Arquivos relacionados:** `src/app/pages/Notificacoes.tsx`, `src/app/pages/AjustarNotificacoes.tsx`, `src/app/pages/admin/AdminNotificacoes.tsx`, `docs/QA_MANUAL.md`.
-**Ação recomendada:** executar roteiro de notificações em `docs/QA_MANUAL.md`.
-**Status:** aberto.
-
----
-
-### Banco/Supabase
-
-#### ID: SUPA-001
-
-**Título:** Manter distinção entre visual/documental e schema.
-**Tipo:** risco
-**Prioridade:** alta
-**Contexto:** mudanças visuais/documentais não exigem migration; alterações de tabelas, RPCs, policies, buckets, triggers ou Edge Functions exigem migration/documentação operacional.
-**Evidência:** a documentação operacional separa migrations, Edge Functions, Storage, OAuth e deploy.
-**Arquivos relacionados:** `supabase/migrations/*`, `supabase/functions/*`, `docs/operacao/*`.
-**Ação recomendada:** exigir migration e revisão operacional quando houver mudança de schema/segurança.
-**Status:** aberto.
-
-#### ID: SUPA-002
-
-**Título:** Revisar uso de service role e secrets antes de novas automações.
-**Tipo:** segurança
-**Prioridade:** alta
-**Contexto:** service role e secrets nunca devem aparecer no frontend nem em documentação pública com valores reais.
-**Evidência:** integrações operacionais dependem de variáveis como service role, OAuth e chaves de API.
-**Arquivos relacionados:** `supabase/functions/*`, `docs/operacao/*`, `.env.example`.
-**Ação recomendada:** revisar variáveis por ambiente e manter docs apenas com nomes, nunca valores.
-**Status:** aberto.
-
----
-
-## 4. Backlog de refatoração futura
-
-| ID | Frente | Prioridade | Observação |
-|---|---|---:|---|
-| REF-001 | Extrair responsabilidades de `Home.tsx` | média | Separar dados, filtros, painel, modais, exportação, debug e seleção de pessoa. |
-| REF-002 | Renomear `SidebarPanelTabs` | baixa | O componente não representa mais tabs; possível nome futuro: `TreeControlPanel`. |
-| REF-003 | Compartilhar view model entre horizontal desktop/mobile | média | Reduz divergência estrutural entre as duas renderizações. |
-| REF-004 | Remover legado ReactFlow com segurança | baixa | Exige inventário de imports, testes e validação de exportação. |
-| REF-005 | Extrair limpeza DOM de datas desconhecidas do `main.tsx` | média | Relacionado a `TREE-004`. |
-
----
-
-## 5. Como fechar um item
-
-Para fechar qualquer item deste plano:
-
-1. identificar commit ou decisão explícita;
-2. executar validação aplicável;
-3. registrar evidência;
-4. atualizar documentação canônica afetada;
-5. remover, arquivar ou marcar o item como concluído.
-
-Checklist de fechamento:
-
-```txt
-Item:
-Commit:
-Validação automática:
-QA manual:
-Documento atualizado:
-Resultado:
-Pendências restantes:
+```bash
+git add docs
+git commit -m "docs: documenta ajustes pós ciclo 7D"
+git push origin feature/questionario-ia-vinculos-pets
 ```
 
-Procedimentos de QA manual ficam em:
+### `PREVIEW-001` — Revisão em ambiente publicado
 
-```txt
-docs/QA_MANUAL.md
-```
+**Status:** aberto.
 
-<!-- PENDENCIAS-LEVANTAMENTO-2026-06-18 -->
-## PendÃªncias e verificaÃ§Ãµes herdadas do levantamento recente
+Depois do deploy/preview:
 
-Estas frentes aparecem no levantamento como scripts gerados, execuÃ§Ã£o nÃ£o confirmada, tentativa falha, visual sugerido por print ou decisÃ£o pendente. Elas nÃ£o devem ser registradas como baseline atÃ© verificaÃ§Ã£o no cÃ³digo/Git.
+- validar se CSS de overrides foi carregado;
+- validar se o bundle não usa cache antigo;
+- validar se as alterações do painel e dropdown estão visíveis;
+- validar se Supabase remoto tem migrations aplicadas;
+- validar se usuários reais com dados incompletos não quebram `/curiosidades`.
 
-### Verificar antes de documentar como implementado
+## Melhorias futuras possíveis
 
-- Contagem de cÃ´njuges no `/mapa-familiar-horizontal`.
-- ReorganizaÃ§Ã£o de `/pessoa/:id` com timeline lateral.
-- Relacionamentos abaixo de acontecimentos histÃ³ricos.
-- Textos narrativos da timeline.
-- RemoÃ§Ã£o de badge secundÃ¡ria e â€œData desconhecidaâ€ da timeline.
-- Subida de grupos no mapa familiar vertical quando a Ã¡rvore for esparsa.
-- `/meus-favoritos` com botÃ£o Filtros.
-- `/meus-favoritos` com estrela ativa para remover favorito.
-- Header e `/notificacoes` com contador de nÃ£o lidas, textos e datas.
-- OcultaÃ§Ã£o de contato/privacidade de falecidos no admin.
-- Fase 2 de `/minha-arvore/editar`.
-- EdiÃ§Ã£o de casamento/cÃ´njuge sob demanda.
-- SeparaÃ§Ã£o de containers em `/minha-arvore/editar`.
-- PainÃ©is, popovers, toolbar mobile e exportaÃ§Ã£o da Ã¡rvore quando nÃ£o houver commit confirmado.
+### `IA-002` — Enriquecimento controlado do contexto da IA
 
-### Bloqueado para revisÃ£o operacional
+**Status:** melhoria incremental.
 
-- Reset ampliado de perfil admin removendo mini bio, curiosidades, arquivos histÃ³ricos e usuÃ¡rio em `auth.users`.
+Próxima evolução possível:
 
-Motivo:
+- incluir resumo controlado de vínculos;
+- incluir fatos históricos textuais sem URLs;
+- incluir idade aproximada calculada no backend/frontend;
+- incluir profissão/localidade quando informados.
 
-- envolve Supabase;
-- envolve RPC/migration;
-- pode afetar dados sensÃ­veis e autenticaÃ§Ã£o;
-- nÃ£o deve ser aplicado por script documental;
-- sÃ³ deve entrar em `docs/operacao/MIGRATIONS_SUPABASE.md` se houver migration real confirmada.
+Essa evolução deve manter o filtro de privacidade.
 
-### Comandos recomendados para verificaÃ§Ã£o
+### `CURI-003` — Melhorar personalização de `/curiosidades`
 
-```powershell
-git log --oneline -- src/app/pages/MeusFavoritos.tsx
-git log --oneline -- src/app/pages/Notificacoes.tsx
-git log --oneline -- src/app/components/Timeline/PersonTimeline.tsx
-git log --oneline -- src/app/pages/PersonProfile.tsx
-git log --oneline -- src/app/pages/MinhaArvore.tsx
-git log --oneline -- src/app/pages/admin/AdminPessoaForm.tsx
-```
+**Status:** melhoria incremental.
 
-<!-- RODADA2-PENDENCIAS-2026-06-18 -->
-## PendÃªncias remanescentes â€” segunda rodada
+Possibilidades:
 
-### Coordenadas e rota familiar
+- filtros por ramo familiar;
+- destaque de pessoas com mais informações completas;
+- ranking de perfis mais preenchidos;
+- cards de descobertas baseados em fatos históricos.
 
-A frente de Curiosidades implementou cÃ¡lculo de rota com coordenadas quando disponÃ­veis, mas ainda exige consolidaÃ§Ã£o da fonte canÃ´nica de coordenadas.
+### `TREE-006` — Decisão de produto sobre seletor “Visualizar como”
 
-PendÃªncias:
+**Status:** decisão de produto.
 
-- definir se latitude/longitude vÃªm de autocomplete, tabela de cidades, backfill ou geocoding;
-- normalizar cidades jÃ¡ cadastradas;
-- tratar variaÃ§Ãµes de grafia;
-- resolver cidades homÃ´nimas por UF/paÃ­s;
-- garantir preservaÃ§Ã£o de coordenadas ao salvar cidade de residÃªncia;
-- validar massa real com:
-  - nenhuma coordenada;
-  - uma cidade coordenada;
-  - duas ou mais cidades coordenadas;
-  - cidade brasileira;
-  - cidade no exterior.
+O seletor está funcional, mas pode exigir decisão final:
 
-### Curiosidades
+- manter como funcionalidade oficial;
+- restringir a QA/admin;
+- ocultar em produção;
+- manter para todos os membros.
 
-- Evoluir compartilhamento de descobertas para o fÃ³rum, se essa for a decisÃ£o de produto.
-- Encerrar/atualizar issue tÃ©cnica da rodada, se existir.
-- Manter testes de utilitÃ¡rios atualizados quando novos cÃ¡lculos forem adicionados.
+Enquanto isso, a documentação trata o seletor como funcionalidade do painel desktop.
 
-### Mapas e painel
+## Não fazer sem nova frente explícita
 
-- Executar QA visual mobile em 320px, 375px, 390px e 430px.
-- Confirmar que popovers da toolbar nÃ£o extrapolam a largura.
-- Confirmar que desktop/tablet nÃ£o foram afetados pelos PRs mobile.
-- Validar exportaÃ§Ã£o por Ãrea, Imagem, PDF e Imprimir.
-- Confirmar comportamento do botÃ£o `+` e do painel mobile completo.
-
-### Painel/header
-
-- Confirmar se o painel lateral compacto atende visualmente ao alvo final.
-- Confirmar se exportaÃ§Ã£o ficou no local final previsto.
-- Registrar qualquer divergÃªncia visual em `QA_POS_CONSOLIDACAO_2026_06_18.md`.
-
-### NotificaÃ§Ãµes
-
-- Se o contador de nÃ£o lidas no header ainda nÃ£o estiver implementado, manter como pendÃªncia separada.
-- NÃ£o confundir a simplificaÃ§Ã£o visual dos cards com implementaÃ§Ã£o de contador global.
-
-### Admin e pessoa falecida
-
-- A decisÃ£o sobre ocultar ou manter contato/privacidade de pessoa falecida no admin ainda deve refletir o cÃ³digo atual antes de virar regra definitiva.
+- Não reabrir as etapas 9 e 10 do questionário IA.
+- Não voltar o limite para 300 caracteres.
+- Não usar `Nostálgico` como gatilho automático de pessoa falecida.
+- Não exigir upload em Fatos e Arquivos Históricos.
+- Não voltar pets para Filhos.
+- Não exibir ações no header das páginas de onboarding.
+- Não alterar scripts mobile ou `index.html` em frentes de onboarding/desktop.
+- Não reverter o dropdown para `Família de Maria` nas opções.
+- Não reverter irmãos desktop para 1 coluna.
+- Não remover o deslocamento desktop de cônjuge/pets sem QA visual.
+- Não remover validação `typecheck`.

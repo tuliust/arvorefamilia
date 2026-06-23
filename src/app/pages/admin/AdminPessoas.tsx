@@ -215,6 +215,10 @@ export function AdminPessoas() {
           'Perfil resetado.',
           `${result.deleted_insights} conteúdo(s) gerado(s),`,
           `${result.deleted_historical_files} arquivo(s) histórico(s),`,
+          `${result.deleted_person_events} evento(s),`,
+          `${result.deleted_social_profiles} rede(s) social(is),`,
+          `${result.deleted_questionnaire_answers} questionário(s),`,
+          `${result.deleted_activity_logs} registro(s) de atividade,`,
           `${result.deleted_user_links} vínculo(s) de usuário,`,
           `${result.deleted_auth_users} auth user(s)`,
           `e ${result.deleted_favorites} favorito(s) removido(s).`,
@@ -500,7 +504,7 @@ export function AdminPessoas() {
         open={!!resetId}
         onOpenChange={(open) => !open && setResetId(null)}
         title="Resetar perfil"
-        description={`Tem certeza que deseja resetar o perfil de "${pessoas.find(p => p.id === resetId)?.nome_completo}"? Esta ação remove foto, conteúdos gerados e favoritos da pessoa, mas mantém o cadastro e os relacionamentos familiares.`}
+        description={`Tem certeza que deseja resetar o perfil de "${pessoas.find(p => p.id === resetId)?.nome_completo}"? Esta ação remove login vinculado quando seguro, preferências, fotos, bio, redes sociais, fatos, arquivos, eventos e histórico de atividade, mas mantém os dados genealógicos básicos e os relacionamentos familiares.`}
         confirmText="Resetar Perfil"
         cancelText="Cancelar"
         onConfirm={handleResetProfile}

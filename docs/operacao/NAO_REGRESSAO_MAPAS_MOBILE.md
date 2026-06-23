@@ -1,6 +1,6 @@
 # Não regressão — mapas familiares mobile
 
-> Última revisão: 2026-06-20  
+> Última revisão: 2026-06-22  
 > Local: `docs/operacao/NAO_REGRESSAO_MAPAS_MOBILE.md`  
 > Escopo: complemento operacional de `docs/REGRAS_DE_NAO_REGRESSAO.md` para `/mapa-familiar` e `/mapa-familiar-horizontal` no mobile.  
 > Status: vigente conforme baseline `baseline/mapas-mobile-padrao-2026-06-20`.
@@ -48,11 +48,51 @@ Regra: qualquer alteração que mude a estrutura visual ou a navegação mobile 
 
 ## 3. Scripts vigentes que não devem ser removidos sem substituição documentada
 
+Scripts carregados pelo `index.html` e relevantes para mapas mobile:
+
 ```txt
+src/mobileFamilyTreeMutationPerformanceGuard.ts
+src/main.tsx
+src/firstLoginMobileTutorialFixes.ts
+src/mobileCuriositiesNavigationFix.ts
+src/mobileTreePanelViewportFix.ts
+src/staticMobileFamilyTreeScreens.ts
+src/mobileFamilyTreeScreenStateGuards.ts
+src/mobileFamilyTreeGrandparentScreens.ts
+src/mobileFamilyTreeSwipeHints.ts
+src/mobileFamilyTreeAncestorConnectorsFix.ts
+src/mobileFamilyTreeDescendantConnectorsFix.ts
+src/mobileFamilyTreeCoreDescendantConnector.ts
+src/mobileFamilyTreeGroupTitleVisibilityFix.ts
 src/mobileFamilyHorizontalZoomOverview.ts
+src/mobileFamilyMapUncleSwipeNavigationGuard.ts
 src/mobileFamilyMapStableMobileFix.ts
 src/mobileFamilyMapDirectionalNavigationFix.ts
 src/mobileFamilyMapCoreConnectorFix.ts
+src/mobileVisualizationPanelFamilyStatsFix.ts
+src/mobileFamilyMapZoomOverviewVisualFix.ts
+src/mobileFamilyMapDescendantsStabilityLock.ts
+src/mobileFamilyMapExtendedSpouseCards.ts
+src/mobileFamilyMapFilterButtonsBehaviorFix.ts
+src/mobileFamilyMapFullOverview.ts
+src/mobileFamilyMapFullOverviewMosaicFix.ts
+```
+
+Scripts críticos de preservação imediata:
+
+```txt
+src/mobileFamilyHorizontalZoomOverview.ts
+src/mobileFamilyMapUncleSwipeNavigationGuard.ts
+src/mobileFamilyMapStableMobileFix.ts
+src/mobileFamilyMapDirectionalNavigationFix.ts
+src/mobileFamilyMapCoreConnectorFix.ts
+src/mobileVisualizationPanelFamilyStatsFix.ts
+src/mobileFamilyMapZoomOverviewVisualFix.ts
+src/mobileFamilyMapDescendantsStabilityLock.ts
+src/mobileFamilyMapExtendedSpouseCards.ts
+src/mobileFamilyMapFilterButtonsBehaviorFix.ts
+src/mobileFamilyMapFullOverview.ts
+src/mobileFamilyMapFullOverviewMosaicFix.ts
 ```
 
 Regras:
@@ -60,9 +100,9 @@ Regras:
 - se remover `mobileFamilyHorizontalZoomOverview.ts`, documentar onde o Zoom horizontal por gerações passa a ser controlado;
 - se remover `mobileFamilyMapStableMobileFix.ts`, documentar como `descendants`, tios, primos, painéis compactos e Zoom 3x3 passam a ser controlados;
 - se remover `mobileFamilyMapDirectionalNavigationFix.ts`, documentar onde a matriz de 9 telas passa a ser garantida;
-- se remover `mobileFamilyMapCoreConnectorFix.ts`, garantir que a linha vertical central, as linhas acima dos tios e os descendentes duplicados no `core` não voltem.
-
----
+- se remover `mobileFamilyMapCoreConnectorFix.ts`, garantir que a linha vertical central, linhas acima dos tios e descendentes duplicados no `core` não voltem;
+- se remover `mobileFamilyMapFullOverview*`, documentar como o mapa completo em mosaico único será substituído;
+- se remover filtros/cônjuges estendidos, atualizar QA, arquitetura e documentação funcional.
 
 ## 4. Grade 3x3 obrigatória de `/mapa-familiar`
 
@@ -206,13 +246,26 @@ Regras:
 
 - `Zoom` em `/mapa-familiar` deve abrir overview 3x3;
 - `Zoom` em `/mapa-familiar-horizontal` deve abrir overview por gerações;
-- o Zoom horizontal não deve usar a estrutura 3x3;
-- abrir/fechar Zoom não pode travar navegação;
-- tocar em uma geração no Zoom horizontal deve navegar para `Ger N`;
-- `Cor` e `Filtros` não devem abrir área com excesso de espaço branco abaixo das opções;
-- painéis superiores não podem deslocar definitivamente a tela ativa.
+- o Zoom horizontal não deve usar a grade 3x3;
+- overview não entra na exportação;
+- abrir/fechar overview não pode travar `body`;
+- toolbar superior mobile contém `Formato`, `Cor`, `Filtros` e `Zoom`;
+- `Exportar` não é item fixo da toolbar superior mobile vigente;
+- o botão `+` abre painel completo de **Visualização**;
+- salvar/exportar pode existir no painel completo aberto por `+`;
+- `Zoom +`, `Zoom -` e `Restaurar` são controles desktop/canvas e não devem ser reintroduzidos como itens fixos mobile sem decisão explícita.
 
----
+## 10.1. Riscos adjacentes bloqueados por padrão
+
+Não fazer em frente mobile de mapa sem prompt próprio:
+
+- remover `Visualizar como...`/seletor de visualizador de `Home.tsx`;
+- alterar `homeAiContext.ts` ou payload de IA;
+- mudar regras de pets/filhos humanos em onboarding;
+- converter pedido pendente de vínculo em relacionamento direto;
+- exigir `participante_ids` em arquivos históricos sem migration aplicada;
+- alterar stepper/preferências de pessoa falecida;
+- mexer em rotas antigas ou preservar query string de forma diferente.
 
 ## 11. QA mínimo antes de fechar mudança mobile
 

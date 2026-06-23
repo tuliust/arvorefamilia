@@ -1,7 +1,70 @@
 import OpenAI from "openai";
 
-function limitText(value: unknown, maxLength = 300) {
+function limitText(value: unknown, maxLength = 500) {
   return String(value ?? "").trim().slice(0, maxLength);
+}
+
+function safeContextText(value: unknown, maxLength = 160) {
+  const text = String(value ?? "").trim();
+  return text ? text.slice(0, maxLength) : null;
+}
+
+function sanitizeContextStringList(value: unknown, maxItems = 10, maxLength = 120) {
+  if (!Array.isArray(value)) return [];
+  return value
+    .filter((item) => typeof item === "string")
+    .map((item) => item.trim().slice(0, maxLength))
+    .filter(Boolean)
+    .slice(0, maxItems);
+}
+
+function sanitizeHistoricalFacts(value: unknown) {
+  if (!Array.isArray(value)) return [];
+
+  return value
+    .map((item) => {
+      if (!item || typeof item !== "object") return null;
+      const record = item as Record<string, unknown>;
+      const titulo = safeContextText(record.titulo, 140);
+      const descricao = safeContextText(record.descricao, 260);
+      const ano = safeContextText(record.ano, 40);
+      const categoria = safeContextText(record.categoria, 80);
+
+      if (!titulo && !descricao) return null;
+      return { titulo, descricao, ano, categoria };
+    })
+    .filter(Boolean)
+    .slice(0, 8);
+}
+
+function sanitizeProfileTextContext(context: unknown, memorialMode: boolean) {
+  if (!context || typeof context !== "object") return {};
+
+  const record = context as Record<string, unknown>;
+  const relacionamentos = record.relacionamentos && typeof record.relacionamentos === "object"
+    ? record.relacionamentos as Record<string, unknown>
+    : {};
+
+  return {
+    nome_completo: safeContextText(record.nome_completo),
+    data_nascimento: safeContextText(record.data_nascimento, 40),
+    idade_aproximada: safeContextText(record.idade_aproximada, 40),
+    local_nascimento: safeContextText(record.local_nascimento),
+    data_falecimento: safeContextText(record.data_falecimento, 40),
+    local_falecimento: safeContextText(record.local_falecimento),
+    local_atual: memorialMode ? null : safeContextText(record.local_atual),
+    profissao: safeContextText(record.profissao),
+    falecido: record.falecido === true,
+    relacionamentos: {
+      pais: sanitizeContextStringList(relacionamentos.pais),
+      maes: sanitizeContextStringList(relacionamentos.maes),
+      conjuges: sanitizeContextStringList(relacionamentos.conjuges),
+      filhos: sanitizeContextStringList(relacionamentos.filhos),
+      pets: sanitizeContextStringList(relacionamentos.pets),
+      irmaos: sanitizeContextStringList(relacionamentos.irmaos),
+    },
+    fatos_historicos: sanitizeHistoricalFacts(record.fatos_historicos),
+  };
 }
 
 export default async function handler(req: any, res: any) {
@@ -32,11 +95,11 @@ export default async function handler(req: any, res: any) {
 
       if (!hasBadges && !hasCustomTraits && !hasAnswers) {
         return res.status(400).json({
-          error: "Selecione ao menos uma opção ou responda uma pergunta para gerar o texto.",
+          error: "Selecione ao menos uma opção para gerar o texto.",
         });
       }
 
-      const isMemorialMode = memorialMode === true || tone === "nostalgico";
+      const isMemorialMode = memorialMode === true;
 
       const profilePayload = {
         tone: typeof tone === "string" ? tone.slice(0, 80) : "afetivo",
@@ -57,7 +120,7 @@ export default async function handler(req: any, res: any) {
             }))
             .slice(0, 6)
           : [],
-        context: context && typeof context === "object" ? context : {},
+        context: sanitizeProfileTextContext(context, isMemorialMode),
       };
       const compactProfileContext = JSON.stringify(profilePayload).slice(0, 9000);
       const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
@@ -68,18 +131,21 @@ export default async function handler(req: any, res: any) {
             role: "system",
             content: isMemorialMode
               ? [
-                "Você deve gerar dois textos curtos para um perfil familiar de uma pessoa falecida.",
+                "Você deve gerar dois textos para um perfil familiar de uma pessoa falecida.",
                 'Retorne exclusivamente JSON válido, sem markdown, no formato: {"minibio":"...","curiosidades":"..."}.',
                 "Regras:",
                 "- Escreva em terceira pessoa.",
                 "- Use verbos no passado.",
-                "- Use tom saudosista, afetivo e respeitoso.",
-                "- Pode usar o nome da pessoa quando disponível no contexto.",
+                "- Use o tom solicitado, inclusive se for nostálgico, divertido, elegante ou outro.",
+                "- Não comece obrigatoriamente pelo nome da pessoa; evite aberturas redundantes como '[Nome] foi...'.",
+                "- Use o nome apenas quando ficar natural e útil para clareza.",
                 "- Não use primeira pessoa.",
                 "- Não use eu, me, meu, minha, meus ou minhas.",
                 "- Não escreva como se a pessoa ainda estivesse viva.",
-                "- Cada campo deve ter no máximo 300 caracteres.",
+                "- Cada campo deve ter no máximo 500 caracteres.",
+                "- Tente escrever entre 400 e 450 caracteres por campo quando houver informação suficiente.",
                 "- Não invente fatos, datas, cidades, viagens, profissões, conquistas ou eventos.",
+                "- Use principalmente badges e respostas do questionário; quando fizer sentido, também considere idade aproximada, local de nascimento ou falecimento, profissão, vínculos familiares e fatos históricos enviados no contexto.",
                 "- Não use placeholders como xxxx.",
                 "- Não mencione morte diretamente se não for necessário.",
                 "- Evite linguagem fúnebre pesada.",
@@ -89,23 +155,24 @@ export default async function handler(req: any, res: any) {
                 "- Se houver temas sensíveis, trate com sobriedade.",
                 "- A Mini Bio deve preservar a memória da pessoa, suas origens, valores, trajetória ou vínculos familiares.",
                 "- Curiosidades deve trazer gostos, marcas pessoais, lembranças, hábitos ou detalhes leves no passado.",
-                "- Prefira formulações como: '[Nome] foi uma pessoa...', '[Nome] era lembrado por...', 'Gostava de...', 'Adorava...', 'Tinha o costume de...'.",
               ].join(" ")
               : [
-                "Você deve gerar dois textos curtos para um perfil familiar.",
+                "Você deve gerar dois textos para um perfil familiar.",
                 'Retorne exclusivamente JSON válido, sem markdown, no formato: {"minibio":"...","curiosidades":"..."}.',
                 "Regras:",
                 "- Escreva sempre em primeira pessoa.",
                 "- Não use terceira pessoa.",
-                "- Cada campo deve ter no máximo 300 caracteres.",
+                "- Não comece obrigatoriamente pelo nome da pessoa; evite aberturas redundantes como 'Sou [nome]...'.",
+                "- Cada campo deve ter no máximo 500 caracteres.",
+                "- Tente escrever entre 400 e 450 caracteres por campo quando houver informação suficiente.",
                 "- Não invente fatos.",
-                "- Use apenas as informações fornecidas em contexto, badges, características adicionais e respostas.",
+                "- Use principalmente badges e respostas do questionário; quando fizer sentido, também considere idade aproximada, local de nascimento, cidade atual, profissão, vínculos familiares e fatos históricos enviados no contexto.",
                 "- Não mencione IA.",
                 "- Não use linguagem exagerada.",
                 "- Não exponha dados técnicos.",
                 "- Não inferir saúde, religião, orientação sexual, condição financeira, conflitos familiares, causa de morte ou informações sensíveis não informadas explicitamente.",
                 "- Se houver temas sensíveis, trate com sobriedade.",
-                "- A Mini Bio deve apresentar quem sou, minhas origens, valores, trajetória ou relação com a família.",
+                "- A Mini Bio deve apresentar origens, valores, trajetória ou relação com a família.",
                 "- Curiosidades deve trazer gostos, marcas pessoais, lembranças, hábitos ou detalhes leves sobre minha vida.",
               ].join(" "),
           },
@@ -114,7 +181,7 @@ export default async function handler(req: any, res: any) {
             content: `Dados fornecidos para geração:\n${compactProfileContext}`,
           },
         ],
-        max_output_tokens: 360,
+        max_output_tokens: 900,
       });
 
       try {
@@ -124,8 +191,8 @@ export default async function handler(req: any, res: any) {
         }
 
         return res.status(200).json({
-          minibio: limitText(parsed.minibio),
-          curiosidades: limitText(parsed.curiosidades),
+          minibio: limitText(parsed.minibio, 500),
+          curiosidades: limitText(parsed.curiosidades, 500),
         });
       } catch {
         return res.status(500).json({

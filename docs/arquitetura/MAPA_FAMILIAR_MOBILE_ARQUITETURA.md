@@ -1,6 +1,6 @@
 # Arquitetura — mapas familiares mobile
 
-> Última revisão: 2026-06-21  
+> Última revisão: 2026-06-22  
 > Local: `docs/arquitetura/MAPA_FAMILIAR_MOBILE_ARQUITETURA.md`  
 > Escopo: arquitetura técnica dos mapas mobile em `/mapa-familiar` e `/mapa-familiar-horizontal`.  
 > Status: atualizado após a rodada de ajustes de tios, cônjuges, Zoom e mapa completo mobile.
@@ -131,29 +131,33 @@ data-mobile-family-tree-root="true"
 
 O carregamento vigente relevante para os mapas mobile é:
 
-| Arquivo | Papel |
+| Arquivo | Responsabilidade vigente |
 |---|---|
-| `mobileFamilyTreeMutationPerformanceGuard.ts` | reduz loops de `MutationObserver` causados por conectores e estilos. |
-| `staticMobileFamilyTreeScreens.ts` | suporte a telas estáticas/estrutura mobile. |
-| `mobileFamilyTreeScreenStateGuards.ts` | guards de estado de tela/stage. |
+| `mobileFamilyTreeMutationPerformanceGuard.ts` | reduz risco de loops de `MutationObserver` em conectores e ajustes DOM. |
+| `main.tsx` | carrega React e importa ajustes globais como `mobileFamilyMapFullPanelStyleFix.ts`. |
+| `firstLoginMobileTutorialFixes.ts` | ajustes do tutorial/primeiro acesso no mobile. |
+| `mobileCuriositiesNavigationFix.ts` | ajustes de navegação mobile em curiosidades. |
+| `mobileTreePanelViewportFix.ts` | correções de viewport/painel no mobile. |
+| `staticMobileFamilyTreeScreens.ts` | suporte a telas estáticas/estrutura de telas mobile. |
+| `mobileFamilyTreeScreenStateGuards.ts` | guards de estado de tela e stage. |
 | `mobileFamilyTreeGrandparentScreens.ts` | cria/apoia telas laterais superiores de ancestrais profundos. |
 | `mobileFamilyTreeSwipeHints.ts` | hints/apoio visual de swipe. |
-| `mobileFamilyTreeAncestorConnectorsFix.ts` | corrige conectores de avós e ancestrais. |
-| `mobileFamilyTreeDescendantConnectorsFix.ts` | desenha/ajusta conectores internos de descendentes. |
-| `mobileFamilyTreeCoreDescendantConnector.ts` | desenha/apoia conectores do núcleo para descendentes. |
-| `mobileFamilyTreeGroupTitleVisibilityFix.ts` | força títulos visíveis e compactos. |
-| `mobileFamilyHorizontalZoomOverview.ts` | Zoom específico da horizontal, com cards por geração. |
-| `mobileFamilyMapUncleSwipeNavigationGuard.ts` | protege gestos nas telas de tios. |
-| `mobileFamilyMapStableMobileFix.ts` | camada consolidada de estabilidade, descendentes, painéis e overview 3x3. |
-| `mobileFamilyMapDirectionalNavigationFix.ts` | contrato direcional da navegação 3x3. |
-| `mobileFamilyMapCoreConnectorFix.ts` | cleanup de conectores, ocultação de duplicações no `core` e conectores controlados de tios. |
-| `mobileVisualizationPanelFamilyStatsFix.ts` | ajustes do painel/estatísticas mobile. |
-| `mobileFamilyMapZoomOverviewVisualFix.ts` | ajustes visuais e funcionais do Zoom 3x3. |
-| `mobileFamilyMapDescendantsStabilityLock.ts` | lock de estabilidade da tela `descendants`, pausado durante Zoom. |
-| `mobileFamilyMapExtendedSpouseCards.ts` | marcação e expansão visual de cônjuges estendidos. |
-| `mobileFamilyMapFilterButtonsBehaviorFix.ts` | comportamento separado dos filtros mobile de cônjuges. |
-| `mobileFamilyMapFullOverview.ts` | botão **Exibir mapa completo**, overlay com pinça/arraste e mosaico único. |
-| `mobileFamilyMapFullOverviewMosaicFix.ts` | refinamento do mosaico completo, filhos/netos e conectores extras. |
+| `mobileFamilyTreeAncestorConnectorsFix.ts` | ajusta conectores de avós e ancestrais. |
+| `mobileFamilyTreeDescendantConnectorsFix.ts` | ajusta conectores internos de descendentes. |
+| `mobileFamilyTreeCoreDescendantConnector.ts` | apoia conectores do núcleo e da área descendente. |
+| `mobileFamilyTreeGroupTitleVisibilityFix.ts` | preserva títulos escuros, compactos e legíveis no mobile. |
+| `mobileFamilyHorizontalZoomOverview.ts` | cria o Zoom específico de `/mapa-familiar-horizontal`, com cards por geração. |
+| `mobileFamilyMapUncleSwipeNavigationGuard.ts` | protege gestos nas telas de tios para evitar navegação indevida. |
+| `mobileFamilyMapStableMobileFix.ts` | estabiliza `descendants`, tios, primos, painéis compactos e overview 3x3. |
+| `mobileFamilyMapDirectionalNavigationFix.ts` | aplica e bloqueia direções de swipe da grade 3x3. |
+| `mobileFamilyMapCoreConnectorFix.ts` | oculta duplicações no `core`, linha central abaixo da pessoa principal e conectores indevidos. |
+| `mobileVisualizationPanelFamilyStatsFix.ts` | ajusta estatísticas/resumo do painel mobile de visualização. |
+| `mobileFamilyMapZoomOverviewVisualFix.ts` | refina aparência/funcionamento visual do Zoom 3x3. |
+| `mobileFamilyMapDescendantsStabilityLock.ts` | trava estabilidade de `descendants`, pausando interferências durante Zoom/overview. |
+| `mobileFamilyMapExtendedSpouseCards.ts` | marca e expande visualmente cônjuges estendidos. |
+| `mobileFamilyMapFilterButtonsBehaviorFix.ts` | separa comportamento dos filtros mobile de cônjuges. |
+| `mobileFamilyMapFullOverview.ts` | adiciona `Exibir mapa completo`, overlay com pinça/arraste e mosaico único. |
+| `mobileFamilyMapFullOverviewMosaicFix.ts` | refina mosaico completo, filhos/netos e conectores extras. |
 
 ### Arquivos legados ou substituídos
 
@@ -175,7 +179,46 @@ src/mobileFamilyMapOverviewNavigationBridge.ts
 
 Regra: não restaurar arquivo legado sem atualizar esta documentação, o QA pós-deploy e os documentos canônicos afetados.
 
----
+## 4.1. Componentes React observados no roteamento atual
+
+`HomeTreeSection.tsx` é a camada que escolhe a implementação por rota e breakpoint:
+
+| Rota | Desktop/tablet | Mobile |
+|---|---|---|
+| `/mapa-familiar` | `DesktopFamilyMapView` | `MobileFamilyTreeView` |
+| `/mapa-familiar-horizontal` | `DesktopFamilyHorizontalMapFilteredView` | `MobileFamilyHorizontalMapFilteredView` |
+
+Regra: a documentação antiga que cita `DesktopFamilyHorizontalMapView` ou `MobileFamilyHorizontalMapView` sem `Filtered` deve ser entendida como conceitual, não como nome de componente renderizado na rota atual.
+
+## 4.2. Toolbar mobile e painel completo
+
+`MobileFamilyMapToolbar.tsx` expõe tecnicamente o union:
+
+```txt
+visualizacao
+formato
+cor
+grupos
+exportar
+zoom
+```
+
+Mas `TOOLBAR_ITEMS` renderiza somente:
+
+```txt
+Formato
+Cor
+Filtros
+Zoom
+```
+
+O botão `+` abre o painel completo de **Visualização**.
+
+Implicações:
+
+- `Exportar` pode existir como painel técnico, mas não é botão fixo da toolbar superior no estado atual;
+- salvar/exportar imagem pertence ao painel completo aberto pelo `+`;
+- `Zoom` pertence ao overview da rota ativa, não a zoom incremental.
 
 ## 5. Camada consolidada mobile
 
@@ -489,6 +532,13 @@ Consolidar progressivamente os scripts auxiliares dentro dos componentes React o
 ```
 
 ---
+
+## 13.1. Riscos fora do escopo dos scripts mobile
+
+- `Home.tsx` concentra `debugViewPersonId`, seletor de visualizador, preservação de `?pessoa=`, contagens e abertura do tutorial. Alterações devem ser isoladas e testadas em ambas as rotas.
+- `homeAiContext.ts` possui inferência por nome/sufixo para pai/mãe e inclui dados de contato/rede social em parte do contexto. Alterar IA exige revisão de privacidade e payload.
+- O modelo mobile pode inferir relações para visualização; isso não cria nem corrige dados persistidos.
+- Rascunhos e fluxo de onboarding não fazem parte desta arquitetura, mas regressões ali podem afetar quais dados chegam ao mapa.
 
 ## 14. Ordem conceitual de carregamento
 

@@ -1,4 +1,4 @@
-import { Baby, Heart, UserRound, Users } from 'lucide-react';
+import { Baby, Heart, PawPrint, UserRound, Users } from 'lucide-react';
 import { Pessoa } from '../../types';
 import { getInitials } from '../../utils/personFields';
 import { formatCount, getFirstName } from './meusVinculosUtils';
@@ -29,6 +29,7 @@ function PersonAvatar({ person, avatarSrc }: { person: Pessoa; avatarSrc?: strin
 const GROUP_ICONS = {
   pais: UserRound,
   filhos: Baby,
+  pets: PawPrint,
   conjuges: Heart,
   irmaos: Users,
 };
@@ -38,21 +39,19 @@ export function RelationshipOverview({ person, avatarSrc, groups }: Relationship
 
   return (
     <section className="space-y-6">
-      <section className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
-        <div className="flex min-w-0 flex-col gap-4 sm:flex-row sm:items-center">
-          <PersonAvatar person={person} avatarSrc={avatarSrc} />
-          <div className="min-w-0 flex-1">
-            <h2 className="min-w-0 break-words text-xl font-semibold leading-tight text-gray-950">
-              {firstName ? `Familiares de ${firstName}` : 'Familiares'}
-            </h2>
-            <p className="mt-3 break-words text-sm text-gray-600">
-              Confira se os familiares abaixo estão corretos. Você pode adicionar vínculos, solicitar correções ou seguir se estiver tudo certo.
-            </p>
-          </div>
+      <div className="flex min-w-0 flex-col gap-4 sm:flex-row sm:items-center">
+        <PersonAvatar person={person} avatarSrc={avatarSrc} />
+        <div className="min-w-0 flex-1">
+          <h2 className="min-w-0 break-words text-2xl font-bold leading-tight text-gray-950">
+            {firstName ? `Familiares de ${firstName}` : 'Familiares'}
+          </h2>
+          <p className="mt-2 max-w-3xl break-words text-base leading-relaxed text-gray-600">
+            Confira se os familiares abaixo estão corretos. Você pode adicionar vínculos, solicitar correções ou seguir se estiver tudo certo.
+          </p>
         </div>
-      </section>
+      </div>
 
-      <div className="grid grid-cols-4 gap-2 sm:grid-cols-2 sm:gap-3 xl:grid-cols-4">
+      <div className="grid grid-cols-4 gap-2 sm:grid-cols-2 sm:gap-3 xl:grid-cols-5">
         {groups.map((group) => {
           const Icon = GROUP_ICONS[group.key];
           return (

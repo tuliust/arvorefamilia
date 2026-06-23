@@ -5,11 +5,11 @@ import {
   ClipboardCheck,
   FileText,
   Heart,
-  Image as ImageIcon,
   MapPin,
   Pencil,
   Phone,
   Save,
+  ScrollText,
   UserCircle2,
   Users,
   X,
@@ -17,7 +17,6 @@ import {
 import { useNavigate } from 'react-router';
 import { toast } from 'sonner';
 import {
-  HEADER_ACTION_ICONS,
   MemberPageHeader,
   PAGE_CONTAINER_CLASS,
 } from '../components/layout/MemberPageHeader';
@@ -61,6 +60,7 @@ type RelationshipGroups = {
   maes: Pessoa[];
   conjuges: Pessoa[];
   filhos: Pessoa[];
+  pets: Pessoa[];
   irmaos: Pessoa[];
 };
 
@@ -71,6 +71,7 @@ const EMPTY_RELATIONSHIPS: RelationshipGroups = {
   maes: [],
   conjuges: [],
   filhos: [],
+  pets: [],
   irmaos: [],
 };
 
@@ -84,13 +85,14 @@ function readDraftRelationships(userId: string, pessoaId: string): RelationshipG
     if (!raw) return null;
     const parsed = JSON.parse(raw) as { relationships?: Partial<RelationshipGroups> };
     if (!parsed.relationships) return null;
-    return {
+    return normalizeRelationshipGroups({
       pais: parsed.relationships.pais ?? [],
       maes: parsed.relationships.maes ?? [],
       conjuges: parsed.relationships.conjuges ?? [],
       filhos: parsed.relationships.filhos ?? [],
+      pets: (parsed.relationships as Partial<RelationshipGroups>).pets ?? [],
       irmaos: parsed.relationships.irmaos ?? [],
-    };
+    });
   } catch {
     return null;
   }
@@ -98,6 +100,24 @@ function readDraftRelationships(userId: string, pessoaId: string): RelationshipG
 
 function uniquePeople(people: Pessoa[]) {
   return Array.from(new Map(people.map((person) => [person.id, person])).values());
+}
+
+function isPetPerson(person: Pessoa) {
+  return person.humano_ou_pet === 'Pet';
+}
+
+function normalizeRelationshipGroups(groups: Partial<RelationshipGroups>): RelationshipGroups {
+  const filhos = uniquePeople(groups.filhos ?? []);
+  const pets = uniquePeople([...(groups.pets ?? []), ...filhos.filter(isPetPerson)]);
+
+  return {
+    pais: uniquePeople(groups.pais ?? []),
+    maes: uniquePeople(groups.maes ?? []),
+    conjuges: uniquePeople(groups.conjuges ?? []),
+    filhos: filhos.filter((person) => !isPetPerson(person)),
+    pets,
+    irmaos: uniquePeople(groups.irmaos ?? []),
+  };
 }
 
 function valueOrEmpty(value: unknown) {
@@ -109,9 +129,19 @@ function yesNo(value: boolean) {
   return value ? 'Sim' : 'Não';
 }
 
-function isImageArchive(archive: ArquivoHistorico) {
-  return archive.tipo === 'imagem' || archive.mime_type?.startsWith('image/');
+function archiveHasFile(archive: ArquivoHistorico) {
+  return Boolean(String(archive.url ?? '').trim());
 }
+
+function isImageArchive(archive: ArquivoHistorico) {
+  return archiveHasFile(archive) && (archive.tipo === 'imagem' || archive.mime_type?.startsWith('image/'));
+}
+function getArchiveRecordLabel(archive: ArquivoHistorico) {
+  if (!archiveHasFile(archive)) return 'Fato sem arquivo';
+  if (archive.tipo === 'pdf' || archive.mime_type === 'application/pdf') return 'PDF';
+  return 'Imagem';
+}
+
 
 type GenderHint = 'homem' | 'mulher' | null | undefined;
 
@@ -274,7 +304,7 @@ export function RevisaoDados() {
         listarPessoaSocialProfiles(pessoa.id),
       ]);
       if (!mounted) return;
-      setRelationships(readDraftRelationships(user.id, pessoa.id) ?? storedRelationships);
+      setRelationships(normalizeRelationshipGroups(readDraftRelationships(user.id, pessoa.id) ?? storedRelationships));
       setArchives(storedArchives);
       setSocialProfiles(storedSocialProfiles);
       setSocialProfileForms(buildSocialProfilesFromRows(storedSocialProfiles, pessoa));
@@ -300,6 +330,7 @@ export function RevisaoDados() {
     },
     { label: 'Cônjuges', people: uniquePeople(relationships.conjuges), genderHints: {} as Record<string, GenderHint> },
     { label: 'Filhos', people: uniquePeople(relationships.filhos), genderHints: {} as Record<string, GenderHint> },
+    { label: 'Pets', people: uniquePeople(relationships.pets), genderHints: {} as Record<string, GenderHint> },
     { label: 'Irmãos', people: uniquePeople(relationships.irmaos), genderHints: {} as Record<string, GenderHint> },
   ], [relationships]);
 
@@ -418,11 +449,8 @@ export function RevisaoDados() {
         title="Revisão final"
         subtitle="Etapa 5 de 5: confira e ajuste seus dados antes de acessar a árvore."
         icon={ClipboardCheck}
-        actions={[
-          { label: 'Meus dados', to: '/meus-dados', icon: HEADER_ACTION_ICONS.Settings },
-          { label: 'Meus vínculos', to: '/meus-vinculos', icon: HEADER_ACTION_ICONS.Network },
-          { label: 'Mapa Familiar', to: '/mapa-familiar', icon: HEADER_ACTION_ICONS.Network },
-        ]}
+        hideHeaderActions
+        hideMobileHeaderActions
       />
 
       <MemberOnboardingSteps activeStep={5} hidePreferences={pessoa.falecido === true} />
@@ -573,7 +601,7 @@ export function RevisaoDados() {
             </SectionCard>
 
             <SectionCard
-              title="Arquivos históricos"
+              title="Fatos e arquivos históricos"
               icon={FileText}
               onEdit={() => navigate('/arquivos-historicos')}
             >
@@ -584,12 +612,19 @@ export function RevisaoDados() {
                       <div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-white text-gray-500 ring-1 ring-gray-200">
                         {isImageArchive(archive) ? (
                           <img src={archive.url} alt={archive.titulo} className="h-full w-full object-cover" />
+                        ) : archiveHasFile(archive) ? (
+                          <FileText className="h-5 w-5" />
                         ) : (
-                          <ImageIcon className="h-5 w-5" />
+                          <ScrollText className="h-5 w-5" />
                         )}
                       </div>
                       <div className="min-w-0">
-                        <p className="truncate text-sm font-semibold text-gray-900">{archive.titulo}</p>
+                        <div className="flex flex-wrap items-center gap-2">
+                          <p className="min-w-0 truncate text-sm font-semibold text-gray-900">{archive.titulo}</p>
+                          <span className="shrink-0 rounded-full border border-gray-200 bg-white px-2 py-0.5 text-[11px] font-semibold text-gray-600">
+                            {getArchiveRecordLabel(archive)}
+                          </span>
+                        </div>
                         <p className="mt-1 line-clamp-2 text-xs text-gray-600">{archive.descricao || 'Sem descrição.'}</p>
                         {archive.ano && <p className="mt-1 text-xs text-gray-500">Ano: {archive.ano}</p>}
                       </div>
@@ -597,7 +632,7 @@ export function RevisaoDados() {
                   ))}
                 </div>
               ) : (
-                <p className="text-sm text-gray-500">Nenhum arquivo histórico informado.</p>
+                <p className="text-sm text-gray-500">Nenhum fato ou arquivo histórico informado.</p>
               )}
             </SectionCard>
           </div>

@@ -1,534 +1,203 @@
+# Árvore, legendas, conectores e painel
 
-# Árvore — painel, filtros, conectores, destaques e exportação
+> Última revisão: 2026-06-23  
+> Escopo: painel desktop, conectores, legendas, seletor de visualização e layout direto do mapa familiar.
 
-> Última revisão: 2026-06-14
-> Local canônico: `docs/funcionalidades/ARVORE_LEGENDAS_CONECTORES_PAINEL.md`
-> Tipo: documentação funcional/técnica do painel, filtros, conectores e destaques da árvore
-> Status: organizado para descrever contrato funcional e apontar QA manual para `docs/QA_MANUAL.md`.
+## Painel desktop do mapa familiar
 
----
+### Dropdown
 
-## 1. Função deste documento
+Label padrão fechado:
 
-Este documento descreve:
-
-- painel lateral desktop;
-- modal mobile de controles;
-- filtros de grupos;
-- filtros de status;
-- cards do painel;
-- conectores;
-- destaques;
-- relação do painel com exportação.
-
-Para detalhes das views em si:
-
-```txt
-docs/funcionalidades/MAPA_FAMILIAR_VIEW.md
+```text
+Família de [Nome]
 ```
 
-Para detalhes da exportação:
+Deve usar a pessoa central/visualizada ou principal vinculada.
 
-```txt
-docs/funcionalidades/EXPORTACAO_ARVORE.md
+### Dropdown aberto
+
+A primeira opção visível deve ser desabilitada:
+
+```text
+Visualize a árvore como...
 ```
 
-Para QA manual:
+Depois, listar pessoas por primeiro e segundo nome:
 
-```txt
-docs/QA_MANUAL.md
+```text
+Maria Acileide
+Tulius Tsangaropulos
 ```
 
----
+Não usar `Família de Maria` nas opções abertas.
 
-## 2. Views cobertas
+## Contagem de cadastrados
 
-Views oficiais:
+Fonte:
 
-```txt
-/mapa-familiar
-/mapa-familiar-horizontal
-```
-
-Rotas antigas fora do produto ativo:
-
-```txt
-/minha-arvore
-/genealogia
-/visao-completa
-```
-
-Exceção vigente:
-
-```txt
-/minha-arvore/editar
-```
-
----
-
-## 3. Estado atual do painel
-
-O painel atual **não usa** a barra:
-
-```txt
-Filtros | Legendas | Ações
-```
-
-Contrato vigente:
-
-- controles superiores compactos no desktop;
-- filtros de grupos e status acessíveis diretamente;
-- flyouts específicos para `Cores`, `Exportar` e `Destacar`;
-- modal mobile reduzido para controles essenciais;
-- cards do painel alinhados visualmente à paleta ativa;
-- painel, modal e elementos auxiliares ignorados pela exportação.
-
-Não tratar como contrato vigente:
-
-```txt
-activeSidebarPanel
-aba Legendas
-aba Ações
-barra Filtros | Legendas | Ações
-```
-
----
-
-## 4. Arquivos principais
-
-```txt
-src/app/pages/Home.tsx
-src/app/pages/home/SidebarPanelTabs.tsx
-src/app/pages/home/HomeMobileNav.tsx
-src/app/pages/home/HomeTreeSection.tsx
-src/app/pages/home/DirectRelationKpiGrid.tsx
-src/app/pages/home/DirectRelativeFilterGrid.tsx
-src/app/pages/home/LifeStatusKpiGrid.tsx
-src/app/components/FamilyTree/DesktopFamilyMapView.tsx
-src/app/components/FamilyTree/DesktopFamilyHorizontalMapView.tsx
-src/app/components/FamilyTree/MobileFamilyTreeView.tsx
-src/app/components/FamilyTree/MobileFamilyHorizontalMapView.tsx
-src/styles/home-sidebar-unified.css
-src/styles/mobile-tree-controls.css
-src/styles/tree-panel-palette-cards.css
-src/styles/family-map-qa.css
-src/styles/family-map-horizontal.css
-src/styles/family-map-mobile-palettes.css
-```
-
----
-
-## 5. Estados principais
-
-| Estado | Papel |
-|---|---|
-| `directRelativeFilters` | Controla filtros de grupos diretos. |
-| `personFilters` | Controla vivos, falecidos e pets. |
-| `visualLineFilters` | Controla linhas/conectores conforme view. |
-| `activeHighlights` | Controla `Destacar`: linhas, cards e grupos. |
-| `legendOpen` | Nome histórico; controla modal mobile de controles. |
-| `mobileGroupsOpen` | Controla abertura dos grupos no modal mobile. |
-| `renderedDirectRelationCounts` | Contagens efetivas retornadas pela view renderizada. |
-
-Regras:
-
-- filtro não altera dados;
-- destaque não altera dados;
-- contagem deve refletir renderização efetiva quando disponível;
-- cônjuge sempre visível não deve inflar contagem de cônjuges filtráveis.
-
----
-
-## 6. Controles desktop
-
-| Controle | Função |
-|---|---|
-| Zoom + | Aproxima a view ativa. |
-| Zoom - | Afasta a view ativa. |
-| Restaurar visualização | Restaura enquadramento/zoom/scroll conforme view. |
-| Vertical | Navega para `/mapa-familiar`. |
-| Horizontal | Navega para `/mapa-familiar-horizontal`. |
-| Cores | Alterna paleta. |
-| Exportar | Abre ações Área, Imagem, PDF e Imprimir. |
-| Destacar | Abre destaque de Linhas, Cards e Grupos. |
-| Grupos/Filtros | Controla grupos diretos e status. |
-
-Regras:
-
-- Vertical/Horizontal preservam `location.search`;
-- `?pessoa=...` não pode ser perdido;
-- painel não entra na exportação;
-- `Restaurar visualização` não é sinônimo de `Zoom -`;
-- ações não dependem de abas removidas.
-
----
-
-## 7. Modal mobile de controles
-
-O modal mobile é uma versão reduzida, não uma réplica do desktop.
-
-### Deve conter
-
-```txt
-Vertical
-Horizontal
-Cores
-Grupos
-Destacar
-Filtros
-```
-
-### Não deve conter
-
-```txt
-Zoom +
-Zoom -
-Restaurar visualização
-Exportar
-```
-
-Contrato visual:
-
-- título `Controles`;
-- sem subtítulo;
-- botão superior direito com ícone `X`;
-- overlay fecha o modal;
-- `Escape` fecha quando disponível;
-- body fica com scroll travado enquanto aberto;
-- conteúdo interno tem rolagem própria;
-- modal fica acima de header, bottom nav e botões flutuantes;
-- modal não entra na exportação.
-
-Regras específicas:
-
-- `Grupos` exibe/oculta cards de grupos;
-- grupos não aparecem por padrão;
-- filtros de status ficam sempre visíveis;
-- filtros devem caber em 4 colunas quando houver espaço.
-
----
-
-## 8. Filtros de grupos
-
-Keys esperadas:
-
-```txt
-tataravos
-bisavos
-avos
-pais
-tios
-primos
-sobrinhos
-irmaos
-filhos
-netos
-conjuge
-pets
+```text
+user_person_links
 ```
 
 Regras:
 
-- `Cônjuges` é filtro visual;
-- `Pets` participa de filtros de grupo/status conforme view;
-- pessoa central permanece visível quando aplicável;
-- filtros devem funcionar nas duas views oficiais;
-- filtros devem refletir a view renderizada, não apenas a base bruta;
-- bordas e fundos no mobile seguem a paleta ativa.
+- deduplicar `pessoa_id`;
+- não usar fallback artificial para 1;
+- se RLS limitar leitura, registrar limitação;
+- não confundir pessoa existente em `pessoas` com pessoa cadastrada.
 
----
+## Cards e status
 
-## 9. Filtros de status
+### Cadastrado
 
-Componente principal:
+Pessoa com usuário vinculado.
 
-```txt
-LifeStatusKpiGrid
+### Pré-cadastrado
+
+Pessoa existente na árvore sem usuário vinculado.
+
+### Em análise
+
+Pessoa ou vínculo com alteração pendente.
+
+## Cards do painel lateral
+
+### Grupos
+
+- Núcleo;
+- Ascendentes;
+- Colaterais.
+
+### Ajuste desktop pós-7D
+
+Os cards foram compactados:
+
+- menor gap entre cards;
+- menor padding interno;
+- menor fonte nos títulos;
+- menor fonte nas linhas de parentes;
+- contadores preservados;
+- mobile sem alteração.
+
+### Linhas internas
+
+Exemplos:
+
+- Pais;
+- Irmãos;
+- Filhos;
+- Netos;
+- Avós;
+- Bisavós;
+- Tataravós;
+- Tios;
+- Primos;
+- Sobrinhos.
+
+## Botão de cônjuges indiretos
+
+### Estados
+
+Quando inativo:
+
+```text
+Exibir cônjuges de tios, primos etc
 ```
 
-Filtros:
+Quando ativo:
 
-```txt
-Vivos
-Falecidos
-Pets
+```text
+Ocultar cônjuges de tios, primos etc
 ```
 
-Regras:
+### Preservar
 
-- não alterar dados;
-- não esconder pessoa central quando a regra da view exigir permanência;
-- filtros devem ser refletidos na exportação;
-- no mobile, filtros são compactos e permanecem visíveis mesmo com `Grupos` fechado;
-- cores devem ser coerentes com a paleta ativa.
+- estado visual ativo;
+- `aria-pressed`;
+- `data-active`;
+- lógica de filtro.
 
----
+## Conectores
 
-## 10. Cards do painel e paletas
+- Conectores devem preservar relação visual entre gerações.
+- Ajustes de layout compacto não devem desconectar cards.
+- Layout compacto é permitido apenas para árvore pequena e simples.
+- Alterações de posição devem preservar leitura de ascendentes, núcleo, descendentes e colaterais.
 
-Contrato:
+## Layout direto desktop
 
-- cards de grupos e filtros usam o vocabulário visual da árvore;
-- desktop é referência visual;
-- mobile adapta layout, não redefine paleta;
-- `tree-panel-palette-cards.css` aplica background/borda/texto com base em data attributes e variáveis;
-- a paleta Visual/Azul pode usar gradientes equivalentes aos cards da árvore;
-- paletas Branca, Laranja e Marrom não devem cair em fallback azul/teal.
+### Irmãos
 
-Data attributes esperados quando aplicável:
+No desktop, o grupo de irmãos permite até 2 cards por linha.
 
-```txt
-data-tree-panel-card="true"
-data-tree-panel-card-type="group"
-data-tree-panel-card-type="filter"
-data-family-map-color-key
-data-tree-panel-filter-key
+Regra esperada:
+
+```ts
+maxPerRow: options.isMobile ? 1 : 2
 ```
 
-Anti-regressão:
+### Cônjuge e pets
 
-```txt
-O painel não deve parecer um sistema visual separado da árvore.
+O grupo inferior direito foi deslocado no desktop:
+
+```ts
+const LOWER_RIGHT_GROUP_SHIFT_X = 180;
 ```
 
----
+Cálculo esperado:
 
-## 11. Regras de cônjuges no painel/filtros
-
-### Sempre visíveis
-
-Não dependem do filtro `Cônjuges`:
-
-- cônjuge da pessoa central;
-- cônjuges de avós;
-- cônjuges de bisavós;
-- cônjuges de tataravós.
-
-### Filtráveis implementados no código atual
-
-Dependem do filtro `Cônjuges`:
-
-```txt
-tios
-primos
-sobrinhos
-filhos
-netos
+```ts
+const lowerRightGroupCenterX = options.isMobile
+  ? MOBILE_LOWER_RIGHT_GROUP_CENTER_X
+  : LOWER_RIGHT_GROUP_CENTER_X + LOWER_RIGHT_GROUP_SHIFT_X;
 ```
 
-### Pendência conhecida
+### Mobile
 
-`pais`/Geração 4 na horizontal é uma pendência aberta (`TREE-003`). Não documentar como implementado enquanto `pais` não estiver no conjunto filtrável do desktop e do mobile horizontal.
+Mobile deve manter comportamento anterior:
 
----
+- 1 card por linha nos irmãos;
+- sem deslocamento desktop;
+- sem reabrir problemas de sobreposição.
 
-## 12. Legendas e ajuda contextual
+## Tour
 
-A aba `Legendas` não é UI vigente do painel.
+Etapas pós-6A:
 
-Possibilidades futuras:
+- Perfis, vínculos e memórias.
+- Inteligência artificial e datas importantes.
+- Guarde os seus destaques.
 
-| Opção | Decisão necessária |
-|---|---|
-| Remover totalmente | Excluir UI/CSS/docs legadas após auditoria. |
-| Manter como ajuda contextual | Reposicionar fora de tabs, por exemplo em tooltip ou modal independente. |
+## Proteções mobile
 
-Até nova decisão:
+Não alterar scripts mobile sem frente explícita:
 
-- não restaurar a aba `Legendas`;
-- qualquer ajuda contextual deve usar `data-tree-export-ignore="true"`;
-- documentação histórica sobre legendas deve ficar em `docs/historico/`.
+- `src/mobileFamilyMap*.ts`;
+- `src/mobileFamilyTree*.ts`;
+- `src/staticMobileFamilyTreeScreens.ts`;
+- `src/firstLoginMobileTutorialFixes.ts`.
 
----
+## QA
 
-## 13. Conectores
+1. Conferir dropdown fechado `Família de X`.
+2. Conferir dropdown aberto com `Visualize a árvore como...`.
+3. Conferir nomes no seletor com primeiro e segundo nome.
+4. Conferir contagem `Cadastrados`.
+5. Conferir cards cadastrados/pré-cadastrados.
+6. Conferir cards `Núcleo`, `Ascendentes` e `Colaterais` compactos.
+7. Conferir botão `Exibir/Ocultar cônjuges`.
+8. Conferir conectores no layout padrão.
+9. Conferir conectores no layout compacto.
+10. Conferir irmãos em até 2 colunas no desktop.
+11. Conferir cônjuge e pets deslocados à direita no desktop.
+12. Conferir tour.
+13. Conferir mobile.
 
-### Vertical desktop
+## Não regressão
 
-- SVG por âncoras;
-- recalcula com grupos, zoom, scroll e painel;
-- respeita filtros e destaques;
-- não depende de proximidade visual;
-- usa espessura discreta.
-
-### Vertical mobile
-
-- conectores HTML/CSS;
-- navegação Paterno/Central/Materno;
-- paleta ativa;
-- alinhamento baseado na hierarquia desktop.
-
-### Horizontal desktop
-
-- SVG por geração/casal/filhos;
-- cônjuges adjacentes quando incluídos;
-- casal → tronco → filhos;
-- colunas compactadas;
-- conectores recalculam com grupos/cabeçalhos.
-
-### Horizontal mobile
-
-- uma geração por tela;
-- botões `Ger X`;
-- swipe lateral;
-- scroll vertical interno;
-- sem scroll horizontal manual;
-- conectores alinhados à geração ativa.
-
-Regra crítica:
-
-```txt
-Conector conjugal nunca deve ser inferido por proximidade visual.
-```
-
----
-
-## 14. Destaques
-
-Flyout:
-
-```txt
-Destacar
-```
-
-Opções:
-
-| Opção | Comportamento |
-|---|---|
-| Linhas | Afeta conectores/linhas conforme view. |
-| Cards | Realça ou destaca cards. |
-| Grupos | Reduz/oculta chrome visual de grupos, preservando conteúdo. |
-
-Regras:
-
-- destaque não altera dados;
-- destaque deve ser refletido na exportação;
-- `Destacar > Grupos` não pode quebrar conectores;
-- labels auxiliares não devem aparecer na exportação se forem apenas UI.
-
----
-
-## 15. Relação com exportação
-
-O painel desktop/completo aciona:
-
-```txt
-Área
-Imagem
-PDF
-Imprimir
-```
-
-Este documento registra apenas que o painel expõe as ações. Detalhes técnicos de refs, `html2canvas`, loading, crop e título ficam em:
-
-```txt
-docs/funcionalidades/EXPORTACAO_ARVORE.md
-```
-
-Regras locais:
-
-- modal mobile não exibe Exportar;
-- painel/modal não entram na captura;
-- remoção da antiga barra de tabs não pode quebrar exportação.
-
----
-
-## 16. QA
-
-Procedimentos manuais ficam em:
-
-```txt
-docs/QA_MANUAL.md
-```
-
-Usar especialmente as seções:
-
-- painel desktop;
-- modal mobile de controles;
-- paletas;
-- cônjuges, núcleos e conectores;
-- exportação.
-
-Pendências continuam em:
-
-```txt
-docs/PLANO_PROXIMOS_PASSOS.md
-```
-
-<!-- ARVORE-PAINEL-PENDENCIAS-2026-06-18 -->
-## Pontos recentes a confirmar em Ã¡rvore, legendas, conectores e painel
-
-Antes de registrar como contrato vigente, confirmar no cÃ³digo/Git:
-
-- conectores e espessura de linhas;
-- destaque visual de relaÃ§Ãµes;
-- painel desktop de visualizaÃ§Ã£o;
-- popovers mÃ³veis;
-- filtros por grupo;
-- paletas/cores por geraÃ§Ã£o;
-- separaÃ§Ã£o entre painel fixo e popovers contextuais.
-
-Registrar tentativas antigas ou scripts substituÃ­dos apenas em `docs/historico/`.
-
-<!-- RODADA2-PAINEL-ARVORE-2026-06-18 -->
-## Painel lateral, header, conectores e tour
-
-### Painel lateral
-
-O painel lateral da Ã¡rvore concentra:
-
-- seletor â€œVisualizar comoâ€;
-- modos de visualizaÃ§Ã£o;
-- formato;
-- resumo;
-- grupos familiares;
-- aÃ§Ãµes de navegaÃ§Ã£o e suporte.
-
-Commits citados no levantamento:
-
-| Commit | FunÃ§Ã£o |
-|---|---|
-| `4a535a3` | Move visualizar como para painel lateral |
-| `cea87e9` | Destaca modos de visualizaÃ§Ã£o no painel lateral |
-| `895790c` | Ajusta header e move visualizar como para painel lateral |
-| `5e7491c` | Ajusta painel lateral desktop da Ã¡rvore familiar |
-| `2e6fc66` | Ajusta painel para largura mÃ¡xima de 350px |
-| `8212bb0` | Ajusta painel de visualizaÃ§Ã£o para largura compacta |
-
-### Header
-
-O header foi refinado para:
-
-- nÃ£o concentrar controles que pertencem ao painel;
-- manter aÃ§Ãµes principais organizadas;
-- preservar Favoritos/Alertas quando aplicÃ¡vel;
-- permitir fechar busca pelo botÃ£o do header.
-
-### Tour inicial e holofote
-
-O tour inicial deve:
-
-- apontar para elementos reais;
-- evitar destacar controles removidos;
-- explicar painel, favoritos, alvos e controles de Ã¡rvore;
-- nÃ£o bloquear a experiÃªncia em mobile.
-
-Commit de referÃªncia citado:
-
-```txt
-c37d91c Ajusta tour inicial e controles da Ã¡rvore
-```
-
-### Conectores e destaque de linhas
-
-O levantamento registra ajuste de dica/destaque de linhas no mapa horizontal, incluindo:
-
-```txt
-b7710a9 feat: adiciona dica de destaque de linhas no mapa horizontal
-```
-
-Regras:
-
-- conectores devem permanecer visualmente legÃ­veis;
-- destaque de linhas deve auxiliar leitura sem competir com os cards;
-- qualquer dica/sticker deve ser contextual e nÃ£o permanente quando atrapalhar navegaÃ§Ã£o.
+- Não voltar ao label `Sua view padrão` quando houver pessoa.
+- Não listar `Família de Maria` dentro do dropdown aberto.
+- Não remover compactação do painel lateral.
+- Não aplicar deslocamento desktop no mobile.
+- Não desconectar edges/conectores ao ajustar layout.

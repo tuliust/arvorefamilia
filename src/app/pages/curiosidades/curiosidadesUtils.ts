@@ -16,9 +16,21 @@ export type CuriosidadesPlaceholderCard = {
   icon: React.ComponentType<{ className?: string }>;
 };
 
+export type PersonProfileBadge = {
+  id?: string;
+  label: string;
+  category?: string;
+  questionId?: string;
+  questionLabel?: string;
+  group?: string;
+};
+
+export type ProfileBadgesByPersonId = Record<string, PersonProfileBadge[]>;
+
 export type CuriosidadesDataProps = {
   pessoas: Pessoa[];
   relacionamentos: Relacionamento[];
+  profileBadgesByPersonId?: ProfileBadgesByPersonId;
   loading?: boolean;
   error?: string | null;
 };
@@ -149,6 +161,18 @@ export function isLivingPerson(pessoa: Pessoa) {
   return !isPet(pessoa) && !isDeceased(pessoa);
 }
 
+export function countDistinctCurrentCities(pessoas: Pessoa[]) {
+  const cities = new Set<string>();
+
+  pessoas.filter(isLivingPerson).forEach((pessoa) => {
+    const label = String(pessoa.local_atual ?? '').trim();
+    const key = normalizeCuriosityText(label);
+    if (key) cities.add(key);
+  });
+
+  return cities.size;
+}
+
 export function getPersonDisplayName(pessoa?: Pessoa | null) {
   return String(pessoa?.nome_completo || 'Pessoa sem nome').trim();
 }
@@ -247,6 +271,14 @@ export function getTopBirthMonth(pessoas: Pessoa[]) {
   return [...getBirthMonthCounts(pessoas)]
     .filter((month) => month.count > 0)
     .sort((a, b) => b.count - a.count || a.monthIndex - b.monthIndex)[0] ?? null;
+}
+
+export function getTopBirthMonths(pessoas: Pessoa[], limit = 5): TopCount[] {
+  return [...getBirthMonthCounts(pessoas)]
+    .filter((month) => month.count > 0)
+    .sort((a, b) => b.count - a.count || a.monthIndex - b.monthIndex)
+    .slice(0, limit)
+    .map((month) => ({ label: month.label, count: month.count }));
 }
 
 export function buildTodayFamilyEvents(
@@ -406,6 +438,45 @@ export function getPeopleBySocialGeneration(pessoas: Pessoa[]) {
     };
   });
 }
+
+export type AgeRangeInfo = {
+  key: string;
+  label: string;
+  period: string;
+  minAge: number;
+  maxAge: number | null;
+  people: Pessoa[];
+};
+
+export const AGE_RANGES = [
+  { key: 'criancas', label: '0–12 anos', period: '0–12', minAge: 0, maxAge: 12 },
+  { key: 'adolescentes', label: '13–17 anos', period: '13–17', minAge: 13, maxAge: 17 },
+  { key: 'jovens-adultos', label: '18–29 anos', period: '18–29', minAge: 18, maxAge: 29 },
+  { key: 'adultos-30-44', label: '30–44 anos', period: '30–44', minAge: 30, maxAge: 44 },
+  { key: 'adultos-45-59', label: '45–59 anos', period: '45–59', minAge: 45, maxAge: 59 },
+  { key: 'idosos-60-74', label: '60–74 anos', period: '60–74', minAge: 60, maxAge: 74 },
+  { key: 'idosos-75-mais', label: '75+ anos', period: '75+', minAge: 75, maxAge: null },
+] as const;
+
+export function getPeopleByAgeRange(pessoas: Pessoa[], now = new Date()): AgeRangeInfo[] {
+  return AGE_RANGES.map((range) => {
+    const people = pessoas
+      .filter(isLivingPerson)
+      .filter((pessoa) => {
+        const birthDate = parseFamilyDate(pessoa.data_nascimento);
+        if (!birthDate) return false;
+
+        const age = calculateFullYearsSince(pessoa.data_nascimento, now);
+        return age >= range.minAge && (range.maxAge === null || age <= range.maxAge);
+      })
+      .sort((a, b) => calculateFullYearsSince(a.data_nascimento, now) - calculateFullYearsSince(b.data_nascimento, now));
+
+    return {
+      ...range,
+      people,
+    };
+  });
+}
 export type CoupleAnniversary = {
   id: string;
   coupleName: string;
@@ -414,6 +485,9 @@ export type CoupleAnniversary = {
   weddingDateLabel: string;
   years: number;
   milestone: WeddingMilestone | null;
+  endedByDeath: boolean;
+  endedAtLabel: string | undefined;
+  durationLabel: string;
 };
 
 export type WeddingMilestone = {
@@ -435,6 +509,10 @@ export function getWeddingMilestone(years: number) {
   return WEDDING_MILESTONES.find((milestone) => years >= milestone.years) ?? null;
 }
 
+function getEarlierDate(dates: Date[]) {
+  return dates.sort((a, b) => a.getTime() - b.getTime())[0] ?? null;
+}
+
 export function buildCoupleAnniversaries(
   pessoas: Pessoa[],
   relacionamentos: Relacionamento[],
@@ -451,21 +529,37 @@ export function buildCoupleAnniversaries(
 
       if (!pessoaA || !pessoaB || !relacionamento.data_casamento) return null;
 
+      const weddingDate = parseFamilyDate(relacionamento.data_casamento);
+      if (!weddingDate) return null;
+
       const sortedIds = [pessoaA.id, pessoaB.id].sort();
       const key = `${sortedIds.join('-')}-${relacionamento.data_casamento}`;
       if (seen.has(key)) return null;
       seen.add(key);
 
-      const years = calculateFullYearsSince(relacionamento.data_casamento, now);
+      const deathDates = [pessoaA.data_falecimento, pessoaB.data_falecimento]
+        .map((value) => parseFamilyDate(value))
+        .filter((date): date is Date => Boolean(date && date.getTime() >= weddingDate.getTime()));
+      const endDate = getEarlierDate(deathDates) ?? now;
+      const endedByDeath = deathDates.length > 0;
+      const years = calculateFullYearsSince(relacionamento.data_casamento, endDate);
+      const weddingDateLabel = formatFamilyDate(relacionamento.data_casamento);
+      const endedAtLabel = endedByDeath ? endDate.toLocaleDateString('pt-BR') : undefined;
+      const durationLabel = endedByDeath
+        ? `${years} ${years === 1 ? 'ano' : 'anos'} de casamento · de ${weddingDateLabel || 'data registrada'} até ${endedAtLabel}`
+        : `${years} ${years === 1 ? 'ano' : 'anos'} de casamento${weddingDateLabel ? ` · ${weddingDateLabel}` : ''}`;
 
       return {
         id: key,
         coupleName: `${getPersonDisplayName(pessoaA)} e ${getPersonDisplayName(pessoaB)}`,
         personIds: [pessoaA.id, pessoaB.id],
         weddingDate: relacionamento.data_casamento,
-        weddingDateLabel: formatFamilyDate(relacionamento.data_casamento),
+        weddingDateLabel,
         years,
         milestone: getWeddingMilestone(years),
+        endedByDeath,
+        endedAtLabel,
+        durationLabel,
       };
     })
     .filter((couple): couple is CoupleAnniversary => Boolean(couple))
@@ -485,24 +579,35 @@ export type CuriosityQuizQuestion = {
   }>;
 };
 
-function buildQuizOptions(answer: Pessoa, allPeople: Pessoa[]) {
-  const options = [answer];
+function sortPeopleByName(people: Pessoa[]) {
+  return [...people].sort((a, b) => getPersonDisplayName(a).localeCompare(getPersonDisplayName(b), 'pt-BR', { sensitivity: 'base' }));
+}
 
-  allPeople
+function buildQuizOptions(answer: Pessoa, allPeople: Pessoa[], limit = 5) {
+  const unique = new Map<string, Pessoa>();
+  unique.set(answer.id, answer);
+
+  sortPeopleByName(allPeople)
     .filter((pessoa) => pessoa.id !== answer.id)
-    .slice(0, 8)
     .forEach((pessoa) => {
-      if (options.length < 4) options.push(pessoa);
+      if (unique.size < limit) unique.set(pessoa.id, pessoa);
     });
 
-  return options
-    .slice(0, 4)
-    .sort((a, b) => getPersonDisplayName(a).localeCompare(getPersonDisplayName(b), 'pt-BR'))
+  return sortPeopleByName(Array.from(unique.values()))
+    .slice(0, limit)
     .map((pessoa) => ({
       id: pessoa.id,
       label: getPersonDisplayName(pessoa),
       imageUrl: pessoa.foto_principal_url,
     }));
+}
+
+function buildControlledQuizOptions(answer: Pessoa, distractors: Pessoa[], limit = 5) {
+  return buildQuizOptions(answer, [answer, ...distractors], limit);
+}
+
+function isJournalist(pessoa: Pessoa) {
+  return normalizeCuriosityText(pessoa.profissao).includes('jornalista');
 }
 
 export { countChildrenByPerson };
@@ -515,67 +620,78 @@ export function buildCuriosityQuizQuestions(
     .filter((pessoa) => !isPet(pessoa))
     .filter((pessoa) => Boolean(pessoa.id && pessoa.nome_completo));
 
-  if (people.length < 4) return [];
+  if (people.length < 5) return [];
 
-  const byBirthYear = people
-    .map((pessoa) => ({ pessoa, year: getBirthYear(pessoa) }))
-    .filter((item): item is { pessoa: Pessoa; year: number } => Boolean(item.year))
-    .sort((a, b) => a.year - b.year);
+  const livingByAge = people
+    .filter((pessoa) => !isDeceased(pessoa))
+    .map((pessoa) => ({ pessoa, birthDate: parseFamilyDate(pessoa.data_nascimento) }))
+    .filter((item): item is { pessoa: Pessoa; birthDate: Date } => Boolean(item.birthDate))
+    .sort((a, b) => a.birthDate.getTime() - b.birthDate.getTime());
+
+  const byBirthDate = people
+    .map((pessoa) => ({ pessoa, birthDate: parseFamilyDate(pessoa.data_nascimento) }))
+    .filter((item): item is { pessoa: Pessoa; birthDate: Date } => Boolean(item.birthDate))
+    .sort((a, b) => a.birthDate.getTime() - b.birthDate.getTime());
 
   const questions: CuriosityQuizQuestion[] = [];
 
-  const oldest = byBirthYear[0];
-  if (oldest) {
+  const fiveOldestLiving = livingByAge.slice(0, 5).map((item) => item.pessoa);
+  const oldestLiving = fiveOldestLiving[0];
+  if (oldestLiving && fiveOldestLiving.length === 5) {
     questions.push({
-      id: 'oldest-person',
-      prompt: 'Quem é a pessoa mais antiga cadastrada na família?',
-      answerId: oldest.pessoa.id,
-      answerLabel: getPersonDisplayName(oldest.pessoa),
-      explanation: `${getPersonDisplayName(oldest.pessoa)} aparece com ano de nascimento em ${oldest.year}.`,
-      options: buildQuizOptions(oldest.pessoa, people),
+      id: 'oldest-living-person',
+      prompt: 'Quem é a pessoa viva com mais tempo de vida na árvore?',
+      answerId: oldestLiving.id,
+      answerLabel: getPersonDisplayName(oldestLiving),
+      explanation: `${getPersonDisplayName(oldestLiving)} é a pessoa viva mais velha entre os perfis com data de nascimento cadastrada.`,
+      options: buildControlledQuizOptions(oldestLiving, fiveOldestLiving.filter((pessoa) => pessoa.id !== oldestLiving.id), 5),
     });
   }
 
-  const youngest = byBirthYear[byBirthYear.length - 1];
-  if (youngest && youngest.pessoa.id !== oldest?.pessoa.id) {
+  const fiveYoungest = [...byBirthDate].reverse().slice(0, 5).map((item) => item.pessoa);
+  const youngest = fiveYoungest[0];
+  if (youngest && fiveYoungest.length === 5) {
     questions.push({
       id: 'youngest-person',
-      prompt: 'Quem é a pessoa mais jovem cadastrada na família?',
-      answerId: youngest.pessoa.id,
-      answerLabel: getPersonDisplayName(youngest.pessoa),
-      explanation: `${getPersonDisplayName(youngest.pessoa)} aparece com ano de nascimento em ${youngest.year}.`,
-      options: buildQuizOptions(youngest.pessoa, people),
+      prompt: 'Quem é a pessoa mais jovem na família?',
+      answerId: youngest.id,
+      answerLabel: getPersonDisplayName(youngest),
+      explanation: `${getPersonDisplayName(youngest)} tem a data de nascimento mais recente entre as pessoas cadastradas.`,
+      options: buildControlledQuizOptions(youngest, fiveYoungest.filter((pessoa) => pessoa.id !== youngest.id), 5),
     });
   }
 
   const topBirthCity = getBirthCityRanking(people, 1)[0];
   if (topBirthCity) {
-    const answer = people.find((pessoa) => normalizeCuriosityText(pessoa.local_nascimento) === normalizeCuriosityText(topBirthCity.label));
-    if (answer) {
+    const cityKey = normalizeCuriosityText(topBirthCity.label);
+    const cityPeople = sortPeopleByName(people.filter((pessoa) => normalizeCuriosityText(pessoa.local_nascimento) === cityKey));
+    const nonCityPeople = sortPeopleByName(people.filter((pessoa) => normalizeCuriosityText(pessoa.local_nascimento) !== cityKey));
+    const answer = cityPeople[0];
+
+    if (answer && nonCityPeople.length >= 4) {
       questions.push({
         id: 'birth-city',
         prompt: `Quem nasceu em ${topBirthCity.label}?`,
         answerId: answer.id,
         answerLabel: getPersonDisplayName(answer),
         explanation: `${topBirthCity.label} aparece como uma das cidades de nascimento mais recorrentes da família.`,
-        options: buildQuizOptions(answer, people),
+        options: buildControlledQuizOptions(answer, nonCityPeople.slice(0, 4), 5),
       });
     }
   }
 
-  const topProfession = getProfessionRanking(people, 1)[0];
-  if (topProfession) {
-    const answer = people.find((pessoa) => normalizeCuriosityText(pessoa.profissao) === normalizeCuriosityText(topProfession.label));
-    if (answer) {
-      questions.push({
-        id: 'profession',
-        prompt: `Quem tem a profissão cadastrada como ${topProfession.label}?`,
-        answerId: answer.id,
-        answerLabel: getPersonDisplayName(answer),
-        explanation: `${topProfession.label} aparece entre as profissões mais repetidas da família.`,
-        options: buildQuizOptions(answer, people),
-      });
-    }
+  const journalists = sortPeopleByName(people.filter(isJournalist));
+  const nonJournalists = sortPeopleByName(people.filter((pessoa) => !isJournalist(pessoa)));
+  const journalistAnswer = journalists[0];
+  if (journalistAnswer && nonJournalists.length >= 4) {
+    questions.push({
+      id: 'profession-journalist',
+      prompt: 'Qual destas pessoas abaixo é jornalista?',
+      answerId: journalistAnswer.id,
+      answerLabel: getPersonDisplayName(journalistAnswer),
+      explanation: `${getPersonDisplayName(journalistAnswer)} tem Jornalista como profissão cadastrada.`,
+      options: buildControlledQuizOptions(journalistAnswer, nonJournalists.slice(0, 4), 5),
+    });
   }
 
   const topParent = countChildrenByPerson(relacionamentos)[0];
@@ -588,12 +704,12 @@ export function buildCuriosityQuizQuestions(
         answerId: answer.id,
         answerLabel: getPersonDisplayName(answer),
         explanation: `${getPersonDisplayName(answer)} aparece com ${topParent.count} ${topParent.count === 1 ? 'filho cadastrado' : 'filhos cadastrados'}.`,
-        options: buildQuizOptions(answer, people),
+        options: buildQuizOptions(answer, people, 5),
       });
     }
   }
 
-  return questions.filter((question) => question.options.length >= 2).slice(0, 6);
+  return questions.filter((question) => question.options.length >= 5).slice(0, 6);
 }
 
 export type FamilyRouteSummary = {
@@ -705,31 +821,173 @@ export function splitFlexibleList(value: unknown) {
     .filter(Boolean);
 }
 
-export function getPersonInterestProfile(pessoa: Pessoa): PersonInterestProfile {
-  const possibleFields = [
-    'interesses',
-    'hobbies',
-    'preferencias',
-    'time',
-    'time_coracao',
-    'torcida',
-    'comida_favorita',
-    'musica_favorita',
-    'filme_favorito',
+function normalizeBadgeLike(raw: unknown): PersonProfileBadge | null {
+  if (!raw) return null;
+
+  if (typeof raw === 'string') {
+    const label = raw.trim();
+    return label ? { label } : null;
+  }
+
+  if (typeof raw !== 'object') return null;
+
+  const record = raw as Record<string, unknown>;
+  const label = String(
+    record.label ??
+    record.nome ??
+    record.name ??
+    record.value ??
+    record.titulo ??
+    ''
+  ).trim();
+
+  if (!label && Array.isArray(record.selected_badges)) return null;
+  if (!label) return null;
+
+  return {
+    id: String(record.id ?? record.badge_id ?? record.value ?? '').trim() || undefined,
+    label,
+    category: String(record.category ?? record.categoria ?? record.step ?? '').trim() || undefined,
+    questionId: String(record.question_id ?? record.questionId ?? record.pergunta_id ?? '').trim() || undefined,
+    questionLabel: String(record.question_label ?? record.questionLabel ?? record.pergunta ?? '').trim() || undefined,
+    group: String(record.group ?? record.grupo ?? record.etapa ?? '').trim() || undefined,
+  };
+}
+
+function extractBadgesFromUnknown(value: unknown): PersonProfileBadge[] {
+  if (!value) return [];
+
+  if (Array.isArray(value)) {
+    return value.flatMap((item) => extractBadgesFromUnknown(item));
+  }
+
+  if (typeof value === 'object') {
+    const record = value as Record<string, unknown>;
+    const direct = normalizeBadgeLike(value);
+    const nested = [
+      record.selected_badges,
+      record.selectedBadges,
+      record.badges,
+      record.profile_badges,
+      record.questionnaire_badges,
+    ].flatMap((item) => extractBadgesFromUnknown(item));
+
+    return direct ? [direct, ...nested] : nested;
+  }
+
+  const direct = normalizeBadgeLike(value);
+  return direct ? [direct] : [];
+}
+
+export function getPersonProfileBadges(
+  pessoa: Pessoa,
+  profileBadgesByPersonId: ProfileBadgesByPersonId = {}
+): PersonProfileBadge[] {
+  const record = pessoa as unknown as Record<string, unknown>;
+  const candidates = [
+    profileBadgesByPersonId[pessoa.id],
+    record.selected_badges,
+    record.selectedBadges,
+    record.profile_badges,
+    record.profileBadges,
+    record.questionnaire_badges,
+    record.questionnaireBadges,
+    record.person_profile_questionnaire_answers,
+    record.profile_questionnaire_answers,
+    record.questionnaire_answers,
   ];
 
-  const interests = possibleFields.flatMap((fieldName) => {
-    const value = getFlexiblePersonField(pessoa, [fieldName]);
-    return splitFlexibleList(value);
+  const unique = new Map<string, PersonProfileBadge>();
+
+  candidates.flatMap((candidate) => extractBadgesFromUnknown(candidate)).forEach((badge) => {
+    const key = normalizeCuriosityText(`${badge.category ?? ''}|${badge.questionId ?? ''}|${badge.questionLabel ?? ''}|${badge.label}`);
+    if (key && !unique.has(key)) unique.set(key, badge);
   });
 
-  const profession = String(pessoa.profissao ?? '').trim();
-  const currentCity = String(pessoa.local_atual ?? '').trim();
-  const birthCity = String(pessoa.local_nascimento ?? '').trim();
+  return Array.from(unique.values());
+}
 
-  if (profession) interests.push(`Profissão: ${profession}`);
-  if (currentCity) interests.push(`Mora em: ${currentCity}`);
-  if (birthCity) interests.push(`Nasceu em: ${birthCity}`);
+const STYLE_LABELS = new Set([
+  'afetivo',
+  'simples e direto',
+  'divertido',
+  'elegante',
+  'nostalgico',
+  'inspirador',
+  'familiar',
+  'emocional',
+  'leve',
+  'formal',
+]);
+
+function isStyleBadge(badge: PersonProfileBadge) {
+  const metadata = [badge.category, badge.questionId, badge.questionLabel, badge.group, badge.id]
+    .map((value) => normalizeCuriosityText(value))
+    .join(' ');
+  const labelKey = normalizeCuriosityText(badge.label);
+
+  return metadata.includes('estilo') || metadata.includes('style') || STYLE_LABELS.has(labelKey);
+}
+
+export function getProfileStyleRanking(
+  pessoas: Pessoa[],
+  profileBadgesByPersonId: ProfileBadgesByPersonId = {},
+  limit = 5
+): TopCount[] {
+  const counts = new Map<string, TopCount>();
+
+  pessoas.filter((pessoa) => !isPet(pessoa)).forEach((pessoa) => {
+    getPersonProfileBadges(pessoa, profileBadgesByPersonId)
+      .filter(isStyleBadge)
+      .forEach((badge) => {
+        const key = normalizeCuriosityText(badge.label);
+        const current = counts.get(key);
+        if (current) {
+          current.count += 1;
+        } else if (key) {
+          counts.set(key, { label: badge.label, count: 1 });
+        }
+      });
+  });
+
+  return Array.from(counts.values())
+    .sort((a, b) => b.count - a.count || a.label.localeCompare(b.label, 'pt-BR'))
+    .slice(0, limit);
+}
+
+export function getPersonInterestProfile(
+  pessoa: Pessoa,
+  profileBadgesByPersonId: ProfileBadgesByPersonId = {}
+): PersonInterestProfile {
+  const badgeInterests = getPersonProfileBadges(pessoa, profileBadgesByPersonId).map((badge) => badge.label);
+  const interests = [...badgeInterests];
+
+  if (interests.length === 0) {
+    const possibleFields = [
+      'interesses',
+      'hobbies',
+      'preferencias',
+      'time',
+      'time_coracao',
+      'torcida',
+      'comida_favorita',
+      'musica_favorita',
+      'filme_favorito',
+    ];
+
+    possibleFields.forEach((fieldName) => {
+      const value = getFlexiblePersonField(pessoa, [fieldName]);
+      interests.push(...splitFlexibleList(value));
+    });
+
+    const profession = String(pessoa.profissao ?? '').trim();
+    const currentCity = String(pessoa.local_atual ?? '').trim();
+    const birthCity = String(pessoa.local_nascimento ?? '').trim();
+
+    if (profession) interests.push(`Profissão: ${profession}`);
+    if (currentCity) interests.push(`Mora em: ${currentCity}`);
+    if (birthCity) interests.push(`Nasceu em: ${birthCity}`);
+  }
 
   const unique = new Map<string, string>();
 
@@ -746,7 +1004,11 @@ export function getPersonInterestProfile(pessoa: Pessoa): PersonInterestProfile 
   };
 }
 
-export function comparePeopleInterests(pessoaA: Pessoa | null, pessoaB: Pessoa | null) {
+export function comparePeopleInterests(
+  pessoaA: Pessoa | null,
+  pessoaB: Pessoa | null,
+  profileBadgesByPersonId: ProfileBadgesByPersonId = {}
+) {
   if (!pessoaA || !pessoaB) {
     return {
       common: [] as string[],
@@ -756,8 +1018,8 @@ export function comparePeopleInterests(pessoaA: Pessoa | null, pessoaB: Pessoa |
     };
   }
 
-  const profileA = getPersonInterestProfile(pessoaA);
-  const profileB = getPersonInterestProfile(pessoaB);
+  const profileA = getPersonInterestProfile(pessoaA, profileBadgesByPersonId);
+  const profileB = getPersonInterestProfile(pessoaB, profileBadgesByPersonId);
 
   const normalizedA = new Map(profileA.interests.map((interest) => [normalizeCuriosityText(interest), interest]));
   const normalizedB = new Map(profileB.interests.map((interest) => [normalizeCuriosityText(interest), interest]));

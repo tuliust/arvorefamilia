@@ -1,395 +1,230 @@
 # Migrations Supabase
 
-> Última revisão: 2026-06-14
-> Local canônico: `docs/operacao/MIGRATIONS_SUPABASE.md`
-> Tipo: documentação operacional de banco, schema, RLS, RPCs e migrations.
-> Status: revisado para separar migrations oficiais, SQLs soltos, stubs preventivos, diagnósticos e operações pontuais.
+> Última revisão: 2026-06-23
 
----
+## Regra geral
 
-## 1. Objetivo
+O estado implementado só deve ser considerado válido no ambiente em que as migrations correspondentes foram aplicadas.
 
-Este documento define o fluxo seguro para trabalhar com migrations Supabase no projeto **Árvore Família**.
+Sempre validar migrations no ambiente remoto, não apenas localmente.
 
-Use antes de:
+## Migrations relevantes do ciclo
 
-- criar migration;
-- aplicar `supabase db push`;
-- rodar `supabase db reset`;
-- investigar schema local/remoto;
-- alterar RLS, RPC, trigger, constraint ou função SQL;
-- decidir se SQL solto deve virar migration;
-- corrigir divergência de schema cache;
-- revisar script SQL fora de `supabase/migrations/`.
+### `20260622120000_create_person_profile_questionnaire_answers.sql`
 
-Não use este documento para ajustes puramente visuais.
+Cria/padroniza a tabela:
 
----
-
-## 2. Regra principal
-
-```txt
-supabase/migrations/ é a fonte da verdade do schema.
+```text
+person_profile_questionnaire_answers
 ```
 
-SQL solto pode existir como histórico, diagnóstico, operação pontual ou stub preventivo, mas não substitui migration.
+Uso:
 
-Não aplicar como schema principal:
+- questionário IA;
+- tom;
+- badges;
+- respostas;
+- modo memorial;
+- hash de última geração.
 
-```txt
-database-schema.sql
-supabase/forum-schema.sql
-supabase/google-calendar-schema.sql
-src/imports/pasted_text/*.txt com SQL antigo
-scripts/cleanup-test-user-*.sql
-diagnostico-*.sql
-verificar-*.sql
-scripts SQL antigos fora de supabase/migrations/
+Requisitos:
+
+- RLS habilitado;
+- usuário só acessa respostas de pessoa vinculada/editável;
+- upsert por `pessoa_id` e `user_id`.
+
+### `20260622170000_allow_historical_facts_without_file.sql`
+
+Permite fatos históricos sem arquivo.
+
+Campos alterados em `arquivos_historicos`:
+
+- `url` pode ser nulo;
+- `storage_bucket` pode ser nulo;
+- `storage_path` pode ser nulo;
+- `mime_type` pode ser nulo.
+
+Status: implementado no ciclo 7C.
+
+### `20260623...get_person_profile_selected_badges.sql` ou equivalente
+
+Expõe de forma controlada os badges selecionados no questionário de perfil.
+
+Função esperada:
+
+```text
+get_person_profile_selected_badges(target_pessoa_id uuid)
 ```
 
-Observação:
+Uso:
 
-```txt
-supabase/forum-schema.sql, supabase/google-calendar-schema.sql, arquivos SQL-like em src/imports/pasted_text/ e scripts de limpeza antigos foram neutralizados ou devem permanecer como stubs preventivos.
-Eles não devem conter comandos operacionais nem ser usados para provisionar banco.
+- `/curiosidades`;
+- rankings de `Perfil dos familiares`;
+- comparação de interesses;
+- perfil público quando exibir características agrupadas.
+
+Requisitos:
+
+- não expor respostas completas do questionário quando a tela só precisa de badges;
+- respeitar RLS/escopo de pessoa acessível;
+- retornar apenas dados mínimos:
+  - `id`;
+  - `label`;
+  - `category`.
+
+### `admin_reset_person_profile` — versão atualizada
+
+A RPC de reset administrativo deve limpar profundamente dados de perfil.
+
+Escopo esperado:
+
+- campos editáveis de `pessoas`;
+- avatar/foto;
+- mini bio;
+- curiosidades;
+- telefone/endereço/redes legacy;
+- localização atual quando aplicável;
+- `person_insights`;
+- favoritos relacionados;
+- arquivos históricos;
+- eventos pessoais;
+- redes sociais versionadas;
+- respostas do questionário;
+- logs de atividade relacionados;
+- vínculos usuário-pessoa quando aplicável;
+- preferências de notificação relacionadas;
+- usuários auth elegíveis, quando a regra administrativa permitir.
+
+A função deve retornar contadores por tipo de item removido/alterado.
+
+## `arquivos_historicos` após 7C
+
+Comportamento vigente:
+
+- upload opcional;
+- fato sem arquivo válido;
+- imagem/PDF continuam válidos;
+- timeline consome a tabela.
+
+Não documentar mais como comportamento vigente:
+
+- upload obrigatório;
+- `url` obrigatória;
+- fatos sem arquivo como pendência.
+
+## Validação SQL sugerida
+
+### Verificar nulabilidade de fatos/arquivos
+
+```sql
+select column_name, is_nullable
+from information_schema.columns
+where table_schema = 'public'
+  and table_name = 'arquivos_historicos'
+  and column_name in ('url', 'storage_bucket', 'storage_path', 'mime_type')
+order by column_name;
 ```
 
-Inventário histórico:
+Resultado esperado:
 
-```txt
-docs/historico/SQLS_LEGADOS.md
+```text
+YES para url, storage_bucket, storage_path, mime_type
 ```
 
----
+### Verificar tabela de questionário
 
-## 3. Quando criar migration
-
-Criar migration para:
-
-- nova tabela;
-- nova coluna;
-- alteração de tipo;
-- índice;
-- constraint;
-- trigger;
-- function SQL;
-- RPC;
-- policy/RLS;
-- bucket/policy quando versionado via SQL;
-- seed controlado necessário;
-- ajuste de permissões/grants.
-
-Não criar migration para:
-
-- paleta;
-- CSS;
-- layout mobile;
-- conectores visuais;
-- cards;
-- avatar fallback visual;
-- modal;
-- exportação client-side;
-- documentação;
-- microcopy estática sem banco.
-
----
-
-## 4. Checklist antes de alterar banco
-
-```bash
-git status --short
-git diff --check
-npm run build
-npm test
-supabase migration list
+```sql
+select table_name
+from information_schema.tables
+where table_schema = 'public'
+  and table_name = 'person_profile_questionnaire_answers';
 ```
 
-Perguntas obrigatórias:
+### Verificar função de badges
 
-| Pergunta | Motivo |
-|---|---|
-| A mudança exige banco? | Evita migration desnecessária. |
-| O objeto já existe? | Evita duplicidade. |
-| O ambiente remoto está correto? | Evita aplicar no projeto errado. |
-| Há risco de perda de dados? | Exige backup. |
-| O frontend depende da mudança? | Define ordem banco -> frontend. |
-| RLS precisa mudar? | Evita exposição indevida. |
-| Há Edge Function envolvida? | Exige secrets e deploy server-side. |
-| Existe SQL solto equivalente? | Exige comparação com migrations e neutralização se for legado. |
-
----
-
-## 5. Criar migration
-
-```bash
-supabase migration new nome_descritivo
+```sql
+select routine_name
+from information_schema.routines
+where routine_schema = 'public'
+  and routine_name = 'get_person_profile_selected_badges';
 ```
 
-Boas práticas:
+### Verificar função de reset
 
-- nome claro;
-- SQL idempotente quando seguro;
-- `create or replace function` para RPCs;
-- `drop policy if exists` antes de recriar policy;
-- revisar locks e dados existentes;
-- deduplicar antes de constraint unique;
-- separar limpeza destrutiva de alteração de schema;
-- comentar SQL complexo.
-
----
-
-## 6. Aplicar localmente
-
-Ambiente descartável:
-
-```bash
-supabase migration list
-supabase db reset
-npm run build
-npm test
-git diff --check
+```sql
+select routine_name
+from information_schema.routines
+where routine_schema = 'public'
+  and routine_name = 'admin_reset_person_profile';
 ```
 
-Quando não puder resetar dados locais:
+### Testar retorno mínimo de badges
 
-```bash
-supabase migration list
-supabase db push
-npm run build
-git diff --check
+```sql
+select *
+from public.get_person_profile_selected_badges('<pessoa_id_de_teste>'::uuid);
 ```
 
----
+Validar que o retorno não inclui:
 
-## 7. Aplicar remotamente
+- respostas abertas;
+- custom traits;
+- hash;
+- user_id;
+- dados sensíveis.
 
-Antes:
+## RLS
 
-```bash
-git status --short
-supabase migration list
-```
+### Questionário IA
 
-Aplicar somente com autorização explícita:
+Usuário deve poder:
 
-```bash
-supabase db push
-```
+- ler respostas da própria pessoa vinculada;
+- inserir/atualizar respostas da própria pessoa vinculada com permissão de edição.
 
-Depois:
+### Badges para curiosidades/perfil
 
-```bash
-supabase migration list
-npm run build
-npm test
-npm run test:e2e
-git diff --check
-```
+Usuário autenticado deve poder ler somente os badges necessários para a experiência autorizada.
 
-Regras:
+A consulta deve evitar expor:
 
-- confirmar projeto Supabase;
-- fazer backup se houver dados reais sensíveis;
-- aplicar migration antes de deploy frontend dependente;
-- monitorar PostgREST/schema cache;
-- não alterar frontend para mascarar schema ausente.
+- respostas completas;
+- dados de outro usuário sem permissão;
+- dados sensíveis.
 
----
+### Arquivos históricos
 
-## 8. `migration repair`
+Usuário deve poder:
 
-Usar apenas quando:
+- listar fatos/arquivos da própria pessoa vinculada;
+- salvar/substituir registros no fluxo de onboarding;
+- não acessar dados privados de terceiros sem permissão.
 
-- migration foi aplicada manualmente;
-- schema remoto comprovadamente reflete o SQL;
-- histórico Supabase divergiu;
-- decisão foi registrada.
+### Reset administrativo
 
-Não usar para:
+Somente admin deve conseguir executar reset profundo.
 
-- pular migration;
-- esconder erro de SQL;
-- mascarar ambiente errado;
-- evitar backup;
-- corrigir cache temporário.
+Não usar service role no frontend.
 
----
+## Ordem operacional
 
-## 9. SQLs fora de `supabase/migrations/`
+1. Aplicar migrations.
+2. Validar nulabilidade de `arquivos_historicos`.
+3. Validar existência de `person_profile_questionnaire_answers`.
+4. Validar RPC de badges.
+5. Validar RPC de reset.
+6. Rodar build.
+7. Testar `/meus-dados`.
+8. Testar `/curiosidades`.
+9. Testar `/arquivos-historicos` com fato sem arquivo.
+10. Testar timeline em `/pessoa/:id`.
+11. Testar `/revisao-dados`.
 
-Arquivos fora de `supabase/migrations/` devem ser tratados como exceção.
+## Não regressão
 
-Classificação permitida:
-
-| Tipo | Pode ficar versionado? | Condição |
-|---|---:|---|
-| Stub preventivo | Sim | Sem comandos operacionais e com referência à fonte oficial. |
-| Diagnóstico de leitura | Avaliar | Sem dados reais no arquivo; escopo e ambiente claros. |
-| Operação destrutiva | Evitar | Preferir arquivo local não versionado; exige dry-run, backup e autorização. |
-| Dump de schema | Não recomendado | Só histórico controlado; não usar como migration. |
-| Dump de dados | Não | Não versionar. |
-| Schema operacional | Não | Deve virar migration oficial. |
-
-Arquivos neutralizados ou monitorados:
-
-```txt
-supabase/forum-schema.sql
-supabase/google-calendar-schema.sql
-src/imports/pasted_text/genealogy-schema.txt
-src/imports/pasted_text/sibling-check.txt
-src/imports/pasted_text/irmaos-relacionamento.txt
-scripts/cleanup-test-user-9feabe7c.sql
-```
-
-Regra:
-
-```txt
-Se o arquivo orienta executar SQL no Supabase SQL Editor, cria/altera schema, contém comandos destrutivos, contém resultados reais ou contém identificadores reais, ele deve ser neutralizado, removido do versionamento ou refeito como migration/rotina operacional aprovada.
-```
-
----
-
-## 10. Schema cache/PostgREST
-
-Sintomas:
-
-```txt
-coluna recém-criada não aparece
-RPC corrigida continua antiga
-payload falha com coluna inexistente
-PGRST202 em RPC existente localmente
-```
-
-Fluxo:
-
-1. conferir `supabase migration list`;
-2. verificar coluna/RPC no banco;
-3. conferir assinatura e grants;
-4. aguardar/recarregar schema cache;
-5. testar novamente;
-6. não remover payload correto para contornar ambiente atrasado.
-
-Exemplos de objetos sensíveis:
-
-```txt
-RPCs usadas pelo frontend
-policies RLS
-grants de funções
-triggers de auditoria
-views usadas por services
-colunas novas consumidas pelo frontend
-```
-
----
-
-## 11. Operações destrutivas
-
-Operações destrutivas não devem ser tratadas como migration normal quando forem limpeza pontual de dados.
-
-Regras mínimas:
-
-- nunca commitar service role key;
-- nunca commitar dump de dados reais;
-- nunca commitar script com UUID, e-mail ou identificador real sem justificativa explícita;
-- preferir script local não versionado;
-- usar dry-run antes de qualquer alteração;
-- fazer backup quando houver dados compartilhados ou produção;
-- confirmar projeto Supabase antes de executar;
-- registrar decisão operacional quando a limpeza impactar dados reais.
-
----
-
-## 12. Documentos relacionados
-
-```txt
-docs/historico/SQLS_LEGADOS.md
-docs/operacao/DEPLOYMENT.md
-docs/operacao/STORAGE_MAINTENANCE.md
-docs/operacao/OAUTH_GOOGLE.md
-docs/arquitetura/ESTRUTURA_USUARIOS_BANCO_DADOS.md
-```
-
-<!-- MIGRATIONS-ALERTA-2026-06-18 -->
-## Alerta operacional â€” scripts citados no levantamento
-
-O levantamento cita proposta de reset ampliado de perfil com possÃ­vel alteraÃ§Ã£o de RPC/migration e limpeza de `auth.users`.
-
-NÃ£o registrar nem aplicar como implementado sem:
-
-- arquivo real em `supabase/migrations/`;
-- revisÃ£o de RLS/RPC;
-- validaÃ§Ã£o em ambiente seguro;
-- confirmaÃ§Ã£o de commit;
-- rollback documentado.
-
-Enquanto nÃ£o houver essa confirmaÃ§Ã£o, a frente permanece bloqueada em `PLANO_PROXIMOS_PASSOS.md`.
-
-<!-- RODADA2-SUPABASE-CURIOSIDADES-2026-06-18 -->
-## Migrations Supabase â€” Curiosidades
-
-O levantamento registra duas migrations aplicadas na frente de Curiosidades:
-
-```txt
-supabase/migrations/20260618120000_create_family_memory_wall_posts.sql
-supabase/migrations/20260618123000_add_curiosity_discovery_favorites.sql
-```
-
-### `family_memory_wall_posts`
-
-Objetivo:
-
-- persistir mural de lembranÃ§as.
-
-Tabela:
-
-```txt
-public.family_memory_wall_posts
-```
-
-Campos principais:
-
-```txt
-id
-user_id
-author_name
-body
-visibility
-status
-created_at
-updated_at
-```
-
-RLS/policies registradas:
-
-- leitura por usuÃ¡rios autenticados;
-- inserÃ§Ã£o pelo prÃ³prio usuÃ¡rio;
-- atualizaÃ§Ã£o pelo autor ou admin;
-- exclusÃ£o pelo autor ou admin.
-
-### Favoritos de descobertas
-
-Objetivo:
-
-- permitir salvar descobertas de Curiosidades em favoritos.
-
-Tipo de favorito:
-
-```txt
-curiosity_discovery
-```
-
-### Status informado no levantamento
-
-```txt
-Migrations aplicadas.
-QA real autenticado OK.
-```
-
-### PendÃªncia operacional
-
-Confirmar fonte canÃ´nica de coordenadas de cidades para a rota familiar:
-
-- autocomplete;
-- tabela de cidades;
-- backfill;
-- geocoding posterior.
+- Não criar migration para voltar `url` para not null.
+- Não criar tabela paralela de fatos sem decisão arquitetural.
+- Não remover RLS.
+- Não usar service role no frontend.
+- Não expor respostas completas do questionário quando só badges são necessários.
+- Não permitir reset administrativo por usuário comum.

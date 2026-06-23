@@ -158,6 +158,8 @@ describe('curiosidadesUtils', () => {
       makePessoa({ id: 'p2', nome_completo: 'Bruno Souza', data_nascimento: '1980-01-01', profissao: 'Medica', local_nascimento: 'Recife' }),
       makePessoa({ id: 'p3', nome_completo: 'Carla Souza', data_nascimento: '1990-01-01', profissao: 'Jornalista', local_nascimento: 'Natal' }),
       makePessoa({ id: 'p4', nome_completo: 'Daniel Souza', data_nascimento: '2020-01-01', profissao: 'Estudante', local_nascimento: 'Porto Alegre' }),
+      makePessoa({ id: 'p5', nome_completo: 'Eduardo Souza', data_nascimento: '1970-01-01', profissao: 'Engenheiro', local_nascimento: 'Salvador' }),
+      makePessoa({ id: 'p6', nome_completo: 'Fernanda Souza', data_nascimento: '1965-01-01', profissao: 'Arquiteta', local_nascimento: 'Fortaleza' }),
     ];
 
     const relacionamentos = [
@@ -172,7 +174,8 @@ describe('curiosidadesUtils', () => {
     const questions = buildCuriosityQuizQuestions(pessoas, relacionamentos);
 
     expect(questions.length).toBeGreaterThan(0);
-    expect(questions.map((question) => question.id)).toEqual(expect.arrayContaining(['oldest-person', 'youngest-person', 'more-children']));
+    expect(questions.map((question) => question.id)).toEqual(expect.arrayContaining(['oldest-living-person', 'youngest-person', 'profession-journalist', 'more-children']));
+    expect(questions.every((question) => question.options.length === 5)).toBe(true);
   });
 
   it('calcula signo e compatibilidade recreativa', () => {

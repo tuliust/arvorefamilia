@@ -14,6 +14,7 @@ type RelationshipGroupPanelProps = {
   emptyDescription: string;
   addButtonLabel: string;
   onAdd: () => void;
+  showEmptyAddButton?: boolean;
   children: React.ReactNode;
 };
 
@@ -28,6 +29,7 @@ export function RelationshipGroupPanel({
   emptyDescription,
   addButtonLabel,
   onAdd,
+  showEmptyAddButton = false,
   children,
 }: RelationshipGroupPanelProps) {
   return (
@@ -56,10 +58,12 @@ export function RelationshipGroupPanel({
         <div className="mt-4 rounded-xl border border-dashed border-gray-300 bg-gray-50 p-5 text-center">
           <p className="font-semibold text-gray-900">{emptyTitle}</p>
           <p className="mx-auto mt-1 max-w-xl break-words text-sm text-gray-600">{emptyDescription}</p>
-          <Button type="button" variant="outline" className="mt-4 w-full sm:w-auto" onClick={onAdd}>
-            <Plus className="h-4 w-4" />
-            {addButtonLabel}
-          </Button>
+          {showEmptyAddButton && (
+            <Button type="button" variant="outline" className="mt-4 w-full sm:w-auto" onClick={onAdd}>
+              <Plus className="h-4 w-4" />
+              {addButtonLabel}
+            </Button>
+          )}
         </div>
       ) : (
         <div className="mt-4 space-y-3">{children}</div>

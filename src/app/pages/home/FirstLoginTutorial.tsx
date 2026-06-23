@@ -5,6 +5,7 @@ import {
   Network,
   SlidersHorizontal,
   Sparkles,
+  Star,
   UserRound,
   X,
 } from 'lucide-react';
@@ -121,8 +122,9 @@ const TUTORIAL_STEPS: TutorialStep[] = [
     eyebrow: 'GUIA RÁPIDO',
     title: 'Perfis, vínculos e memórias',
     icon: UserRound,
-    panelPlacement: 'below',
-    panelGap: 40,
+    panelPlacement: 'auto',
+    panelReference: 'first',
+    panelGap: 18,
     targets: [{ selectors: ['[data-family-map-central-card="true"]', '[data-family-map-mobile-card="true"]'], padding: 12 }],
     bullets: [
       'Clique nos cards para acessar informações pessoais, biografia e contatos de familiares.',
@@ -133,18 +135,32 @@ const TUTORIAL_STEPS: TutorialStep[] = [
   },
   {
     eyebrow: 'GUIA RÁPIDO',
-    title: 'Inteligência artificial, datas importantes e seus destaques',
+    title: 'Inteligência artificial e datas importantes',
     icon: Sparkles,
     panelPlacement: 'below',
     mergeSpotlights: true,
     targets: [
       { selectors: ['[data-tour-target="curiosities"]'], padding: 10 },
       { selectors: ['[data-tour-target="calendar"]'], padding: 10 },
-      { selectors: ['[data-tour-target="favorites"]'], padding: 10 },
     ],
     bullets: [
       'Em Curiosidades, surpreenda-se com fatos e números. Faça perguntas para a inteligência artificial para descobrir conexões e buscar dados sobre você e seus familiares.',
       'Veja aniversários, datas de memória e comemorações no Calendário. Você pode integrar também ao Google Agenda.',
+    ],
+  },
+  {
+    eyebrow: 'GUIA RÁPIDO',
+    title: 'Guarde os seus destaques',
+    icon: Star,
+    panelPlacement: 'auto',
+    mergeSpotlights: true,
+    targets: [
+      { selectors: ['[data-tour-target="favorites"]'], padding: 10 },
+      { selectors: ['[data-tour-target="tree-favorite"]'], padding: 10 },
+    ],
+    bullets: [
+      'Favorite páginas e atalhos importantes para acessar rapidamente depois.',
+      'Use Favoritos no menu superior e o botão de estrela na árvore para guardar o que quiser consultar novamente.',
     ],
   },
   {

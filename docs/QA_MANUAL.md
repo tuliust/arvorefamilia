@@ -1,546 +1,308 @@
-# QA manual — Árvore Família
+# QA manual
 
-> Última revisão: 2026-06-20  
-> Local canônico: `docs/QA_MANUAL.md`  
-> Projeto: `tuliust/arvorefamilia`  
-> Tipo: guia central de QA manual  
-> Status: revisado para incluir roteiro dos mapas familiares mobile, overview/zoom, painel `+`, rolagem interna e validações pós-deploy.
+> Última revisão: 2026-06-23  
+> Escopo: roteiro de validação após commits 6A–7D e ajustes pós-ciclo em `/curiosidades`, `/mapa-familiar`, header, notificações, `/forum` e `/meus-favoritos`.
 
----
+## Pré-condições
 
-## 1. Objetivo
+- Branch: `feature/questionario-ia-vinculos-pets`.
+- Build local aprovado.
+- Migrations aplicadas no ambiente testado.
+- Usuário de teste vinculado a pelo menos uma pessoa.
+- Para QA de badges, pelo menos uma pessoa deve ter questionário de `/meus-dados` salvo com características selecionadas.
+- Para QA de mapa, usar árvore com irmãos, cônjuge e pets.
 
-Este guia centraliza os procedimentos de QA manual do projeto **Árvore Família**.
-
-Use este arquivo para validar:
-
-- rotas oficiais e rotas removidas;
-- guards e navegação;
-- Árvore Familiar vertical;
-- Mapa Genealógico horizontal;
-- mobile e breakpoints;
-- toolbar, zoom, overview e painel `+`;
-- paletas;
-- cards, avatares e conectores;
-- exportação;
-- calendário familiar;
-- perfil e retorno;
-- fórum;
-- notificações;
-- admin;
-- deploy e pós-deploy.
-
-Documentos complementares:
-
-| Documento | Papel |
-|---|---|
-| `docs/REGRAS_DE_NAO_REGRESSAO.md` | contratos técnicos e regras que não devem ser violadas |
-| `docs/PLANO_PROXIMOS_PASSOS.md` | pendências, riscos e decisões futuras |
-| `docs/funcionalidades/MAPA_FAMILIAR_VIEW.md` | contrato funcional das duas views da árvore |
-| `docs/funcionalidades/MAPA_FAMILIAR_MOBILE.md` | contrato mobile detalhado dos mapas familiares |
-| `docs/operacao/QA_MAPAS_MOBILE_POS_DEPLOY.md` | checklist pós-deploy específico dos mapas mobile |
-| `docs/funcionalidades/EXPORTACAO_ARVORE.md` | contrato técnico da exportação |
-| `docs/operacao/DEPLOYMENT.md` | procedimento completo de deploy e operação |
-
----
-
-## 2. Comandos mínimos
-
-### Mudança documental
+## Comandos básicos
 
 ```bash
+git status --short
 git diff --check
+npm run typecheck
 npm run build
 ```
 
-### Mudança de código não visual
+Observações:
 
-```bash
-git diff --check
-npm run build
-npm test
-```
+- `npm run build` não substitui `npm run typecheck`.
+- Avisos de LF/CRLF no Windows podem aparecer; erros de `git diff --check` devem ser corrigidos.
+- `git status --short` deve estar limpo após commit/push.
 
-### Mudança em rotas, guards, árvore, navegação, exportação ou mobile
+## QA de `/meus-dados`
 
-```bash
-git diff --check
-npm run build
-npm test
-npm run test:e2e
-```
+### Pessoa viva
 
-### Mudança visual/CSS
+1. Acessar `/meus-dados`.
+2. Confirmar que o header não tem botões de ação.
+3. Confirmar que o questionário IA tem 8 etapas.
+4. Confirmar que a etapa 1 pergunta `Qual é o seu estilo?`.
+5. Selecionar qualquer tom.
+6. Manter toggle memorial em `Não`.
+7. Selecionar badges/características em diferentes categorias.
+8. Avançar até a etapa 8.
+9. Confirmar que não existem etapas 9 e 10.
+10. Confirmar que na última etapa não aparece botão `Avançar`.
+11. Confirmar dados.
 
-```bash
-git diff --check
-npm run build
-npm run test:e2e
-```
+### Pessoa falecida
 
----
+1. Marcar `Você está escrevendo o perfil de uma pessoa falecida?` como `Sim`.
+2. Selecionar um tom que não seja `Nostálgico`.
+3. Confirmar dados.
+4. Ir para `/meus-vinculos`.
+5. Gerar Mini Bio/Curiosidades.
+6. Confirmar que o texto usa terceira pessoa e passado.
+7. Confirmar que o texto não depende exclusivamente do tom `Nostálgico`.
 
-## 3. Breakpoints e ambientes mínimos
+### Limites de texto
+
+1. Gerar Mini Bio/Curiosidades.
+2. Confirmar contador de até 500 caracteres.
+3. Confirmar que textos gerados ficam próximos de 400–450 caracteres quando há insumo suficiente.
+4. Editar manualmente até 500 caracteres.
+5. Confirmar que texto maior é bloqueado ou truncado com segurança.
+
+## QA de `/meus-vinculos`
+
+### Header e títulos
+
+1. Confirmar header sem botões.
+2. Confirmar título `Sobre mim` fora do box de textos.
+3. Confirmar título `Familiares de X` fora do container de vínculos.
+4. Confirmar fontes maiores e ícone/avatar à esquerda.
+
+### Mini Bio/Curiosidades
+
+1. Confirmar ausência do botão `Salvar textos`.
+2. Editar Mini Bio.
+3. Editar Curiosidades.
+4. Avançar página.
+5. Voltar e confirmar persistência dos textos.
+
+### Pets
+
+1. Adicionar pet.
+2. Confirmar que aparece em `Pets`.
+3. Confirmar que não aparece em `Filhos`.
+4. Confirmar ícone de pet quando não houver foto.
+
+### Filhos
+
+1. Adicionar filho humano.
+2. Confirmar que aparece em `Filhos`.
+3. Confirmar que não aparece em `Pets`.
+
+### Estados vazios
+
+1. Em grupo sem registros, confirmar título/descrição do estado vazio.
+2. Confirmar que não há botão inferior duplicado.
+3. Confirmar que o botão superior permanece.
+
+### Irmã feminina
+
+1. Usar pessoa com `genero` feminino ou hint feminino.
+2. Confirmar label `Irmã`.
+3. Confirmar que não aparece `Irmão(a)`.
+
+### Cônjuges
+
+1. Adicionar cônjuge ativo.
+2. Adicionar segundo cônjuge ativo.
+3. Confirmar que apenas um fica ativo no estado local.
+4. Confirmar que o fluxo gera solicitação pendente, não relacionamento definitivo.
+
+## QA de `/arquivos-historicos`
+
+### Fato sem arquivo
+
+1. Criar registro com título/descrição e sem upload.
+2. Salvar.
+3. Confirmar sucesso.
+4. Confirmar que aparece na lista como fato/memória.
+5. Confirmar que não há botão de download/abrir arquivo.
+
+### Imagem
+
+1. Criar registro com imagem.
+2. Confirmar thumbnail.
+3. Confirmar tipo `Imagem`.
+
+### PDF
+
+1. Criar registro com PDF.
+2. Confirmar ícone de PDF.
+3. Confirmar tipo `PDF`.
+
+### Participantes
+
+1. Associar participantes.
+2. Salvar.
+3. Confirmar que participantes aparecem quando a coluna `participante_ids` está disponível.
+
+## QA de `/revisao-dados`
+
+1. Confirmar header sem ações.
+2. Confirmar dados pessoais.
+3. Confirmar Mini Bio/Curiosidades com até 500 caracteres.
+4. Confirmar grupos de vínculos.
+5. Confirmar Pets separados de Filhos.
+6. Confirmar fatos/arquivos com labels:
+   - Fato sem arquivo;
+   - Imagem;
+   - PDF.
+7. Confirmar edição inline das seções permitidas.
+8. Confirmar conclusão do onboarding.
+
+## QA do perfil `/pessoa/:id`
+
+1. Abrir perfil com fatos históricos.
+2. Confirmar timeline lateral.
+3. Confirmar que fato sem arquivo aparece como `Fato`.
+4. Confirmar que arquivo com anexo aparece como `Arquivo`.
+5. Confirmar ordenação por ano/data.
+6. Confirmar que registros sem ano ficam ao final.
+7. Confirmar que não aparecem URLs/storage paths na interface.
+8. Confirmar contatos no topo quando permitidos e pessoa viva.
+9. Confirmar múltiplas redes sociais quando cadastradas.
+10. Confirmar badges do questionário no card `Sobre`.
+
+## QA de `/curiosidades`
+
+### Cards principais
+
+1. Abrir `/curiosidades`.
+2. Confirmar cards:
+   - `Pessoas`;
+   - `Localização`;
+   - `In memoriam`;
+   - `Pets`;
+   - `Casais`.
+3. Confirmar descrições revisadas.
+4. Confirmar `Localização` contando cidades atuais.
+5. Confirmar `In memoriam` contando falecidos.
+6. Confirmar `Casais` contando relações ativas.
+
+### Rankings
+
+1. Confirmar `Nomes mais comuns`.
+2. Confirmar `Mês com mais aniversários` listando top 5 meses.
+3. Confirmar que a lista de aniversários não mostra nomes antigos indevidos.
+4. Confirmar `Perfil dos familiares` usando badges quando disponíveis.
+5. Confirmar `Principais cidades de nascimento`.
+6. Confirmar `Profissões mais comuns`.
+
+### Gráficos
+
+1. Confirmar `Faixa Etária`.
+2. Confirmar que não aparece `Pessoas por geração` com gerações sociológicas nesse card.
+3. Confirmar distribuição coerente por idade.
+
+### Bodas
+
+1. Abrir card/seção `Bodas`.
+2. Confirmar que relação com cônjuge falecido não soma anos após falecimento.
+3. Confirmar que relações ativas continuam calculando até data atual.
+4. Confirmar que o título não volta para `Bodas e Vínculos`.
+
+### Interações
+
+1. Confirmar dropdowns iniciando com `Selecione` em:
+   - Comparar interesses;
+   - Astrologia;
+   - Qual a minha conexão com alguém.
+2. Confirmar que não há pré-seleção automática de Absalon ou primeira pessoa.
+3. Confirmar comparação usando características/badges quando disponíveis.
+
+### Quiz
+
+1. Confirmar pergunta de pessoa viva com mais tempo de vida.
+2. Confirmar opções com 5 pessoas vivas mais velhas.
+3. Confirmar pergunta de pessoa mais jovem.
+4. Confirmar pergunta de cidade de nascimento.
+5. Confirmar pergunta de profissão com alternativas válidas.
+
+## QA de `/mapa-familiar`
+
+### Painel desktop
+
+1. Confirmar dropdown fechado `Família de X`.
+2. Abrir dropdown e confirmar opção desabilitada `Visualize a árvore como...`.
+3. Confirmar nomes listados com primeiro e segundo nome, sem `Família de Maria`.
+4. Confirmar seleção manual por query string `?pessoa=`.
+5. Confirmar card `Cadastrados`.
+6. Confirmar cards `Núcleo`, `Ascendentes` e `Colaterais` com gap reduzido.
+7. Confirmar fontes menores nos títulos de parentes.
+8. Confirmar botão:
+   - inativo: `Exibir cônjuges de tios, primos etc`;
+   - ativo: `Ocultar cônjuges de tios, primos etc`.
+
+### Canvas desktop
+
+1. Confirmar layout compacto em árvore pequena.
+2. Confirmar que árvore complexa não força layout compacto.
+3. Confirmar irmãos em até 2 colunas no desktop.
+4. Confirmar Lorenzo ao lado direito de Titus quando houver espaço.
+5. Confirmar cônjuge mais à direita.
+6. Confirmar pets mais à direita.
+7. Confirmar ausência de sobreposição entre irmãos, cônjuge e pets.
+
+### Tour
+
+1. Abrir `/mapa-familiar?tutorial=1`.
+2. Confirmar etapa IA/Calendário.
+3. Confirmar etapa Favoritos.
+4. Confirmar que o target visual não fica fora da tela.
+
+## QA de `/forum`
+
+### Desktop
+
+1. Abrir `/forum` em desktop.
+2. Confirmar que a barra de busca/filtros ocupa a largura do container.
+3. Confirmar botão `Criar novo` alinhado à lateral direita do container de `Tópicos recentes`.
+4. Confirmar que não há overflow horizontal.
 
 ### Mobile
 
-Validar, no mínimo:
+1. Abrir `/forum` em largura mobile.
+2. Confirmar que a busca e os botões continuam acessíveis.
+3. Confirmar que não há quebra de layout.
 
-```txt
-320px
-375px
-390px
-430px
-```
+## QA de `/meus-favoritos`
 
-### Tablet e desktop
+### Desktop
 
-Validar, quando a mudança envolver árvore, painel, exportação ou layout:
-
-```txt
-tablet
-1366px
-1440px
-1536px
-1920px
-```
-
-### Navegadores
-
-Quando houver mudança mobile ou deploy:
-
-```txt
-Chrome desktop
-Chrome Android, quando possível
-Safari/iOS, quando possível
-janela anônima/privada no pós-deploy
-```
-
----
-
-## 4. QA de documentação
-
-Checklist:
-
-- [ ] `docs/README.md` aponta para documentos existentes.
-- [ ] `docs/QA_MANUAL.md` é referenciado quando o assunto for QA manual.
-- [ ] `docs/REGRAS_DE_NAO_REGRESSAO.md` mantém regras, não checklists longos duplicados.
-- [ ] `docs/PLANO_PROXIMOS_PASSOS.md` contém apenas pendências, riscos e decisões abertas.
-- [ ] documentos funcionais descrevem comportamento implementado, não backlog.
-- [ ] documentos operacionais concentram deploy, migrations, OAuth, Storage e secrets.
-- [ ] documentos históricos não parecem fonte vigente.
-- [ ] rotas antigas aparecem apenas como histórico, keyword ou anti-regressão.
-- [ ] não há links quebrados óbvios para documentos movidos/removidos.
-- [ ] `git diff --check` não retorna trailing whitespace.
-
----
-
-## 5. QA de rotas e guards
-
-Rotas oficiais da árvore:
-
-```txt
-/
-/mapa-familiar
-/mapa-familiar-horizontal
-```
-
-Exceção vigente:
-
-```txt
-/minha-arvore/editar
-```
-
-Rotas antigas que não devem voltar como views ativas:
-
-```txt
-/minha-arvore
-/genealogia
-/visao-completa
-```
-
-Checklist:
-
-- [ ] `/` redireciona para `/mapa-familiar` ou para `/entrar` conforme sessão/guard.
-- [ ] `/?pessoa=abc` preserva `?pessoa=abc` ao redirecionar.
-- [ ] `/mapa-familiar` exige acesso de árvore.
-- [ ] `/mapa-familiar-horizontal` exige acesso de árvore.
-- [ ] `/busca` exige acesso de árvore.
-- [ ] `/minha-arvore/editar` permanece protegida como rota de membro.
-- [ ] `/minha-arvore`, `/genealogia` e `/visao-completa` não renderizam views da árvore.
-- [ ] usuário comum não acessa `/admin/*`.
-
----
-
-## 6. QA de `TreeViewMode`
-
-Contrato:
-
-```txt
-mapa-familiar
-mapa-familiar-horizontal
-```
-
-Checklist:
-
-- [ ] `VIEW_MODE_TO_PATH` contém só as duas views oficiais.
-- [ ] `PATH_TO_VIEW_MODE` reconhece `/`, `/mapa-familiar` e `/mapa-familiar-horizontal`.
-- [ ] fallback desconhecido retorna `mapa-familiar`.
-- [ ] alternância Vertical/Horizontal preserva `location.search`.
-- [ ] `?pessoa=...` não é perdido.
-- [ ] rotas removidas não são reintroduzidas no tipo.
-
----
-
-## 7. QA da Árvore Familiar vertical — `/mapa-familiar`
-
-Componentes esperados:
-
-| Ambiente | Componente |
-|---|---|
-| Desktop/tablet | `DesktopFamilyMapView` |
-| Mobile | `MobileFamilyTreeView` |
-
-### Desktop/tablet
-
-Checklist:
-
-- [ ] canvas vertical/panorâmico renderiza sem erro.
-- [ ] pessoa central aparece.
-- [ ] grupos familiares aparecem conforme dados e filtros.
-- [ ] cônjuge principal aparece quando existe.
-- [ ] múltiplos núcleos conjugais aparecem apenas quando há dados reais.
-- [ ] pets aparecem com filtro próprio quando existentes.
-- [ ] conectores não invadem cards.
-- [ ] zoom aproxima e afasta.
-- [ ] restaurar visualização funciona.
-- [ ] painel não quebra bounds, conectores ou exportação.
-
-### Mobile — grade 3x3
-
-Checklist:
-
-- [ ] renderiza `MobileFamilyTreeView`.
-- [ ] a tela `core` aparece como centro da grade.
-- [ ] a grade possui as telas `paternal-ancestors`, `ancestors`, `maternal-ancestors`, `paternal-uncles`, `core`, `maternal-uncles`, `paternal-cousins`, `descendants` e `maternal-cousins`.
-- [ ] cards preservam contraste.
-- [ ] grupos e bordas seguem paleta ativa.
-- [ ] conectores HTML/CSS respeitam hierarquia visual.
-- [ ] não há scroll horizontal global indevido.
-- [ ] bottom nav não cobre permanentemente cards ou títulos.
-
-### Mobile — `descendants`
-
-Checklist:
-
-- [ ] tela aparece ao deslizar para baixo a partir de `core`.
-- [ ] há scroll interno quando conteúdo ultrapassa a altura útil.
-- [ ] o último grupo é alcançável sem ficar escondido pelo bottom nav.
-- [ ] swipe para cima/baixo não bloqueia a rolagem interna enquanto há conteúdo para rolar.
-- [ ] linha entra na tela e ramifica para `Irmãos` e `Cônjuge`.
-- [ ] `Irmãos` conecta a `Sobrinhos` quando houver sobrinhos.
-- [ ] `Cônjuge` conecta a `Pets` e `Filhos` quando houver ambos.
-- [ ] se só houver `Pets`, o grupo ocupa sozinho a área abaixo de `Cônjuge`.
-- [ ] se só houver `Filhos`, o grupo ocupa sozinho a área abaixo de `Cônjuge`.
-- [ ] não aparecem linhas antigas transparentes ou duplicadas.
-
-### Mobile — tios
-
-Checklist para `paternal-uncles`:
-
-- [ ] título `Tios Paternos` aparece.
-- [ ] grupo aparece centralizado.
-- [ ] cards aparecem e são legíveis quando houver dados.
-- [ ] se houver mais cards do que área útil, a tela permite rolagem interna.
-- [ ] swipe vertical não navega para outra tela antes de esgotar o scroll interno.
-- [ ] largura do grupo não deixa excesso de área vazia quando há poucos cards.
-
-Checklist para `maternal-uncles`:
-
-- [ ] título `Tios Maternos` aparece.
-- [ ] grupo aparece centralizado.
-- [ ] grupo não fica grande demais.
-- [ ] cards são legíveis.
-- [ ] se houver mais cards do que área útil, a tela permite rolagem interna.
-
-### Mobile — títulos de grupos
-
-Validar títulos:
-
-```txt
-Tios Paternos
-Tios Maternos
-Irmãos
-Sobrinhos
-Pets
-Filhos
-Netos
-```
-
-Checklist:
-
-- [ ] nenhum título aparece branco sobre fundo branco.
-- [ ] nenhum título fica transparente.
-- [ ] nenhum título é encoberto por conector.
-- [ ] títulos não quebram layout em 320px.
-
----
-
-## 8. QA do Mapa Genealógico horizontal — `/mapa-familiar-horizontal`
-
-Componentes esperados:
-
-| Ambiente | Componente |
-|---|---|
-| Desktop/tablet | `DesktopFamilyHorizontalMapView` |
-| Mobile | `MobileFamilyHorizontalMapView` |
-
-### Desktop/tablet
-
-Checklist:
-
-- [ ] pessoas aparecem por geração/coluna.
-- [ ] `manual_generation` é respeitado quando disponível.
-- [ ] colunas vazias são ocultadas.
-- [ ] cônjuges adjacentes aparecem conforme regra implementada.
-- [ ] conectores casal → filhos estão alinhados.
-- [ ] filtros afetam a visualização sem alterar dados.
-- [ ] paleta ativa altera cards, conectores e canvas.
-- [ ] exportação usa título `Mapa Genealógico`.
+1. Abrir `/meus-favoritos` em desktop.
+2. Confirmar que a barra de busca/filtros ocupa a largura dos cards.
+3. Confirmar botão de filtro alinhado com o terceiro card.
+4. Confirmar que grid de favoritos continua correto.
 
 ### Mobile
 
-Checklist:
+1. Abrir `/meus-favoritos` em largura mobile.
+2. Confirmar busca/filtro sem overflow.
+3. Confirmar cards empilhados corretamente.
 
-- [ ] renderiza `MobileFamilyHorizontalMapView`.
-- [ ] uma geração aparece por tela.
-- [ ] botões `Ger 1`, `Ger 2`, `Ger 3` etc. funcionam.
-- [ ] swipe lateral troca geração.
-- [ ] scroll vertical permite ver último card e conectores.
-- [ ] não há barra Paterno/Central/Materno.
-- [ ] não há scroll horizontal manual como navegação principal.
-- [ ] botão de controles fica alinhado à linha de `Ger`.
-- [ ] primeira tela corresponde à menor geração visível.
-- [ ] paletas não azuis não caem em fallback azul/teal.
+## QA de notificações
 
----
+1. Abrir dropdown do sino.
+2. Confirmar que `Ver todas as notificações` aparece inteiro.
+3. Confirmar que `Personalizar preferências` aparece inteiro.
+4. Confirmar que os botões funcionam.
+5. Confirmar que dropdown não corta horizontalmente em desktop.
+6. Confirmar empilhamento em viewport estreito.
 
-## 9. QA do Zoom/overview mobile
+## QA mobile
 
-### `/mapa-familiar`
+1. Testar `/mapa-familiar` em largura mobile.
+2. Testar `/mapa-familiar-horizontal` em largura mobile.
+3. Confirmar zoom/overview/filtros/painel.
+4. Confirmar que scripts mobile não foram quebrados por alterações de onboarding ou desktop.
 
-Checklist:
+## Erros conhecidos a vigiar
 
-- [ ] botão `Zoom` abre overview com 9 cards.
-- [ ] botão de fechar fecha o overview.
-- [ ] tocar em cada card fecha o overview.
-- [ ] cada card navega para a tela correta da grade 3x3.
-- [ ] card atual é identificado visualmente.
-- [ ] ao navegar, a tela de destino não aparece deslocada ou vazia.
-- [ ] overview não entra na exportação.
-
-### `/mapa-familiar-horizontal`
-
-Checklist:
-
-- [ ] botão `Zoom` abre overview com 9 cards.
-- [ ] tocar em um card navega para a geração correspondente.
-- [ ] overview fecha após escolha.
-- [ ] o mapa horizontal não perde scroll vertical da geração ativa.
-
----
-
-## 10. QA do painel mobile aberto pelo botão `+`
-
-Checklist:
-
-- [ ] botão `+` abre painel.
-- [ ] overlay escurece o fundo.
-- [ ] painel principal é branco/opaco.
-- [ ] conteúdo interno tem scroll.
-- [ ] fechar pelo overlay funciona.
-- [ ] fechar por ação interna funciona.
-- [ ] body destrava ao fechar.
-- [ ] painel não aparece na exportação.
-
----
-
-## 11. QA de paletas
-
-Paletas oficiais:
-
-```txt
-white
-visual
-orange
-brown
-```
-
-Checklist por paleta:
-
-- [ ] cards mudam corretamente.
-- [ ] bordas mudam corretamente.
-- [ ] grupos mudam corretamente.
-- [ ] conectores mudam corretamente.
-- [ ] labels e títulos preservam contraste.
-- [ ] painel acompanha vocabulário visual.
-- [ ] exportação preserva a paleta.
-- [ ] paletas `white`, `orange` e `brown` não caem em fallback azul/teal.
-
----
-
-## 12. QA de cards e avatares
-
-Contrato:
-
-| Caso | Esperado |
-|---|---|
-| Pessoa com foto | foto real |
-| Pessoa sem foto | ícone `User` |
-| Pet sem foto | ícone `PawPrint` |
-
-Checklist:
-
-- [ ] pessoa sem foto não usa fallback por gênero.
-- [ ] pet não usa ícone de pessoa.
-- [ ] ícones preservam contraste.
-- [ ] exportação preserva ícones.
-- [ ] nascimento aparece apenas quando há ano/data real.
-- [ ] falecimento aparece apenas quando há ano/data real.
-- [ ] `Nascimento não informado` não aparece no resultado visual.
-- [ ] `Falecimento não informado` não aparece no resultado visual.
-
----
-
-## 13. QA de cônjuges, núcleos e conectores
-
-Checklist:
-
-- [ ] cônjuge da pessoa central aparece quando há relação.
-- [ ] cônjuges de avós/bisavós/tataravós aparecem como ancestrais quando aplicável.
-- [ ] filtro `Cônjuges` afeta grupos filtráveis implementados.
-- [ ] `pais`/Geração 4 não é tratado como implementado até correção documentada.
-- [ ] nenhum cônjuge é inferido apenas por proximidade visual.
-- [ ] pessoa central com mais de um relacionamento explícito não perde cônjuges adicionais.
-- [ ] filhos são agrupados pelo outro pai/mãe quando relação existir.
-- [ ] conectores representam relações explícitas.
-- [ ] conectores não invadem cards.
-- [ ] conectores não são cortados no fim da superfície.
-- [ ] conectores seguem paleta ativa.
-
----
-
-## 14. QA de exportação
-
-Ações:
-
-```txt
-Área
-Imagem/PNG
-PDF
-Imprimir
-```
-
-Validar em:
-
-```txt
-/mapa-familiar
-/mapa-familiar-horizontal
-```
-
-Checklist:
-
-- [ ] Área abre seleção.
-- [ ] segundo clique em Área fecha seleção.
-- [ ] seleção mínima é respeitada.
-- [ ] PNG gera arquivo.
-- [ ] PDF gera arquivo.
-- [ ] Imprimir abre fluxo de impressão.
-- [ ] loading aparece durante ação real.
-- [ ] erro libera loading.
-- [ ] título correto é adicionado.
-- [ ] painel não aparece.
-- [ ] header não aparece.
-- [ ] bottom nav não aparece.
-- [ ] modal mobile não aparece.
-- [ ] overview não aparece.
-- [ ] overlay de seleção não aparece.
-- [ ] paleta ativa é preservada.
-- [ ] conectores são preservados.
-- [ ] ícones SVG são preservados.
-
----
-
-## 15. QA do calendário familiar
-
-Checklist mobile:
-
-- [ ] cinco botões de categorias aparecem em uma linha quando possível.
-- [ ] bolinha colorida aparece acima do título.
-- [ ] título permanece em uma linha.
-- [ ] ellipsis funciona em telas extremas.
-- [ ] não há overflow horizontal global.
-- [ ] filtros alteram eventos visíveis.
-- [ ] estado visual reflete categoria ativa/inativa.
-- [ ] Google Agenda não quebra quando OAuth não está configurado.
-
----
-
-## 16. QA de perfil, retorno e pessoas
-
-Checklist:
-
-- [ ] perfil aberto a partir de `/mapa-familiar` retorna para `/mapa-familiar`.
-- [ ] perfil aberto a partir de `/mapa-familiar-horizontal` retorna para `/mapa-familiar-horizontal`.
-- [ ] retorno com `?pessoa=...` é preservado quando codificado em `voltar`.
-- [ ] URL externa em `voltar` é rejeitada.
-- [ ] retorno inválido cai em `/mapa-familiar`.
-- [ ] usuário comum não edita pessoa sem permissão.
-- [ ] admin mantém acesso esperado.
-
----
-
-## 17. QA de fórum, notificações e admin
-
-### Fórum
-
-- [ ] fórum lista tópicos.
-- [ ] usuário autenticado cria tópico.
-- [ ] usuário autorizado edita tópico.
-- [ ] respostas funcionam.
-- [ ] favoritos funcionam.
-- [ ] notificações associadas não quebram.
-
-### Notificações
-
-- [ ] central lista notificações.
-- [ ] marcação de leitura funciona.
-- [ ] preferências carregam.
-- [ ] preferências salvam.
-- [ ] e-mails/secrets não aparecem no frontend.
-
-### Admin
-
-- [ ] usuário admin acessa `/admin`.
-- [ ] usuário comum é bloqueado.
-- [ ] áreas administrativas não expõem dados para usuário comum.
-
----
-
-## 18. Critérios de aprovação pós-deploy mobile
-
-A frente de mapas mobile só deve ser considerada validada quando:
-
-- [ ] `/mapa-familiar` e `/mapa-familiar-horizontal` carregarem em Safari/iOS.
-- [ ] overview abrir nas duas rotas.
-- [ ] cards do overview navegarem corretamente.
-- [ ] `descendants` rolar internamente.
-- [ ] `paternal-uncles` exibir cards quando houver dados.
-- [ ] painel `+` não tiver fundo transparente.
-- [ ] não houver travamento perceptível após abrir a página.
-
-Checklist operacional detalhado:
-
-```txt
-docs/operacao/QA_MAPAS_MOBILE_POS_DEPLOY.md
-```
+- `ReferenceError: MapPin is not defined` indica import ausente de ícone.
+- Build do Vite pode não detectar todos os erros de runtime.
+- Falha ao salvar fato sem arquivo indica migration não aplicada.
+- Badge `Cadastrado` incorreto pode indicar problema em `user_person_links` ou RLS.
+- Texto com mojibake (`FamÃ­lia`, `cÃ´njuges`, `Árvore` corrompido) indica gravação com encoding incorreto.
+- Se `npm run build` passar mas `npm run typecheck` falhar, corrigir antes do commit.

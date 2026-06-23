@@ -15,9 +15,12 @@ import {
   listarArquivosHistoricosPorPessoa,
 } from '../services/arquivosHistoricosService';
 import { listarEventosDaPessoa } from '../services/personEventsService';
+import { listarPessoaSocialProfiles } from '../services/pessoaSocialProfilesService';
+import { getProfileQuestionnaireSelectedBadges } from '../services/profileQuestionnaireService';
 import { ArquivosHistoricos } from '../components/ArquivosHistoricos';
 import { listarTopicosForum } from '../services/forumService';
-import { ArquivoHistorico, ForumTopico, Pessoa, PersonEvent, Relacionamento } from '../types';
+import { ArquivoHistorico, ForumTopico, Pessoa, PessoaSocialProfile, PersonEvent, Relacionamento } from '../types';
+import type { ProfileQuestionnaireSelectableOption } from '../types/profileQuestionnaire';
 import {
   ArrowLeft,
   Bell,
@@ -91,6 +94,8 @@ export function PersonProfile() {
   const [relationshipsLoading, setRelationshipsLoading] = useState(false);
   const [forumTopicos, setForumTopicos] = useState<ForumTopico[]>([]);
   const [personEvents, setPersonEvents] = useState<PersonEvent[]>([]);
+  const [socialProfiles, setSocialProfiles] = useState<PessoaSocialProfile[]>([]);
+  const [profileBadges, setProfileBadges] = useState<ProfileQuestionnaireSelectableOption[]>([]);
   const [rawRelationships, setRawRelationships] = useState<Relacionamento[]>([]);
   const [relationshipHistoricalFiles, setRelationshipHistoricalFiles] = useState<ArquivoHistorico[]>([]);
   const [forumLoading, setForumLoading] = useState(false);
@@ -147,22 +152,28 @@ export function PersonProfile() {
       setLoading(true);
       setPessoa(undefined);
       setPersonEvents([]);
+      setSocialProfiles([]);
+      setProfileBadges([]);
       setRelacionamentos(EMPTY_RELATIONSHIPS);
       setRawRelationships([]);
       setRelationshipHistoricalFiles([]);
       setRelationshipsLoading(false);
       const pessoaData = await obterPessoaPorId(id);
-      const [arquivosHistoricos, eventosDaPessoa] = pessoaData
+      const [arquivosHistoricos, eventosDaPessoa, socialProfileRows, questionnaireBadgesResult] = pessoaData
         ? await Promise.all([
           listarArquivosHistoricosPorPessoa(pessoaData.id),
           listarEventosDaPessoa(pessoaData.id),
+          listarPessoaSocialProfiles(pessoaData.id, { onlyVisible: true }).catch(() => []),
+          getProfileQuestionnaireSelectedBadges(pessoaData.id).catch(() => ({ data: [] })),
         ])
-        : [[], []];
+        : [[], [], [], { data: [] }];
 
       if (!mounted) return;
 
       setPessoa(pessoaData ? { ...pessoaData, arquivos_historicos: arquivosHistoricos } : undefined);
       setPersonEvents(eventosDaPessoa);
+      setSocialProfiles(socialProfileRows);
+      setProfileBadges(questionnaireBadgesResult.data);
       setLoading(false);
     }
 
@@ -388,9 +399,12 @@ export function PersonProfile() {
       <main className="mx-auto w-full max-w-[1440px] space-y-6 px-2 py-6 sm:px-4 sm:py-8 lg:px-5 xl:px-6">
         <PersonDataView
           pessoa={pessoa}
+          socialProfiles={socialProfiles}
+          profileBadges={profileBadges}
           afterOverviewContent={(
             <RelationshipFinder
               pessoaBase={pessoa}
+              linkedPessoaId={linkedPessoaId}
               pessoas={allPeople.length > 0 ? allPeople : [pessoa]}
               relacionamentos={relationshipFinderRelationships}
               dataScopeNotice={relationshipFinderScopeNotice}

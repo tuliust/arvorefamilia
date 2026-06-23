@@ -92,7 +92,7 @@ export function getRelationshipCardClassName(status: RelationshipReviewStatus) {
 export function getRelationshipStatusBadgeConfig(status: RelationshipReviewStatus, hasAuthUser = false) {
   const config: Record<RelationshipReviewStatus, { label: string; className: string }> = {
     confirmed: {
-      label: hasAuthUser ? 'Ativo' : 'Pré-cadastrado',
+      label: hasAuthUser ? 'Cadastrado' : 'Pré-cadastrado',
       className: hasAuthUser
         ? 'border-green-200 bg-green-100 text-green-800'
         : 'border-gray-200 bg-gray-100 text-gray-700',
@@ -134,6 +134,18 @@ export function getChildRelationshipLabel(person: Pessoa) {
   }
 
   return 'Filho(a)';
+}
+
+
+export function isPetPerson(person: Pessoa) {
+  const entityType = String(person.humano_ou_pet ?? '').trim().toLowerCase();
+  const gender = String(person.genero ?? '').trim().toLowerCase();
+
+  return entityType === 'pet' || gender === 'pet' || gender === 'animal' || gender === 'mascote';
+}
+
+export function getPetRelationshipLabel(person: Pessoa) {
+  return isPetPerson(person) ? 'Pet' : 'Pet';
 }
 
 function resolveRelationshipOtherPersonId(rel: Relacionamento, childId: string) {
@@ -185,13 +197,24 @@ export function getChildOtherParentOptions(args: {
 export function getRelationshipCardLabel(group: RelationshipGroupKey, isMother = false) {
   if (group === 'pais') return isMother ? 'Mãe' : 'Pai';
   if (group === 'filhos') return 'Filho(a)';
+  if (group === 'pets') return 'Pet';
   if (group === 'conjuges') return 'Cônjuge';
+  return 'Irmão(ã)';
+}
+
+export function getSiblingRelationshipLabel(person: Pessoa) {
+  const normalizedGender = String(person.genero ?? '').trim().toLowerCase();
+
+  if (['mulher', 'feminino', 'female', 'feminina', 'woman'].includes(normalizedGender)) return 'Irmã';
+  if (['homem', 'masculino', 'male', 'masculina', 'man'].includes(normalizedGender)) return 'Irmão';
+
   return 'Irmão(ã)';
 }
 
 export function getRelationshipOverviewGroupLabel(group: RelationshipGroupKey) {
   if (group === 'pais') return 'Pais';
   if (group === 'filhos') return 'Filhos';
+  if (group === 'pets') return 'Pets';
   if (group === 'conjuges') return 'Cônjuges';
   return 'Irmãos';
 }

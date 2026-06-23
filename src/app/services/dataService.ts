@@ -79,6 +79,10 @@ export type PersonProfileResetResult = {
   deleted_insights: number;
   deleted_favorites: number;
   deleted_historical_files: number;
+  deleted_person_events: number;
+  deleted_social_profiles: number;
+  deleted_questionnaire_answers: number;
+  deleted_activity_logs: number;
   deleted_user_links: number;
   deleted_auth_users: number;
   notification_preferences_reset: number;
@@ -151,6 +155,13 @@ function toRelacionamento(row: any): Relacionamento {
     ...row,
     ativo: row?.ativo ?? true,
   } as Relacionamento;
+}
+
+function isPetPessoa(pessoa?: Pessoa | null) {
+  const entityType = String(pessoa?.humano_ou_pet ?? '').trim().toLowerCase();
+  const gender = String(pessoa?.genero ?? '').trim().toLowerCase();
+
+  return entityType === 'pet' || gender === 'pet' || gender === 'animal' || gender === 'mascote';
 }
 
 function pickDefined<T extends readonly string[]>(source: Record<string, any>, keys: T) {
@@ -382,6 +393,10 @@ export async function resetarPerfilPessoa(id: string): Promise<PersonProfileRese
     deleted_insights: Number(data?.deleted_insights ?? 0),
     deleted_favorites: Number(data?.deleted_favorites ?? 0),
     deleted_historical_files: Number(data?.deleted_historical_files ?? 0),
+    deleted_person_events: Number(data?.deleted_person_events ?? 0),
+    deleted_social_profiles: Number(data?.deleted_social_profiles ?? 0),
+    deleted_questionnaire_answers: Number(data?.deleted_questionnaire_answers ?? 0),
+    deleted_activity_logs: Number(data?.deleted_activity_logs ?? 0),
     deleted_user_links: Number(data?.deleted_user_links ?? 0),
     deleted_auth_users: Number(data?.deleted_auth_users ?? 0),
     notification_preferences_reset: Number(data?.notification_preferences_reset ?? 0),
@@ -542,18 +557,22 @@ export async function obterRelacionamentosDaPessoa(pessoaId: string) {
       .map(id => pessoasMap.get(id))
       .filter((p): p is Pessoa => !!p);
 
-    const filhos = Array.from(filhosSet)
+    const childrenAndPets = Array.from(filhosSet)
       .map(id => pessoasMap.get(id))
       .filter((p): p is Pessoa => !!p);
+
+    const filhos = childrenAndPets.filter((person) => !isPetPessoa(person));
+    const pets = childrenAndPets.filter(isPetPessoa);
 
     const irmaos = Array.from(irmaosSet)
       .map(id => pessoasMap.get(id))
-      .filter((p): p is Pessoa => !!p);
+      .filter((p): p is Pessoa => !!p)
+      .filter((person) => !isPetPessoa(person));
 
-    return { pais, maes, conjuges, filhos, irmaos };
+    return { pais, maes, conjuges, filhos, pets, irmaos };
   } catch (error) {
     console.error('Erro na requisição obterRelacionamentosDaPessoa:', error);
-    return { pais: [], maes: [], conjuges: [], filhos: [], irmaos: [] };
+    return { pais: [], maes: [], conjuges: [], filhos: [], pets: [], irmaos: [] };
   }
 }
 

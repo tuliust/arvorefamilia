@@ -36,9 +36,10 @@ function isMobileViewport() {
 
 function shouldEnableInitialSpouseFilter() {
   try {
+    const isFamilyMap = window.location.pathname === '/mapa-familiar';
     const isHorizontalFamilyMap = window.location.pathname === '/mapa-familiar-horizontal';
     const isViewingAnotherPerson = new URLSearchParams(window.location.search).has('pessoa');
-    return isHorizontalFamilyMap || isViewingAnotherPerson;
+    return isFamilyMap || isHorizontalFamilyMap || isViewingAnotherPerson;
   } catch {
     return false;
   }

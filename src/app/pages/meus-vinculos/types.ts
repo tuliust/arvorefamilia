@@ -1,6 +1,6 @@
 import { Pessoa } from '../../types';
 
-export type RelationshipGroupKey = 'pais' | 'filhos' | 'conjuges' | 'irmaos';
+export type RelationshipGroupKey = 'pais' | 'filhos' | 'pets' | 'conjuges' | 'irmaos';
 
 export type RelationshipReviewStatus =
   | 'confirmed'
@@ -26,6 +26,7 @@ export type ProfileControlRequestDraft = {
 export type RelationshipCounts = {
   parents: number;
   children: number;
+  pets: number;
   spouses: number;
   siblings: number;
 };

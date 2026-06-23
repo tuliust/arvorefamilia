@@ -27,7 +27,10 @@ export function PersonEventsList({ eventos }: PersonEventsListProps) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Eventos da vida</CardTitle>
+        <CardTitle className="flex items-center gap-2">
+          <CalendarDays className="h-5 w-5 text-blue-600" />
+          Eventos da vida
+        </CardTitle>
       </CardHeader>
       <CardContent>
         <div className="space-y-3">

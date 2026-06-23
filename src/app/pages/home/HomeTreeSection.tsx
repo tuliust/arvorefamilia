@@ -175,7 +175,7 @@ export function HomeTreeSection({
               {desktopTreeTitle}
             </h1>
           </div>
-          <div className="absolute right-[6.75rem] top-4 z-30">
+          <div className="absolute right-[6.75rem] top-4 z-30" data-tour-target="tree-favorite">
             <PageFavoriteButton path={location.pathname} className="h-9 w-9 rounded-xl border-gray-200 shadow-sm" />
           </div>
         </>
