@@ -21,6 +21,9 @@
 - O painel lateral apresenta seleção de pessoa de referência, temas, métricas, filtros e exportação.
 - O seletor de visualização deve manter label fechado do tipo `Família de X` quando houver pessoa de referência.
 - O placeholder aberto é `Visualize a árvore como...`.
+- O cabeçalho do painel deve manter o título `Visualização`, ícone de olho sem borda visual e ação de recolher alinhada dentro da mesma linha do título.
+- Os cards `Núcleo`, `Ascendentes` e `Colaterais` devem preservar largura e gap gerais, com títulos e linhas legíveis em uma linha, sem reticências ou quebra forçada.
+- A área `Exportar` deve permanecer visível; quando houver sobra vertical, pode usar maior espaçamento interno e botões mais altos, desde que os quatro botões continuem no painel.
 - O painel compacto deve preservar acesso aos botões de exportação.
 
 ### Mobile
