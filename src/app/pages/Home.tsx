@@ -105,10 +105,10 @@ import { LifeStatusKpiGrid } from './home/LifeStatusKpiGrid';
 import { SidebarPanelTabs } from './home/SidebarPanelTabs';
 
 const AI_QUESTION_EXAMPLES = [
-  'Quem sÃ£o meus bisavÃ³s paternos?',
-  'Quantas pessoas da famÃ­lia nasceram em Recife?',
+  'Quem sÃƒÂ£o meus bisavÃƒÂ³s paternos?',
+  'Quantas pessoas da famÃƒÂ­lia nasceram em Recife?',
   'Quais parentes moram em Porto Alegre?',
-  'Monte um resumo da linha genealÃ³gica de uma pessoa.',
+  'Monte um resumo da linha genealÃƒÂ³gica de uma pessoa.',
 ];
 const AI_QUESTION_PLACEHOLDER = `Pergunte, por exemplo:\n${AI_QUESTION_EXAMPLES.join('\n')}`;
 
@@ -132,8 +132,13 @@ function getFirstPersonName(value?: string | null) {
   return clean.split(/\s+/).filter(Boolean)[0] || 'Pessoa';
 }
 
+function getFirstTwoNames(value?: string | null) {
+  const names = String(value ?? '').trim().split(/\s+/).filter(Boolean);
+  return names.slice(0, 2).join(' ') || 'Pessoa';
+}
+
 function getFamilyViewOptionLabel(pessoa?: Pessoa) {
-  return pessoa ? `Família de ${getFirstPersonName(pessoa.nome_completo || pessoa.id)}` : 'Sua view padrão';
+  return pessoa ? `FamÃ­lia de ${getFirstPersonName(pessoa.nome_completo || pessoa.id)}` : 'Sua view padrÃ£o';
 }
 
 function isVisibleByLifeStatusFilter(
@@ -385,7 +390,7 @@ export function Home() {
       }
 
       if (pessoasData.length === 0) {
-        setLoadError('Tabela sem dados: pessoas nÃ£o retornou registros.');
+        setLoadError('Tabela sem dados: pessoas nÃƒÂ£o retornou registros.');
         return;
       }
 
@@ -401,12 +406,12 @@ export function Home() {
       setRelacionamentos(nextRelacionamentos);
 
       if (relacionamentosData.length === 0) {
-        console.warn('[Supabase] Tabela sem dados: relacionamentos nÃ£o retornou registros.');
+        console.warn('[Supabase] Tabela sem dados: relacionamentos nÃƒÂ£o retornou registros.');
       }
     } catch (error) {
       if (treeDataLoadTokenRef.current !== loadToken) return;
       const message = error instanceof Error ? error.message : 'Erro desconhecido ao carregar dados.';
-      console.error('Erro ao carregar dados da Ã¡rvore:', error);
+      console.error('Erro ao carregar dados da ÃƒÂ¡rvore:', error);
       setLoadError(message);
       setPessoas([]);
       setRelacionamentos([]);
@@ -460,7 +465,7 @@ export function Home() {
         }
       } catch (error) {
         if (cancelled) return;
-        console.error('Erro ao carregar vÃ­nculo do membro:', error);
+        console.error('Erro ao carregar vÃƒÂ­nculo do membro:', error);
         setLinkedPersonId(undefined);
       } finally {
         if (!cancelled) {
@@ -521,11 +526,11 @@ export function Home() {
       try {
         const { data, error } = await getMemberProfile(user.id);
         if (error) {
-          console.error('Erro ao carregar perfil do usuÃ¡rio:', error);
+          console.error('Erro ao carregar perfil do usuÃƒÂ¡rio:', error);
         }
         setProfile(data);
       } catch (error) {
-        console.error('Erro ao carregar perfil do usuÃ¡rio:', error);
+        console.error('Erro ao carregar perfil do usuÃƒÂ¡rio:', error);
         setProfile(null);
       }
     };
@@ -547,13 +552,13 @@ export function Home() {
       try {
         const { isAdmin: nextIsAdmin, error } = await isAdminUser(user);
         if (error) {
-          console.error('Erro ao verificar permissÃ£o administrativa:', error);
+          console.error('Erro ao verificar permissÃƒÂ£o administrativa:', error);
         }
         if (!cancelled) {
           setIsAdmin(nextIsAdmin);
         }
       } catch (error) {
-        console.error('Erro ao verificar permissÃ£o administrativa:', error);
+        console.error('Erro ao verificar permissÃƒÂ£o administrativa:', error);
         if (!cancelled) {
           setIsAdmin(false);
         }
@@ -680,7 +685,7 @@ export function Home() {
   }, []);
 
   const handleAddConnectionSubmit = useCallback((payload: AddConnectionPayload) => {
-    console.info('Salvar conexÃ£o:', payload);
+    console.info('Salvar conexÃƒÂ£o:', payload);
     setConnectionTarget(null);
   }, []);
 
@@ -992,7 +997,7 @@ export function Home() {
         : [];
       setDiscoverInsights(insightsResult);
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'NÃ£o foi possÃ­vel carregar as informaÃ§Ãµes selecionadas.';
+      const message = error instanceof Error ? error.message : 'NÃƒÂ£o foi possÃƒÂ­vel carregar as informaÃƒÂ§ÃƒÂµes selecionadas.';
       setDiscoverError(message);
     } finally {
       setDiscoverLoading(false);
@@ -1006,10 +1011,10 @@ export function Home() {
     const curiosityInstruction = selectedCuriosityPerson && selectedCuriosityTopics.length > 0
       ? [
           `Pessoa selecionada: ${selectedCuriosityPerson.nome_completo}.`,
-          `TÃ³picos desejados: ${selectedCuriosityTopics.join(', ')}.`,
+          `TÃƒÂ³picos desejados: ${selectedCuriosityTopics.join(', ')}.`,
         ].join('\n')
       : '';
-    const question = manualQuestion || 'Fale sobre a pessoa selecionada considerando os tÃ³picos marcados.';
+    const question = manualQuestion || 'Fale sobre a pessoa selecionada considerando os tÃƒÂ³picos marcados.';
     const message = [question, curiosityInstruction].filter(Boolean).join('\n\n');
 
     setAiLoading(true);
@@ -1041,18 +1046,18 @@ export function Home() {
       const payload = await response.json().catch(() => null);
 
       if (!response.ok) {
-        throw new Error(payload?.error || payload?.message || 'NÃ£o foi possÃ­vel gerar a resposta agora.');
+        throw new Error(payload?.error || payload?.message || 'NÃƒÂ£o foi possÃƒÂ­vel gerar a resposta agora.');
       }
 
       const answer = payload?.answer || payload?.data?.answer || payload?.response;
 
       if (!answer || typeof answer !== 'string') {
-        throw new Error('A IA nÃ£o retornou uma resposta vÃ¡lida.');
+        throw new Error('A IA nÃƒÂ£o retornou uma resposta vÃƒÂ¡lida.');
       }
 
-      setAiAnswer(answer || 'NÃ£o encontrei uma resposta para essa pergunta.');
+      setAiAnswer(answer || 'NÃƒÂ£o encontrei uma resposta para essa pergunta.');
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'NÃ£o foi possÃ­vel gerar a resposta agora.';
+      const message = error instanceof Error ? error.message : 'NÃƒÂ£o foi possÃƒÂ­vel gerar a resposta agora.';
       setAiError(message);
       toast.error(message);
     } finally {
@@ -1102,7 +1107,7 @@ export function Home() {
       });
       setConnectionResult(resultado);
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'NÃ£o foi possÃ­vel descobrir a conexÃ£o agora.';
+      const message = error instanceof Error ? error.message : 'NÃƒÂ£o foi possÃƒÂ­vel descobrir a conexÃƒÂ£o agora.';
       setConnectionError(message);
     } finally {
       setConnectionLoading(false);
@@ -1118,10 +1123,10 @@ export function Home() {
 
   const curiosityTabs = useMemo(
     () => [
-      { id: 'voce-sabia' as const, label: 'VocÃª Sabia?', icon: Lightbulb },
+      { id: 'voce-sabia' as const, label: 'VocÃƒÂª Sabia?', icon: Lightbulb },
       { id: 'descubra' as const, label: 'Descubra mais sobre...', icon: Search },
-      { id: 'pergunte-ia' as const, label: 'Pergunte Ã  IA', icon: Bot },
-      { id: 'conexao' as const, label: 'Qual a minha conexÃ£o com alguÃ©m?', icon: Network },
+      { id: 'pergunte-ia' as const, label: 'Pergunte ÃƒÂ  IA', icon: Bot },
+      { id: 'conexao' as const, label: 'Qual a minha conexÃƒÂ£o com alguÃƒÂ©m?', icon: Network },
     ],
     []
   );
@@ -1172,7 +1177,7 @@ export function Home() {
       .filter((pessoa) => Boolean(pessoa.id))
       .map((pessoa) => ({
         id: pessoa.id,
-        label: getFamilyViewOptionLabel(pessoa),
+        label: getFirstTwoNames(pessoa.nome_completo || pessoa.id),
       }))
       .sort((a, b) => a.label.localeCompare(b.label, 'pt-BR', { sensitivity: 'base' }));
   }, [pessoas]);
@@ -1431,7 +1436,7 @@ export function Home() {
           <DialogHeader>
             <DialogTitle>Fica a dica</DialogTitle>
             <DialogDescription>
-              Este site Ã© melhor acessado pelo computador, notebook ou tablet.
+              Este site ÃƒÂ© melhor acessado pelo computador, notebook ou tablet.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
