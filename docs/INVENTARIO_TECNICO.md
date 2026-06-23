@@ -1,113 +1,106 @@
 # Inventário técnico
 
-> Última revisão: 2026-06-23
-> Escopo: rotas, páginas, componentes, serviços, tipos, API e SQLs relevantes da branch `main`.
+> Última revisão: 2026-06-23  
+> Escopo: rotas, módulos, documentos finais e referências técnicas preservadas após limpeza documental.  
 > Status: canônico.
 
 ## Stack
 
 - Aplicação React com Vite.
-- Rotas em `src/app/routes.tsx` usando `createBrowserRouter`.
+- Rotas declaradas em `src/app/routes.tsx` com `createBrowserRouter`.
 - Autenticação e contexto em `src/app/contexts/AuthContext`.
-- Proteção de rota por `ProtectedRoute`, `MemberRoute` e `TreeAccessRoute`.
-- Dados no Supabase via serviços em `src/app/services`.
-- IA via endpoint serverless `api/ai.ts`.
-- Build e verificação: `npm run typecheck` e `npm run build`.
+- Proteção de rotas por `ProtectedRoute`, `MemberRoute` e `TreeAccessRoute`.
+- Dados via Supabase, com serviços em `src/app/services` e tipos em `src/app/types`.
+- IA por endpoint serverless `api/ai.ts`.
+- Validação esperada: `npm run typecheck` e `npm run build`.
 
-## Rotas públicas
+## Áreas funcionais documentadas
 
-| Rota | Página |
+| Área | Documento canônico |
 |---|---|
-| `/entrar` | `src/app/pages/Entrar.tsx` |
-| `/termos` | `src/app/pages/Termos.tsx` |
-| `/privacidade` | `src/app/pages/Privacidade.tsx` |
-| `/duvidas` | `src/app/pages/Duvidas.tsx` |
-| `/admin/login` | `src/app/pages/admin/AdminLogin.tsx` |
+| Mapa familiar vertical e horizontal | `funcionalidades/MAPA_FAMILIAR_VIEW.md` |
+| Árvore, conectores, painel e edição | `funcionalidades/ARVORE_LEGENDAS_CONECTORES_PAINEL.md` |
+| Meus dados, IA, mini bio e textos de perfil | `funcionalidades/MINI_BIO_CURIOSIDADES_IA.md` |
+| Meus vínculos | `funcionalidades/MEUS_VINCULOS.md` |
+| Revisão de dados | `funcionalidades/REVISAO_DADOS.md` |
+| Curiosidades | `funcionalidades/CURIOSIDADES.md` |
+| Arquivos históricos | `funcionalidades/ARQUIVOS_HISTORICOS.md` |
+| Fórum, favoritos, notificações, dúvidas, calendário, onboarding, timeline, exportação e admin de pessoas | `funcionalidades/FUNCIONALIDADES_COMPLEMENTARES.md` |
 
-`/` redireciona para `/mapa-familiar`.
+## Documentos técnicos finais
 
-## Rotas protegidas por árvore ou membro
-
-| Rota | Página / shell |
+| Tema | Documento |
 |---|---|
-| `/mapa-familiar` | `Home` com modo `mapa-familiar` |
-| `/mapa-familiar-horizontal` | `Home` com modo `mapa-familiar-horizontal` |
-| `/busca` | `BuscaResultados` |
-| `/minha-arvore/editar` | `MinhaArvore` |
-| `/meus-dados` | `MeusDados` |
-| `/meus-vinculos` | `MeusVinculosWithProfileBio` |
-| `/arquivos-historicos` | `ArquivosHistoricosPage` |
-| `/preferencias` | `PreferenciasPage` |
-| `/revisao-dados` | `RevisaoDados` |
-| `/vincular-perfil` | `VincularPerfil` |
-| `/pessoa/:id` e `/pessoas/:id` | `PersonProfile` |
-| `/calendario-familiar` | `CalendarioFamiliar` |
-| `/curiosidades` | `Curiosidades` |
-| `/meus-favoritos` | `MeusFavoritos` |
-| `/notificacoes` | `Notificacoes` |
-| `/ajustar-notificacoes` | `AjustarNotificacoes` |
-| `/forum` | `ForumHome` |
-| `/forum/novo` | `ForumNovoTopico` |
-| `/forum/topico/:id` | `ForumTopico` |
-| `/forum/topico/:id/editar` | `ForumEditarTopico` |
+| Arquitetura e decisões | `arquitetura/DECISOES_ARQUITETURAIS.md` |
+| Rotas e guards | `arquitetura/ROTAS_E_GUARDS.md` |
+| Componentes | `GUIA_COMPONENTES.md` |
+| Implementações | `GUIA_IMPLEMENTACOES.md` |
+| UX e layout | `GUIA_UX_LAYOUT.md` |
+| QA manual | `QA_MANUAL.md` |
+| Não regressão | `REGRAS_DE_NAO_REGRESSAO.md` |
+| Correção de erros | `GUIA_CORRECAO_ERROS.md` |
+| Próximos passos | `PLANO_PROXIMOS_PASSOS.md` |
+| Migrations Supabase | `operacao/MIGRATIONS_SUPABASE.md` |
+| Deploy | `operacao/DEPLOY.md` |
+| OAuth Google | `operacao/OAUTH_GOOGLE.md` |
+| Storage | `operacao/STORAGE_MAINTENANCE.md` |
+
+## Histórico preservado
+
+| Tema | Documento |
+|---|---|
+| Auditoria documental anterior | `historico/AUDITORIA_DOCUMENTACAO_FINAL_20260623.md` |
+| Legado técnico consolidado | `historico/LEGADO_TECNICO.md` |
+| Limpeza documental final | `historico/LIMPEZA_DOCUMENTACAO_FINAL_20260623.md` |
+
+## Rotas públicas principais
+
+- `/`
+- `/entrar`
+- `/termos`
+- `/privacidade`
+- `/pessoa/:id`
+- `/pessoas/:id`
+
+## Rotas de membro principais
+
+- `/mapa-familiar`
+- `/mapa-familiar-horizontal`
+- `/minha-arvore`
+- `/minha-arvore/editar`
+- `/meus-dados`
+- `/meus-vinculos`
+- `/arquivos-historicos`
+- `/revisao-dados`
+- `/curiosidades`
+- `/forum`
+- `/meus-favoritos`
+- `/notificacoes`
+- `/preferencias`
+- `/calendario-familiar`
 
 ## Área administrativa
 
-| Rota | Página |
-|---|---|
-| `/admin` e `/admin/dashboard` | `AdminDashboard` |
-| `/admin/home` | `AdminHomeSettings` |
-| `/admin/pessoas` | `AdminPessoas` |
-| `/admin/pessoas/nova` | `AdminPessoaForm` |
-| `/admin/pessoas/:id/editar` | `AdminPessoaForm` |
-| `/admin/pessoas/:id` | `AdminPessoaForm` |
-| `/admin/relacionamentos` | `AdminRelacionamentos` |
-| `/admin/relacionamentos/novo` | `AdminRelacionamentoForm` |
-| `/admin/importacao` | `AdminImportacao` |
-| `/admin/migrar-dados` | `AdminMigrarDados` |
-| `/admin/diagnostico` | `AdminDiagnostico` |
-| `/admin/integridade` | `AdminIntegridade` |
-| `/admin/atividades` | `AdminAtividades` |
-| `/admin/notificacoes` | `AdminNotificacoes` |
-| `/admin/duvidas` | `AdminDuvidas` |
-| `/admin/solicitacoes-vinculos` | `AdminSolicitacoesVinculos` |
+A área administrativa permanece documentada de forma consolidada nos guias canônicos, especialmente:
 
-## Componentes centrais
+- `GUIA_COMPONENTES.md`;
+- `GUIA_IMPLEMENTACOES.md`;
+- `funcionalidades/FUNCIONALIDADES_COMPLEMENTARES.md`;
+- `arquitetura/ROTAS_E_GUARDS.md`.
 
-- `src/app/pages/Home.tsx`: orquestra mapas, IA contextual, filtros, busca, abertura de perfil e estado de visualização.
-- `src/app/pages/home/*`: header, painel desktop, navegação mobile, seções e diálogos do mapa.
-- `src/app/components/FamilyTree/*`: renderização da árvore, mapas desktop/mobile, layout horizontal, conectores, preferências e ações de exportação.
-- `src/app/components/layout/*`: navegação global, avatar, menus, notificações e atalhos.
-- `src/app/pages/forum/*`: fórum de tópicos.
-- `src/app/pages/curiosidades/*` e `src/app/pages/Curiosidades.tsx`: estatísticas e exploração de dados familiares.
+## Arquivos removidos ou absorvidos
 
-## Serviços principais
+A limpeza final removeu arquivos de rodada, baseline, QA datado, mobile legado, histórico fragmentado e documentos funcionais pequenos. Conteúdo útil foi absorvido por:
 
-| Serviço | Responsabilidade |
-|---|---|
-| `dataService.ts` | CRUD de pessoas e relacionamentos, normalização de campos, logs de atividade e invalidação de cache. |
-| `memberProfileService.ts` | perfis de membros, vínculos entre usuário e pessoa, pessoa principal vinculada. |
-| `personInsightsService.ts` | leitura de insights gerados por pessoa. |
-| `historicalFilesService.ts` | fatos e arquivos históricos. |
-| `notificationService.ts` | notificações e preferências. |
-| `favoritesService.ts` | favoritos do usuário. |
-| `forumService.ts` | tópicos e interações do fórum. |
-| `treeDataCache.ts` | cache local e eventos de atualização da árvore. |
-| `permissionService.ts` | detecção de permissão administrativa. |
+- `funcionalidades/FUNCIONALIDADES_COMPLEMENTARES.md`;
+- `funcionalidades/ARVORE_LEGENDAS_CONECTORES_PAINEL.md`;
+- `funcionalidades/MINI_BIO_CURIOSIDADES_IA.md`;
+- `funcionalidades/CURIOSIDADES.md`;
+- `arquitetura/DECISOES_ARQUITETURAIS.md`;
+- `operacao/DEPLOY.md`;
+- `historico/LEGADO_TECNICO.md`;
+- `historico/LIMPEZA_DOCUMENTACAO_FINAL_20260623.md`.
 
-## Tipos e contratos
+## Regra de inventário
 
-- `src/app/types` concentra os modelos de pessoa, relacionamento e entidades de domínio.
-- `src/app/components/FamilyTree/types.ts` define filtros de visualização, grupos de parentesco, dados de casamento e opções de layout.
-- `api/ai.ts` aceita dois usos: perguntas sobre a árvore e geração de textos de perfil (`purpose: "profile_text"`).
-
-## Supabase
-
-Não foi localizado, pela busca disponível, um diretório versionado `supabase/migrations` como fonte primária. A documentação operacional deve tratar como fontes versionadas atuais:
-
-- `supabase/forum-schema.sql`;
-- `supabase/google-calendar-schema.sql`;
-- `supabase/config.toml`;
-- SQLs legados preservados em `docs/historico/SQLS_LEGADOS.md`.
-
-Se migrations numeradas forem adicionadas depois, `docs/operacao/MIGRATIONS_SUPABASE.md` deve ser atualizado.
+Este inventário deve listar apenas documentos existentes em `docs/`. Se um arquivo for removido, o link correspondente deve ser apagado ou substituído pelo documento canônico que absorveu seu conteúdo.
