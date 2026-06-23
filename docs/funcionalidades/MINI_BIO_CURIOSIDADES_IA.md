@@ -1,65 +1,75 @@
 # Meus dados, IA, Mini Bio e Curiosidades
 
-> Última revisão: 2026-06-23
-> Escopo: `/meus-dados`, `/meus-vinculos`, `/pessoa/:id`, `/curiosidades` e `api/ai.ts`.
+> Última revisão: 2026-06-23  
+> Escopo: `/meus-dados`, `/pessoa/:id`, textos de perfil, geração assistida por IA, mini bio e curiosidades individuais.  
 > Status: canônico.
+
+## Objetivo
+
+Documentar o contrato dos textos curtos de perfil e da geração assistida por IA. Este documento absorve o conteúdo útil do antigo `CURIOSIDADES_E_IA.md`.
 
 ## Campos de perfil
 
-A aplicação trabalha com textos curtos de perfil:
+A aplicação trabalha com textos curtos associados à pessoa:
 
 - `minibio`;
 - `curiosidades`.
 
-Os campos devem ter até 500 caracteres cada quando gerados por IA.
+Quando gerados por IA, os textos devem ser curtos, revisáveis e compatíveis com exibição em cards, perfil público e telas internas.
 
 ## Geração por IA
 
 `api/ai.ts` usa `purpose === "profile_text"` para gerar textos de perfil.
 
-Payload relevante:
+Payload funcional esperado:
 
-- `tone`;
-- `selectedBadges`;
-- `customTraits`;
-- `answers`;
-- `context`;
-- `memorialMode`.
+- dados básicos da pessoa;
+- fatos familiares disponíveis;
+- contexto textual limitado;
+- tipo de texto solicitado.
 
-A resposta esperada é JSON válido:
+A IA não deve ser tratada como fonte de verdade. O usuário deve poder revisar, ajustar ou descartar o texto gerado.
 
-```json
-{"minibio":"...","curiosidades":"..."}
-```
+## Mini bio
 
-## Modo memorial
+A mini bio deve:
 
-- Ativado apenas por `memorialMode === true`.
-- Usa terceira pessoa.
-- Usa verbos no passado.
-- Não deve escrever como se a pessoa ainda estivesse viva.
-- Evita linguagem fúnebre pesada.
+- resumir a pessoa em linguagem natural;
+- evitar extrapolações sem base nos dados existentes;
+- ser adequada para perfil público e telas internas;
+- manter tom respeitoso e familiar.
 
-## Pessoa viva
+## Curiosidades individuais
 
-- Usa primeira pessoa.
-- Não deve inventar fatos.
-- Pode considerar respostas do questionário, badges, idade aproximada, local de nascimento, cidade atual, profissão, vínculos e fatos históricos enviados no contexto.
+As curiosidades individuais devem:
 
-## Restrições
+- destacar fatos de perfil, família, locais, datas ou relações;
+- evitar inventar eventos;
+- ser separadas das estatísticas gerais da página `/curiosidades`.
 
-A IA não deve:
+A página `/curiosidades` continua documentada em `funcionalidades/CURIOSIDADES.md`.
 
-- expor IDs internos;
-- expor telefone, endereço, tokens, storage paths ou dados técnicos;
-- inferir saúde, religião, orientação sexual, condição financeira, conflitos, causa de morte ou tema sensível não informado;
-- mencionar IA no texto final;
-- usar placeholders.
+## Integrações relevantes
 
-## Integrações
+Conferir implementação em:
 
-- `/meus-dados` coleta dados e preferências.
-- `/meus-vinculos` pode exibir e salvar textos de perfil conforme fluxo.
-- `/pessoa/:id` consome os textos salvos.
-- `/curiosidades` pode usar badges e características de perfil para estatísticas.
-- `Home.tsx` também usa IA para perguntas sobre a árvore com contexto JSON limitado.
+- `api/ai.ts`;
+- `src/app/pages/MeusDados` quando aplicável;
+- `src/app/pages/curiosidades`;
+- `src/app/services/personInsightsService` quando aplicável;
+- componentes de perfil em `src/app/components`.
+
+## Não regressão
+
+Validar:
+
+- geração de mini bio;
+- geração de curiosidades individuais;
+- edição manual em `/meus-dados`;
+- exibição em `/pessoa/:id`;
+- ausência de texto salvo automaticamente sem ação do usuário;
+- tratamento de erro quando IA falhar.
+
+## Regra de manutenção
+
+Não recriar `CURIOSIDADES_E_IA.md`. Novas regras de IA para perfil devem ser registradas aqui; estatísticas e rankings familiares devem permanecer em `funcionalidades/CURIOSIDADES.md`.
