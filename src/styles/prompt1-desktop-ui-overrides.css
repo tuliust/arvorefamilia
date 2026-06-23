@@ -63,7 +63,87 @@
 }
 
 @media (min-width: 1024px) {
-  [data-forum-page='true'] > section[aria-label='Busca e filtros do fórum'] {
+  [data-forum-page='true'] > section[aria-label='Busca e filtros do fÃ³rum'] {
     max-width: none !important;
   }
 }
+
+/* Ajustes 2026-06-23: cards do painel lateral mais baixos para liberar Exportar. */
+@media (min-width: 768px) {
+  .desktop-tree-visualization-panel {
+    gap: clamp(0.42rem, 0.86vh, 0.64rem) !important;
+  }
+
+  .desktop-tree-groups-divider {
+    margin-block: clamp(0.04rem, 0.16vh, 0.1rem) !important;
+  }
+
+  .desktop-tree-family-groups {
+    min-height: clamp(4.65rem, 11.2vh, 6.05rem) !important;
+    gap: clamp(0.1rem, 0.24vw, 0.24rem) !important;
+  }
+
+  .desktop-tree-family-group-card {
+    min-height: 0 !important;
+    padding: clamp(0.18rem, 0.38vh, 0.32rem) !important;
+    border-radius: 0.62rem !important;
+  }
+
+  .desktop-tree-family-group-card h4 {
+    margin-bottom: clamp(0.06rem, 0.18vh, 0.14rem) !important;
+    font-size: clamp(0.56rem, 1.02vh, 0.7rem) !important;
+    line-height: 1 !important;
+  }
+
+  .desktop-tree-family-group-row-list {
+    gap: clamp(0.01rem, 0.08vh, 0.04rem) !important;
+  }
+
+  .desktop-tree-family-group-row {
+    min-height: clamp(0.72rem, 1.44vh, 0.98rem) !important;
+    padding: 0.01rem 0.06rem !important;
+    gap: 0.08rem !important;
+  }
+
+  .desktop-tree-family-group-card[aria-label='Núcleo'] .desktop-tree-family-group-row {
+    min-height: clamp(0.68rem, 1.36vh, 0.92rem) !important;
+  }
+
+  .desktop-tree-family-group-row span:not(.desktop-tree-family-group-icon) {
+    font-size: clamp(0.5rem, 0.92vh, 0.62rem) !important;
+    line-height: 1 !important;
+  }
+
+  .desktop-tree-family-group-row strong {
+    font-size: clamp(0.52rem, 0.98vh, 0.64rem) !important;
+    line-height: 1 !important;
+  }
+
+  .desktop-tree-export-panel {
+    margin-top: 0 !important;
+  }
+}
+
+@media (max-height: 720px) and (min-width: 768px) {
+  .desktop-tree-family-groups {
+    min-height: 4.2rem !important;
+  }
+
+  .desktop-tree-family-group-card {
+    padding: 0.14rem !important;
+  }
+
+  .desktop-tree-family-group-row,
+  .desktop-tree-family-group-card[aria-label='Núcleo'] .desktop-tree-family-group-row {
+    min-height: 0.64rem !important;
+  }
+
+  .desktop-tree-family-group-row span:not(.desktop-tree-family-group-icon) {
+    font-size: 0.48rem !important;
+  }
+
+  .desktop-tree-family-group-row strong {
+    font-size: 0.5rem !important;
+  }
+}
+/* Fim ajustes 2026-06-23: cards do painel lateral mais baixos para liberar Exportar. */
