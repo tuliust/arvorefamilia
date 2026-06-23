@@ -1,234 +1,64 @@
 # Guia de implementações
 
-> Última revisão: 2026-06-23  
-> Escopo: comportamento implementado após 6A–7D e ajustes pós-ciclo 7D.
+> Última revisão: 2026-06-23
+> Escopo: comportamento implementado na branch `main`.
+> Status: canônico.
 
-## Regra geral
+## Rotas e carregamento
 
-A documentação deve descrever o que está implementado. Pendências devem ser marcadas explicitamente como pendência. Não misturar comportamento antigo com contrato vigente.
+- `src/app/routes.tsx` define lazy loading para páginas públicas, de membro, de árvore e administrativas.
+- O fallback de rota exibe estado de carregamento.
+- Erros de chunk ou asset JS disparam tentativa controlada de reload com chave de sessão.
+- A rota raiz redireciona para `/mapa-familiar`.
 
-Antes de qualquer frente:
+## Mapa familiar
 
-1. Rodar `git status --short`.
-2. Confirmar branch.
-3. Isolar escopo.
-4. Evitar alterar scripts mobile sem pedido explícito.
-5. Rodar `git diff --check`.
-6. Rodar `npm run typecheck`.
-7. Rodar `npm run build`.
-8. Testar rota afetada no navegador.
-9. Conferir `git status --short` antes do commit.
+- `Home.tsx` carrega pessoas e relacionamentos via `dataService`.
+- O cache de árvore é segmentado por usuário e pessoa vinculada.
+- Mudanças de dados invalidam cache via `treeDataCache`.
+- A pessoa de referência usa, em ordem, query string, foco atual, pessoa vinculada ou primeira pessoa disponível.
+- Filtros de parentes diretos são persistidos por usuário.
+- Filtros de vida/pet afetam a visibilidade e os contadores.
 
-## Prompt 6A — mapa familiar, tour e painel
+## Alternância de visualização
 
-### Implementado
+- `/mapa-familiar` e `/mapa-familiar-horizontal` compartilham `Home`.
+- `treeViewMode.ts` converte rota em modo de visualização.
+- A query `pessoa` é preservada ao trocar entre modos.
 
-- Dropdown do painel desktop com label `Família de X`.
-- Seleção manual por query string preservada.
-- Contagem `Cadastrados` baseada em `user_person_links`.
-- Tour revisado:
-  - IA/Calendário em uma etapa;
-  - Favoritos em etapa separada.
-- Layout compacto para árvore pequena e simples em `DesktopFamilyMapView`.
+## IA
 
-### Não alterado
+`api/ai.ts` implementa:
 
-- Scripts mobile.
-- `index.html`.
-- Migrations.
-- `/meus-dados` e `/meus-vinculos`.
+- perguntas sobre árvore com contexto JSON limitado;
+- geração de `minibio` e `curiosidades` quando `purpose === "profile_text"`;
+- validação de payload mínimo;
+- uso de `OPENAI_API_KEY`;
+- modelo padrão `gpt-4.1-mini`, sobrescrevível por `OPENAI_MODEL`;
+- resposta JSON estrita para geração de textos de perfil;
+- limite de 500 caracteres por campo gerado.
 
-## Prompt 7A — questionário e geração de perfil
+## Dados e Supabase
 
-### Implementado
+- `dataService.ts` centraliza pessoas e relacionamentos.
+- Campos de privacidade são normalizados no carregamento.
+- Erros de Supabase são convertidos em mensagens técnicas mais legíveis.
+- Alterações relevantes criam log de atividade quando o serviço aplicável faz essa chamada.
+- Vínculos de membro são tratados por `memberProfileService`.
 
-- Persistência do questionário em `person_profile_questionnaire_answers`.
-- Hash de geração (`lastGeneratedHash`) só é atualizado após geração salva com sucesso.
-- Contexto de IA sanitizado.
-- Server-side também filtra contexto sensível em `api/ai.ts`.
+## Fórum
 
-### Regras
+- Rotas do fórum estão em `/forum`, `/forum/novo`, `/forum/topico/:id` e `/forum/topico/:id/editar`.
+- A documentação funcional do fórum deve considerar `forumService.ts` e o SQL versionado em `supabase/forum-schema.sql`.
 
-- Não enviar telefone, endereço, WhatsApp, redes sociais, permissões privadas, URLs, storage paths ou tokens para IA.
-- Não registrar dados sensíveis em logs ou metadata.
+## Notificações e favoritos
 
-## Prompt 7B — vínculos, pets e cônjuges
+- Notificações usam rotas `/notificacoes` e `/ajustar-notificacoes`.
+- Favoritos usam `/meus-favoritos`.
+- As buscas/filtros dessas áreas devem ser documentadas como comportamento de UI, não como regra de banco, salvo quando o serviço correspondente existir.
 
-### Implementado
+## Administração
 
-- Pets separados de Filhos.
-- Criação de pet com `humano_ou_pet: 'Pet'`.
-- Pessoa humana não entra em Pets.
-- Pet não entra em Filhos.
-- Cônjuges normalizados para no máximo um ativo.
-- Badge `Cadastrado`/`Pré-cadastrado` baseado em `user_person_links`.
-- Alterações continuam como solicitações pendentes.
-
-### Regras
-
-- Não criar relacionamento definitivo direto no fluxo de membro.
-- Não duplicar pessoa entre pai/mãe/pet/filho.
-
-## Prompt 7C — fatos e arquivos históricos na timeline
-
-### Implementado
-
-- `arquivos_historicos` aceita registros sem arquivo após migration.
-- Upload é opcional.
-- `/arquivos-historicos` permite fato sem arquivo, imagem e PDF.
-- `/revisao-dados` diferencia os três tipos.
-- Timeline do perfil exibe fatos e arquivos.
-- Fato sem arquivo aparece como `Fato`.
-- Arquivo com anexo aparece como `Arquivo`.
-
-### Migration
-
-```text
-supabase/migrations/20260622170000_allow_historical_facts_without_file.sql
-```
-
-Campos que podem ser nulos:
-
-- `url`;
-- `storage_bucket`;
-- `storage_path`;
-- `mime_type`.
-
-## Prompt 7D — UX final do onboarding
-
-### Implementado em `/meus-dados`
-
-- Etapa 1: `Qual é o seu estilo?`
-- Remoção das etapas 9 e 10.
-- Última etapa sem botão `Avançar`.
-- Toggle: `Você está escrevendo o perfil de uma pessoa falecida?`
-- `Nostálgico` deixou de ser gatilho de memorial.
-
-### Implementado na IA
-
-- Limite de 500 caracteres por campo.
-- Geração de 400–450 caracteres por campo.
-- Evita início redundante com nome da pessoa.
-- Pode considerar dados estruturados seguros.
-
-### Implementado em `/meus-vinculos`
-
-- Remoção do botão `Salvar textos`.
-- Salvamento no avanço da página.
-- Título `Sobre mim` fora do box.
-- Título `Familiares de X` fora do container.
-- Botões inferiores de adicionar removidos.
-- Label feminina `Irmã`.
-
-### Implementado nos headers
-
-Sem ações no header em:
-
-- `/meus-dados`;
-- `/meus-vinculos`;
-- `/arquivos-historicos`;
-- `/preferencias`;
-- `/revisao-dados`.
-
-## Pós-ciclo 7D — `/curiosidades`
-
-### Implementado
-
-- Renomeação e recálculo dos cards principais:
-  - `Pessoas`;
-  - `Localização`;
-  - `In memoriam`;
-  - `Pets`;
-  - `Casais`.
-- Rankings revisados:
-  - `Nomes mais comuns`;
-  - top 5 meses com mais aniversários;
-  - `Perfil dos familiares`, baseado em badges;
-  - `Principais cidades de nascimento`.
-- Gráfico `Faixa Etária` no lugar de geração sociológica.
-- Bodas passam a encerrar contagem no falecimento de um dos cônjuges.
-- Cards de comparação usam badges/características do questionário quando disponíveis.
-- Dropdowns de comparação, astrologia e conexão iniciam neutros.
-- Quiz revisado para:
-  - pessoa viva com mais tempo de vida;
-  - pessoa mais jovem;
-  - cidade de nascimento;
-  - profissão.
-
-### Integração técnica
-
-- `Curiosidades.tsx` carrega `profileBadgesByPersonId`.
-- `profileQuestionnaireService.ts` expõe `getProfileQuestionnaireSelectedBadges`.
-- `curiosidadesUtils.ts` contém helpers para ranking de badges, faixa etária, bodas ajustadas e perguntas do quiz.
-
-## Pós-ciclo 7D — painel desktop, dropdowns e buscas
-
-### Implementado
-
-- Cards `Núcleo`, `Ascendentes` e `Colaterais` mais compactos no desktop.
-- Títulos e linhas internas de parentes com fonte menor.
-- Dropdown fechado mantém `Família de X`.
-- Dropdown aberto mostra `Visualize a árvore como...`.
-- Opções do dropdown usam primeiro e segundo nome.
-- Botão de cônjuges alterna entre `Exibir` e `Ocultar`.
-- Dropdown de notificações usa largura responsiva e rodapé flexível.
-- Barra de busca de `/forum` expandida no desktop.
-- Barra de busca/filtros de `/meus-favoritos` expandida no desktop.
-
-### Arquivos principais
-
-- `src/app/pages/Home.tsx`
-- `src/app/pages/home/DesktopTreeVisualizationPanel.tsx`
-- `src/app/components/layout/HeaderNotificationsDropdown.tsx`
-- `src/app/pages/MeusFavoritos.tsx`
-- `src/styles/prompt1-desktop-ui-overrides.css`
-- `src/styles/index.css`
-
-## Pós-ciclo 7D — layout do canvas
-
-### Implementado
-
-- `LOWER_RIGHT_GROUP_SHIFT_X = 180`.
-- `lowerRightGroupCenterX` preserva mobile e desloca grupos inferiores direitos no desktop.
-- `siblingGroup.maxPerRow` usa:
-  - `1` no mobile;
-  - `2` no desktop.
-- Cônjuge e pets acompanham deslocamento para a direita.
-- Encoding UTF-8 foi revisado após alteração via PowerShell.
-
-### Arquivo principal
-
-```text
-src/app/components/FamilyTree/layouts/directFamilyDistributedLayout.ts
-```
-
-## Hotfix MapPin
-
-### Problema
-
-`ReferenceError: MapPin is not defined` em `/meus-dados`.
-
-### Causa
-
-`MapPin` era usado, mas não estava importado de `lucide-react`.
-
-### Correção
-
-Adicionar `MapPin` ao import em `MeusDados.tsx`.
-
-### Lição
-
-`npm run build` com Vite pode passar mesmo com erro de referência em runtime. Recomenda-se typecheck explícito.
-
-## Checklist de implementação futura
-
-1. Confirmar branch.
-2. Rodar `git pull --ff-only origin feature/questionario-ia-vinculos-pets`.
-3. Rodar `git status --short`.
-4. Isolar a frente em poucos arquivos.
-5. Preferir commits pequenos.
-6. Rodar `npm run typecheck`.
-7. Rodar `npm run build`.
-8. Rodar `git diff --check`.
-9. Fazer QA visual da rota alterada.
-10. Commitar e fazer push.
+- A administração usa `ProtectedRoute`.
+- Rotas administrativas atuais estão listadas em `INVENTARIO_TECNICO.md`.
+- Documentação de admin deve citar apenas rotas existentes em `src/app/routes.tsx`.
