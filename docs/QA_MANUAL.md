@@ -103,6 +103,8 @@ Confirmar que as alterações documentais ficaram restritas aos documentos canô
 ### `/notificacoes`
 
 - Dropdown e página não devem cortar ações.
+- No desktop, o botão `Alertas` dos headers de páginas de membro deve abrir o dropdown em vez de redirecionar diretamente.
+- O rodapé do dropdown deve exibir `Ver todas` e `Preferências` com larguras equivalentes e sem quebra de linha.
 - Ajustes devem estar acessíveis por `/ajustar-notificacoes`.
 
 ### `/pessoa/:id`
