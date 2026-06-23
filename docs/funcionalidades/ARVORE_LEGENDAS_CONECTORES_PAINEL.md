@@ -1,7 +1,19 @@
 # Árvore, legendas, conectores e painel
 
 > Última revisão: 2026-06-23  
-> Escopo: painel desktop, conectores, legendas, seletor de visualização e layout direto do mapa familiar.
+> Escopo: `/minha-arvore`, `/minha-arvore/editar`, painéis do mapa familiar, conectores, legendas e seletor de visualização.  
+> Status: canônico.
+
+## Objetivo
+
+Consolidar em um único documento o contrato visual e funcional da árvore, incluindo a edição que antes estava documentada separadamente em `MINHA_ARVORE_EDITAR.md`.
+
+## Rotas relacionadas
+
+- `/minha-arvore`;
+- `/minha-arvore/editar`;
+- `/mapa-familiar`;
+- `/mapa-familiar-horizontal`.
 
 ## Painel desktop do mapa familiar
 
@@ -23,181 +35,61 @@ A primeira opção visível deve ser desabilitada:
 Visualize a árvore como...
 ```
 
-Depois, listar pessoas por primeiro e segundo nome:
+A lista deve priorizar pessoas disponíveis para navegação sem duplicar a pessoa já selecionada.
 
-```text
-Maria Acileide
-Tulius Tsangaropulos
-```
+## Legendas
 
-Não usar `Família de Maria` nas opções abertas.
+As legendas devem explicar visualmente:
 
-## Contagem de cadastrados
-
-Fonte:
-
-```text
-user_person_links
-```
-
-Regras:
-
-- deduplicar `pessoa_id`;
-- não usar fallback artificial para 1;
-- se RLS limitar leitura, registrar limitação;
-- não confundir pessoa existente em `pessoas` com pessoa cadastrada.
-
-## Cards e status
-
-### Cadastrado
-
-Pessoa com usuário vinculado.
-
-### Pré-cadastrado
-
-Pessoa existente na árvore sem usuário vinculado.
-
-### Em análise
-
-Pessoa ou vínculo com alteração pendente.
-
-## Cards do painel lateral
-
-### Grupos
-
-- Núcleo;
-- Ascendentes;
-- Colaterais.
-
-### Ajuste desktop pós-7D
-
-Os cards foram compactados:
-
-- menor gap entre cards;
-- menor padding interno;
-- menor fonte nos títulos;
-- menor fonte nas linhas de parentes;
-- contadores preservados;
-- mobile sem alteração.
-
-### Linhas internas
-
-Exemplos:
-
-- Pais;
-- Irmãos;
-- Filhos;
-- Netos;
-- Avós;
-- Bisavós;
-- Tataravós;
-- Tios;
-- Primos;
-- Sobrinhos.
-
-## Botão de cônjuges indiretos
-
-### Estados
-
-Quando inativo:
-
-```text
-Exibir cônjuges de tios, primos etc
-```
-
-Quando ativo:
-
-```text
-Ocultar cônjuges de tios, primos etc
-```
-
-### Preservar
-
-- estado visual ativo;
-- `aria-pressed`;
-- `data-active`;
-- lógica de filtro.
+- pessoa central;
+- familiares diretos;
+- vínculos por casamento ou relação;
+- pets quando presentes;
+- estados visuais de destaque, seleção ou foco.
 
 ## Conectores
 
-- Conectores devem preservar relação visual entre gerações.
-- Ajustes de layout compacto não devem desconectar cards.
-- Layout compacto é permitido apenas para árvore pequena e simples.
-- Alterações de posição devem preservar leitura de ascendentes, núcleo, descendentes e colaterais.
+Os conectores devem preservar leitura geracional e não podem criar linhas soltas ou duplicadas. A prioridade é clareza visual sobre ornamentação.
 
-## Layout direto desktop
+Regras gerais:
 
-### Irmãos
+- pais conectam à pessoa central;
+- filhos e descendentes devem ficar agrupados de forma legível;
+- cônjuges e vínculos relacionais devem usar distinção visual sem competir com laços sanguíneos;
+- conectores mobile não devem depender de documentos antigos de rodada.
 
-No desktop, o grupo de irmãos permite até 2 cards por linha.
+## Edição da árvore
 
-Regra esperada:
+A edição em `/minha-arvore/editar` deve permitir manutenção controlada de dados familiares conforme permissões do usuário.
 
-```ts
-maxPerRow: options.isMobile ? 1 : 2
-```
+Fluxos esperados:
 
-### Cônjuge e pets
+- localizar pessoa;
+- revisar dados principais;
+- ajustar vínculos quando disponível;
+- respeitar guards e perfil de acesso;
+- evitar alterações silenciosas sem confirmação visual.
 
-O grupo inferior direito foi deslocado no desktop:
+## Relação com componentes
 
-```ts
-const LOWER_RIGHT_GROUP_SHIFT_X = 180;
-```
+A documentação deve ser conferida contra:
 
-Cálculo esperado:
-
-```ts
-const lowerRightGroupCenterX = options.isMobile
-  ? MOBILE_LOWER_RIGHT_GROUP_CENTER_X
-  : LOWER_RIGHT_GROUP_CENTER_X + LOWER_RIGHT_GROUP_SHIFT_X;
-```
-
-### Mobile
-
-Mobile deve manter comportamento anterior:
-
-- 1 card por linha nos irmãos;
-- sem deslocamento desktop;
-- sem reabrir problemas de sobreposição.
-
-## Tour
-
-Etapas pós-6A:
-
-- Perfis, vínculos e memórias.
-- Inteligência artificial e datas importantes.
-- Guarde os seus destaques.
-
-## Proteções mobile
-
-Não alterar scripts mobile sem frente explícita:
-
-- `src/mobileFamilyMap*.ts`;
-- `src/mobileFamilyTree*.ts`;
-- `src/staticMobileFamilyTreeScreens.ts`;
-- `src/firstLoginMobileTutorialFixes.ts`.
-
-## QA
-
-1. Conferir dropdown fechado `Família de X`.
-2. Conferir dropdown aberto com `Visualize a árvore como...`.
-3. Conferir nomes no seletor com primeiro e segundo nome.
-4. Conferir contagem `Cadastrados`.
-5. Conferir cards cadastrados/pré-cadastrados.
-6. Conferir cards `Núcleo`, `Ascendentes` e `Colaterais` compactos.
-7. Conferir botão `Exibir/Ocultar cônjuges`.
-8. Conferir conectores no layout padrão.
-9. Conferir conectores no layout compacto.
-10. Conferir irmãos em até 2 colunas no desktop.
-11. Conferir cônjuge e pets deslocados à direita no desktop.
-12. Conferir tour.
-13. Conferir mobile.
+- `src/app/components/FamilyTree`;
+- `src/app/components`;
+- `src/app/pages`;
+- `src/app/services`.
 
 ## Não regressão
 
-- Não voltar ao label `Sua view padrão` quando houver pessoa.
-- Não listar `Família de Maria` dentro do dropdown aberto.
-- Não remover compactação do painel lateral.
-- Não aplicar deslocamento desktop no mobile.
-- Não desconectar edges/conectores ao ajustar layout.
+Antes de alterar árvore, painel ou conectores, validar:
+
+- `/mapa-familiar`;
+- `/mapa-familiar-horizontal`;
+- `/minha-arvore`;
+- `/minha-arvore/editar`;
+- visualização desktop e mobile;
+- dados com pessoa central, pais, cônjuge, filhos, irmãos e pets.
+
+## Regra de manutenção
+
+Não recriar `MINHA_ARVORE_EDITAR.md`. Alterações de edição, conectores ou painéis devem ser registradas aqui e refletidas em `QA_MANUAL.md` e `REGRAS_DE_NAO_REGRESSAO.md` quando necessário.
