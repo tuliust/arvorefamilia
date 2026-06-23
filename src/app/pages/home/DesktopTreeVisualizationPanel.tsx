@@ -46,14 +46,14 @@ const viewOptions: Array<{
 }> = [
   {
     key: 'mapa-familiar',
-    label: 'ÃƒÂrvore Familiar',
-    subtitle: 'VisÃƒÂ£o de parentes por grupos',
+    label: 'Árvore Familiar',
+    subtitle: 'Visão de parentes por grupos',
     icon: Tally3,
   },
   {
     key: 'mapa-familiar-horizontal',
     label: 'Linha Geracional',
-    subtitle: 'VisualizaÃƒÂ§ÃƒÂ£o cronolÃƒÂ³gica por geraÃƒÂ§ÃƒÂµes',
+    subtitle: 'Visualização cronológica por gerações',
     icon: Network,
   },
 ];
@@ -63,7 +63,7 @@ const exportOptions: Array<{
   label: string;
   icon: React.ComponentType<{ className?: string }>;
 }> = [
-  { action: 'select-area', label: 'ÃƒÂrea', icon: Scan },
+  { action: 'select-area', label: 'Área', icon: Scan },
   { action: 'save-image', label: 'Imagem', icon: ImageDown },
   { action: 'save-pdf', label: 'PDF', icon: FileDown },
   { action: 'print', label: 'Imprimir', icon: Printer },
@@ -78,20 +78,20 @@ const groupSections: Array<{
   }>;
 }> = [
   {
-    title: 'NÃƒÂºcleo',
+    title: 'Núcleo',
     rows: [
       { keys: ['pais'], label: 'Pais', icon: UsersRound },
       { keys: ['filhos'], label: 'Filhos', icon: Baby },
       { keys: ['netos'], label: 'Netos', icon: Baby },
-      { keys: ['irmaos'], label: 'IrmÃƒÂ£os', icon: UsersRound },
+      { keys: ['irmaos'], label: 'Irmãos', icon: UsersRound },
     ],
   },
   {
     title: 'Ascendentes',
     rows: [
-      { keys: ['avos'], label: 'AvÃƒÂ³s', icon: Tally3 },
-      { keys: ['bisavos'], label: 'BisavÃƒÂ³s', icon: Tally2 },
-      { keys: ['tataravos'], label: 'TataravÃƒÂ³s', icon: Tally1 },
+      { keys: ['avos'], label: 'Avós', icon: Tally3 },
+      { keys: ['bisavos'], label: 'Bisavós', icon: Tally2 },
+      { keys: ['tataravos'], label: 'Tataravós', icon: Tally1 },
     ],
   },
   {
@@ -120,7 +120,7 @@ function getGroupCount(counts: DirectRelationCounts, keys: DirectRelativeGroup[]
 export function DesktopTreeVisualizationPanel({
   showViewAsSelector = true,
   viewAsPersonValue = '',
-  defaultViewAsPersonLabel = 'Sua view padrÃƒÂ£o',
+  defaultViewAsPersonLabel = 'Sua view padrão',
   viewAsPersonOptions,
   onViewAsPersonChange,
   totalPeople,
@@ -188,7 +188,7 @@ export function DesktopTreeVisualizationPanel({
     <div className="desktop-tree-visualization-panel-shell" data-tree-export-ignore="true">
       <section
         className="desktop-tree-visualization-panel"
-        aria-label="VisualizaÃƒÂ§ÃƒÂ£o da ÃƒÂ¡rvore"
+        aria-label="Visualização da árvore"
         data-tree-export-ignore="true"
       >
         <div className="desktop-tree-panel-header">
@@ -196,7 +196,7 @@ export function DesktopTreeVisualizationPanel({
             <span className="desktop-tree-panel-eye" aria-hidden="true">
               <Eye />
             </span>
-            <h2 className="desktop-tree-panel-title">VisualizaÃƒÂ§ÃƒÂ£o</h2>
+            <h2 className="desktop-tree-panel-title">Visualização</h2>
           </div>
         </div>
 
@@ -205,10 +205,10 @@ export function DesktopTreeVisualizationPanel({
             value={viewAsPersonValue}
             onChange={(event) => handleViewAsChange(event.target.value)}
             className="desktop-tree-view-select"
-            aria-label="Visualizar ÃƒÂ¡rvore como outra pessoa"
+            aria-label="Visualizar árvore como outra pessoa"
           >
             <option value="" hidden>{defaultViewAsPersonLabel}</option>
-            <option value="__view_as_placeholder__" disabled>Visualize a Ã¡rvore como...</option>
+            <option value="__view_as_placeholder__" disabled>Visualize a árvore como...</option>
             {viewAsPersonOptions.map((pessoa) => (
               <option key={pessoa.id} value={pessoa.id}>
                 {pessoa.label}
@@ -217,7 +217,7 @@ export function DesktopTreeVisualizationPanel({
           </select>
         )}
 
-        <div className="desktop-tree-palette-row" aria-label="Tema da ÃƒÂ¡rvore">
+        <div className="desktop-tree-palette-row" aria-label="Visualização da árvore">
           {paletteOptions.map((paletteKey) => {
             const palette = TREE_COLOR_PALETTES[paletteKey];
             const active = treeColorPalette === paletteKey;
@@ -317,7 +317,7 @@ export function DesktopTreeVisualizationPanel({
           ))}
         </div>
 
-        <section className="desktop-tree-export-panel" aria-label="Exportar ÃƒÂ¡rvore" data-tree-export-ignore="true">
+        <section className="desktop-tree-export-panel" aria-label="Exportar árvore" data-tree-export-ignore="true">
           <h3 className="desktop-tree-export-title">Exportar</h3>
           <div className="desktop-tree-export-actions">
             {exportOptions.map((option) => {
@@ -347,15 +347,15 @@ export function DesktopTreeVisualizationPanel({
             onClick={() => onToggleDirectRelative('conjuge')}
           >
             <HeartHandshake />
-            <span>Exibir cÃƒÂ´njuges de tios, primos etc</span>
+            <span>{directRelativeFilters.conjuge ? 'Ocultar cônjuges de tios, primos etc' : 'Exibir cônjuges de tios, primos etc'}</span>
           </button>
 
           <button
             type="button"
             className="desktop-tree-final-filter-button"
             disabled
-            aria-label="Apenas meus familiares. Funcionalidade serÃƒÂ¡ definida posteriormente."
-            title="Funcionalidade serÃƒÂ¡ definida posteriormente."
+            aria-label="Apenas meus familiares. Funcionalidade será definida posteriormente."
+            title="Funcionalidade será definida posteriormente."
           >
             <UsersRound />
             <span>Apenas meus familiares</span>
