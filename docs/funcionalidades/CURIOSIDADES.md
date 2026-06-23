@@ -1,12 +1,14 @@
 # Curiosidades
 
-> Última revisão: 2026-06-23
-> Escopo: `/curiosidades`, estatísticas familiares, rankings, comparações e uso de badges.
+> Última revisão: 2026-06-23  
+> Escopo: `/curiosidades`, estatísticas familiares, rankings, comparações, badges e exploração dos dados da árvore.  
 > Status: canônico.
 
 ## Objetivo
 
 Transformar os dados da árvore em exploração visual e textual: pessoas, locais, pets, memórias, casais, aniversários, perfis e padrões familiares.
+
+Este documento cobre a página geral `/curiosidades`. Textos individuais de perfil e geração assistida por IA ficam em `MINI_BIO_CURIOSIDADES_IA.md`.
 
 ## Dados usados
 
@@ -18,36 +20,45 @@ A página depende principalmente de:
 - locais de nascimento, falecimento e local atual;
 - profissão;
 - indicador humano/pet;
-- vínculos e badges de perfil quando disponíveis;
-- fatos históricos quando integrados ao contexto.
+- campos de perfil;
+- arquivos e fatos históricos quando disponíveis.
 
-## Cards principais
+## Tipos de curiosidade
 
-A documentação canônica considera estes agrupamentos funcionais:
+A página pode apresentar:
 
-- Pessoas;
-- Localização;
-- In memoriam;
-- Pets;
-- Casais.
+- rankings familiares;
+- agrupamentos por local;
+- destaques de aniversários e datas;
+- estatísticas de longevidade;
+- perfis com campos preenchidos;
+- distribuição de pets;
+- contagens de vínculos;
+- fatos derivados de arquivos históricos.
 
-## Rankings e análises
+## Regras de exibição
 
-- Nomes mais comuns.
-- Meses com mais aniversários.
-- Perfil dos familiares com base em badges quando disponíveis.
-- Cidades de nascimento mais recorrentes.
-- Faixas etárias.
-- Bodas e duração de casais, considerando falecimento quando aplicável.
+- Não inventar fatos ausentes no banco.
+- Distinguir dado vazio de dado desconhecido.
+- Não misturar pessoa humana e pet em rankings que exijam semântica humana.
+- Usar badges e cards de forma consistente com `GUIA_UX_LAYOUT.md`.
+- Não duplicar textos de mini bio como se fossem estatísticas gerais.
 
-## Interações
+## Relação com IA
 
-- Dropdowns dependentes de seleção iniciam em estado neutro.
-- Quiz familiar usa dados reais disponíveis.
-- Comparações de interesses devem usar badges ou características salvas, sem inventar informações.
+A IA pode apoiar textos de perfil, mas a página de curiosidades deve priorizar dados estruturados. O contrato de IA fica centralizado em `MINI_BIO_CURIOSIDADES_IA.md`.
 
 ## Não regressão
 
-- Não reintroduzir modal antigo como experiência principal se a rota `/curiosidades` estiver ativa.
-- Não usar geração sociológica como substituto de faixa etária se a página implementada estiver usando faixa etária.
-- Não misturar pets em contagens de pessoas humanas.
+Validar:
+
+- carregamento com dados completos;
+- carregamento com dados incompletos;
+- ausência de quebra quando não houver data ou local;
+- cards responsivos;
+- rankings sem duplicidade;
+- consistência com favoritos, pessoa pública e arquivos históricos quando houver ligação.
+
+## Regra de manutenção
+
+Não criar documentos paralelos para estatísticas familiares. Novos blocos de curiosidade devem ser documentados aqui e refletidos em `QA_MANUAL.md` quando exigirem teste manual específico.
