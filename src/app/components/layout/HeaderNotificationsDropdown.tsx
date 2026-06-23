@@ -231,7 +231,7 @@ export function HeaderNotificationsDropdown({
 
       {open && (
         <div
-          className="absolute right-0 top-full z-[650] mt-2 w-80 overflow-hidden rounded-2xl border border-gray-200 bg-white text-left shadow-2xl ring-1 ring-black/5 sm:w-96"
+          className="absolute right-0 top-full z-[650] mt-2 w-[min(24rem,calc(100vw-1rem))] overflow-hidden rounded-2xl border border-gray-200 bg-white text-left shadow-2xl ring-1 ring-black/5"
           role="menu"
           aria-label="Últimas notificações"
         >
@@ -348,18 +348,18 @@ export function HeaderNotificationsDropdown({
             )}
           </div>
 
-          <div className="grid grid-cols-1 gap-2 border-t border-gray-100 bg-gray-50 px-3 py-3 sm:grid-cols-2">
+          <div className="flex flex-col gap-2 border-t border-gray-100 bg-gray-50 px-3 py-3 sm:flex-row sm:items-center sm:justify-between">
             <Link
               to="/notificacoes"
               onClick={() => setOpen(false)}
-              className="inline-flex h-9 items-center justify-center rounded-xl border border-gray-200 bg-white px-3 text-xs font-bold text-gray-700 shadow-sm transition hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700"
+              className="inline-flex min-h-9 min-w-0 flex-1 items-center justify-center whitespace-normal rounded-xl border border-gray-200 bg-white px-3 py-2 text-center text-xs font-bold leading-tight text-gray-700 shadow-sm transition hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700"
             >
               Ver todas as notificações
             </Link>
             <Link
               to="/ajustar-notificacoes"
               onClick={() => setOpen(false)}
-              className="inline-flex h-9 items-center justify-center rounded-xl border border-gray-200 bg-white px-3 text-xs font-bold text-gray-700 shadow-sm transition hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700"
+              className="inline-flex min-h-9 min-w-0 flex-1 items-center justify-center whitespace-normal rounded-xl border border-gray-200 bg-white px-3 py-2 text-center text-xs font-bold leading-tight text-gray-700 shadow-sm transition hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700"
             >
               Personalizar preferências
             </Link>
