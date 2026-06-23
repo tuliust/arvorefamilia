@@ -16,6 +16,11 @@ interface HeaderNotificationsDropdownProps {
   wrapperClassName?: string;
   buttonClassName?: string;
   iconClassName?: string;
+  label?: React.ReactNode;
+  labelClassName?: string;
+  title?: string;
+  ariaLabel?: string;
+  tourTarget?: string;
 }
 
 function formatarHora(data: Date) {
@@ -97,6 +102,11 @@ export function HeaderNotificationsDropdown({
   wrapperClassName = 'relative hidden md:inline-flex',
   buttonClassName = 'h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-gray-200 bg-white text-slate-800 shadow-sm transition hover:border-blue-200 hover:bg-blue-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2',
   iconClassName = 'h-4 w-4',
+  label,
+  labelClassName = 'whitespace-nowrap text-sm font-semibold leading-none',
+  title = 'Alertas',
+  ariaLabel = 'Abrir menu de alertas',
+  tourTarget = 'alerts',
 }: HeaderNotificationsDropdownProps) {
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -218,14 +228,15 @@ export function HeaderNotificationsDropdown({
       <button
         type="button"
         className={`relative flex ${buttonClassName}`}
-        title="Alertas"
-        aria-label="Abrir menu de alertas"
+        title={title}
+        aria-label={ariaLabel}
         aria-haspopup="menu"
         aria-expanded={open}
-        data-tour-target="alerts"
+        data-tour-target={tourTarget}
         onClick={() => setOpen((current) => !current)}
       >
         <Bell className={iconClassName} />
+        {label && <span className={labelClassName}>{label}</span>}
         <NotificationCountBadge count={unreadNotificationsCount} />
       </button>
 
@@ -348,20 +359,20 @@ export function HeaderNotificationsDropdown({
             )}
           </div>
 
-          <div className="flex flex-col gap-2 border-t border-gray-100 bg-gray-50 px-3 py-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="grid grid-cols-2 gap-2 border-t border-gray-100 bg-gray-50 px-3 py-3">
             <Link
               to="/notificacoes"
               onClick={() => setOpen(false)}
-              className="inline-flex min-h-9 min-w-0 flex-1 items-center justify-center whitespace-normal rounded-xl border border-gray-200 bg-white px-3 py-2 text-center text-xs font-bold leading-tight text-gray-700 shadow-sm transition hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700"
+              className="inline-flex min-h-9 w-full min-w-0 items-center justify-center whitespace-nowrap rounded-xl border border-gray-200 bg-white px-3 py-2 text-center text-xs font-bold leading-tight text-gray-700 shadow-sm transition hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700"
             >
-              Ver todas as notificações
+              Ver todas
             </Link>
             <Link
               to="/ajustar-notificacoes"
               onClick={() => setOpen(false)}
-              className="inline-flex min-h-9 min-w-0 flex-1 items-center justify-center whitespace-normal rounded-xl border border-gray-200 bg-white px-3 py-2 text-center text-xs font-bold leading-tight text-gray-700 shadow-sm transition hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700"
+              className="inline-flex min-h-9 w-full min-w-0 items-center justify-center whitespace-nowrap rounded-xl border border-gray-200 bg-white px-3 py-2 text-center text-xs font-bold leading-tight text-gray-700 shadow-sm transition hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700"
             >
-              Personalizar preferências
+              Preferências
             </Link>
           </div>
         </div>
