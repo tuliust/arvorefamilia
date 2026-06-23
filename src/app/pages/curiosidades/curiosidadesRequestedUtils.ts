@@ -1,4 +1,4 @@
-import type { Pessoa, Relacionamento } from '../../types';
+﻿import type { Pessoa, Relacionamento } from '../../types';
 import type { ProfileQuestionnaireSelectableOption, ProfileQuestionnaireTone } from '../../types/profileQuestionnaire';
 import { AI_TONES } from '../../constants/profileQuestionnaireConfig';
 import {
@@ -49,11 +49,11 @@ export type AdjustedCoupleAnniversary = {
 };
 
 const WEDDING_MILESTONES = [
-  { label: 'Bodas de Jequitibá', years: 100, description: 'um século de união registrado na história da família' },
-  { label: 'Bodas de Platina', years: 65, description: 'uma trajetória rara e muito longeva' },
-  { label: 'Bodas de Diamante', years: 60, description: 'seis décadas de vínculo familiar' },
-  { label: 'Bodas de Ouro', years: 50, description: 'meio século de casamento' },
-  { label: 'Bodas de Prata', years: 25, description: 'vinte e cinco anos de união' },
+  { label: 'Bodas de JequitibÃ¡', years: 100, description: 'um sÃ©culo de uniÃ£o registrado na histÃ³ria da famÃ­lia' },
+  { label: 'Bodas de Platina', years: 65, description: 'uma trajetÃ³ria rara e muito longeva' },
+  { label: 'Bodas de Diamante', years: 60, description: 'seis dÃ©cadas de vÃ­nculo familiar' },
+  { label: 'Bodas de Ouro', years: 50, description: 'meio sÃ©culo de casamento' },
+  { label: 'Bodas de Prata', years: 25, description: 'vinte e cinco anos de uniÃ£o' },
   { label: 'Bodas de Papel', years: 1, description: 'o primeiro ano de casamento' },
 ];
 
@@ -94,12 +94,12 @@ export function getProfileStyleRanking(
 
 export function buildAgeRangeChartData(pessoas: Pessoa[], now = new Date()): ChartDatum[] {
   const ranges = [
-    { label: '0–12', min: 0, max: 12 },
-    { label: '13–17', min: 13, max: 17 },
-    { label: '18–29', min: 18, max: 29 },
-    { label: '30–44', min: 30, max: 44 },
-    { label: '45–59', min: 45, max: 59 },
-    { label: '60–74', min: 60, max: 74 },
+    { label: '0â€“12', min: 0, max: 12 },
+    { label: '13â€“17', min: 13, max: 17 },
+    { label: '18â€“29', min: 18, max: 29 },
+    { label: '30â€“44', min: 30, max: 44 },
+    { label: '45â€“59', min: 45, max: 59 },
+    { label: '60â€“74', min: 60, max: 74 },
     { label: '75+', min: 75, max: Number.POSITIVE_INFINITY },
   ].map((range) => ({ ...range, value: 0 }));
 
@@ -137,7 +137,7 @@ export function buildAdjustedCoupleAnniversaries(
 
   return relacionamentos
     .filter((relacionamento) => Boolean(relacionamento.data_casamento))
-    .map((relacionamento) => {
+    .map<AdjustedCoupleAnniversary | null>((relacionamento) => {
       const pessoaA = pessoasMap.get(relacionamento.pessoa_origem_id);
       const pessoaB = pessoasMap.get(relacionamento.pessoa_destino_id);
       const weddingDate = parseFamilyDate(relacionamento.data_casamento);
@@ -204,7 +204,7 @@ function getFallbackInterestLabels(pessoa: Pessoa) {
   const currentCity = String(pessoa.local_atual ?? '').trim();
   const birthCity = String(pessoa.local_nascimento ?? '').trim();
 
-  if (profession) interests.push(`Profissão: ${profession}`);
+  if (profession) interests.push(`ProfissÃ£o: ${profession}`);
   if (currentCity) interests.push(`Mora em: ${currentCity}`);
   if (birthCity) interests.push(`Nasceu em: ${birthCity}`);
 
@@ -331,7 +331,7 @@ export function buildRequestedCuriosityQuizQuestions(
     const answer = oldestLiving[0];
     questions.push(buildQuestion({
       id: 'oldest-living-person',
-      prompt: 'Quem é a pessoa viva com mais tempo de vida na árvore?',
+      prompt: 'Quem Ã© a pessoa viva com mais tempo de vida na Ã¡rvore?',
       answerId: answer.pessoa.id,
       answerLabel: getPersonDisplayName(answer.pessoa),
       explanation: `${getPersonDisplayName(answer.pessoa)} aparece como a pessoa viva mais velha entre as datas de nascimento cadastradas.`,
@@ -348,7 +348,7 @@ export function buildRequestedCuriosityQuizQuestions(
     const answer = youngestPeople[0];
     questions.push(buildQuestion({
       id: 'youngest-person',
-      prompt: 'Quem é a pessoa mais jovem na família?',
+      prompt: 'Quem Ã© a pessoa mais jovem na famÃ­lia?',
       answerId: answer.pessoa.id,
       answerLabel: getPersonDisplayName(answer.pessoa),
       explanation: `${getPersonDisplayName(answer.pessoa)} aparece como a pessoa mais jovem entre as datas de nascimento cadastradas.`,
@@ -392,10 +392,10 @@ export function buildRequestedCuriosityQuizQuestions(
     const answer = journalists[0];
     questions.push(buildQuestion({
       id: 'journalist-profession',
-      prompt: 'Qual destas pessoas abaixo é jornalista?',
+      prompt: 'Qual destas pessoas abaixo Ã© jornalista?',
       answerId: answer.id,
       answerLabel: getPersonDisplayName(answer),
-      explanation: `${getPersonDisplayName(answer)} tem a profissão cadastrada como jornalista.`,
+      explanation: `${getPersonDisplayName(answer)} tem a profissÃ£o cadastrada como jornalista.`,
       optionsPeople: [answer, ...deterministicShuffle(nonJournalists, 'journalist-profession').slice(0, 4)],
       seed: 'journalist-profession',
     }));
@@ -408,10 +408,10 @@ export function buildRequestedCuriosityQuizQuestions(
     if (answer && distractors.length >= 4) {
       questions.push(buildQuestion({
         id: 'profession',
-        prompt: `Quem tem a profissão cadastrada como ${topProfession.label}?`,
+        prompt: `Quem tem a profissÃ£o cadastrada como ${topProfession.label}?`,
         answerId: answer.id,
         answerLabel: getPersonDisplayName(answer),
-        explanation: `${topProfession.label} aparece entre as profissões mais repetidas da família.`,
+        explanation: `${topProfession.label} aparece entre as profissÃµes mais repetidas da famÃ­lia.`,
         optionsPeople: [answer, ...deterministicShuffle(distractors, `profession-${topProfession.label}`).slice(0, 4)],
         seed: `profession-${topProfession.label}`,
       }));
@@ -420,3 +420,4 @@ export function buildRequestedCuriosityQuizQuestions(
 
   return questions.filter((question): question is CuriosityQuizQuestion => Boolean(question)).slice(0, 6);
 }
+
