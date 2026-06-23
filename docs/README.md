@@ -1,12 +1,14 @@
 # Documentação do produto — arvorefamilia
 
 > Última revisão: 2026-06-23  
-> Escopo: documentação enxuta mantida em `docs/` após auditoria e limpeza final.  
+> Escopo: documentação canônica mantida em `docs/` após auditoria e limpeza final.  
 > Status: canônico.
 
-Este diretório concentra apenas a documentação fundamental do produto. A fonte de verdade para comportamento continua sendo o código da branch `main`, especialmente `src/app/routes.tsx`, `src/app/pages`, `src/app/components`, `src/app/services`, `src/app/types`, `api/ai.ts` e os arquivos SQL/Supabase versionados.
+Este diretório concentra a documentação fundamental do produto. A fonte de verdade para comportamento continua sendo o código da branch `main`, especialmente `src/app/routes.tsx`, `src/app/pages`, `src/app/components`, `src/app/services`, `src/app/types`, `api/ai.ts` e os arquivos SQL/Supabase versionados.
 
-## Estrutura final
+## Estrutura canônica
+
+A estrutura canônica de leitura e manutenção é:
 
 ```text
 docs/
@@ -46,6 +48,8 @@ docs/
     LEGADO_TECNICO.md
     LIMPEZA_DOCUMENTACAO_FINAL_20260623.md
 ```
+
+Arquivos residuais fora desse índice não devem ser usados como contrato operacional. Se ainda existirem na branch, devem ser removidos em rodada local de `git rm` conforme `historico/LIMPEZA_DOCUMENTACAO_FINAL_20260623.md`.
 
 ## Índice canônico
 
