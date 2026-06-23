@@ -159,7 +159,7 @@ export function MeusFavoritos() {
       />
 
       <main className={`${PAGE_CONTAINER_CLASS} space-y-6 py-6 pb-40 md:pb-6`}>
-        <section className="relative flex min-w-0 w-full max-w-3xl items-center gap-2" aria-label="Busca e filtros de favoritos">
+        <section className="relative flex min-w-0 w-full max-w-none items-center gap-2" aria-label="Busca e filtros de favoritos">
           <div className="relative min-w-0 flex-1">
             <Search className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
             <input
