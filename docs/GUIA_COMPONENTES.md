@@ -1,7 +1,7 @@
 # Guia de componentes
 
-> Última revisão: 2026-06-22  
-> Escopo: componentes relevantes após o ciclo 6A–7D.
+> Última revisão: 2026-06-23  
+> Escopo: componentes relevantes após o ciclo 6A–7D e ajustes pós-ciclo em mapa, curiosidades, notificações, fórum e favoritos.
 
 ## `MemberPageHeader`
 
@@ -22,6 +22,41 @@ Componente padrão de header para páginas de membro.
 ### Não regressão
 
 Não reintroduzir botões de navegação/favoritos/notificações nessas páginas sem decisão explícita.
+
+## `UserProfileMenu`
+
+Menu do avatar do usuário.
+
+### Contrato atual
+
+- Renderiza navegação de membro.
+- Inclui item `Curiosidades` quando aplicável.
+- Rodapé do menu deve exibir:
+  - `Dúvidas?` à esquerda, rota `/duvidas`;
+  - `Sair` à direita, preservando logout.
+- `Dúvidas?` não deve ter ícone no estado atual.
+
+## `HeaderNotificationsDropdown`
+
+Dropdown do sino de notificações.
+
+### Contrato atual
+
+- Largura responsiva baseada no viewport.
+- Lista notificações recentes.
+- Rodapé com:
+  - `Ver todas as notificações`;
+  - `Personalizar preferências`.
+- Rodapé deve usar layout resiliente:
+  - empilhado em telas menores;
+  - lado a lado em desktop;
+  - sem corte horizontal.
+
+### Não regressão
+
+- Não cortar `Ver todas as notificações`.
+- Não alterar rotas `/notificacoes` e `/ajustar-notificacoes`.
+- Não alterar lógica de marcar/remover notificações em ajustes visuais.
 
 ## `MemberOnboardingSteps`
 
@@ -45,13 +80,14 @@ Tela de dados pessoais e questionário IA.
 - Gerenciar redes sociais.
 - Persistir questionário IA em `person_profile_questionnaire_answers`.
 - Controlar modo memorial pelo toggle.
+- Persistir `selected_badges` para uso em perfil, IA e `/curiosidades`.
 
 ### Questionário IA
 
 - 8 etapas.
-- Etapa 1: “Qual é o seu estilo?”
-- Última etapa não exibe botão “Avançar”.
-- Não existem mais as etapas “Outras características” e “Perguntas opcionais”.
+- Etapa 1: `Qual é o seu estilo?`.
+- Última etapa não exibe botão `Avançar`.
+- Não existem mais as etapas `Outras características` e `Perguntas opcionais`.
 
 ## `MeusVinculosWithProfileBio`
 
@@ -59,10 +95,10 @@ Wrapper que injeta o bloco de Mini Bio/Curiosidades em `/meus-vinculos`.
 
 ### Contrato atual
 
-- Renderiza título/subtítulo “Sobre mim” fora do box.
+- Renderiza título/subtítulo `Sobre mim` fora do box.
 - Exibe textos editáveis com limite de 500 caracteres.
 - Gera/regenera com IA.
-- Não exibe botão “Salvar textos”.
+- Não exibe botão `Salvar textos`.
 - Salva os textos ao avançar o fluxo.
 
 ## `MeusVinculos`
@@ -90,7 +126,7 @@ Resumo superior de vínculos.
 
 ### Contrato atual
 
-- O título “Familiares de X” e subtítulo ficam fora do container/card principal.
+- O título `Familiares de X` e subtítulo ficam fora do container/card principal.
 - A área visual deve usar fonte maior e ícone/avatar à esquerda.
 - Não deve voltar ao card compacto antigo.
 
@@ -137,6 +173,19 @@ Tela final do onboarding.
 - Diferencia `Fato sem arquivo`, `Imagem` e `PDF`.
 - Header sem ações.
 
+## `PersonDataView`
+
+Bloco principal do perfil individual `/pessoa/:id`.
+
+### Contrato atual
+
+- Renderiza dados públicos da pessoa.
+- Exibe contato permitido no topo/área superior.
+- Para pessoa falecida, não deve destacar telefone/WhatsApp/endereço como ação pessoal.
+- Suporta redes sociais versionadas por `pessoa_social_profiles`.
+- Mantém fallback para campos legacy de rede social.
+- Exibe badges do questionário no card `Sobre`, agrupados por categoria.
+
 ## `PersonTimeline`
 
 Timeline do perfil individual.
@@ -148,19 +197,109 @@ Timeline do perfil individual.
 - Metadata deve ser sanitizada.
 - URLs e storage paths não entram na metadata.
 
+## Componentes de `/curiosidades`
+
+### `CuriosidadesStats`
+
+Cards atuais:
+
+- `Pessoas`;
+- `Localização`;
+- `In memoriam`;
+- `Pets`;
+- `Casais`.
+
+### `CuriosidadesRankings`
+
+Rankings atuais:
+
+- `Nomes mais comuns`;
+- `Mês com mais aniversários`;
+- `Perfil dos familiares`;
+- `Principais cidades de nascimento`.
+
+### `CuriosidadesCharts`
+
+- `Faixa Etária` deve usar idade/faixas etárias.
+- `Profissões mais comuns` deve listar ocupações dos perfis.
+
+### `CuriosidadesCouples`
+
+- Título atual: `Bodas`.
+- Cálculo de anos deve parar no falecimento de um dos cônjuges, quando aplicável.
+
+### `CuriosidadesInterestsSection`
+
+- Dropdowns devem iniciar com `Selecione`.
+- Comparação deve usar badges/características de `/meus-dados` quando disponíveis.
+
+### `CuriosidadesAstrology`
+
+- Dropdowns devem iniciar com `Selecione`.
+- Não deve pré-selecionar automaticamente Absalon ou primeira pessoa da lista.
+
+### `CuriosidadesConnectionSection`
+
+- Dropdowns devem iniciar com `Selecione`.
+- A busca de conexão só deve rodar após seleção válida.
+
+### `CuriosidadesQuizSection`
+
+Perguntas/regras atuais:
+
+- pessoa viva com mais tempo de vida;
+- pessoa mais jovem;
+- pessoa nascida em cidade específica;
+- profissão específica com alternativas controladas.
+
 ## Componentes do mapa familiar
 
 ### `DesktopTreeVisualizationPanel`
 
-- Dropdown usa `Família de X`.
+Contrato atual:
+
+- Dropdown fechado usa `Família de X`.
+- Dropdown aberto inclui opção desabilitada `Visualize a árvore como...`.
+- Opções de pessoas usam primeiro e segundo nome, não `Família de X`.
 - Card `Cadastrados` usa `user_person_links`.
+- Cards `Núcleo`, `Ascendentes` e `Colaterais` usam layout compacto no desktop.
+- Botão de cônjuges alterna:
+  - `Exibir cônjuges de tios, primos etc`;
+  - `Ocultar cônjuges de tios, primos etc`.
 
 ### `DesktopFamilyMapView`
 
 - Suporta layout compacto para árvore pequena e simples.
 - Não deve afetar scripts mobile.
 
+### `directFamilyDistributedLayout`
+
+Responsável pela distribuição direta da árvore.
+
+Contratos recentes:
+
+- `LOWER_RIGHT_GROUP_SHIFT_X = 180` desloca grupo inferior direito no desktop.
+- `lowerRightGroupCenterX` preserva mobile e aplica deslocamento apenas em desktop.
+- `siblingGroup.maxPerRow` preserva 1 coluna no mobile e permite 2 no desktop.
+- Cônjuge e pets derivam do centro inferior direito.
+
 ### `FirstLoginTutorial`
 
 - Tour separa IA/Calendário de Favoritos.
 - Etapa de Favoritos tem target próprio.
+
+## Componentes de `/forum`
+
+### `ForumHome`
+
+- Seção de busca/filtros deve ocupar largura total do container no desktop.
+- `Criar novo` deve alinhar com a lateral direita do container de tópicos recentes.
+- Mobile deve continuar empilhado/sem overflow.
+
+## Componentes de `/meus-favoritos`
+
+### `MeusFavoritos`
+
+- Seção de busca/filtros deve ocupar largura dos cards em desktop.
+- Botão de filtros deve alinhar com o terceiro card quando houver grid de 3 colunas.
+- Mobile não deve ser alterado por ajustes desktop.

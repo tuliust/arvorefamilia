@@ -1,11 +1,13 @@
 # Revisão de Dados
 
-> Última revisão: 2026-06-22  
-> Escopo: `/revisao-dados` após Prompts 7B, 7C e 7D.
+> Última revisão: 2026-06-23  
+> Escopo: `/revisao-dados` após Prompts 7B, 7C, 7D e integrações posteriores com pets, IA e reset de perfil.
 
 ## Objetivo
 
 Permitir que o usuário revise as informações finais antes de concluir o onboarding e acessar o mapa familiar.
+
+A tela deve consolidar dados pessoais, textos, privacidade, vínculos, pets e registros históricos, sem bloquear seções não relacionadas quando apenas uma parte precisar de correção.
 
 ## Header
 
@@ -27,11 +29,31 @@ Exibe apenas:
 - Pets.
 - Fatos e arquivos históricos.
 
+## Dados pessoais
+
+Validar:
+
+- nome;
+- data de nascimento;
+- local de nascimento;
+- data de falecimento, quando aplicável;
+- local de falecimento, quando aplicável;
+- profissão;
+- local atual, apenas para pessoa viva.
+
 ## Pets
 
 Pets aparecem em grupo próprio.
 
 Não devem ser misturados com Filhos.
+
+### Regra
+
+Pet é pessoa com:
+
+```text
+humano_ou_pet = 'Pet'
+```
 
 ## Fatos e Arquivos Históricos
 
@@ -55,7 +77,49 @@ Para pessoa falecida:
 
 - local atual deve ser limpo/desconsiderado quando aplicável;
 - WhatsApp/notificações pessoais não devem ser habilitados;
-- textos devem poder estar em modo memorial.
+- textos devem poder estar em modo memorial;
+- privacidades relacionadas a contato devem ser tratadas com cautela;
+- o perfil pode manter dados históricos, mas não dados de contato operacional.
+
+## Mini Bio e Curiosidades
+
+A seção deve respeitar:
+
+- limite de 500 caracteres;
+- textos editáveis;
+- modo memorial quando aplicável;
+- ausência de dados sensíveis;
+- salvamento coerente com fluxo de onboarding.
+
+## Questionário IA
+
+A revisão pode refletir dados derivados de `/meus-dados`, mas não deve exigir que o usuário veja internamente todos os campos técnicos.
+
+Dados do questionário podem alimentar:
+
+- Mini Bio;
+- Curiosidades;
+- badges;
+- experiências agregadas em `/curiosidades`.
+
+## Reset administrativo relacionado
+
+O reset de perfil deve limpar dados personalizáveis e vínculos de usuário quando acionado pela área administrativa, incluindo:
+
+- foto;
+- Mini Bio;
+- Curiosidades;
+- contato;
+- endereço;
+- redes sociais;
+- eventos pessoais;
+- arquivos históricos;
+- respostas do questionário;
+- favoritos relacionados;
+- preferências de notificação;
+- vínculos de usuário, quando aplicável.
+
+A revisão de dados não executa reset, mas deve continuar compatível com perfis resetados.
 
 ## Conclusão
 
@@ -74,4 +138,15 @@ Ao finalizar:
 6. Conferir imagem/PDF.
 7. Editar seção pessoal.
 8. Salvar seção.
-9. Finalizar fluxo.
+9. Confirmar Mini Bio/Curiosidades com limite de 500 caracteres.
+10. Confirmar que pessoa falecida não mantém local atual indevido.
+11. Confirmar que WhatsApp/notificações pessoais não ficam habilitados para falecido.
+12. Finalizar fluxo e ir para `/mapa-familiar`.
+
+## Não regressão
+
+- Não misturar pets com filhos.
+- Não remover fatos sem arquivo.
+- Não exibir ações no header.
+- Não bloquear toda a revisão por erro em seção isolada.
+- Não reintroduzir dados de contato operacional para pessoa falecida.

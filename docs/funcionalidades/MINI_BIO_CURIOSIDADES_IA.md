@@ -1,7 +1,7 @@
 # Mini Bio e Curiosidades com IA
 
-> Última revisão: 2026-06-22  
-> Escopo: `/meus-dados`, `/meus-vinculos` e `api/ai.ts` após Prompts 7A e 7D.
+> Última revisão: 2026-06-23  
+> Escopo: `/meus-dados`, `/meus-vinculos`, `/pessoa/:id`, `/curiosidades` e `api/ai.ts` após Prompts 7A, 7D e integrações pós-7D.
 
 ## Objetivo
 
@@ -10,7 +10,7 @@ Gerar e permitir edição de dois textos do perfil familiar:
 - Mini Bio;
 - Curiosidades.
 
-Os textos ajudam a humanizar o perfil da pessoa na árvore familiar.
+Os textos ajudam a humanizar o perfil da pessoa na árvore familiar, no perfil público e nas experiências de memória/curiosidades.
 
 ## Limite atual
 
@@ -85,7 +85,8 @@ Qualquer tom deve gerar:
 - terceira pessoa;
 - verbos no passado;
 - tom respeitoso;
-- sem tratar a pessoa como viva.
+- sem tratar a pessoa como viva;
+- sem simular fala direta da pessoa.
 
 ### Se o toggle for `Não`
 
@@ -97,6 +98,61 @@ O texto pode usar primeira pessoa quando o usuário escreve o próprio perfil.
 
 Não deve ativar modo memorial sozinho.
 
+## Persistência
+
+As respostas do questionário são persistidas em:
+
+```text
+person_profile_questionnaire_answers
+```
+
+Campos relevantes:
+
+- `tone`;
+- `selected_badges`;
+- `custom_traits`;
+- `generated_questions`;
+- `answers`;
+- `memorial_mode`;
+- `last_generated_hash`.
+
+## Badges selecionados
+
+Os badges de `selected_badges` são usados além da geração de texto.
+
+Eles alimentam:
+
+- badges exibidos em `/pessoa/:id`;
+- ranking `Perfil dos familiares` em `/curiosidades`;
+- comparação de interesses em `/curiosidades`;
+- contexto seguro para sugestões e cards familiares.
+
+### Categorias
+
+Categorias atuais:
+
+- Personalidade;
+- Família;
+- Trabalho;
+- Lugares;
+- Momentos;
+- Hobbies;
+- Marcas pessoais.
+
+## Hash de geração
+
+`lastGeneratedHash` deve representar a última geração efetivamente salva.
+
+Não atualizar hash apenas por salvar questionário comum.
+
+### Regra
+
+Atualizar `lastGeneratedHash` somente quando:
+
+- a IA gerou texto;
+- o texto foi salvo;
+- o payload usado na geração corresponde ao hash persistido.
+
 ## Fontes de contexto permitidas
 
 A IA pode considerar, quando disponíveis e seguros:
@@ -104,6 +160,8 @@ A IA pode considerar, quando disponíveis e seguros:
 - respostas do questionário;
 - tom selecionado;
 - modo memorial;
+- badges selecionados;
+- características customizadas;
 - nome, apenas para contexto, sem precisar repetir no início;
 - data de nascimento;
 - local de nascimento;
@@ -164,6 +222,18 @@ A instrução do modelo deve:
 - respeitar memorial quando `memorialMode === true`;
 - retornar JSON válido.
 
+## Frontend `/meus-dados`
+
+### Responsabilidades
+
+- coletar tom;
+- coletar badges;
+- coletar características customizadas;
+- gerar perguntas;
+- salvar respostas;
+- preservar rascunho em sessão quando necessário;
+- não bloquear salvamento por campos não relacionados.
+
 ## Frontend `/meus-vinculos`
 
 ### Estado atual
@@ -174,11 +244,25 @@ A instrução do modelo deve:
 - Não tem botão `Salvar textos`.
 - Salva ao avançar a página.
 
-## Hash de geração
+## Perfil público `/pessoa/:id`
 
-`lastGeneratedHash` deve representar a última geração efetivamente salva.
+Quando houver badges do questionário:
 
-Não atualizar hash apenas por salvar questionário comum.
+- exibir no card `Sobre`;
+- agrupar por categoria;
+- não expor dados sensíveis;
+- não exibir badges inexistentes ou vazios.
+
+## `/curiosidades`
+
+Pode usar badges para:
+
+- ranking `Perfil dos familiares`;
+- comparação de interesses;
+- sugestões familiares;
+- experiências agregadas.
+
+Não deve usar badges para inferir dados sensíveis.
 
 ## Exemplos de texto aceitável
 
@@ -204,3 +288,16 @@ Era lembrada pelo cuidado com a família, pelo jeito acolhedor e pela presença 
 6. Confirmar que texto não começa obrigatoriamente pelo nome.
 7. Confirmar ausência de dados sensíveis.
 8. Confirmar salvamento ao avançar em `/meus-vinculos`.
+9. Confirmar persistência de `selected_badges`.
+10. Confirmar badges no perfil público quando existirem.
+11. Confirmar uso agregado em `/curiosidades`.
+12. Confirmar que `lastGeneratedHash` não muda sem geração salva.
+
+## Não regressão
+
+- Não voltar para 300 caracteres.
+- Não acoplar `Nostálgico` a pessoa falecida.
+- Não reintroduzir etapas 9 e 10.
+- Não salvar hash de geração sem geração salva.
+- Não expor telefone/endereço/redes em prompts.
+- Não tratar badge como fato biográfico se for apenas característica declarada.

@@ -1,8 +1,8 @@
 # Guia de UX e layout
 
-> Última revisão: 2026-06-22  
-> Escopo: UX consolidada após 6A–7D.  
-> Este arquivo substitui versões antigas com referências a 10 etapas, 300 caracteres e modo memorial acoplado ao tom Nostálgico.
+> Última revisão: 2026-06-23  
+> Escopo: UX consolidada após 6A–7D e ajustes pós-ciclo em `/curiosidades`, `/mapa-familiar`, header, notificações, `/forum` e `/meus-favoritos`.  
+> Este arquivo substitui versões antigas com referências a 10 etapas, 300 caracteres, modo memorial acoplado ao tom Nostálgico e painel desktop sem os ajustes de 2026-06-23.
 
 ## Princípios
 
@@ -12,6 +12,8 @@
 - Botões duplicados devem ser removidos.
 - Labels devem respeitar gênero quando há sinal disponível.
 - Fluxos de IA devem ser claros: tom textual não é o mesmo que estado de pessoa falecida.
+- Ajustes desktop não devem degradar mobile.
+- Mudanças visuais de mapa devem preservar legibilidade, conectores e seleção por query string.
 
 ## Header do onboarding
 
@@ -30,6 +32,42 @@ Não exibir:
 - Voltar para árvore;
 - ações customizadas;
 - menus secundários de navegação.
+
+## Menu do avatar do usuário
+
+### Rodapé do menu
+
+O menu do avatar deve manter:
+
+- `Dúvidas?` à esquerda, apontando para `/duvidas`;
+- `Sair` à direita, mantendo a ação de logout.
+
+### Navegação
+
+- `Curiosidades` deve estar disponível no menu desktop quando aplicável.
+- O botão `Dúvidas?` deve usar a mesma linguagem visual dos demais itens textuais do menu.
+- Não adicionar ícone ao botão `Dúvidas?` sem nova decisão de produto.
+
+## Dropdown de notificações
+
+### Layout
+
+O dropdown do sino deve ter largura responsiva e não deve cortar os botões do rodapé.
+
+Regras:
+
+- usar largura segura baseada no viewport;
+- rodapé em `flex`, com empilhamento em telas menores e lado a lado em desktop;
+- botões com `whitespace-normal`, `text-center`, `leading-tight` e largura flexível.
+
+### Rodapé
+
+Botões obrigatórios:
+
+- `Ver todas as notificações`, rota `/notificacoes`;
+- `Personalizar preferências`, rota `/ajustar-notificacoes`.
+
+Não alterar a lógica de listar, marcar ou remover notificações em ajustes puramente visuais.
 
 ## `/meus-dados`
 
@@ -96,6 +134,17 @@ Se `Não`:
 A última etapa é `Marcas pessoais e curiosidades`.
 
 Não exibir botão `Avançar` nessa etapa, porque o fluxo continua pelo botão principal `Confirmar meus dados`.
+
+### Badges do questionário
+
+As escolhas do questionário são persistidas em `person_profile_questionnaire_answers.selected_badges`.
+
+Uso atual desses dados:
+
+- perfil individual;
+- cards e rankings de `/curiosidades`;
+- comparação de interesses;
+- geração de Mini Bio/Curiosidades com contexto seguro.
 
 ## Mini Bio e Curiosidades
 
@@ -199,12 +248,58 @@ Na lateral do perfil:
 - fatos sem ano ficam ao final;
 - não exibir URL, storage path ou dados técnicos.
 
+## `/pessoa/:id`
+
+### Perfil individual
+
+- Contato deve aparecer junto ao cabeçalho/área superior quando permitido.
+- Para pessoa falecida, contatos pessoais não devem ser destacados.
+- Redes sociais versionadas devem ter prioridade sobre campos legacy.
+- Badges do questionário devem aparecer no card `Sobre`, agrupados por categoria.
+
+## `/curiosidades`
+
+### Cards principais
+
+Cards atuais:
+
+- `Pessoas`: familiares humanos cadastrados no site;
+- `Localização`: cidades onde vivem;
+- `In memoriam`: familiares falecidos na árvore genealógica;
+- `Pets`: pets registrados;
+- `Casais`: relações de união ativas.
+
+### Rankings e listas
+
+- `Nomes mais comuns`: ranking de primeiros nomes.
+- `Mês com mais aniversários`: top 5 meses por quantidade de aniversários.
+- `Perfil dos familiares`: ranking por badges/estilo do questionário de `/meus-dados`.
+- `Principais cidades de nascimento`: ranking de cidades.
+- `Profissões mais comuns`: principais ocupações dos perfis.
+- `Faixa Etária`: distribuição por idade, não gerações sociológicas.
+- `Bodas`: considera fim por falecimento quando aplicável.
+
+### Interações
+
+- Dropdowns de comparar interesses, astrologia e conexão devem iniciar com estado neutro, exibindo `Selecione`.
+- Quiz deve usar opções coerentes e aleatórias controladas:
+  - pessoa viva com mais tempo de vida;
+  - pessoa mais jovem;
+  - pessoa nascida em cidade específica;
+  - profissão cadastrada.
+
 ## `/mapa-familiar`
 
-### Painel
+### Painel desktop
 
-- Dropdown: `Família de X`.
+- Dropdown fechado: `Família de X`.
+- Dropdown aberto: primeira opção desabilitada `Visualize a árvore como...`.
+- Opções: primeiro e segundo nome da pessoa, por exemplo `Maria Acileide`, não `Família de Maria`.
 - Card `Cadastrados`: número baseado em `user_person_links`.
+- Cards `Núcleo`, `Ascendentes` e `Colaterais`: gap reduzido e tipografia compacta no desktop.
+- Botão de cônjuges:
+  - inativo: `Exibir cônjuges de tios, primos etc`;
+  - ativo: `Ocultar cônjuges de tios, primos etc`.
 
 ### Tour
 
@@ -215,6 +310,31 @@ Na lateral do perfil:
 
 Árvores pequenas e simples podem usar layout compacto no desktop.
 
+### Canvas desktop
+
+A distribuição direta deve preservar:
+
+- irmãos em até 2 colunas no desktop;
+- irmãos em 1 coluna no mobile;
+- cônjuge e pets deslocados para a direita no desktop quando necessário;
+- mobile sem alteração por ajustes de desktop.
+
+## `/forum`
+
+### Busca desktop
+
+- A barra de busca/filtros deve ocupar a largura do container.
+- O botão `Criar novo` deve alinhar com a lateral direita do container de `Tópicos recentes`.
+- Não aplicar alterações que quebrem o empilhamento mobile.
+
+## `/meus-favoritos`
+
+### Busca desktop
+
+- A barra de busca/filtros deve ocupar a largura dos cards.
+- O botão de filtros deve alinhar com o terceiro card no desktop.
+- Não aplicar alterações que quebrem mobile.
+
 ## Não regressões de UX
 
 - Não voltar o questionário para 10 etapas.
@@ -224,3 +344,7 @@ Na lateral do perfil:
 - Não colocar títulos principais dentro dos containers operacionais.
 - Não usar `Nostálgico` como sinônimo de pessoa falecida.
 - Não exibir ações no header do onboarding.
+- Não listar opções do dropdown de visualização como `Família de Maria`; usar primeiro e segundo nome.
+- Não deixar o botão inferior do dropdown de notificações cortado.
+- Não misturar Faixa Etária com gerações sociológicas em `/curiosidades`.
+- Não contabilizar bodas após falecimento de um dos cônjuges.
