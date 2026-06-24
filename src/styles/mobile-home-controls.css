@@ -223,3 +223,23 @@
     line-height: 1.05 !important;
   }
 }
+
+/* Ajustes QA mobile grupos familiares 2026-06-24 */
+@media (max-width: 767px) {
+  div[role="dialog"][aria-label="Painel de visualização"] h3:nth-of-type(2) + div + div button svg:last-child,
+  div[role="dialog"][aria-label="Painel de visualização"] h3:nth-of-type(2) + div + div button [class*="rotate-"] {
+    transform: none !important;
+    transition: none !important;
+  }
+
+  div[role="dialog"][aria-label="Painel de visualização"] h3:nth-of-type(2) + div + div button + div {
+    padding-left: 3.35rem !important;
+    padding-right: 0.85rem !important;
+  }
+
+  div[role="dialog"][aria-label="Painel de visualização"] h3:nth-of-type(2) + div + div button + div ul,
+  div[role="dialog"][aria-label="Painel de visualização"] h3:nth-of-type(2) + div + div button + div ol {
+    margin-left: 0 !important;
+    padding-left: 0 !important;
+  }
+}

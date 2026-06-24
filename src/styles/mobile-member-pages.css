@@ -148,3 +148,28 @@
   }
 
 }
+
+/* Ajustes QA mobile fórum categorias 2026-06-24 */
+@media (max-width: 767px) {
+  form [aria-labelledby="categoria-label"] > button {
+    min-height: 3.9rem !important;
+    justify-content: center !important;
+    gap: 0.18rem !important;
+    padding-top: 0.32rem !important;
+    padding-bottom: 0.32rem !important;
+  }
+
+  form [aria-labelledby="categoria-label"] > button > span:first-child {
+    height: 1.55rem !important;
+    width: 1.55rem !important;
+  }
+
+  form [aria-labelledby="categoria-label"] > button svg {
+    height: 0.95rem !important;
+    width: 0.95rem !important;
+  }
+
+  form [aria-labelledby="categoria-label"] > button > span:last-child {
+    margin-top: 0.08rem !important;
+  }
+}

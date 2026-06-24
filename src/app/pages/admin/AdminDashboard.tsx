@@ -8,7 +8,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { obterTodasPessoas, obterTodosRelacionamentos } from '../../services/dataService';
 import { getActivityActionLabel, getActivitySummary, listRecentActivityLogs } from '../../services/activityLogService';
 import { listPendingRelationshipChangeRequests } from '../../services/relationshipChangeRequestService';
-import { adminListProfilesForLinking } from '../../services/memberProfileService';
+import { adminListProfilesForLinking, type AdminLinkableProfile } from '../../services/memberProfileService';
 import { ActivityLog } from '../../types';
 
 type Pessoa = {
@@ -45,6 +45,14 @@ function formatLocalPhone(value?: string | null) {
   return `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7)}`;
 }
 
+function getCadastroDisplayName(profile: AdminLinkableProfile) {
+  return String(profile.nome_exibicao || profile.email || profile.id || 'Usuário cadastrado').trim();
+}
+
+function getCadastroSubtitle(profile: AdminLinkableProfile) {
+  return String(profile.email || profile.id || 'Auth user id vinculado').trim();
+}
+
 function firstName(fullName?: string | null) {
   return (fullName ?? '').trim().split(/\s+/)[0] || 'familiar';
 }
@@ -63,6 +71,7 @@ export function AdminDashboard() {
   const [atividadesRecentes, setAtividadesRecentes] = useState<ActivityLog[]>([]);
   const [pendingRelationshipRequests, setPendingRelationshipRequests] = useState(0);
   const [totalCadastros, setTotalCadastros] = useState(0);
+  const [cadastrosRecentes, setCadastrosRecentes] = useState<AdminLinkableProfile[]>([]);
   const [selectedPessoaId, setSelectedPessoaId] = useState('');
   const [whatsappLocal, setWhatsappLocal] = useState('');
   const [message, setMessage] = useState(buildInviteMessage(null));
@@ -83,7 +92,9 @@ export function AdminDashboard() {
         setRelacionamentos(Array.isArray(relacionamentosData) ? relacionamentosData : []);
         setAtividadesRecentes(Array.isArray(atividadesData) ? atividadesData : []);
         setPendingRelationshipRequests(Array.isArray(pendingRequestsData) ? pendingRequestsData.length : 0);
-        setTotalCadastros(profilesData.error ? 0 : profilesData.data.length);
+        const profiles = profilesData.error ? [] : profilesData.data.filter((profile) => Boolean(profile.id));
+        setCadastrosRecentes(profiles.slice(0, 5));
+        setTotalCadastros(profiles.length);
       } catch (error) {
         console.error('Erro ao carregar dashboard:', error);
         setPessoas([]);
@@ -91,6 +102,7 @@ export function AdminDashboard() {
         setAtividadesRecentes([]);
         setPendingRelationshipRequests(0);
         setTotalCadastros(0);
+        setCadastrosRecentes([]);
       } finally {
         setLoading(false);
       }
@@ -135,7 +147,7 @@ export function AdminDashboard() {
     { title: 'Integridade dos dados', description: 'Diagnóstico da base', icon: ShieldCheck, onClick: () => navigate('/admin/integridade'), color: 'bg-cyan-700' },
   ];
 
-  const novosCadastros = pessoas.slice(0, 5);
+  const novosCadastros = cadastrosRecentes;
 
   const formatActivityDate = (value?: string) => {
     if (!value) return 'Data não informada';
@@ -167,7 +179,7 @@ export function AdminDashboard() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50" data-admin-dashboard-page="true">
       <MemberPageHeader
         title="Painel Administrativo"
         subtitle="Gestão da Árvore Genealógica"
@@ -175,7 +187,7 @@ export function AdminDashboard() {
         actions={[...DEFAULT_MEMBER_HEADER_ACTIONS, { label: 'Sair', onClick: handleSignOut, variant: 'ghost' }]}
       />
 
-      <main className={`${PAGE_CONTAINER_CLASS} py-6 sm:py-8`}>
+      <main className={`${PAGE_CONTAINER_CLASS} pb-32 pt-6 sm:py-8`}>
         <div className="mb-6 grid grid-cols-4 gap-2 sm:mb-8 sm:gap-4 lg:grid-cols-4">
           <button type="button" onClick={() => navigate('/admin/pessoas')} className={dashboardCardButtonClass} aria-label="Abrir página de pessoas">
             <span className="flex min-w-0 flex-col items-center justify-center gap-1 px-1 pb-1 pt-3 text-center sm:flex-row sm:justify-between sm:px-6 sm:pb-2 sm:pt-6">
@@ -311,17 +323,11 @@ export function AdminDashboard() {
                 <p className="text-sm text-gray-500">Nenhum cadastro encontrado.</p>
               ) : (
                 <div className="space-y-3">
-                  {novosCadastros.map((pessoa) => (
-                    <button
-                      key={pessoa.id}
-                      type="button"
-                      className="block w-full min-w-0 rounded-lg p-3 text-left transition hover:bg-gray-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
-                      onClick={() => navigate(`/pessoa/${pessoa.id}`)}
-                      aria-label={`Ver dados de ${pessoa.nome_completo}`}
-                    >
-                      <p className="break-words text-sm font-medium text-gray-900">{pessoa.nome_completo}</p>
-                      <p className="mt-1 break-words text-xs text-gray-500">{pessoa.local_nascimento || 'Local não informado'}</p>
-                    </button>
+                  {novosCadastros.map((profile) => (
+                    <div key={profile.id} className="rounded-lg border border-gray-100 p-3">
+                      <p className="break-words text-sm font-medium text-gray-900">{getCadastroDisplayName(profile)}</p>
+                      <p className="mt-1 break-words text-xs text-gray-500">{getCadastroSubtitle(profile)}</p>
+                    </div>
                   ))}
                 </div>
               )}

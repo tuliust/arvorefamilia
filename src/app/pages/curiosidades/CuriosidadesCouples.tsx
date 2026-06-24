@@ -6,6 +6,28 @@ import {
   type CuriosidadesDataProps,
 } from './curiosidadesUtils';
 
+function getRelationshipPairKey(relacionamento: CuriosidadesDataProps['relacionamentos'][number]) {
+  const ids = [relacionamento.pessoa_origem_id, relacionamento.pessoa_destino_id]
+    .filter(Boolean)
+    .sort();
+
+  return ids.length === 2 ? ids.join('|') : relacionamento.id;
+}
+
+function countActiveUnions(relacionamentos: CuriosidadesDataProps['relacionamentos']) {
+  const activeUnionKeys = new Set<string>();
+
+  relacionamentos.forEach((relacionamento) => {
+    if (relacionamento.ativo === false) return;
+    if (relacionamento.tipo_relacionamento !== 'conjuge') return;
+    if (relacionamento.data_separacao || relacionamento.subtipo_relacionamento === 'separado') return;
+
+    activeUnionKeys.add(getRelationshipPairKey(relacionamento));
+  });
+
+  return activeUnionKeys.size;
+}
+
 export function CuriosidadesCouples({
   pessoas,
   relacionamentos,
@@ -13,8 +35,9 @@ export function CuriosidadesCouples({
   error,
 }: CuriosidadesDataProps) {
   const couples = buildCoupleAnniversaries(pessoas, relacionamentos);
-  const displayCouples = couples.filter((couple) => couple.milestone).slice(0, 4);
-  const unionCountLabel = `${displayCouples.length} ${displayCouples.length === 1 ? 'união' : 'uniões'}`;
+  const completedCouples = couples.filter((couple) => couple.years >= 1).slice(0, 6);
+  const activeUnionCount = countActiveUnions(relacionamentos);
+  const unionCountLabel = `${activeUnionCount} ${activeUnionCount === 1 ? 'união' : 'uniões'}`;
 
   return (
     <section className={curiositySectionCardClassName}>
@@ -47,34 +70,37 @@ export function CuriosidadesCouples({
         </div>
       )}
 
-      {!error && !loading && displayCouples.length === 0 && (
+      {!error && !loading && completedCouples.length === 0 && (
         <div className="mt-5 rounded-xl border border-dashed border-gray-200 bg-gray-50 px-4 py-5 text-sm text-gray-600">
           Ainda não há casais ativos com bodas de 1, 5, 10, 15, 20, 25, 30, 40, 45, 50, 60 ou 75 anos.
         </div>
       )}
 
-      {!error && !loading && displayCouples.length > 0 && (
-        <div className="mt-5 space-y-3">
-          {displayCouples.map((couple) => (
-            <article key={couple.id} className="rounded-xl border border-gray-200 bg-gray-50 p-4">
-              <div className="flex items-start gap-3">
-                <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white text-blue-700 shadow-sm">
-                  <Medal className="h-5 w-5" />
-                </span>
-                <div className="min-w-0 flex-1">
-                  <p className="font-bold leading-6 text-gray-950">{couple.coupleName}</p>
-                  <p className="mt-1 text-sm text-gray-600">
-                    {couple.durationLabel}
-                  </p>
-                  {couple.milestone && (
-                    <p className="mt-3 rounded-lg border border-blue-100 bg-blue-50 px-3 py-2 text-sm font-semibold text-blue-800">
-                      {couple.milestone.label}: {couple.milestone.description}.
+      {!error && !loading && completedCouples.length > 0 && (
+        <div className="mt-5">
+          <h3 className="text-sm font-bold text-gray-900">Casais que já completaram bodas</h3>
+          <div className="mt-3 space-y-3">
+            {completedCouples.map((couple) => (
+              <article key={couple.id} className="rounded-xl border border-gray-200 bg-gray-50 p-4">
+                <div className="flex items-start gap-3">
+                  <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white text-blue-700 shadow-sm">
+                    <Medal className="h-5 w-5" />
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <p className="font-bold leading-6 text-gray-950">{couple.coupleName}</p>
+                    <p className="mt-1 text-sm text-gray-600">
+                      {couple.durationLabel}
                     </p>
-                  )}
+                    {couple.milestone && (
+                      <p className="mt-3 rounded-lg border border-blue-100 bg-blue-50 px-3 py-2 text-sm font-semibold text-blue-800">
+                        {couple.milestone.label}: {couple.milestone.description}.
+                      </p>
+                    )}
+                  </div>
                 </div>
-              </div>
-            </article>
-          ))}
+              </article>
+            ))}
+          </div>
         </div>
       )}
     </section>
