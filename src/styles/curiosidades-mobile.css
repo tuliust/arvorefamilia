@@ -292,6 +292,10 @@
     padding: 1rem !important;
   }
 
+  .curiosidades-page #ia .curiosidades-ai-question-panel > section {
+    padding: 0 !important;
+  }
+
   .curiosidades-page #ia textarea {
     min-height: 9.5rem !important;
   }

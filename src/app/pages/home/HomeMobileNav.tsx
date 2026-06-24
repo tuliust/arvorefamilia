@@ -908,7 +908,7 @@ export function HomeMobileNav({
                       aria-label={option.ariaLabel}
                       onClick={() => handleViewOptionClick(option.path)}
                       className={[
-                        'flex min-h-[72px] min-w-0 flex-col items-center justify-start gap-1 rounded-xl border bg-white px-2 py-2 text-center shadow-sm transition active:scale-[0.99]',
+                        'flex min-h-[72px] min-w-0 flex-col items-center justify-start gap-1 rounded-xl border bg-white px-2 pt-2 pb-5 text-center shadow-sm transition active:scale-[0.99]',
                         active
                           ? 'border-blue-500 bg-blue-50 text-blue-950 ring-1 ring-blue-500'
                           : 'border-slate-200 text-slate-900 hover:border-blue-200 hover:bg-blue-50/70',
