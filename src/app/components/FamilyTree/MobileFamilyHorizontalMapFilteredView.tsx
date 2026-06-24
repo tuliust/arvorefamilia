@@ -317,9 +317,15 @@ function MobileFamilyHorizontalMapFilteredViewComponent({
   React.useImperativeHandle(ref, () => ({
     zoomIn: () => toast.info('Zoom não é necessário nesta visualização mobile.'),
     zoomOut: () => toast.info('Zoom não é necessário nesta visualização mobile.'),
-    print: async () => toast.info('Impressão disponível na versão desktop.'),
-    savePdf: async () => toast.info('PDF disponível na versão desktop.'),
-    saveImage: async () => toast.info('Imagem disponível na versão desktop.'),
+    print: async () => {
+      toast.info('Impressão disponível na versão desktop.');
+    },
+    savePdf: async () => {
+      toast.info('PDF disponível na versão desktop.');
+    },
+    saveImage: async () => {
+      toast.info('Imagem disponível na versão desktop.');
+    },
     startAreaSelection: () => toast.info('Seleção de área disponível na versão desktop.'),
   }), []);
 
