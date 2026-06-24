@@ -282,12 +282,41 @@ function MobileFamilyHorizontalMapFilteredViewComponent({
     return intersectVisiblePersonIds(expandedDirectScopeIds, visiblePersonIds, centralPersonId);
   }, [centralPersonId, directRelativeFilters, onPersonClick, pessoas, relacionamentos, visiblePersonIds]);
 
+  const scopedPessoas = React.useMemo(() => {
+    if (!filteredVisiblePersonIds) return pessoas;
+
+    return pessoas.filter((person) => (
+      person.id === centralPersonId || filteredVisiblePersonIds.has(person.id)
+    ));
+  }, [centralPersonId, filteredVisiblePersonIds, pessoas]);
+
+  const scopedPersonIds = React.useMemo(
+    () => new Set(scopedPessoas.map((person) => person.id)),
+    [scopedPessoas],
+  );
+
+  const scopedRelacionamentos = React.useMemo(() => {
+    if (!filteredVisiblePersonIds) return relacionamentos;
+
+    return relacionamentos.filter((relationship) => {
+      const origemId = relationship.pessoa_origem_id;
+      const destinoId = relationship.pessoa_destino_id;
+
+      return Boolean(
+        origemId
+        && destinoId
+        && scopedPersonIds.has(origemId)
+        && scopedPersonIds.has(destinoId)
+      );
+    });
+  }, [filteredVisiblePersonIds, relacionamentos, scopedPersonIds]);
+
   return (
     <MobileFamilyHorizontalMapView
       ref={ref}
-      pessoas={pessoas}
-      visiblePersonIds={filteredVisiblePersonIds}
-      relacionamentos={relacionamentos}
+      pessoas={scopedPessoas}
+      visiblePersonIds={undefined}
+      relacionamentos={scopedRelacionamentos}
       centralPersonId={centralPersonId}
       directRelativeFilters={directRelativeFilters}
       onPersonClick={onPersonClick}

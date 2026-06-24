@@ -806,8 +806,8 @@ function MobileFamilyHorizontalMapViewComponent({
   );
 
   const genealogyReferencePlacements = React.useMemo(
-    () => buildGenealogyReferencePlacements(visibleHorizontalPessoas, relacionamentos, onPersonClick),
-    [onPersonClick, relacionamentos, visibleHorizontalPessoas],
+    () => new Map<string, GenealogyReferencePlacement>(),
+    [],
   );
 
   const peopleByGeneration = React.useMemo(() => {
