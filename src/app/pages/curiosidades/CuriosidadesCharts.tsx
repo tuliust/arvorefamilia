@@ -99,13 +99,13 @@ function ProfessionRankingCard({
           Complete profissões nos perfis para gerar este gráfico.
         </div>
       ) : (
-        <div className="curiosidades-profession-circles-grid mt-5 grid grid-cols-2 gap-3 sm:grid-cols-5">
+        <div className="curiosidades-profession-circles-grid mt-5 grid grid-cols-2 gap-4 sm:grid-cols-5">
           {visibleProfessions.map((item) => (
             <div
               key={item.label}
-              className="aspect-square min-h-24 rounded-full bg-blue-600 p-3 text-white shadow-sm shadow-blue-900/10"
+              className="curiosidades-profession-circle flex h-28 w-28 rounded-full bg-blue-600 p-3 text-white shadow-sm shadow-blue-900/10 sm:aspect-square sm:h-auto sm:w-auto sm:min-h-24"
             >
-              <div className="flex h-full flex-col items-center justify-center gap-1 text-center">
+              <div className="flex h-full w-full flex-col items-center justify-center gap-1 text-center">
                 <BriefcaseBusiness className="h-5 w-5 shrink-0" />
                 <span className="text-2xl font-black leading-none">{item.value}</span>
                 <span className="max-w-full text-[11px] font-bold leading-tight">
