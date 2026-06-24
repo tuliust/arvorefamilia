@@ -199,7 +199,7 @@ export function DesktopTreeVisualizationPanel({
             <span className="desktop-tree-panel-eye" aria-hidden="true">
               <Eye />
             </span>
-            <h2 className="desktop-tree-panel-title">Visualiza\u00e7\u00e3o</h2>
+            <h2 className="desktop-tree-panel-title">Visualização</h2>
           </div>
 
           {onCollapse && (
