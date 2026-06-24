@@ -99,7 +99,7 @@ export function CuriosidadesHero() {
           <button
             type="button"
             onClick={() => scrollNav('left')}
-            className={["curiosidades-section-scroll-button shrink-0 rounded-full border border-gray-200 bg-white px-2 text-blue-700 shadow-sm transition md:hidden", scrollState.canScrollLeft ? "opacity-100" : "opacity-40"].join(' ')}
+            className={["curiosidades-section-scroll-button curiosidades-section-scroll-button-left inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-gray-200 bg-white p-0 text-blue-700 shadow-sm transition md:hidden", scrollState.canScrollLeft ? "opacity-100" : "opacity-40"].join(' ')}
             aria-label="Ver botões anteriores"
           >
             <ChevronLeft className="h-5 w-5" />
@@ -127,7 +127,7 @@ export function CuriosidadesHero() {
           <button
             type="button"
             onClick={() => scrollNav('right')}
-            className={["curiosidades-section-scroll-button shrink-0 rounded-full border border-gray-200 bg-white px-2 text-blue-700 shadow-sm transition md:hidden", scrollState.canScrollRight ? "opacity-100" : "opacity-40"].join(' ')}
+            className={["curiosidades-section-scroll-button curiosidades-section-scroll-button-right inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-gray-200 bg-white p-0 text-blue-700 shadow-sm transition md:hidden", scrollState.canScrollRight ? "opacity-100" : "opacity-40"].join(' ')}
             aria-label="Ver próximos botões"
           >
             <ChevronRight className="h-5 w-5" />
