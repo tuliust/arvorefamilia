@@ -417,14 +417,14 @@ const mobileTreeViewPopoverTopClass = 'top-[calc(env(safe-area-inset-top,0px)+8.
 const paletteOptions: TreeColorPalette[] = ['white', 'visual', 'orange', 'brown'];
 
 const TREE_VIEW_OPTIONS: Array<{
-  path: '/mapa-familiar' | '/mapa-familiar-horizontal';
+  path: '/mapa-familiar' | '/linha-geracional';
   label: string;
   subtitle: string;
   ariaLabel: string;
   icon: React.ComponentType<{ className?: string }>;
 }> = [
   {
-    path: '/mapa-familiar-horizontal',
+    path: '/linha-geracional',
     label: 'Linha Geracional',
     subtitle: 'Visualização cronológica por gerações',
     ariaLabel: 'Alternar para Linha Geracional',
@@ -811,7 +811,7 @@ export function HomeMobileNav({
     navigateFromHome(`${pathname}${query ? `?${query}` : ''}`);
   }, [navigateFromHome, pathname]);
 
-  const handleViewOptionClick = useCallback((path: '/mapa-familiar' | '/mapa-familiar-horizontal') => {
+  const handleViewOptionClick = useCallback((path: '/mapa-familiar' | '/linha-geracional') => {
     const query = typeof window === 'undefined' ? '' : window.location.search;
     const nextPath = `${path}${query}`;
 
