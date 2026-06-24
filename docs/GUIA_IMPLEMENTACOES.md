@@ -19,12 +19,17 @@
 - A pessoa de referência usa, em ordem, query string, foco atual, pessoa vinculada ou primeira pessoa disponível.
 - Filtros de parentes diretos são persistidos por usuário.
 - Filtros de vida/pet afetam a visibilidade e os contadores.
+- O painel desktop usa `DesktopTreeVisualizationPanel` para visualização, tema, filtros e exportação.
+- Ajustes visuais específicos do painel desktop ficam centralizados em `src/styles/desktop-tree-panel-frente-a.css` e devem ser conferidos em conjunto com `src/styles/index.css`.
+- O mapa desktop por grupos usa `DesktopFamilyMapView`; alterações de alinhamento dos grupos devem preservar a posição de pai/mãe e a leitura geracional.
+- A renderização de cards em grupos usa `FamilyTreeVisualCards`; a ordenação visual deve evitar linhas desnecessárias quando houver pares conjugais no grupo.
 
 ## Alternância de visualização
 
 - `/mapa-familiar` e `/mapa-familiar-horizontal` compartilham `Home`.
 - `treeViewMode.ts` converte rota em modo de visualização.
 - A query `pessoa` é preservada ao trocar entre modos.
+- O seletor de visualização deve manter texto em UTF-8 válido; correções defensivas de mojibake não substituem a manutenção correta dos textos de origem.
 
 ## IA
 
@@ -45,15 +50,28 @@
 - Erros de Supabase são convertidos em mensagens técnicas mais legíveis.
 - Alterações relevantes criam log de atividade quando o serviço aplicável faz essa chamada.
 - Vínculos de membro são tratados por `memberProfileService`.
+- Badges selecionadas do questionário de perfil usam RPC versionada quando disponível e fallback no serviço quando a RPC não estiver aplicada no ambiente remoto.
+
+## Curiosidades
+
+- `/curiosidades` carrega estatísticas e blocos exploratórios a partir de pessoas, relacionamentos e badges de perfil.
+- Seletores que dependem de pessoa devem iniciar neutros e não podem renderizar item com `value` vazio em componentes Radix.
+- A seção “Descubra mais sobre...” usa placeholder `Selecione` até escolha explícita do usuário.
+- As badges de status dos cards devem manter contadores em uma linha.
+- A área de gerações permite expandir o marcador `+N` para revelar as pessoas restantes.
+- Bodas exibem apenas marcos exatos permitidos para casais ativos, sem separação registrada e sem pessoas falecidas.
 
 ## Fórum
 
 - Rotas do fórum estão em `/forum`, `/forum/novo`, `/forum/topico/:id` e `/forum/topico/:id/editar`.
 - A documentação funcional do fórum deve considerar `forumService.ts` e o SQL versionado em `supabase/forum-schema.sql`.
+- No desktop, a busca do fórum deve preservar alinhamento com `Categorias` à esquerda e com a ação `Criar novo` à direita.
 
 ## Notificações e favoritos
 
 - Notificações usam rotas `/notificacoes` e `/ajustar-notificacoes`.
+- O header desktop de mapas e páginas de membro abre `HeaderNotificationsDropdown` sem redirecionar imediatamente para `/notificacoes`.
+- O rodapé do dropdown usa ações curtas com larguras equivalentes: `Ver todas` e `Preferências`.
 - Favoritos usam `/meus-favoritos`.
 - As buscas/filtros dessas áreas devem ser documentadas como comportamento de UI, não como regra de banco, salvo quando o serviço correspondente existir.
 
