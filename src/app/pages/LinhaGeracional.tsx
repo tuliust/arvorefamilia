@@ -507,9 +507,14 @@ function LinhaGeracionalCardView({
   const colorKey = getPaletteSlotForCard(card, generation);
 
   return (
-    <div className="relative pl-8">
+    <div className="relative px-8">
       <span
         className="absolute left-[13px] top-1/2 h-px w-5 -translate-y-1/2 opacity-60"
+        style={{ backgroundColor: 'var(--tree-palette-edge-child)' }}
+        aria-hidden="true"
+      />
+      <span
+        className="absolute right-[13px] top-1/2 h-px w-5 -translate-y-1/2 opacity-60"
         style={{ backgroundColor: 'var(--tree-palette-edge-child)' }}
         aria-hidden="true"
       />
@@ -541,41 +546,30 @@ function LinhaGeracionalCardView({
 }
 
 
+
 function GenerationScreen({ generation, onPersonClick }: { generation: LinhaGeracionalScreen; onPersonClick: (person: Pessoa) => void }) {
   return (
     <section
-      className="relative flex h-full min-w-full snap-start flex-col overflow-y-auto px-4 py-4"
+      className="relative flex h-full min-w-full snap-start flex-col overflow-y-auto px-4 py-3"
       aria-label={generation.title}
     >
       <div className="mx-auto flex w-full max-w-md flex-1 flex-col">
-        <div
-          className="mb-4 rounded-3xl border p-4 shadow-sm"
-          style={{
-            background: 'var(--tree-palette-legend-bg)',
-            borderColor: 'var(--tree-palette-group-border)',
-            color: 'var(--tree-palette-text-primary)',
-          }}
-        >
-          <p
-            className="text-[11px] font-black uppercase tracking-[0.2em]"
-            style={{ color: 'var(--tree-palette-edge-sibling)' }}
-          >
-            {generation.position}
-          </p>
-          <h2 className="mt-2 text-2xl font-black leading-none tracking-[-0.035em]">{generation.title}</h2>
-          <p className="mt-2 text-sm font-semibold" style={{ color: 'var(--tree-palette-text-muted)' }}>
-            {generation.subtitle}
-          </p>
-        </div>
-
-        <div className="relative flex flex-1 flex-col justify-center gap-3 pb-4">
+        <div className="relative flex flex-1 flex-col justify-start gap-3 pb-4 pt-2">
           {generation.cards.length > 0 && (
-            <span
-              className="absolute bottom-10 left-[13px] top-10 w-px opacity-60"
-              style={{ backgroundColor: 'var(--tree-palette-edge-child)' }}
-              aria-hidden="true"
-            />
+            <>
+              <span
+                className="absolute bottom-10 left-[13px] top-8 w-px opacity-60"
+                style={{ backgroundColor: 'var(--tree-palette-edge-child)' }}
+                aria-hidden="true"
+              />
+              <span
+                className="absolute bottom-10 right-[13px] top-8 w-px opacity-60"
+                style={{ backgroundColor: 'var(--tree-palette-edge-child)' }}
+                aria-hidden="true"
+              />
+            </>
           )}
+
           {generation.cards.length > 0 ? (
             generation.cards.map((card) => (
               <LinhaGeracionalCardView
@@ -597,6 +591,7 @@ function GenerationScreen({ generation, onPersonClick }: { generation: LinhaGera
               {SCREEN_DEFINITIONS.find((screen) => screen.id === generation.id)?.emptyLabel || 'Nenhum familiar encontrado.'}
             </div>
           )}
+
           {generation.truncated && (
             <p
               className="rounded-2xl px-3 py-2 text-center text-[11px] font-bold"
@@ -613,7 +608,6 @@ function GenerationScreen({ generation, onPersonClick }: { generation: LinhaGera
     </section>
   );
 }
-
 
 function LinhaGeracionalToolbar({ mapaFamiliarPath }: { mapaFamiliarPath: string }) {
   return (
@@ -897,16 +891,16 @@ export function LinhaGeracional() {
 
         <LinhaGeracionalToolbar mapaFamiliarPath={mapaFamiliarPath} />
 
-        <section className="min-h-0 flex-1 overflow-hidden bg-white pb-[calc(env(safe-area-inset-bottom,0px)+5.8rem)]">
-          <div className="flex h-full flex-col rounded-t-2xl bg-yellow-300 p-4">
-            <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-sm bg-slate-50 shadow-inner">
-              <div className="shrink-0 border-b border-slate-200 bg-white px-4 py-3">
-                <p className="text-[11px] font-black uppercase tracking-[0.2em] text-blue-600">Linha Geracional</p>
+        <section className="min-h-0 flex-1 overflow-hidden pb-[calc(env(safe-area-inset-bottom,0px)+5.8rem)]">
+          <div className="flex h-full flex-col rounded-t-2xl bg-transparent px-4 pb-4 pt-3">
+            <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-[1.35rem] shadow-inner" style={{ background: 'var(--tree-palette-canvas-bg)' }}>
+              <div className="shrink-0 border-b px-4 py-3" style={{ background: 'var(--tree-palette-legend-bg)', borderColor: 'var(--tree-palette-group-border)' }}>
+                <p className="text-[11px] font-black uppercase tracking-[0.2em]" style={{ color: 'var(--tree-palette-edge-sibling)' }}>{`Gera??o ${activeIndex + 1}`}</p>
                 <div className="mt-1 flex items-center justify-between gap-3">
-                  <h1 className="truncate text-lg font-black tracking-[-0.035em] text-blue-950">
+                  <h1 className="truncate text-lg font-black tracking-[-0.035em]" style={{ color: 'var(--tree-palette-text-primary)' }}>
                     {generationScreens[activeIndex]?.title || 'Gerações'}
                   </h1>
-                  <span className="shrink-0 rounded-full bg-blue-50 px-2.5 py-1 text-[11px] font-black text-blue-700">
+                  <span className="shrink-0 rounded-full px-2.5 py-1 text-[11px] font-black" style={{ background: 'var(--tree-palette-legend-bg)', color: 'var(--tree-palette-edge-sibling)' }}>
                     {activeIndex + 1}/{generationScreens.length}
                   </span>
                 </div>
