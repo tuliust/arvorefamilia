@@ -833,3 +833,44 @@
     font-size: 0.48rem !important;
   }
 }
+
+/* Correção mobile: setas de navegação ao lado dos cards, não sobrepostas (Problema 5) */
+@media (max-width: 767px) {
+  .curiosidades-section-scroll-button {
+    position: static !important;
+    top: auto !important;
+    left: auto !important;
+    right: auto !important;
+    transform: none !important;
+    z-index: auto !important;
+    align-self: center !important;
+    flex-shrink: 0 !important;
+  }
+
+  .curiosidades-section-scroll-button-left,
+  .curiosidades-section-scroll-button-right {
+    left: auto !important;
+    right: auto !important;
+  }
+}
+
+/* Correção mobile: largura do campo e botão IA alinhada ao container de sugestões (Problema 3) */
+@media (max-width: 767px) {
+  .curiosidades-page #ia .curiosidades-ai-question-panel,
+  .curiosidades-page #ia .curiosidades-ai-question-panel > section {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+  }
+
+  .curiosidades-page #ia .curiosidades-ai-question-panel textarea,
+  .curiosidades-page #ia .curiosidades-ai-question-panel > section > div {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  .curiosidades-page #ia .curiosidades-ai-question-panel button {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+}

@@ -3431,3 +3431,18 @@ body.tree-mobile-controls-open {
     font-size: 0.52rem !important;
   }
 }
+
+/* Correção mobile: respiro inferior abaixo dos botões de formato (Problema 1) */
+@media (max-width: 767px) {
+  .tree-mobile-controls-modal .tree-view-toggle {
+    padding-bottom: 0.85rem !important;
+  }
+}
+
+/* Correção mobile: alinhamento vertical nos grupos familiares (Problema 2) */
+@media (max-width: 767px) {
+  .desktop-tree-family-group-row {
+    grid-template-columns: minmax(0, 1fr) auto !important;
+    align-items: center !important;
+  }
+}

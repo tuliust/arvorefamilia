@@ -22,6 +22,7 @@ import {
   MemberPageHeader,
 } from '../components/layout/MemberPageHeader';
 import { MemberOnboardingSteps } from '../components/member/MemberOnboardingSteps';
+import { ProfileEditMobileTabs } from '../components/member/ProfileEditMobileTabs';
 import { AddressAutocompleteInput } from '../components/person/AddressAutocompleteInput';
 import {
   SocialProfileForm,
@@ -1078,6 +1079,12 @@ export function MeusDados() {
       />
 
       {isOnboarding && <MemberOnboardingSteps activeStep={1} hidePreferences={form.falecido === true} />}
+
+      {!isOnboarding && (
+        <div className="mx-auto w-full max-w-6xl px-4 pt-3">
+          <ProfileEditMobileTabs />
+        </div>
+      )}
 
       <main className="mx-auto grid max-w-6xl grid-cols-1 gap-6 px-4 py-6 pb-[calc(7rem+env(safe-area-inset-bottom))] lg:grid-cols-[minmax(0,1.4fr)_minmax(280px,320px)] lg:pb-6">
         <form onSubmit={handleConfirm} className="order-2 min-w-0 rounded-2xl border border-gray-200 bg-white p-4 shadow-sm sm:p-5 lg:order-1">
