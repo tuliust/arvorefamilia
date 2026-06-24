@@ -37,6 +37,23 @@ Mensagens como tabela inexistente, permissão, RLS, token inválido ou erro ao c
 3. Confirmar políticas RLS.
 4. Verificar SQLs documentados em `docs/operacao/MIGRATIONS_SUPABASE.md`.
 
+## Curiosidades não carrega
+
+### Sintoma
+
+A rota `/curiosidades` não renderiza ou o console aponta erro em seleção de pessoa, RPC de badges ou carregamento de dados do questionário.
+
+### Implementação atual
+
+A página usa fallback para badges de perfil quando a RPC `get_person_profile_selected_badges` não estiver disponível. Seletores que usam Radix devem filtrar itens sem ID e iniciar neutros quando dependem de escolha do usuário.
+
+### Ação
+
+1. Confirmar se a migration da RPC foi aplicada no Supabase remoto.
+2. Conferir se a página continua carregando pelo fallback.
+3. Verificar se não existe item de seleção com valor vazio.
+4. Conferir `/curiosidades` no QA manual.
+
 ## IA indisponível
 
 ### Sintoma
