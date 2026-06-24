@@ -15,7 +15,6 @@ import { CuriosidadesPhotoSlider } from './curiosidades/CuriosidadesPhotoSlider'
 import { CuriosidadesQuizSection } from './curiosidades/CuriosidadesQuizSection';
 import { CuriosidadesRankings } from './curiosidades/CuriosidadesRankings';
 import { CuriosidadesRouteSection } from './curiosidades/CuriosidadesRouteSection';
-import { CuriosidadesStats } from './curiosidades/CuriosidadesStats';
 import { CuriosidadesToday } from './curiosidades/CuriosidadesToday';
 import type { ProfileBadgesByPersonId } from './curiosidades/curiosidadesUtils';
 
@@ -130,10 +129,6 @@ export function Curiosidades() {
 
           <div id="ia" className="curiosidades-ai-card-slot min-w-0 scroll-mt-24 xl:col-span-3 xl:h-full xl:[&>section]:h-full">
             <CuriosidadesAiSection {...curiosityDataProps} />
-          </div>
-
-          <div id="numeros-da-familia" className="curiosidades-stats-slot min-w-0 scroll-mt-24 xl:col-span-5">
-            <CuriosidadesStats {...curiosityDataProps} />
           </div>
 
           <div id="quiz" className="curiosidades-quiz-slot min-w-0 scroll-mt-24 xl:col-span-3 xl:h-full">

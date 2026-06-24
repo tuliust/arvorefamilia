@@ -11,14 +11,12 @@ import {
   Route,
   Sparkles,
   Star,
-  Users,
 } from 'lucide-react';
 
 const sectionLinks = [
   { href: '#hoje-na-familia', label: 'Hoje', icon: CalendarDays },
   { href: '#ia', label: 'IA', icon: Brain },
   { href: '#fotos', label: 'Fotos', icon: Camera },
-  { href: '#numeros-da-familia', label: 'Números', icon: Users },
   { href: '#quiz', label: 'Quiz', icon: HelpCircle },
   { href: '#mural', label: 'Mural', icon: Star },
   { href: '#voce-sabia', label: 'Você Sabia', icon: Sparkles },
@@ -33,7 +31,7 @@ function getScrollState(element: HTMLDivElement | null) {
   if (!element) {
     return {
       canScrollLeft: false,
-      canScrollRight: false,
+      canScrollRight: true,
     };
   }
 
@@ -57,8 +55,6 @@ export function CuriosidadesHero() {
     const element = scrollRef.current;
     if (!element) return undefined;
 
-    updateScrollState();
-
     const handleScroll = () => updateScrollState();
     const handleResize = () => updateScrollState();
 
@@ -71,13 +67,15 @@ export function CuriosidadesHero() {
 
     resizeObserver?.observe(element);
 
-    const frame = window.requestAnimationFrame(updateScrollState);
+    const firstFrame = window.requestAnimationFrame(updateScrollState);
+    const timeout = window.setTimeout(updateScrollState, 250);
 
     return () => {
       element.removeEventListener('scroll', handleScroll);
       window.removeEventListener('resize', handleResize);
       resizeObserver?.disconnect();
-      window.cancelAnimationFrame(frame);
+      window.cancelAnimationFrame(firstFrame);
+      window.clearTimeout(timeout);
     };
   }, []);
 
@@ -85,11 +83,13 @@ export function CuriosidadesHero() {
     const element = scrollRef.current;
     if (!element) return;
 
-    const distance = Math.max(220, Math.round(element.clientWidth * 0.8));
+    const distance = Math.max(220, Math.round(element.clientWidth * 0.82));
     element.scrollBy({
       left: direction === 'right' ? distance : -distance,
       behavior: 'smooth',
     });
+
+    window.setTimeout(updateScrollState, 320);
   };
 
   return (
@@ -100,18 +100,15 @@ export function CuriosidadesHero() {
             <button
               type="button"
               onClick={() => scrollNav('left')}
-              className="curiosidades-section-scroll-button shrink-0 rounded-2xl border border-gray-200 bg-white px-2 text-blue-700 shadow-sm md:hidden"
+              className="curiosidades-section-scroll-button shrink-0 rounded-full border border-gray-200 bg-white px-2 text-blue-700 shadow-sm md:hidden"
               aria-label="Ver botões anteriores"
             >
               <ChevronLeft className="h-5 w-5" />
             </button>
           )}
 
-          <div
-            ref={scrollRef}
-            className="curiosidades-section-links-wrapper min-w-0 flex-1 overflow-x-auto pb-1"
-          >
-            <div className="curiosidades-section-links grid min-w-max grid-flow-col auto-cols-[5.8rem] gap-2 xl:min-w-0 xl:grid-flow-row xl:grid-cols-12">
+          <div ref={scrollRef} className="curiosidades-section-links-wrapper min-w-0 flex-1 overflow-x-auto pb-1">
+            <div className="curiosidades-section-links grid min-w-max grid-flow-col auto-cols-[5.8rem] gap-2 xl:min-w-0 xl:grid-flow-row xl:grid-cols-11">
               {sectionLinks.map((link) => {
                 const Icon = link.icon;
 
@@ -133,7 +130,7 @@ export function CuriosidadesHero() {
             <button
               type="button"
               onClick={() => scrollNav('right')}
-              className="curiosidades-section-scroll-button shrink-0 rounded-2xl border border-gray-200 bg-white px-2 text-blue-700 shadow-sm md:hidden"
+              className="curiosidades-section-scroll-button shrink-0 rounded-full border border-gray-200 bg-white px-2 text-blue-700 shadow-sm md:hidden"
               aria-label="Ver próximos botões"
             >
               <ChevronRight className="h-5 w-5" />

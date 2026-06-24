@@ -52,12 +52,12 @@ export function CuriosidadesPhotoSlider({
     }
   }, [photos, selectedPhotoId]);
 
+  const selectedIndex = Math.max(0, photos.findIndex((photo) => photo.id === selectedPhoto?.id));
+
   const goPrevious = () => {
     if (photos.length <= 1) return;
 
-    const selectedIndex = Math.max(0, photos.findIndex((photo) => photo.id === selectedPhoto?.id));
     const nextIndex = (selectedIndex - 1 + photos.length) % photos.length;
-
     setSelectedPhotoId(photos[nextIndex]?.id ?? '');
     setPageIndex(Math.floor(nextIndex / PHOTOS_PER_PAGE));
   };
@@ -65,9 +65,7 @@ export function CuriosidadesPhotoSlider({
   const goNext = () => {
     if (photos.length <= 1) return;
 
-    const selectedIndex = Math.max(0, photos.findIndex((photo) => photo.id === selectedPhoto?.id));
     const nextIndex = (selectedIndex + 1) % photos.length;
-
     setSelectedPhotoId(photos[nextIndex]?.id ?? '');
     setPageIndex(Math.floor(nextIndex / PHOTOS_PER_PAGE));
   };
@@ -116,15 +114,36 @@ export function CuriosidadesPhotoSlider({
                 alt={selectedPhoto.caption}
                 className="h-full min-h-[17rem] w-full object-cover"
               />
+
+              {photos.length > 1 && (
+                <>
+                  <button
+                    type="button"
+                    onClick={goPrevious}
+                    className="absolute left-3 top-1/2 inline-flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-white/95 text-blue-700 shadow-lg transition hover:bg-blue-50"
+                    aria-label="Foto anterior"
+                  >
+                    <ChevronLeft className="h-5 w-5" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={goNext}
+                    className="absolute right-3 top-1/2 inline-flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-white/95 text-blue-700 shadow-lg transition hover:bg-blue-50"
+                    aria-label="Próxima foto"
+                  >
+                    <ChevronRight className="h-5 w-5" />
+                  </button>
+                </>
+              )}
             </div>
           )}
 
-          <div className="flex items-center justify-between gap-3 rounded-xl border border-blue-100 bg-blue-50 px-3 py-2">
+          <div className="flex w-full items-center justify-between gap-3 rounded-xl border border-blue-100 bg-blue-50 px-3 py-2">
             <p className="min-w-0 truncate text-sm font-bold text-blue-950">
               {selectedPhoto?.caption ?? 'Fotos da família'}
             </p>
 
-            <div className="flex shrink-0 items-center gap-2">
+            <div className="hidden shrink-0 items-center gap-2 md:flex">
               <button
                 type="button"
                 onClick={goPrevious}

@@ -71,6 +71,25 @@ function buildWeddingAgeStats(pessoas: Pessoa[], relacionamentos: Relacionamento
   };
 }
 
+function RelationshipMetricCard({
+  label,
+  value,
+  variant = 'muted',
+}: {
+  label: string;
+  value: string | number;
+  variant?: 'blue' | 'muted';
+}) {
+  return (
+    <div className={variant === 'blue' ? 'rounded-xl bg-blue-50 p-4' : 'rounded-xl bg-gray-50 p-4'}>
+      <p className={variant === 'blue' ? 'text-xs font-semibold text-blue-700' : 'text-xs font-semibold text-gray-600'}>
+        {label}
+      </p>
+      <p className="mt-2 text-2xl font-bold text-gray-950">{value}</p>
+    </div>
+  );
+}
+
 type CuriosidadesCouplesProps = CuriosidadesDataProps & {
   className?: string;
 };
@@ -117,29 +136,18 @@ export function CuriosidadesCouples({
         <div className="mt-5 space-y-6">
           <div>
             <h3 className="text-base font-bold text-gray-950">Idade média ao casar</h3>
-            {!weddingAgeStats ? (
+
+            {weddingAgeStats ? (
               <div className="mt-4 grid gap-3 sm:grid-cols-3">
-                <div className="rounded-xl border border-dashed border-gray-200 bg-gray-50 px-4 py-5 text-sm text-gray-600 sm:col-span-2">
-                  Cadastre datas de casamento e nascimento para calcular este indicador.
-                </div>
-                <div className="rounded-xl bg-blue-50 p-4">
-                  <p className="text-xs font-semibold text-blue-700">Uniões</p>
-                  <p className="mt-2 text-2xl font-bold text-gray-950">
-                    {activeUnionCount}
-                  </p>
-                </div>
+                <RelationshipMetricCard label="Uniões" value={activeUnionCount} variant="blue" />
+                <RelationshipMetricCard label="Média" value={`${weddingAgeStats.average} anos`} variant="blue" />
+                <RelationshipMetricCard label="Faixa" value={`${weddingAgeStats.min}-${weddingAgeStats.max}`} />
               </div>
             ) : (
-              <div className="mt-4 grid gap-3 sm:grid-cols-2">
-                <div className="rounded-xl bg-blue-50 p-4">
-                  <p className="text-xs font-semibold text-blue-700">Média</p>
-                  <p className="mt-2 text-2xl font-bold text-gray-950">{weddingAgeStats.average} anos</p>
-                </div>
-                <div className="rounded-xl bg-gray-50 p-4">
-                  <p className="text-xs font-semibold text-gray-600">Faixa</p>
-                  <p className="mt-2 text-2xl font-bold text-gray-950">
-                    {weddingAgeStats.min}-{weddingAgeStats.max}
-                  </p>
+              <div className="mt-4 grid gap-3 sm:grid-cols-3">
+                <RelationshipMetricCard label="Uniões" value={activeUnionCount} variant="blue" />
+                <div className="rounded-xl border border-dashed border-gray-200 bg-gray-50 px-4 py-5 text-sm text-gray-600 sm:col-span-2">
+                  Cadastre datas de casamento e nascimento para calcular este indicador.
                 </div>
               </div>
             )}
@@ -162,9 +170,7 @@ export function CuriosidadesCouples({
                         </span>
                         <div className="min-w-0 flex-1">
                           <p className="font-bold leading-6 text-gray-950">{couple.coupleName}</p>
-                          <p className="mt-1 text-sm text-gray-600">
-                            {couple.durationLabel}
-                          </p>
+                          <p className="mt-1 text-sm text-gray-600">{couple.durationLabel}</p>
                           {couple.milestone && (
                             <p className="mt-3 rounded-lg border border-blue-100 bg-blue-50 px-3 py-2 text-sm font-semibold text-blue-800">
                               {couple.milestone.label}: {couple.milestone.description}.

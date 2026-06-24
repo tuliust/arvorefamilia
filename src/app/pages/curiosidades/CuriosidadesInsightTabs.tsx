@@ -112,7 +112,7 @@ export function CuriosidadesInsightTabs(props: CuriosidadesDataProps) {
               aria-pressed={active}
             >
               <Icon className="h-4 w-4 shrink-0" />
-              <span className="truncate">{tab.label}</span>
+              <span className="line-clamp-2 min-w-0 whitespace-normal text-center">{tab.label}</span>
             </button>
           );
         })}

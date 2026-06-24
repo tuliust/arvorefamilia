@@ -109,7 +109,7 @@ export function CuriosidadesGenerations({
                   </span>
 
                   <span className="inline-flex shrink-0 items-center gap-2">
-                    <span className="hidden rounded-full border border-gray-200 bg-white px-3 py-1 text-xs font-bold text-gray-700 sm:inline-flex">
+                    <span className="inline-flex rounded-full border border-gray-200 bg-white px-3 py-1 text-xs font-bold text-gray-700">
                       {generation.people.length} {generation.people.length === 1 ? 'pessoa' : 'pessoas'}
                     </span>
                     <span className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-gray-200 bg-white text-blue-700 shadow-sm">

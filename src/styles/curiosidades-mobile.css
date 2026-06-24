@@ -708,3 +708,128 @@
   top: 0 !important;
 }
 
+/* QA mobile curiosidades setas fotos ia profissoes abas 2026-06-25 */
+@media (max-width: 767px) {
+  .curiosidades-section-scroll-button {
+    width: 2.6rem !important;
+    min-width: 2.6rem !important;
+    height: 2.6rem !important;
+    min-height: 2.6rem !important;
+    align-self: center !important;
+    border-radius: 9999px !important;
+    padding: 0 !important;
+  }
+
+  .curiosidades-photo-slider-card {
+    min-height: 22.5rem !important;
+  }
+
+  .curiosidades-photo-slider-card .md\:hidden {
+    display: block !important;
+  }
+
+  .curiosidades-photo-slider-card img {
+    min-height: 17rem !important;
+  }
+
+  .curiosidades-page #ia .curiosidades-ai-suggestion-chip:nth-of-type(n + 4) {
+    display: none !important;
+  }
+
+  .curiosidades-page #ia .curiosidades-ai-suggestion-chip {
+    justify-content: flex-start !important;
+    text-align: left !important;
+  }
+
+  .curiosidades-page #graficos .curiosidades-profession-circles-grid {
+    grid-template-columns: repeat(3, minmax(0, 5.15rem)) !important;
+    justify-content: start !important;
+    gap: 0.5rem !important;
+  }
+
+  .curiosidades-page #graficos .curiosidades-profession-circle:nth-child(n + 4) {
+    display: none !important;
+  }
+
+  .curiosidades-page #graficos .curiosidades-profession-circle {
+    aspect-ratio: 1 / 1 !important;
+    width: 5.15rem !important;
+    height: 5.15rem !important;
+    min-height: 0 !important;
+    border-radius: 9999px !important;
+    padding: 0.45rem !important;
+  }
+
+  .curiosidades-page #graficos .curiosidades-profession-circle > div {
+    transform: translateY(-0.18rem);
+    gap: 0.12rem !important;
+  }
+
+  .curiosidades-page #graficos .curiosidades-profession-circle svg {
+    height: 1rem !important;
+    width: 1rem !important;
+  }
+
+  .curiosidades-page #graficos .curiosidades-profession-circle span:nth-of-type(1) {
+    font-size: 1.25rem !important;
+    line-height: 1 !important;
+  }
+
+  .curiosidades-page #graficos .curiosidades-profession-circle span:nth-of-type(2) {
+    max-width: 4.25rem !important;
+    font-size: 0.58rem !important;
+    line-height: 1.05 !important;
+    overflow-wrap: anywhere !important;
+  }
+
+  .curiosidades-page #exploracoes-familiares .curiosidades-insight-tabs-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+    gap: 0.35rem !important;
+  }
+
+  .curiosidades-page #exploracoes-familiares .curiosidades-insight-tabs-grid button {
+    min-height: 4.9rem !important;
+    padding: 0.35rem 0.25rem !important;
+    font-size: 0.55rem !important;
+    line-height: 1.02 !important;
+  }
+
+  .curiosidades-page #exploracoes-familiares .curiosidades-insight-tabs-grid button svg {
+    height: 1.05rem !important;
+    width: 1.05rem !important;
+  }
+
+  .curiosidades-page #exploracoes-familiares > section > .mt-5 > section > div:first-child {
+    display: block !important;
+    text-align: left !important;
+  }
+
+  .curiosidades-page #exploracoes-familiares > section > .mt-5 > section > div:first-child > svg {
+    display: none !important;
+  }
+
+  .curiosidades-page #exploracoes-familiares > section > .mt-5 > section > div:first-child h2 {
+    margin: 0 !important;
+    text-align: left !important;
+  }
+}
+
+@media (max-width: 374px) {
+  .curiosidades-page #graficos .curiosidades-profession-circles-grid {
+    grid-template-columns: repeat(3, minmax(0, 4.65rem)) !important;
+  }
+
+  .curiosidades-page #graficos .curiosidades-profession-circle {
+    width: 4.65rem !important;
+    height: 4.65rem !important;
+  }
+
+  .curiosidades-page #graficos .curiosidades-profession-circle span:nth-of-type(2) {
+    max-width: 3.85rem !important;
+    font-size: 0.52rem !important;
+  }
+
+  .curiosidades-page #exploracoes-familiares .curiosidades-insight-tabs-grid button {
+    font-size: 0.48rem !important;
+  }
+}
