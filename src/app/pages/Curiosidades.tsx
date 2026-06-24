@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+﻿import { useEffect, useState } from 'react';
 import { Sparkles } from 'lucide-react';
 import { MemberPageHeader, PAGE_CONTAINER_CLASS } from '../components/layout/MemberPageHeader';
 import { obterTodasPessoas, obterTodosRelacionamentos } from '../services/dataService';
@@ -106,7 +106,7 @@ export function Curiosidades() {
   };
 
   return (
-    <div className="curiosidades-page min-h-screen overflow-x-clip bg-gray-50 pb-24 md:pb-0">
+    <div className="curiosidades-page min-h-screen bg-gray-50 pb-24 md:pb-0">
       <MemberPageHeader
         title="Curiosidades"
         subtitle="Descobertas, histórias e conexões da família"
