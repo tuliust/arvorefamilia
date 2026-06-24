@@ -36,11 +36,16 @@ function GenerationPeopleBadges({ people }: { people: CuriosidadesDataProps['pes
   );
 }
 
+type CuriosidadesGenerationsProps = CuriosidadesDataProps & {
+  className?: string;
+};
+
 export function CuriosidadesGenerations({
   pessoas,
   loading,
   error,
-}: CuriosidadesDataProps) {
+  className = '',
+}: CuriosidadesGenerationsProps) {
   const generations = getPeopleBySocialGeneration(pessoas);
   const generationsWithPeople = generations.filter((generation) => generation.people.length > 0);
   const [expandedGenerationKey, setExpandedGenerationKey] = useState<string>('');
@@ -54,7 +59,7 @@ export function CuriosidadesGenerations({
   }, [expandedGenerationKey, generationsWithPeople]);
 
   return (
-    <section className={curiositySectionCardClassName}>
+    <section className={`${curiositySectionCardClassName} ${className}`}>
       <div>
         <div className="flex items-center gap-3">
           <GitBranch className="h-5 w-5 text-blue-700" />

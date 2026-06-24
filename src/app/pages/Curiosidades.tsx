@@ -146,20 +146,20 @@ export function Curiosidades() {
           <CuriosidadesCharts {...curiosityDataProps} />
         </div>
 
-        <div className="grid min-w-0 gap-4 lg:grid-cols-2 lg:items-start">
-          <div className="min-w-0 space-y-4">
-            <div id="geracoes" className="scroll-mt-24">
-              <CuriosidadesGenerations {...curiosityDataProps} />
+        <div className="grid min-w-0 gap-4 lg:grid-cols-2 lg:items-stretch">
+          <div className="min-w-0 lg:h-full">
+            <div id="geracoes" className="scroll-mt-24 lg:h-full">
+              <CuriosidadesGenerations {...curiosityDataProps} className="lg:h-full" />
             </div>
           </div>
 
-          <div className="min-w-0 space-y-4">
-            <div id="bodas" className="scroll-mt-24">
-              <CuriosidadesCouples {...curiosityDataProps} />
+          <div className="min-w-0 space-y-4 lg:flex lg:h-full lg:flex-col lg:space-y-0 lg:gap-4">
+            <div id="bodas" className="scroll-mt-24 lg:flex-1">
+              <CuriosidadesCouples {...curiosityDataProps} className="lg:h-full" />
             </div>
 
-            <div id="rota" className="scroll-mt-24">
-              <CuriosidadesRouteSection {...curiosityDataProps} />
+            <div id="rota" className="scroll-mt-24 lg:flex-1">
+              <CuriosidadesRouteSection {...curiosityDataProps} className="lg:h-full" />
             </div>
           </div>
         </div>

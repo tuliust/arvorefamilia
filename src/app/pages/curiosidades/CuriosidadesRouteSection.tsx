@@ -22,12 +22,17 @@ function formatRoadDistance(value: number) {
   return `${value.toLocaleString('pt-BR')} km`;
 }
 
+type CuriosidadesRouteSectionProps = CuriosidadesDataProps & {
+  className?: string;
+};
+
 export function CuriosidadesRouteSection({
   loading,
   error,
-}: CuriosidadesDataProps) {
+  className = '',
+}: CuriosidadesRouteSectionProps) {
   return (
-    <section className={curiositySectionCardClassName}>
+    <section className={`${curiositySectionCardClassName} ${className}`}>
       <div>
         <div className="flex items-center gap-3">
           <Route className="h-5 w-5 text-blue-700" />

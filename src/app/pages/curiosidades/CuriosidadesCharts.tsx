@@ -70,9 +70,6 @@ function ChartCard({
                     aria-label={`${item.label}: ${item.value}`}
                   />
                 </div>
-                {item.note && (
-                  <p className="text-xs leading-5 text-gray-500">{item.note}</p>
-                )}
               </div>
             );
           })}
@@ -93,7 +90,7 @@ function BirthdayMonthChartCard({
   const hasValues = data.some((item) => item.value > 0);
 
   return (
-    <article className={`${curiositySectionCardClassName} lg:flex-[1.08]`}>
+    <article className={`${curiositySectionCardClassName} lg:flex-[1.15]`}>
       <div className="flex items-center gap-2">
         <CalendarDays className="h-4 w-4 text-blue-700" />
         <h3 className="text-base font-bold text-gray-950">Aniversários por mês</h3>
@@ -144,33 +141,38 @@ function ProfessionRankingCard({
   data: ChartDatum[];
   loading: boolean;
 }) {
+  const visibleProfessions = data.slice(0, 5);
+
   return (
     <article className={`${curiositySectionCardClassName} lg:flex-1`}>
       <div className="flex items-center gap-2">
         <BriefcaseBusiness className="h-4 w-4 text-blue-700" />
         <h3 className="text-base font-bold text-gray-950">Profissões mais comuns</h3>
       </div>
-      <p className="mt-2 text-sm leading-6 text-gray-600">
-        Principais ocupações dos perfis.
-      </p>
 
       {loading ? (
         <div className="mt-5 h-32 animate-pulse rounded-xl bg-gray-100" />
-      ) : data.length === 0 ? (
+      ) : visibleProfessions.length === 0 ? (
         <div className="mt-5 rounded-xl border border-dashed border-gray-200 bg-gray-50 px-4 py-5 text-sm text-gray-600">
           Complete profissões nos perfis para gerar este gráfico.
         </div>
       ) : (
-        <ol className="mt-5 space-y-2">
-          {data.slice(0, 5).map((item, index) => (
-            <li key={item.label} className="flex items-center justify-between gap-3 rounded-lg bg-gray-50 px-3 py-2 text-sm">
-              <span className="min-w-0 truncate font-semibold text-gray-700">
-                {index + 1}. {item.label}
-              </span>
-              <span className="shrink-0 font-bold text-gray-950">{item.value}</span>
-            </li>
+        <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-5">
+          {visibleProfessions.map((item) => (
+            <div
+              key={item.label}
+              className="aspect-square min-h-24 rounded-full bg-blue-600 p-3 text-white shadow-sm shadow-blue-900/10"
+            >
+              <div className="flex h-full flex-col items-center justify-center gap-1 text-center">
+                <BriefcaseBusiness className="h-5 w-5 shrink-0" />
+                <span className="text-2xl font-black leading-none">{item.value}</span>
+                <span className="max-w-full text-[11px] font-bold leading-tight">
+                  {item.label}
+                </span>
+              </div>
+            </div>
           ))}
-        </ol>
+        </div>
       )}
     </article>
   );
@@ -191,7 +193,6 @@ export function CuriosidadesCharts({
     .map((range) => ({
       label: range.label,
       value: range.people.length,
-      note: range.period,
     }));
 
   const professionData = getProfessionRanking(pessoas, 6).map((profession) => ({
@@ -212,7 +213,7 @@ export function CuriosidadesCharts({
       )}
 
       <div className="grid gap-4 lg:grid-cols-2 lg:items-stretch">
-        <div className="flex min-w-0 flex-col gap-4 lg:h-full">
+        <div className="flex min-w-0 flex-col gap-4 lg:h-full lg:min-h-[34rem]">
           <BirthdayMonthChartCard data={birthMonthData} loading={loading && !error} />
           <ProfessionRankingCard data={professionData} loading={loading && !error} />
         </div>
@@ -226,7 +227,7 @@ export function CuriosidadesCharts({
             data={ageRangeData}
             emptyLabel="Complete datas de nascimento para comparar faixas etárias."
             icon={UsersRound}
-            className="h-full"
+            className="h-full min-h-[34rem]"
           />
         )}
       </div>

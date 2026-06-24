@@ -72,12 +72,17 @@ function buildWeddingAgeStats(pessoas: Pessoa[], relacionamentos: Relacionamento
   };
 }
 
+type CuriosidadesCouplesProps = CuriosidadesDataProps & {
+  className?: string;
+};
+
 export function CuriosidadesCouples({
   pessoas,
   relacionamentos,
   loading,
   error,
-}: CuriosidadesDataProps) {
+  className = '',
+}: CuriosidadesCouplesProps) {
   const couples = buildCoupleAnniversaries(pessoas, relacionamentos);
   const completedCouples = couples.filter((couple) => couple.years >= 1).slice(0, 6);
   const activeUnionCount = countActiveUnions(relacionamentos);
@@ -85,7 +90,7 @@ export function CuriosidadesCouples({
   const weddingAgeStats = buildWeddingAgeStats(pessoas, relacionamentos);
 
   return (
-    <section className={curiositySectionCardClassName}>
+    <section className={`${curiositySectionCardClassName} ${className}`}>
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-3">
@@ -119,10 +124,6 @@ export function CuriosidadesCouples({
         <div className="mt-5 space-y-6">
           <div>
             <h3 className="text-base font-bold text-gray-950">Idade média ao casar</h3>
-            <p className="mt-2 text-sm leading-6 text-gray-600">
-              Estimativa calculada com data de casamento e data de nascimento dos cônjuges.
-            </p>
-
             {!weddingAgeStats ? (
               <div className="mt-4 rounded-xl border border-dashed border-gray-200 bg-gray-50 px-4 py-5 text-sm text-gray-600">
                 Cadastre datas de casamento e nascimento para calcular este indicador.
@@ -144,15 +145,13 @@ export function CuriosidadesCouples({
           </div>
 
           <div className="border-t border-gray-100 pt-5">
-            <h3 className="text-base font-bold text-gray-950">Bodas</h3>
-
             {completedCouples.length === 0 ? (
               <div className="mt-4 rounded-xl border border-dashed border-gray-200 bg-gray-50 px-4 py-5 text-sm text-gray-600">
                 Ainda não há casais ativos com bodas de 1, 5, 10, 15, 20, 25, 30, 40, 45, 50, 60 ou 75 anos.
               </div>
             ) : (
               <div className="mt-4">
-                <h4 className="text-sm font-bold text-gray-950">Casais que já completaram bodas</h4>
+                <h3 className="text-base font-bold text-gray-950">Casais que já completaram bodas</h3>
                 <div className="mt-3 space-y-3">
                   {completedCouples.map((couple) => (
                     <article key={couple.id} className="rounded-xl border border-gray-200 bg-gray-50 p-4">
