@@ -13,6 +13,7 @@ import {
   RefreshCw,
   Sparkles,
   Star,
+  UserRound,
   UsersRound,
 } from 'lucide-react';
 
@@ -400,6 +401,24 @@ function getYear(value?: string | number | null) {
   return String(value).match(/\b(18|19|20|21)\d{2}\b/)?.[0] ?? '';
 }
 
+function getDateDisplayLabel(value?: string | number | null) {
+  if (!value) return '';
+
+  const rawValue = String(value).trim();
+  if (!rawValue) return '';
+
+  const brDateMatch = rawValue.match(/\b(\d{2})\/(\d{2})\/((?:18|19|20|21)\d{2})\b/);
+  if (brDateMatch) return `${brDateMatch[1]}/${brDateMatch[2]}/${brDateMatch[3]}`;
+
+  const isoDateMatch = rawValue.match(/\b((?:18|19|20|21)\d{2})-(\d{2})-(\d{2})\b/);
+  if (isoDateMatch) return `${isoDateMatch[3]}/${isoDateMatch[2]}/${isoDateMatch[1]}`;
+
+  const compactDateMatch = rawValue.match(/\b((?:18|19|20|21)\d{2})(\d{2})(\d{2})\b/);
+  if (compactDateMatch) return `${compactDateMatch[3]}/${compactDateMatch[2]}/${compactDateMatch[1]}`;
+
+  return getYear(rawValue);
+}
+
 function getYearsLabel(person: Pessoa) {
   const birthYear = person.permitir_exibir_data_nascimento === false ? '' : getYear(person.data_nascimento);
   const deathYear = getYear(person.data_falecimento);
@@ -506,6 +525,11 @@ function LinhaGeracionalCardView({
   onClick: (person: Pessoa) => void;
 }) {
   const colorKey = getPaletteSlotForCard(card, generation);
+  const birthDate = card.person.permitir_exibir_data_nascimento === false
+    ? ''
+    : getDateDisplayLabel(card.person.data_nascimento);
+  const deathDate = getDateDisplayLabel(card.person.data_falecimento);
+  const shouldShowDeathDate = Boolean(card.person.falecido || card.person.data_falecimento) && Boolean(deathDate);
 
   return (
     <div className="relative px-8">
@@ -519,6 +543,7 @@ function LinhaGeracionalCardView({
         style={{ backgroundColor: 'var(--tree-palette-edge-child)' }}
         aria-hidden="true"
       />
+
       <button
         type="button"
         data-family-map-color-key={colorKey}
@@ -526,27 +551,52 @@ function LinhaGeracionalCardView({
         className="flex min-h-[74px] w-full items-center gap-3 rounded-2xl border px-3 py-2 text-left shadow-sm active:scale-[0.99]"
       >
         <span
-          className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-full border border-white/70 bg-white/35 text-sm font-black shadow-inner"
+          className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-full border-[3px] border-white/85 bg-white/25 text-current shadow-inner"
           aria-hidden="true"
         >
           {card.person.foto_principal_url ? (
-            <img src={card.person.foto_principal_url} alt="" className="h-full w-full object-cover" loading="lazy" />
+            <img
+              src={card.person.foto_principal_url}
+              alt=""
+              className="h-full w-full object-cover"
+              loading="lazy"
+            />
           ) : (
-            getInitials(card.name)
+            <UserRound className="h-8 w-8 opacity-90" />
           )}
         </span>
+
         <span className="min-w-0 flex-1">
-          <span className="block truncate text-sm font-black leading-tight">{card.name}</span>
-          <span className="mt-1 block truncate text-[11px] font-bold opacity-80">
-            {card.label}{card.years ? ` ? ${card.years}` : ''}
+          <span className="block truncate text-[13px] font-black uppercase leading-[1.05] tracking-[0.08em]">
+            {card.name}
+          </span>
+
+          <span className="mt-1.5 flex flex-col gap-0.5 text-[13px] font-black leading-tight">
+            {birthDate && (
+              <span className="flex items-center gap-1.5">
+                <Star className="h-4 w-4 shrink-0 fill-current" aria-hidden="true" />
+                <span>{birthDate}</span>
+              </span>
+            )}
+
+            {shouldShowDeathDate && (
+              <span className="flex items-center gap-1.5">
+                <Plus className="h-4 w-4 shrink-0 stroke-[3]" aria-hidden="true" />
+                <span>{deathDate}</span>
+              </span>
+            )}
+
+            {!birthDate && !shouldShowDeathDate && (
+              <span className="truncate text-[11px] font-bold normal-case tracking-normal opacity-75">
+                {card.label}
+              </span>
+            )}
           </span>
         </span>
       </button>
     </div>
   );
 }
-
-
 
 function GenerationScreen({ generation, onPersonClick }: { generation: LinhaGeracionalScreen; onPersonClick: (person: Pessoa) => void }) {
   return (
