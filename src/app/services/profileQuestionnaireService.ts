@@ -329,6 +329,44 @@ export async function getProfileQuestionnaireSelectedBadges(
   };
 }
 
+export async function getProfileQuestionnaireSelectedBadgesByPersonIds(
+  pessoaIds: string[],
+): Promise<ServiceResult<Record<string, ProfileQuestionnaireSelectableOption[]>>> {
+  const uniquePessoaIds = Array.from(new Set(pessoaIds.map((id) => normalizeString(id)).filter(Boolean)));
+
+  if (uniquePessoaIds.length === 0) {
+    return { error: undefined, data: {} };
+  }
+
+  const { data, error } = await supabase
+    .from(PROFILE_QUESTIONNAIRE_TABLE)
+    .select('pessoa_id, selected_badges')
+    .in('pessoa_id', uniquePessoaIds);
+
+  if (error) {
+    return { error: error.message, data: {} };
+  }
+
+  const badgesByPersonId = (data as Pick<ProfileQuestionnaireRow, 'pessoa_id' | 'selected_badges'>[] | null)?.reduce<
+    Record<string, ProfileQuestionnaireSelectableOption[]>
+  >((accumulator, row) => {
+    const pessoaId = normalizeString(row.pessoa_id);
+    if (!pessoaId) return accumulator;
+
+    const badges = normalizeBadges(row.selected_badges);
+    if (badges.length > 0) {
+      accumulator[pessoaId] = badges;
+    }
+
+    return accumulator;
+  }, {}) ?? {};
+
+  return {
+    error: undefined,
+    data: badgesByPersonId,
+  };
+}
+
 export async function upsertProfileQuestionnaireAnswers(
   pessoaId: string,
   payload: ProfileQuestionnairePersistedPayload,
