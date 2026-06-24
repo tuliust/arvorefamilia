@@ -2,11 +2,13 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import Cropper, { Area } from 'react-easy-crop';
 import { useNavigate } from 'react-router';
 import {
+  Archive,
   Camera,
   ChevronLeft,
   ChevronRight,
   ImagePlus,
   Info,
+  Link2,
   MapPin,
   Save,
   Sparkles,
@@ -1350,35 +1352,64 @@ export function MeusDados() {
           </div>
         </form>
 
-        <aside className="order-1 h-fit min-w-0 rounded-2xl border border-gray-200 bg-white p-5 text-center shadow-sm lg:order-2">
-          <div className="mx-auto flex h-32 w-32 items-center justify-center overflow-hidden rounded-2xl bg-blue-50 text-3xl font-bold text-blue-700">
-            {currentPhotoUrl ? (
-              <img src={currentPhotoUrl} alt={previewName} className="h-full w-full object-cover" />
-            ) : (
-              <span>{getInitials(previewName)}</span>
-            )}
-          </div>
+        <aside className="order-1 h-fit min-w-0 space-y-4 lg:order-2">
+          <section className="rounded-2xl border border-gray-200 bg-white p-5 text-center shadow-sm">
+            <div className="mx-auto flex h-32 w-32 items-center justify-center overflow-hidden rounded-2xl bg-blue-50 text-3xl font-bold text-blue-700">
+              {currentPhotoUrl ? (
+                <img src={currentPhotoUrl} alt={previewName} className="h-full w-full object-cover" />
+              ) : (
+                <span>{getInitials(previewName)}</span>
+              )}
+            </div>
 
-          <h2 className="mt-4 break-words text-xl font-bold leading-snug text-gray-900">
-            {previewName}
-          </h2>
-          <p className="mt-2 break-words text-sm text-gray-500">{previewLocation}</p>
+            <h2 className="mt-4 break-words text-xl font-bold leading-snug text-gray-900">
+              {previewName}
+            </h2>
+            <p className="mt-2 break-words text-sm text-gray-500">{previewLocation}</p>
 
-          <div className="mt-5 grid grid-cols-1 gap-2">
-            <Button type="button" variant="outline" onClick={() => setPhotoDialogOpen(true)}>
-              <Camera className="h-4 w-4" />
-              <span className="md:hidden">{currentPhotoUrl ? 'Alterar' : 'Cadastrar'}</span>
-              <span className="hidden md:inline">{currentPhotoUrl ? 'Alterar foto' : 'Cadastrar foto'}</span>
-            </Button>
-            {currentPhotoUrl && (
-              <Button type="button" variant="ghost" onClick={handleRemovePhoto} className="text-red-700 hover:bg-red-50">
-                <Trash2 className="h-4 w-4" />
-                <span className="md:hidden">Remover</span>
-                <span className="hidden md:inline">Remover foto</span>
+            <div className="mt-5 grid grid-cols-1 gap-2">
+              <Button type="button" variant="outline" onClick={() => setPhotoDialogOpen(true)}>
+                <Camera className="h-4 w-4" />
+                <span className="md:hidden">{currentPhotoUrl ? 'Alterar' : 'Cadastrar'}</span>
+                <span className="hidden md:inline">{currentPhotoUrl ? 'Alterar foto' : 'Cadastrar foto'}</span>
               </Button>
-            )}
-          </div>
+              {currentPhotoUrl && (
+                <Button type="button" variant="ghost" onClick={handleRemovePhoto} className="text-red-700 hover:bg-red-50">
+                  <Trash2 className="h-4 w-4" />
+                  <span className="md:hidden">Remover</span>
+                  <span className="hidden md:inline">Remover foto</span>
+                </Button>
+              )}
+            </div>
+          </section>
 
+          {!isOnboarding && (
+            <section className="rounded-2xl border border-gray-200 bg-white p-4 text-left shadow-sm">
+              <h3 className="break-words text-sm font-semibold uppercase tracking-wide text-gray-500">
+                Outros ajustes
+              </h3>
+              <div className="mt-3 grid grid-cols-1 gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => navigate('/meus-vinculos')}
+                  className="w-full justify-start text-left"
+                >
+                  <Link2 className="h-4 w-4 shrink-0" />
+                  <span className="min-w-0 break-words">Ajustar Meus Vínculos</span>
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => navigate('/arquivos-historicos')}
+                  className="w-full justify-start text-left"
+                >
+                  <Archive className="h-4 w-4 shrink-0" />
+                  <span className="min-w-0 break-words">Ajustar Fatos e Arquivos Históricos</span>
+                </Button>
+              </div>
+            </section>
+          )}
         </aside>
       </main>
 
@@ -1497,155 +1528,33 @@ function SectionTitle({
   className?: string;
 }) {
   return (
-    <h2 className={['mb-4 flex min-w-0 items-center gap-2.5 text-lg font-semibold text-gray-900', className].filter(Boolean).join(' ')}>
-      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-blue-700">
-        <Icon className="h-5 w-5" />
-      </span>
-      <span className="min-w-0 break-words">{children}</span>
-    </h2>
-  );
-}
-
-function InfoTooltipButton({
-  ariaLabel,
-  children,
-}: {
-  ariaLabel: string;
-  children: React.ReactNode;
-}) {
-  const [open, setOpen] = useState(false);
-  const wrapperRef = useRef<HTMLSpanElement | null>(null);
-  const tooltipId = React.useId();
-
-  useEffect(() => {
-    if (!open) return;
-
-    const handlePointerDown = (event: PointerEvent) => {
-      if (event.target instanceof Node && wrapperRef.current?.contains(event.target)) return;
-      setOpen(false);
-    };
-
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') setOpen(false);
-    };
-
-    document.addEventListener('pointerdown', handlePointerDown);
-    window.addEventListener('keydown', handleKeyDown);
-
-    return () => {
-      document.removeEventListener('pointerdown', handlePointerDown);
-      window.removeEventListener('keydown', handleKeyDown);
-    };
-  }, [open]);
-
-  return (
-    <span ref={wrapperRef} className="group relative inline-flex shrink-0">
-      <button
-        type="button"
-        aria-label={ariaLabel}
-        aria-expanded={open}
-        aria-describedby={open ? tooltipId : undefined}
-        onClick={() => setOpen((current) => !current)}
-        onBlur={(event) => {
-          const nextTarget = event.relatedTarget;
-          if (!(nextTarget instanceof Node) || !wrapperRef.current?.contains(nextTarget)) {
-            setOpen(false);
-          }
-        }}
-        className="inline-flex h-6 w-6 items-center justify-center rounded-full border border-gray-300 bg-white text-gray-600 transition hover:border-blue-300 hover:bg-blue-50 hover:text-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
-      >
-        <Info className="h-3.5 w-3.5" />
-      </button>
-      <span
-        id={tooltipId}
-        role="tooltip"
-        className={[
-          'pointer-events-none absolute right-0 top-full z-20 mt-2 w-64 max-w-[calc(100vw-2rem)] rounded-md border border-gray-200 bg-gray-900 px-3 py-2 text-left text-xs font-medium leading-snug text-white shadow-lg group-hover:block group-focus-within:block',
-          open ? 'block' : 'hidden',
-        ].join(' ')}
-      >
-        {children}
-      </span>
-    </span>
-  );
-}
-
-function DateFormatInfoButton({ ariaLabel }: { ariaLabel: string }) {
-  return (
-    <InfoTooltipButton ariaLabel={ariaLabel}>
-      Use o formato AAAA ou DD/MM/AAAA
-    </InfoTooltipButton>
-  );
-}
-
-function LocationFormatInfoButton({ ariaLabel }: { ariaLabel: string }) {
-  return (
-    <InfoTooltipButton ariaLabel={ariaLabel}>
-      Para locais no Brasil, use Cidade/UF. Para exterior, marque a opção correspondente e use Cidade (País).
-    </InfoTooltipButton>
-  );
-}
-
-function DeathStatusSelector({
-  checked,
-  onChange,
-}: {
-  checked: boolean;
-  onChange: (checked: boolean) => void;
-}) {
-  return (
-    <div className="min-w-0 space-y-3">
-      <p className="break-words text-sm font-medium text-gray-900">Você está escrevendo o perfil de uma pessoa falecida?</p>
-      <div className="inline-flex w-full max-w-xs rounded-lg border border-gray-200 bg-white p-1" role="group" aria-label="Você está escrevendo o perfil de uma pessoa falecida?">
-        <button
-          type="button"
-          onClick={() => onChange(true)}
-          aria-pressed={checked}
-          className={[
-            'flex-1 rounded-md px-4 py-2 text-sm font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2',
-            checked ? 'bg-blue-600 text-white shadow-sm' : 'text-gray-700 hover:bg-gray-50',
-          ].join(' ')}
-        >
-          Sim
-        </button>
-        <button
-          type="button"
-          onClick={() => onChange(false)}
-          aria-pressed={!checked}
-          className={[
-            'flex-1 rounded-md px-4 py-2 text-sm font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2',
-            !checked ? 'bg-blue-600 text-white shadow-sm' : 'text-gray-700 hover:bg-gray-50',
-          ].join(' ')}
-        >
-          Não
-        </button>
-      </div>
+    <div className={`mb-4 flex items-center gap-2 text-base font-semibold text-gray-900 ${className}`}>
+      <Icon className="h-5 w-5 text-blue-600" />
+      <h2 className="break-words">{children}</h2>
     </div>
   );
 }
 
 function Field({
   label,
-  labelAddon,
   error,
   children,
-  className = '',
+  labelAddon,
 }: {
   label: string;
-  labelAddon?: React.ReactNode;
   error?: string;
   children: React.ReactNode;
-  className?: string;
+  labelAddon?: React.ReactNode;
 }) {
   return (
-    <div className={['min-w-0 space-y-2', className].filter(Boolean).join(' ')}>
-      <div className="flex min-w-0 items-center justify-between gap-2">
-        <Label className="min-w-0 break-words">{label}</Label>
+    <label className="block min-w-0 space-y-1">
+      <span className="flex min-w-0 items-center gap-1.5 text-sm font-medium text-gray-700">
+        <span className="break-words">{label}</span>
         {labelAddon}
-      </div>
+      </span>
       {children}
-      {error && <p className="break-words text-xs font-medium text-red-600">{error}</p>}
-    </div>
+      {error && <span className="block break-words text-xs text-red-600">{error}</span>}
+    </label>
   );
 }
 
@@ -1661,12 +1570,78 @@ function CompactToggleField({
   className?: string;
 }) {
   return (
-    <div className={['min-w-0', className].filter(Boolean).join(' ')}>
-      <div aria-hidden="true" className="hidden h-[22px] sm:block" />
-      <div className="flex h-10 min-w-0 items-center justify-between gap-2 rounded-md border border-gray-200 bg-white px-3 sm:mt-2">
-        <Label className="min-w-0 break-words text-xs">{label}</Label>
-        <Switch checked={checked} onCheckedChange={onCheckedChange} className="shrink-0" />
+    <div className={`flex min-h-10 min-w-0 items-center justify-between gap-2 rounded-md border border-gray-200 bg-white px-3 py-2 ${className}`}>
+      <Label className="min-w-0 break-words text-sm leading-snug text-gray-700">{label}</Label>
+      <Switch checked={checked} onCheckedChange={onCheckedChange} className="shrink-0" />
+    </div>
+  );
+}
+
+function DeathStatusSelector({ checked, onChange }: { checked: boolean; onChange: (checked: boolean) => void }) {
+  return (
+    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+      <div className="min-w-0">
+        <p className="break-words text-sm font-medium text-gray-900">Status da pessoa</p>
+        <p className="mt-1 break-words text-xs text-gray-500">Informe se este perfil representa uma pessoa falecida.</p>
+      </div>
+      <div className="flex shrink-0 items-center gap-2 rounded-full border border-gray-200 bg-white p-1">
+        <button
+          type="button"
+          className={[
+            'rounded-full px-3 py-1.5 text-xs font-semibold transition-colors',
+            !checked ? 'bg-blue-600 text-white shadow-sm' : 'text-gray-600 hover:bg-gray-100',
+          ].join(' ')}
+          onClick={() => onChange(false)}
+          aria-pressed={!checked}
+        >
+          Vivo
+        </button>
+        <button
+          type="button"
+          className={[
+            'rounded-full px-3 py-1.5 text-xs font-semibold transition-colors',
+            checked ? 'bg-slate-800 text-white shadow-sm' : 'text-gray-600 hover:bg-gray-100',
+          ].join(' ')}
+          onClick={() => onChange(true)}
+          aria-pressed={checked}
+        >
+          Falecido
+        </button>
       </div>
     </div>
+  );
+}
+
+function LocationFormatInfoButton({ ariaLabel }: { ariaLabel: string }) {
+  return (
+    <span className="group relative inline-flex shrink-0">
+      <button
+        type="button"
+        aria-label={ariaLabel}
+        className="inline-flex h-5 w-5 items-center justify-center rounded-full text-blue-600 transition hover:bg-blue-50 hover:text-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-1"
+      >
+        <Info className="h-3.5 w-3.5" />
+      </button>
+      <span className="pointer-events-none absolute left-1/2 top-7 z-20 w-64 -translate-x-1/2 rounded-lg border border-gray-200 bg-white p-3 text-xs font-normal leading-relaxed text-gray-600 opacity-0 shadow-lg transition-opacity group-focus-within:opacity-100 group-hover:opacity-100">
+        Use o formato Cidade/UF para cidades brasileiras, como Recife/PE ou Porto Alegre/RS. Para cidades fora do Brasil, ative a opção exterior e use Cidade (País), como Atenas (Grécia).
+      </span>
+    </span>
+  );
+}
+
+function DateFormatInfoButton({ ariaLabel }: { ariaLabel: string }) {
+  return (
+    <span className="group relative inline-flex shrink-0">
+      <button
+        type="button"
+        aria-label={ariaLabel}
+        className="inline-flex h-5 w-5 items-center justify-center rounded-full text-blue-600 transition hover:bg-blue-50 hover:text-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-1"
+      >
+        <Info className="h-3.5 w-3.5" />
+      </button>
+      <span className="pointer-events-none absolute left-1/2 top-7 z-20 w-64 -translate-x-1/2 rounded-lg border border-gray-200 bg-white p-3 text-xs font-normal leading-relaxed text-gray-600 opacity-0 shadow-lg transition-opacity group-focus-within:opacity-100 group-hover:opacity-100">
+        Você pode informar apenas o ano ou a data completa. Exemplos aceitos: 1989 ou 23/01/1989. Evite formatos incompletos como 23/01.
+      </span>
+    </span>
   );
 }
