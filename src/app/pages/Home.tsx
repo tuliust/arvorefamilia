@@ -220,6 +220,7 @@ export function Home() {
   const searchInputRef = useRef<HTMLInputElement>(null);
   const familyTreeRef = useRef<FamilyTreeActions | null>(null);
   const treeViewMode = getTreeViewModeFromPath(location.pathname);
+  const isMobileHorizontalTreeView = isMobile && treeViewMode === 'mapa-familiar-horizontal';
   const treeDataLoadTokenRef = useRef(0);
   const firstLoginTutorialForcedRef = useRef(false);
   const treeCacheKey = linkedPersonResolved
@@ -795,6 +796,10 @@ export function Home() {
   const lifeStatusScopePeople = useMemo(() => {
     if (!centralReferencePersonId || pessoas.length === 0) return [];
 
+    if (isMobileHorizontalTreeView) {
+      return pessoasVisiveisPorStatus;
+    }
+
     const graph = buildTreeGraph({
       pessoas,
       relacionamentos,
@@ -814,10 +819,11 @@ export function Home() {
     centralReferencePersonId,
     directRelativeFilters,
     edgeFilters,
+    isMobileHorizontalTreeView,
     pessoas,
+    pessoasVisiveisPorStatus,
     relacionamentos,
     selectedPersonId,
-    treeViewMode,
   ]);
 
   const lifeStatusCounts = useMemo(() => {
@@ -891,14 +897,39 @@ export function Home() {
     ''
   ).trim();
   const directRelationCounts = useMemo(
-    () =>
-      calculateDirectRelationCounts(
+    () => {
+      if (isMobileHorizontalTreeView) {
+        return renderedDirectRelationCounts ?? {
+          pais: 0,
+          avos: 0,
+          bisavos: 0,
+          tataravos: 0,
+          conjuge: 0,
+          filhos: 0,
+          netos: 0,
+          irmaos: 0,
+          sobrinhos: 0,
+          tios: 0,
+          primos: 0,
+          pets: 0,
+        };
+      }
+
+      return calculateDirectRelationCounts(
         pessoas,
         relacionamentos,
         centralReferencePersonId,
         visiblePersonIdsByLifeStatus
-      ),
-    [pessoas, relacionamentos, centralReferencePersonId, visiblePersonIdsByLifeStatus]
+      );
+    },
+    [
+      centralReferencePersonId,
+      isMobileHorizontalTreeView,
+      pessoas,
+      relacionamentos,
+      renderedDirectRelationCounts,
+      visiblePersonIdsByLifeStatus,
+    ]
   );
   const effectiveDirectRelationCounts = useMemo(
     () => (
@@ -1172,6 +1203,8 @@ export function Home() {
   }, [canRenderTree, hasBlockingTutorialDialog, searchParams, user?.id]);
 
   const debugViewPersonOptions = useMemo(() => {
+    if (isMobile) return [];
+
     return [...pessoas]
       .filter((pessoa) => Boolean(pessoa.id))
       .map((pessoa) => ({
@@ -1179,7 +1212,7 @@ export function Home() {
         label: getFirstTwoNames(pessoa.nome_completo || pessoa.id),
       }))
       .sort((a, b) => a.label.localeCompare(b.label, 'pt-BR', { sensitivity: 'base' }));
-  }, [pessoas]);
+  }, [isMobile, pessoas]);
 
   const handleDebugViewPersonChange = useCallback((nextValue: string) => {
     const nextPersonId = nextValue || undefined;
@@ -1356,7 +1389,7 @@ export function Home() {
         />
 
         <HorizontalLineHighlightHint
-          visible={canRenderTree && treeViewMode === 'mapa-familiar-horizontal'}
+          visible={!isMobile && canRenderTree && treeViewMode === 'mapa-familiar-horizontal'}
         />
 
       </main>
