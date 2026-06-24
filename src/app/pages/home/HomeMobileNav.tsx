@@ -80,11 +80,40 @@ function getFirstName(value?: string | null) {
   return beforeEmail.split(/\s+/)[0] || '';
 }
 
+const MOBILE_SPOUSE_FILTER_STORAGE_KEY = 'arvorefamilia:mobile-family-map:show-extended-spouses';
+
 function getShortPersonName(pessoa: Pessoa) {
   const source = String(pessoa.nome_completo || pessoa.id || '').trim();
   const parts = source.split(/\s+/).filter(Boolean);
 
-  return parts.slice(0, 2).join(' ') || pessoa.id;
+  if (parts.length <= 2) return parts.join(' ') || pessoa.id;
+
+  const compactName = [parts[0], parts[1], parts[parts.length - 1]]
+    .filter(Boolean)
+    .join(' ');
+
+  return compactName || pessoa.id;
+}
+
+function readStoredExtendedSpouseFilterState() {
+  if (typeof window === 'undefined') return true;
+
+  try {
+    const stored = window.localStorage.getItem(MOBILE_SPOUSE_FILTER_STORAGE_KEY);
+    return stored === null ? true : stored === 'true';
+  } catch {
+    return true;
+  }
+}
+
+function getExtendedSpouseFilterLabel(active: boolean) {
+  return active
+    ? 'Ocultar cônjuges de tios, primos etc'
+    : 'Exibir cônjuges de tios, primos etc';
+}
+
+function getViewAsOptionLabel(option: ViewAsPersonOption, currentValue: string) {
+  return option.id === currentValue ? formatFamilyViewLabel(option.label) : option.label;
 }
 
 function buildViewAsPersonOptions(pessoas: Pessoa[]): ViewAsPersonOption[] {
@@ -392,7 +421,7 @@ export function HomeMobileNav({
   const [mobilePeople, setMobilePeople] = useState<Pessoa[]>([]);
   const [mobileRelationships, setMobileRelationships] = useState<Relacionamento[]>([]);
   const [defaultViewAsLabel, setDefaultViewAsLabel] = useState('Família principal');
-  const [showExtendedSpouseFilters, setShowExtendedSpouseFilters] = useState(true);
+  const [showExtendedSpouseFilters, setShowExtendedSpouseFilters] = useState(readStoredExtendedSpouseFilterState);
   const [fullControlsOpen, setFullControlsOpen] = useState(false);
   const [activeGroupTab, setActiveGroupTab] = useState<MobileFamilyGroupTab>('nucleo');
 
@@ -417,7 +446,25 @@ export function HomeMobileNav({
 
   useEffect(() => {
     document.documentElement.dataset.mobileFamilySpouseScope = showExtendedSpouseFilters ? 'extended' : 'direct';
+
+    try {
+      window.localStorage.setItem(MOBILE_SPOUSE_FILTER_STORAGE_KEY, String(showExtendedSpouseFilters));
+    } catch {
+      // noop
+    }
   }, [showExtendedSpouseFilters]);
+
+  useEffect(() => {
+    const syncExtendedSpouseFilterState = () => {
+      setShowExtendedSpouseFilters(document.documentElement.dataset.mobileFamilySpouseScope === 'extended');
+    };
+
+    window.addEventListener('arvorefamilia:mobile-spouse-filter-changed', syncExtendedSpouseFilterState);
+
+    return () => {
+      window.removeEventListener('arvorefamilia:mobile-spouse-filter-changed', syncExtendedSpouseFilterState);
+    };
+  }, []);
 
   useEffect(() => {
     if (!fullControlsOpen) return;
@@ -609,11 +656,16 @@ export function HomeMobileNav({
 
   const handleViewOptionClick = useCallback((path: '/mapa-familiar' | '/mapa-familiar-horizontal') => {
     setActiveToolbarAction(null);
+    setFullControlsOpen(false);
 
     if (pathname === path) return;
 
     const query = typeof window === 'undefined' ? '' : window.location.search;
-    navigateFromHome(`${path}${query}`);
+    const nextPath = `${path}${query}`;
+
+    window.setTimeout(() => {
+      navigateFromHome(nextPath);
+    }, 0);
   }, [navigateFromHome, pathname]);
 
   const handleExportOptionClick = useCallback((action: SidebarTreeAction) => {
@@ -627,7 +679,7 @@ export function HomeMobileNav({
   }, []);
 
   const handleFilterOptionClick = useCallback((nextValue: boolean) => {
-    setShowExtendedSpouseFilters(nextValue);
+    setShowExtendedSpouseFilters((current) => (nextValue ? !current : false));
     setActiveToolbarAction(null);
   }, []);
 
@@ -673,7 +725,7 @@ export function HomeMobileNav({
                     )}
                     {viewAsPersonOptions.map((option) => (
                       <option key={option.id} value={option.id}>
-                        {formatFamilyViewLabel(option.label)}
+                        {getViewAsOptionLabel(option, currentViewAsPersonValue)}
                       </option>
                     ))}
                   </select>
@@ -788,7 +840,7 @@ export function HomeMobileNav({
                     >
                       <Icon className={['h-4 w-4 shrink-0', active ? 'text-blue-700' : 'text-slate-400'].join(' ')} />
                       <span className="min-w-0 text-[9px] font-extrabold leading-[1.05] tracking-[-0.02em]">
-                        {option.label}
+                        {option.value ? getExtendedSpouseFilterLabel(showExtendedSpouseFilters) : option.label}
                       </span>
                     </button>
                   );
@@ -882,7 +934,7 @@ export function HomeMobileNav({
                       )}
                       {viewAsPersonOptions.map((option) => (
                         <option key={option.id} value={option.id}>
-                          {formatFamilyViewLabel(option.label)}
+                          {getViewAsOptionLabel(option, currentViewAsPersonValue)}
                         </option>
                       ))}
                     </select>
@@ -947,7 +999,7 @@ export function HomeMobileNav({
                   </div>
 
                   <h3 className="mb-3 text-2xl font-black tracking-[-0.035em] text-blue-950">Resumo</h3>
-                  <div className="mb-6 grid grid-cols-2 gap-3">
+                  <div className="mb-6 grid grid-cols-2 gap-x-1.5 gap-y-2.5">
                     <SummaryTile tone="blue" icon={UsersRound} value={mobileStats.totalPeople} label="Pessoas" />
                     <SummaryTile tone="green" icon={UserRound} value={mobileStats.alivePeople} label="Vivos" />
                     <SummaryTile tone="purple" icon={Cross} value={mobileStats.deceasedPeople} label="Falecidos" />
@@ -1003,17 +1055,19 @@ export function HomeMobileNav({
                     <button
                       type="button"
                       aria-pressed={showExtendedSpouseFilters}
-                      onClick={() => setShowExtendedSpouseFilters(true)}
+                      onClick={() => setShowExtendedSpouseFilters((current) => !current)}
+                      data-mobile-family-filter-panel-toggle="true"
                       className="grid min-h-16 w-full grid-cols-[3rem_minmax(0,1fr)_auto] items-center gap-2 border-b border-slate-200 px-4 text-left active:bg-blue-50"
                     >
                       <HeartHandshake className="h-8 w-8 text-blue-600" />
-                      <span className="text-base font-semibold leading-tight text-blue-950">Exibir cônjuges de tios, primos etc</span>
+                      <span className="text-base font-semibold leading-tight text-blue-950">{getExtendedSpouseFilterLabel(showExtendedSpouseFilters)}</span>
                       <MobileSwitch active={showExtendedSpouseFilters} />
                     </button>
                     <button
                       type="button"
                       aria-pressed={!showExtendedSpouseFilters}
                       onClick={() => setShowExtendedSpouseFilters(false)}
+                      data-mobile-family-filter-panel-toggle="true"
                       className="grid min-h-16 w-full grid-cols-[3rem_minmax(0,1fr)_auto] items-center gap-2 px-4 text-left active:bg-blue-50"
                     >
                       <UsersRound className="h-8 w-8 text-blue-600" />

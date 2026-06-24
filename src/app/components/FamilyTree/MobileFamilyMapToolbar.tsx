@@ -40,10 +40,11 @@ export function MobileFamilyMapToolbar({
       ].filter(Boolean).join(' ')}
       style={{
         top: 'calc(env(safe-area-inset-top,0px)+4.5rem)',
-        paddingBottom: activeAction ? '7.25rem' : undefined,
+        paddingBottom: activeAction === 'formato' ? '8.25rem' : activeAction ? '7.25rem' : undefined,
       }}
       data-mobile-family-map-toolbar="true"
       data-mobile-family-map-toolbar-active={activeAction ? 'true' : undefined}
+      data-mobile-family-map-toolbar-action={activeAction || undefined}
       data-tree-export-ignore="true"
     >
       <div className="mx-auto flex w-full max-w-md min-w-0 items-center justify-center gap-2.5 px-2">

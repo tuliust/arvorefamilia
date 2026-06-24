@@ -445,7 +445,7 @@ export function MemberPageHeader({
           </div>
           <div className="flex shrink-0 items-center justify-end gap-2 md:hidden">
             {!hideHeaderActions && mobileCustomActions}
-            {!hideHeaderActions && !hideMobileHeaderActions && <UserProfileMenu />}
+            {!hideHeaderActions && !hideMobileHeaderActions && <UserProfileMenu notificationBadgeCount={unreadNotificationsCount} />}
           </div>
 
           {!hideHeaderActions && (isAdminSection ? (
@@ -453,7 +453,7 @@ export function MemberPageHeader({
               {ADMIN_HEADER_ACTIONS.map((action) => (
                 <HeaderActionButton key={`${action.label}-${action.to ?? 'button'}`} action={action} />
               ))}
-              <UserProfileMenu />
+              <UserProfileMenu notificationBadgeCount={unreadNotificationsCount} />
             </div>
           ) : (
             <div className="hidden min-w-0 shrink-0 flex-row flex-nowrap items-center justify-end gap-2 overflow-visible md:flex">
@@ -462,7 +462,7 @@ export function MemberPageHeader({
                 <HeaderActionButton key={`${action.label}-${action.to ?? 'button'}`} action={action} />
               ))}
               {customActions}
-              <UserProfileMenu />
+              <UserProfileMenu notificationBadgeCount={unreadNotificationsCount} />
             </div>
           ))}
         </div>

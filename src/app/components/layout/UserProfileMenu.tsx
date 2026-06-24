@@ -81,9 +81,23 @@ function applyTreePalette(value: TreeColorPalette) {
 
 interface UserProfileMenuProps {
   variant?: 'avatar' | 'home-header';
+  notificationBadgeCount?: number;
 }
 
-export function UserProfileMenu({ variant = 'avatar' }: UserProfileMenuProps) {
+function AvatarNotificationBadge({ count }: { count?: number }) {
+  if (!count || count <= 0) return null;
+
+  return (
+    <span
+      className="pointer-events-none absolute -right-1 -top-1 inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-red-600 px-1.5 text-[11px] font-bold leading-5 text-white ring-2 ring-white md:hidden"
+      aria-label={`${count} notificação${count === 1 ? '' : 'es'} não lida${count === 1 ? '' : 's'}`}
+    >
+      {count > 99 ? '99+' : count}
+    </span>
+  );
+}
+
+export function UserProfileMenu({ variant = 'avatar', notificationBadgeCount = 0 }: UserProfileMenuProps) {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
@@ -201,7 +215,7 @@ export function UserProfileMenu({ variant = 'avatar' }: UserProfileMenuProps) {
         className={
           isHomeHeaderVariant
             ? 'group relative flex h-10 min-w-[154px] shrink-0 items-center gap-2 rounded-lg border border-gray-200 bg-white px-2.5 py-1 text-left shadow-sm transition hover:border-blue-200 hover:bg-blue-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 sm:min-h-12 sm:py-1.5'
-            : 'relative flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full border border-gray-200 bg-white text-sm font-bold text-blue-700 shadow-sm transition hover:border-blue-200 hover:bg-blue-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2'
+            : 'relative flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-gray-200 bg-white text-sm font-bold text-blue-700 shadow-sm transition hover:border-blue-200 hover:bg-blue-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 md:h-10 md:w-10'
         }
         aria-label={user ? `Menu de ${firstName}` : 'Login'}
         title={user ? `Menu de ${firstName}` : 'Login'}
@@ -211,7 +225,7 @@ export function UserProfileMenu({ variant = 'avatar' }: UserProfileMenuProps) {
           className={
             isHomeHeaderVariant
               ? 'flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-md bg-gradient-to-br from-blue-600 to-blue-700 text-sm font-semibold text-white sm:h-9 sm:w-9'
-              : 'flex h-full w-full items-center justify-center'
+              : 'flex h-full w-full items-center justify-center overflow-hidden rounded-full'
           }
         >
           {user && avatarUrl ? (
@@ -222,6 +236,7 @@ export function UserProfileMenu({ variant = 'avatar' }: UserProfileMenuProps) {
             <UserCircle2 className="h-6 w-6" />
           )}
         </span>
+        {!isHomeHeaderVariant && <AvatarNotificationBadge count={notificationBadgeCount} />}
         {isHomeHeaderVariant && (
           <>
             <span className="min-w-0 flex-1 leading-none">

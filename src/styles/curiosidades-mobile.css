@@ -58,6 +58,61 @@
     white-space: nowrap;
   }
 
+  .curiosidades-section-links-wrapper {
+    position: relative;
+  }
+
+  .curiosidades-section-scroll-button {
+    position: absolute;
+    top: 50%;
+    z-index: 2;
+    display: inline-flex;
+    height: 2rem;
+    width: 2rem;
+    transform: translateY(-50%);
+    align-items: center;
+    justify-content: center;
+    border-radius: 9999px;
+    border: 1px solid rgb(191, 219, 254);
+    background: rgba(255, 255, 255, 0.95);
+    color: rgb(29, 78, 216);
+    box-shadow: 0 8px 18px rgba(15, 23, 42, 0.14);
+  }
+
+  .curiosidades-section-scroll-button-left {
+    left: -0.35rem;
+  }
+
+  .curiosidades-section-scroll-button-right {
+    right: -0.35rem;
+  }
+
+  .curiosidades-ai-suggestions-card {
+    padding: 1rem !important;
+  }
+
+  .curiosidades-ai-suggestions-list {
+    width: 100%;
+  }
+
+  .curiosidades-ai-suggestion-chip {
+    display: inline-flex !important;
+    min-height: 2.55rem !important;
+    flex: 1 1 100% !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding-inline: 1rem !important;
+    text-align: center !important;
+    line-height: 1.15 !important;
+  }
+
+  .curiosidades-ai-question-panel textarea {
+    min-height: 13.5rem !important;
+    padding-top: 1.15rem !important;
+    padding-bottom: 1.15rem !important;
+    line-height: 1.5 !important;
+  }
+
   .curiosidades-page [id] {
     scroll-margin-top: 6.25rem;
   }

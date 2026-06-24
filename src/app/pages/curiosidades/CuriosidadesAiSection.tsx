@@ -155,32 +155,31 @@ export function CuriosidadesAiSection({
 
       {!error && !loading && pessoas.length > 0 && (
         <div className="mt-5 min-w-0 space-y-4 overflow-hidden break-words">
-          <div className="rounded-xl border border-blue-200 bg-white p-4">
-            <div className="flex items-start gap-3">
-              <Lightbulb className="mt-0.5 h-5 w-5 shrink-0 text-blue-700" />
-              <div>
-                <p className="text-sm font-bold text-blue-900">Sugestões rápidas</p>
-                <div className="mt-3 flex flex-wrap gap-2">
-                  {AI_QUESTION_EXAMPLES.map((example) => (
-                    <button
-                      key={example}
-                      type="button"
-                      onClick={() => {
-                        setAiQuestion(example);
-                        setAiAnswer('');
-                        setAiError(null);
-                      }}
-                      className="rounded-full border border-blue-200 bg-blue-50 px-3 py-1.5 text-xs font-semibold text-blue-800 transition hover:border-blue-300 hover:bg-blue-100"
-                    >
-                      {example}
-                    </button>
-                  ))}
-                </div>
-              </div>
+          <div className="curiosidades-ai-suggestions-card rounded-xl border border-blue-200 bg-white p-4">
+            <div className="curiosidades-ai-suggestions-heading flex items-center gap-3">
+              <Lightbulb className="h-5 w-5 shrink-0 text-blue-700" />
+              <p className="min-w-0 text-sm font-bold text-blue-900">Sugestões rápidas</p>
+            </div>
+            <div className="curiosidades-ai-suggestions-list mt-3 flex flex-wrap gap-2">
+              {AI_QUESTION_EXAMPLES.map((example) => (
+                <button
+                  key={example}
+                  type="button"
+                  onClick={() => {
+                    setAiQuestion(example);
+                    setAiAnswer('');
+                    setAiError(null);
+                  }}
+                  className="curiosidades-ai-suggestion-chip rounded-full border border-blue-200 bg-blue-50 px-3 py-1.5 text-xs font-semibold text-blue-800 transition hover:border-blue-300 hover:bg-blue-100"
+                >
+                  {example}
+                </button>
+              ))}
             </div>
           </div>
 
-          <AiQuestionPanel
+          <div className="curiosidades-ai-question-panel">
+            <AiQuestionPanel
             aiQuestion={aiQuestion}
             aiAnswer={aiAnswer}
             aiLoading={aiLoading}
@@ -191,8 +190,9 @@ export function CuriosidadesAiSection({
             onClearError={() => setAiError(null)}
             onAskAi={handleAskAi}
             onNewAiQuestion={handleNewAiQuestion}
-            hideTitle
-          />
+              hideTitle
+            />
+          </div>
         </div>
       )}
     </section>

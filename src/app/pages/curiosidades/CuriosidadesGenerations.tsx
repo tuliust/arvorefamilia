@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { GitBranch } from 'lucide-react';
+import { ChevronDown, GitBranch } from 'lucide-react';
 import {
   curiositySectionCardClassName,
   curiosityStatusClassName,
@@ -7,6 +7,25 @@ import {
   getPeopleBySocialGeneration,
   type CuriosidadesDataProps,
 } from './curiosidadesUtils';
+
+function PersonBadge({ pessoa }: { pessoa: CuriosidadesDataProps['pessoas'][number] }) {
+  return (
+    <span className="inline-flex max-w-full items-center gap-2 rounded-full border border-gray-200 bg-white px-2.5 py-1.5 text-xs font-semibold text-gray-700">
+      {pessoa.foto_principal_url ? (
+        <img
+          src={pessoa.foto_principal_url}
+          alt=""
+          className="h-6 w-6 shrink-0 rounded-full object-cover"
+        />
+      ) : (
+        <span className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-blue-50 text-[10px] font-bold text-blue-700">
+          {getInitials(pessoa.nome_completo)}
+        </span>
+      )}
+      <span className="truncate">{pessoa.nome_completo}</span>
+    </span>
+  );
+}
 
 function GenerationPeopleBadges({ people }: { people: CuriosidadesDataProps['pessoas'] }) {
   const [expanded, setExpanded] = useState(false);
@@ -16,20 +35,7 @@ function GenerationPeopleBadges({ people }: { people: CuriosidadesDataProps['pes
   return (
     <div className="mt-4 flex flex-wrap gap-2">
       {visiblePeople.map((pessoa) => (
-        <span key={pessoa.id} className="inline-flex max-w-full items-center gap-2 rounded-full border border-gray-200 bg-white px-2.5 py-1.5 text-xs font-semibold text-gray-700">
-          {pessoa.foto_principal_url ? (
-            <img
-              src={pessoa.foto_principal_url}
-              alt=""
-              className="h-6 w-6 shrink-0 rounded-full object-cover"
-            />
-          ) : (
-            <span className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-blue-50 text-[10px] font-bold text-blue-700">
-              {getInitials(pessoa.nome_completo)}
-            </span>
-          )}
-          <span className="truncate">{pessoa.nome_completo}</span>
-        </span>
+        <PersonBadge key={pessoa.id} pessoa={pessoa} />
       ))}
 
       {!expanded && remainingCount > 0 && (
@@ -37,10 +43,43 @@ function GenerationPeopleBadges({ people }: { people: CuriosidadesDataProps['pes
           type="button"
           onClick={() => setExpanded(true)}
           className="inline-flex items-center rounded-full border border-dashed border-gray-300 bg-white px-3 py-1.5 text-xs font-semibold text-gray-500 transition hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700"
-          aria-label={`Mostrar mais ${remainingCount} pessoas desta gera??o`}
+          aria-label={`Mostrar mais ${remainingCount} pessoas desta geração`}
         >
           +{remainingCount}
         </button>
+      )}
+    </div>
+  );
+}
+
+function MobileGenerationPeopleDisclosure({ people }: { people: CuriosidadesDataProps['pessoas'] }) {
+  const [expanded, setExpanded] = useState(false);
+
+  if (people.length === 0) return null;
+
+  return (
+    <div className="mt-4 md:hidden">
+      <button
+        type="button"
+        onClick={() => setExpanded((current) => !current)}
+        aria-expanded={expanded}
+        className="flex w-full items-center justify-between gap-3 rounded-xl border border-gray-200 bg-white px-3 py-2 text-left text-sm font-bold text-blue-800 transition hover:border-blue-200 hover:bg-blue-50"
+      >
+        <span>{expanded ? 'Ocultar pessoas' : `Ver ${people.length} ${people.length === 1 ? 'pessoa' : 'pessoas'}`}</span>
+        <ChevronDown
+          className={[
+            'h-4 w-4 shrink-0 transition-transform',
+            expanded ? 'rotate-180' : '',
+          ].join(' ')}
+        />
+      </button>
+
+      {expanded && (
+        <div className="mt-3 flex flex-col gap-2">
+          {people.map((pessoa) => (
+            <PersonBadge key={pessoa.id} pessoa={pessoa} />
+          ))}
+        </div>
       )}
     </div>
   );
@@ -61,10 +100,10 @@ export function CuriosidadesGenerations({
         <div>
           <div className="flex items-center gap-3">
             <GitBranch className="h-5 w-5 text-blue-700" />
-            <h2 className="text-xl font-bold text-gray-950">Gera??es da fam?lia</h2>
+            <h2 className="text-xl font-bold text-gray-950">Gerações da família</h2>
           </div>
           <p className="mt-3 max-w-3xl text-sm leading-6 text-gray-600">
-            Veja quem faz parte de cada gera??o social a partir do ano de nascimento cadastrado.
+            Veja quem faz parte de cada geração social a partir do ano de nascimento cadastrado.
           </p>
         </div>
         <span className={curiosityStatusClassName}>
@@ -74,7 +113,7 @@ export function CuriosidadesGenerations({
 
       {error && (
         <div className="mt-5 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
-          N?o foi poss?vel carregar as gera??es familiares agora.
+          Não foi possível carregar as gerações familiares agora.
         </div>
       )}
 
@@ -88,7 +127,7 @@ export function CuriosidadesGenerations({
 
       {!error && !loading && generationsWithPeople.length === 0 && (
         <div className="mt-5 rounded-xl border border-dashed border-gray-200 bg-gray-50 px-4 py-5 text-sm text-gray-600">
-          Ainda n?o h? datas de nascimento suficientes para classificar familiares por gera??o.
+          Ainda não há datas de nascimento suficientes para classificar familiares por geração.
         </div>
       )}
 
@@ -111,7 +150,10 @@ export function CuriosidadesGenerations({
                 <p className="mt-2 text-xs leading-5 text-gray-500">{generation.note}</p>
               )}
 
-              <GenerationPeopleBadges people={generation.people} />
+              <div className="hidden md:block">
+                <GenerationPeopleBadges people={generation.people} />
+              </div>
+              <MobileGenerationPeopleDisclosure people={generation.people} />
             </article>
           ))}
         </div>

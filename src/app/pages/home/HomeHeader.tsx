@@ -8,6 +8,7 @@ import { UserProfileMenu } from '../../components/layout/UserProfileMenu';
 import { FAVORITE_PAGES } from '../../constants/favoritePages';
 import { useAuth } from '../../contexts/AuthContext';
 import { getPrimaryLinkedPersonWithPessoa } from '../../services/memberProfileService';
+import { contarNotificacoesNaoLidasSupabase } from '../../services/userEngagementService';
 import type { GlobalSearchPageResult } from '../../services/globalSearchService';
 import type { Pessoa } from '../../types';
 
@@ -100,6 +101,7 @@ export function HomeHeader({
   const mobileSearchRootRef = useRef<HTMLDivElement | null>(null);
   const [searchSuggestionsDismissed, setSearchSuggestionsDismissed] = useState(false);
   const [mobileHeaderFirstName, setMobileHeaderFirstName] = useState('');
+  const [unreadNotificationsCount, setUnreadNotificationsCount] = useState(0);
   const trimmedSearchTerm = searchTerm.trim();
   const effectivePageSuggestions = pageSuggestions ?? filterDefaultPages(searchTerm);
   const hasSearchSuggestions = Boolean(
@@ -148,6 +150,35 @@ export function HomeHeader({
 
     return () => {
       cancelled = true;
+    };
+  }, [user]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const refreshUnreadNotificationsCount = async () => {
+      if (!user?.id) {
+        setUnreadNotificationsCount(0);
+        return;
+      }
+
+      try {
+        const count = await contarNotificacoesNaoLidasSupabase(user.id);
+        if (!cancelled) setUnreadNotificationsCount(count);
+      } catch {
+        if (!cancelled) setUnreadNotificationsCount(0);
+      }
+    };
+
+    void refreshUnreadNotificationsCount();
+
+    window.addEventListener('arvorefamilia:notifications-updated', refreshUnreadNotificationsCount);
+    window.addEventListener('focus', refreshUnreadNotificationsCount);
+
+    return () => {
+      cancelled = true;
+      window.removeEventListener('arvorefamilia:notifications-updated', refreshUnreadNotificationsCount);
+      window.removeEventListener('focus', refreshUnreadNotificationsCount);
     };
   }, [user]);
 
@@ -363,10 +394,10 @@ export function HomeHeader({
           </div>
 
           <div className="md:hidden" data-tour-target="profile-menu">
-            <UserProfileMenu />
+            <UserProfileMenu notificationBadgeCount={unreadNotificationsCount} />
           </div>
           <div className="hidden min-w-0 items-center gap-2 md:flex" data-tour-target="profile-menu">
-            <UserProfileMenu />
+            <UserProfileMenu notificationBadgeCount={unreadNotificationsCount} />
           </div>
         </div>
       </div>

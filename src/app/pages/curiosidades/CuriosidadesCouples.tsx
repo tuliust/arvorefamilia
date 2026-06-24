@@ -14,7 +14,7 @@ export function CuriosidadesCouples({
 }: CuriosidadesDataProps) {
   const couples = buildCoupleAnniversaries(pessoas, relacionamentos);
   const displayCouples = couples.filter((couple) => couple.milestone).slice(0, 4);
-  const unionCountLabel = `${displayCouples.length} ${displayCouples.length === 1 ? 'uni?o' : 'uni?es'}`;
+  const unionCountLabel = `${displayCouples.length} ${displayCouples.length === 1 ? 'união' : 'uniões'}`;
 
   return (
     <section className={curiositySectionCardClassName}>
@@ -25,7 +25,7 @@ export function CuriosidadesCouples({
             <h2 className="text-xl font-bold text-gray-950">Bodas</h2>
           </div>
           <p className="mt-3 text-sm leading-6 text-gray-600">
-            Casais ativos com datas de casamento registradas e marcos importantes da hist?ria familiar.
+            Casais ativos com datas de casamento registradas e marcos importantes da história familiar.
           </p>
         </div>
         <span className={curiosityStatusClassName}>
@@ -35,7 +35,7 @@ export function CuriosidadesCouples({
 
       {error && (
         <div className="mt-5 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
-          N?o foi poss?vel carregar os v?nculos matrimoniais agora.
+          Não foi possível carregar os vínculos matrimoniais agora.
         </div>
       )}
 
@@ -49,7 +49,7 @@ export function CuriosidadesCouples({
 
       {!error && !loading && displayCouples.length === 0 && (
         <div className="mt-5 rounded-xl border border-dashed border-gray-200 bg-gray-50 px-4 py-5 text-sm text-gray-600">
-          Ainda n?o h? casais ativos com bodas de 1, 5, 10, 15, 20, 25, 30, 40, 45, 50, 60 ou 75 anos.
+          Ainda não há casais ativos com bodas de 1, 5, 10, 15, 20, 25, 30, 40, 45, 50, 60 ou 75 anos.
         </div>
       )}
 

@@ -46,12 +46,16 @@ function setExtendedSpouseState(value: boolean) {
   document.documentElement.dataset.mobileFamilySpouseScope = value ? 'extended' : 'direct';
   writeExtendedSpouseState(value);
   applyButtonState();
+
+  window.dispatchEvent(new CustomEvent('arvorefamilia:mobile-spouse-filter-changed', {
+    detail: { showExtended: value },
+  }));
 }
 
 function isExtendedButton(button: HTMLElement) {
   const label = normalizeText(button.textContent);
   const ariaLabel = normalizeText(button.getAttribute('aria-label'));
-  return label.includes('exibir conjuges') || ariaLabel.includes('exibir conjuges');
+  return label.includes('exibir conjuges') || label.includes('ocultar conjuges') || ariaLabel.includes('exibir conjuges') || ariaLabel.includes('ocultar conjuges');
 }
 
 function isFamilyOnlyButton(button: HTMLElement) {
@@ -156,6 +160,16 @@ function ensureStyles() {
 
       button[data-mobile-family-filter-option="extended-spouses"][data-mobile-family-filter-active="false"] svg {
         color: rgb(148 163 184) !important;
+      }
+
+      button[data-mobile-family-filter-panel-toggle="true"] {
+        border-color: rgb(226 232 240) !important;
+        box-shadow: none !important;
+      }
+
+      button[data-mobile-family-filter-panel-toggle="true"][data-mobile-family-filter-active="true"] {
+        color: rgb(23 37 84) !important;
+        box-shadow: none !important;
       }
 
       html[data-mobile-family-spouse-scope="direct"] [data-mobile-family-tree-root="true"] [data-family-map-extended-spouse-card="true"],

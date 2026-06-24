@@ -498,17 +498,17 @@ export type WeddingMilestone = {
 
 export const WEDDING_MILESTONES: WeddingMilestone[] = [
   { label: 'Bodas de Papel', years: 1, description: 'o primeiro ano de casamento' },
-  { label: 'Bodas de Madeira', years: 5, description: 'cinco anos de uni?o' },
-  { label: 'Bodas de Estanho', years: 10, description: 'dez anos de uni?o' },
-  { label: 'Bodas de Cristal', years: 15, description: 'quinze anos de uni?o' },
-  { label: 'Bodas de Porcelana', years: 20, description: 'vinte anos de uni?o' },
-  { label: 'Bodas de Prata', years: 25, description: 'vinte e cinco anos de uni?o' },
-  { label: 'Bodas de P?rola', years: 30, description: 'trinta anos de uni?o' },
-  { label: 'Bodas de Esmeralda', years: 40, description: 'quarenta anos de uni?o' },
-  { label: 'Bodas de Rubi', years: 45, description: 'quarenta e cinco anos de uni?o' },
-  { label: 'Bodas de Ouro', years: 50, description: 'meio s?culo de casamento' },
-  { label: 'Bodas de Diamante', years: 60, description: 'sessenta anos de uni?o' },
-  { label: 'Bodas de Brilhante', years: 75, description: 'setenta e cinco anos de uni?o' },
+  { label: 'Bodas de Madeira', years: 5, description: 'cinco anos de união' },
+  { label: 'Bodas de Estanho', years: 10, description: 'dez anos de união' },
+  { label: 'Bodas de Cristal', years: 15, description: 'quinze anos de união' },
+  { label: 'Bodas de Porcelana', years: 20, description: 'vinte anos de união' },
+  { label: 'Bodas de Prata', years: 25, description: 'vinte e cinco anos de união' },
+  { label: 'Bodas de Pérola', years: 30, description: 'trinta anos de união' },
+  { label: 'Bodas de Esmeralda', years: 40, description: 'quarenta anos de união' },
+  { label: 'Bodas de Rubi', years: 45, description: 'quarenta e cinco anos de união' },
+  { label: 'Bodas de Ouro', years: 50, description: 'meio século de casamento' },
+  { label: 'Bodas de Diamante', years: 60, description: 'sessenta anos de união' },
+  { label: 'Bodas de Brilhante', years: 75, description: 'setenta e cinco anos de união' },
 ];
 
 export function getWeddingMilestone(years: number) {

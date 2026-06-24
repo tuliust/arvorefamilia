@@ -254,4 +254,33 @@
   #minha-arvore-edit-form input::placeholder {
     font-size: 0.82rem !important;
   }
+
+  #minha-arvore-edit-form > section:nth-of-type(2) > div:first-child {
+    align-items: center !important;
+  }
+
+  #minha-arvore-edit-form > section:nth-of-type(2) > div:first-child > span {
+    margin-top: 0 !important;
+  }
+
+  #minha-arvore-edit-form > section:nth-of-type(2) > div:first-child h2::after {
+    line-height: 1.05 !important;
+  }
+
+  #minha-arvore-edit-form div.inline-flex.h-10.shrink-0.items-center.justify-between.gap-3.rounded-md.border {
+    width: clamp(8.25rem, 39vw, 10rem) !important;
+    min-width: 8.25rem !important;
+    max-width: 45% !important;
+    flex: 0 0 auto !important;
+    border-color: rgb(209, 213, 219) !important;
+    background: rgb(249, 250, 251) !important;
+    padding-inline: 0.65rem !important;
+  }
+
+  #minha-arvore-edit-form div.inline-flex.h-10.shrink-0.items-center.justify-between.gap-3.rounded-md.border span {
+    overflow: visible !important;
+    text-overflow: clip !important;
+    white-space: nowrap !important;
+  }
+
 }
