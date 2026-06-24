@@ -1,6 +1,6 @@
 # Guia de implementações
 
-> Última revisão: 2026-06-23
+> Última revisão: 2026-06-24
 > Escopo: comportamento implementado na branch `main`.
 > Status: canônico.
 
@@ -54,12 +54,24 @@
 
 ## Curiosidades
 
-- `/curiosidades` carrega estatísticas e blocos exploratórios a partir de pessoas, relacionamentos e badges de perfil.
-- Seletores que dependem de pessoa devem iniciar neutros e não podem renderizar item com `value` vazio em componentes Radix.
-- A seção “Descubra mais sobre...” usa placeholder `Selecione` até escolha explícita do usuário.
-- As badges de status dos cards devem manter contadores em uma linha.
-- A área de gerações permite expandir o marcador `+N` para revelar as pessoas restantes.
+- `/curiosidades` carrega blocos exploratórios a partir de pessoas, relacionamentos e badges de perfil.
+- A página é orquestrada por `Curiosidades.tsx`, que define a composição de Hoje, Fotos, IA, Quiz, Mural, Rankings, Gráficos, Gerações, Relacionamentos, Rota e abas inferiores.
+- A barra de navegação interna é sticky e usa âncoras para seções existentes; no mobile, a rolagem horizontal é controlada por botões laterais.
+- Os cards numéricos superiores foram removidos da composição final da página e não devem ser reintroduzidos sem decisão explícita.
+- `CuriosidadesPhotoSlider` usa `foto_principal_url` de pessoas humanas, limita a lista de fotos e alterna entre miniaturas desktop e uma foto por vez no mobile.
+- `CuriosidadesAiSection` monta contexto por `buildAiTreeContext`, usa sugestões rápidas e envia perguntas para `/api/ai` quando a página possui dados carregados.
+- O placeholder da pergunta da IA é curto e específico: `Faça aqui sua pergunta…`.
+- `CuriosidadesQuizSection` usa `buildCuriosityQuizQuestions`; as opções são montadas por utilitários em `curiosidadesUtils.ts` e devem evitar listas com poucos candidatos.
+- O quiz deve exibir até seis opções quando houver dados suficientes e usar primeiro e segundo nome nos botões.
+- `CuriosidadesMemoryWall` publica lembranças via `memoryWallService`, usando o usuário autenticado como autor e visibilidade familiar fixa.
+- `CuriosidadesCharts` concentra aniversários por mês, profissões e faixa etária, com componentes visuais próprios para cada tipo de gráfico.
+- `CuriosidadesGenerations` exibe categorias recolhidas inicialmente, com contador por categoria e expansão manual para usuários.
+- `CuriosidadesCouples` calcula uniões ativas, idade média ao casar e faixa de idade a partir de relacionamentos e datas disponíveis.
 - Bodas exibem apenas marcos exatos permitidos para casais ativos, sem separação registrada e sem pessoas falecidas.
+- `CuriosidadesRouteSection` usa uma rota editorial rodoviária fixa, com distância total e distâncias entre cidades.
+- `CuriosidadesInsightTabs` concentra descoberta, conexão, comparação de interesses e astrologia em um único card com abas e hash de URL.
+- Seletores que dependem de pessoa devem evitar item Radix com `value` vazio.
+- A seção `Descubra mais sobre...` usa placeholder `Selecione` até escolha explícita do usuário.
 
 ## Fórum
 

@@ -1,6 +1,6 @@
 # QA manual
 
-> Última revisão: 2026-06-23
+> Última revisão: 2026-06-24
 > Escopo: validação manual das rotas e contratos documentados.
 > Status: canônico.
 
@@ -9,7 +9,7 @@
 - Ambiente com Supabase configurado.
 - Usuário membro autenticado.
 - Usuário admin para rotas administrativas.
-- Dados mínimos de pessoas, relacionamentos, vínculos, fatos históricos e notificações.
+- Dados mínimos de pessoas, relacionamentos, vínculos, fatos históricos, fotos, profissões e notificações.
 
 ## Validação técnica local
 
@@ -85,11 +85,33 @@ Confirmar que as alterações documentais ficaram restritas aos documentos canô
 
 ### `/curiosidades`
 
-- Cards e rankings carregam a partir dos dados reais.
-- Dropdowns iniciam neutros quando dependem de seleção.
+Validar desktop e mobile:
+
+- A rota carrega pessoas, relacionamentos e badges sem bloquear a página quando a RPC de badges não estiver disponível.
+- A barra superior de atalhos fica sticky quando alcança o topo da página.
+- A barra superior contém apenas atalhos existentes: Hoje, IA, Fotos, Quiz, Mural, Você Sabia, Gráficos, Gerações, Relacionamentos, Rotas e Conexões.
+- No mobile, os botões laterais da barra de atalhos aparecem ao lado da lista e permitem avançar/voltar sem sobrepor os cards.
+- Os cards numéricos antigos de Pessoas, Localização, In memoriam, Pets e Casais não aparecem na página.
+- `Hoje na família` renderiza eventos ou estado vazio sem badge de contador.
+- O slide de fotos usa fotos principais de pessoas humanas; no mobile mostra uma foto por vez, com setas circulares sobre a imagem e legenda abaixo.
+- `Pergunte à IA` usa placeholder `Faça aqui sua pergunta…`.
+- No mobile, `Pergunte à IA` mostra visualmente até três sugestões rápidas, alinhadas à esquerda.
+- O envio de pergunta à IA só habilita com contexto carregado e pergunta preenchida.
+- `Teste seus conhecimentos` exibe etapa compacta no formato `1/5`, sem ícone de interrogação no cabeçalho.
+- O quiz exibe até seis opções quando houver dados suficientes, com primeiro e segundo nome das pessoas.
+- `Mural da família` não exibe campo de nome nem dropdown de visibilidade.
+- `Mural da família` destaca a pergunta `Qual sua lembrança favorita da família?` e publica com usuário logado e visibilidade familiar.
+- `Aniversários por mês` usa meses abreviados e mostra o número acima de cada barra.
+- `Profissões mais comuns` exibe círculos sem cortar ícone, número ou título; no mobile aparecem no máximo três profissões.
+- `Faixa Etária` não repete labels abaixo das barras e mostra contagens em círculos.
+- `Gerações da família` inicia recolhida, mostra contador por categoria e revela usuários apenas no card expandido.
+- `Relacionamentos` exibe três métricas: Uniões, Média e Faixa, com Uniões como primeiro card.
+- Bodas respeitam casais ativos, sem separação e sem falecidos.
+- `Rota da família` exibe distância total, transporte rodoviário, pins, linha pontilhada, badges de distância e chegada.
+- O card inferior alterna entre Descubra mais sobre, Qual a minha conexão, Comparar interesses e Astrologia da família.
+- No mobile, as abas inferiores ficam em uma linha, com ícone acima do título e título interno da aba alinhado à esquerda.
 - O seletor de conexão entre duas pessoas não deve gerar erro Radix por item com valor vazio.
-- Ausência da RPC `get_person_profile_selected_badges` no Supabase remoto deve cair em fallback sem impedir o carregamento da página.
-- Estatísticas de pets, falecidos, casais e cidades devem ser coerentes com os dados.
+- A descoberta sem pessoa selecionada deve manter placeholder `Selecione` e não quebrar.
 
 ### `/forum`
 

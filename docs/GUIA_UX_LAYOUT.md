@@ -1,6 +1,6 @@
 # Guia de UX e layout
 
-> Última revisão: 2026-06-23
+> Última revisão: 2026-06-24
 > Escopo: experiência visual das rotas principais da branch `main`.
 > Status: canônico.
 
@@ -77,11 +77,21 @@ Pessoa marcada como falecida em `/meus-dados` pula `/preferencias` e segue para 
 ## Curiosidades
 
 - A rota `/curiosidades` substitui a experiência de modal isolado para exploração de dados.
-- Cards e rankings devem refletir dados reais carregados.
-- Dropdowns iniciam em estado neutro quando dependem de seleção do usuário.
-- A área “Descubra mais sobre...” deve iniciar com `Selecione` e não selecionar uma pessoa automaticamente.
-- Badges de status, como `classificados` e `uniões`, devem manter o texto em uma linha.
-- Marcadores `+N` em gerações devem ser acionáveis e revelar as pessoas restantes.
+- A página usa navegação interna sticky por atalhos. No mobile, os atalhos rolam horizontalmente com botões circulares laterais.
+- Os cards numéricos superiores de Pessoas, Localização, In memoriam, Pets e Casais não fazem parte da estrutura final da página.
+- O topo combina `Hoje na família`, slide de fotos e `Pergunte à IA`. O slide exibe miniaturas no desktop e uma foto por vez no mobile.
+- `Pergunte à IA` deve usar contraste azul, sugestões rápidas legíveis e campo de pergunta com placeholder curto.
+- `Teste seus conhecimentos` e `Mural da família` devem ter composição equilibrada em desktop e leitura confortável no mobile.
+- O mural deve priorizar a pergunta da lembrança e evitar campos redundantes de autoria e visibilidade.
+- `Gráficos da família` deve manter leitura simples: barras verticais para aniversários, círculos para profissões e barras horizontais para faixas etárias.
+- Círculos de profissões devem preservar proporção e não cortar título, número ou ícone.
+- `Gerações da família` inicia com cards recolhidos, exibindo contador por categoria; a expansão revela as pessoas apenas no card aberto.
+- `Relacionamentos` consolida métricas de Uniões, Média e Faixa, com Uniões como primeiro card métrico.
+- `Rota da família` usa leitura visual de percurso, com pins, linha pontilhada, badges de distância e chegada.
+- O card inferior usa abas para `Descubra mais sobre...`, `Qual a minha conexão?`, `Comparar interesses` e `Astrologia da família`.
+- No mobile, as abas inferiores devem caber em uma linha, com ícones acima dos títulos e títulos em até duas linhas.
+- Dropdowns iniciam em estado neutro quando dependem de seleção do usuário, salvo quando o código usa pessoa vinculada como contexto inicial.
+- A área `Descubra mais sobre...` deve iniciar com `Selecione` e não selecionar uma pessoa automaticamente.
 - Bodas devem ser exibidas apenas para casais ativos, sem falecidos, em marcos exatos documentados em `funcionalidades/CURIOSIDADES.md`.
 
 ## Fórum, favoritos e notificações
