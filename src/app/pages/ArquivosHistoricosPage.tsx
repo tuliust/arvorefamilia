@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Archive } from 'lucide-react';
+import { Archive, Link2, UserCircle2 } from 'lucide-react';
 import { useNavigate } from 'react-router';
 import { toast } from 'sonner';
 import { ArquivosHistoricos } from '../components/ArquivosHistoricos';
@@ -192,6 +192,19 @@ export function ArquivosHistoricosPage() {
       {isOnboarding && <MemberOnboardingSteps activeStep={3} hidePreferences={pessoa.falecido === true} />}
 
       <main className={`${PAGE_CONTAINER_CLASS} space-y-6 py-6 pb-[calc(7rem+env(safe-area-inset-bottom))] md:pb-6`}>
+        {!isOnboarding && (
+          <nav className="grid grid-cols-2 gap-2 md:hidden" aria-label="Atalhos de edição do perfil">
+            <Button type="button" variant="outline" className="w-full justify-center" onClick={() => navigate('/meus-dados')}>
+              <UserCircle2 className="h-4 w-4" />
+              Dados
+            </Button>
+            <Button type="button" variant="outline" className="w-full justify-center" onClick={() => navigate('/meus-vinculos')}>
+              <Link2 className="h-4 w-4" />
+              Vínculos
+            </Button>
+          </nav>
+        )}
+
         <ArquivosHistoricos
           arquivos={archives}
           onChange={setArchives}
