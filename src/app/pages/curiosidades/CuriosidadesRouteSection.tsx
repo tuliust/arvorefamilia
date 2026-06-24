@@ -66,13 +66,13 @@ export function CuriosidadesRouteSection({
                 </p>
               </div>
 
-              <div className="flex justify-center sm:justify-end">
+              <div className="flex w-full justify-center sm:w-auto sm:justify-end">
                 <img
                   src={routeMapIllustrationUrl}
                   alt=""
                   aria-hidden="true"
                   loading="lazy"
-                  className="h-24 w-full max-w-[12rem] object-contain sm:h-28"
+                  className="h-auto w-full max-w-none object-contain sm:h-28 sm:max-w-[12rem]"
                 />
               </div>
             </div>
