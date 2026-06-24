@@ -8,21 +8,23 @@
 
 | Componente | Papel |
 |---|---|
-| `Home.tsx` | orquestra carregamento de pessoas/relacionamentos, pessoa vinculada, filtros, busca, IA, curiosidades e navegação para perfil. |
+| `Home.tsx` | orquestra carregamento de pessoas/relacionamentos, pessoa vinculada, filtros, busca, IA, curiosidades, navegação para perfil e recolhimento do painel desktop. |
 | `HomeHeader.tsx` | cabeçalho da experiência de mapa. |
 | `HomeMobileNav.tsx` | navegação e ações mobile da home. |
 | `HomeTreeSection.tsx` | área de renderização da árvore. |
-| `DesktopTreeVisualizationPanel.tsx` | painel desktop de visualização, temas, grupos, filtros e exportação. |
+| `DesktopTreeVisualizationPanel.tsx` | painel desktop de visualização, temas, grupos, filtros, exportação e ação interna de recolher. |
 | `SidebarPanelTabs.tsx` | abas auxiliares do painel lateral. |
 | `HomeCuriositiesDialog.tsx` | diálogo de curiosidades e perguntas assistidas na home. |
 | `FirstLoginTutorial.tsx` | tutorial de primeiro acesso. |
+| `desktopTreeVisualizationPanelTextFix.ts` | camada defensiva para normalizar textos do painel quando houver mojibake remanescente no DOM. |
 
 ## FamilyTree
 
 | Componente / módulo | Papel |
 |---|---|
 | `FamilyTree.tsx` | componente principal de árvore com ações expostas por ref. |
-| `DesktopFamilyMapView.tsx` | mapa familiar desktop por grupos. |
+| `DesktopFamilyMapView.tsx` | mapa familiar desktop por grupos, com layout posicional dos blocos de parentesco. |
+| `FamilyTreeVisualCards.tsx` | cards visuais dos grupos, incluindo ordenação de pares conjugais para evitar quebra de linha desnecessária. |
 | `MobileFamilyTreeView.tsx` | mapa familiar mobile. |
 | `DesktopFamilyHorizontalMapView.tsx` | linha geracional desktop. |
 | `DesktopFamilyHorizontalMapFilteredView.tsx` | linha geracional desktop filtrada. |
@@ -45,7 +47,20 @@
 | `PreferenciasPage.tsx` | preferências do membro. |
 | `RevisaoDados.tsx` | revisão final antes de concluir o fluxo. |
 | `PersonProfile.tsx` | perfil público/protegido da pessoa. |
-| `Curiosidades.tsx` | exploração de estatísticas e narrativas da árvore. |
+| `Curiosidades.tsx` | exploração de estatísticas, rankings, bodas, gerações, descobertas e narrativas da árvore. |
+
+## Curiosidades
+
+| Componente / módulo | Papel |
+|---|---|
+| `CuriosidadesConnectionSection.tsx` | monta a seção de descoberta de conexões entre duas pessoas sem placeholder com ID vazio. |
+| `ConnectionDiscoveryPanel.tsx` | renderiza seletores Radix para conexão entre pessoas, filtrando itens sem ID ou nome. |
+| `CuriosidadesDiscoverySection.tsx` | seção “Descubra mais sobre...” com seleção explícita de pessoa e tópicos. |
+| `DiscoverMoreFlow.tsx` | fluxo de exploração assistida usado pela seção de descoberta, com placeholder `Selecione`. |
+| `CuriosidadesCouples.tsx` | exibe bodas de casais ativos em marcos exatos permitidos. |
+| `CuriosidadesGenerations.tsx` | exibe gerações sociais e permite expandir `+N` para mostrar pessoas restantes. |
+| `curiosidadesUtils.ts` | utilitários de datas, rankings, gerações, bodas, eventos e badges. |
+| `profileQuestionnaireService.ts` | serviço de questionário de perfil, com RPC de badges e fallback quando a RPC não estiver disponível. |
 
 ## Layout e navegação
 
