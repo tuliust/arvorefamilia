@@ -4,6 +4,7 @@ import { ProtectedRoute } from './components/ProtectedRoute';
 import { MemberRoute } from './components/MemberRoute';
 import { TreeAccessRoute } from './components/TreeAccessRoute';
 import { getTreeViewModeFromPath } from './components/FamilyTree/treeViewMode';
+import { MobileGlobalTweaks } from './components/MobileGlobalTweaks';
 
 const Home = React.lazy(() => import('./pages/Home').then((module) => ({ default: module.Home })));
 const BuscaResultados = React.lazy(() => import('./pages/BuscaResultados').then((module) => ({ default: module.BuscaResultados })));
@@ -161,7 +162,10 @@ class RouteErrorBoundary extends React.Component<React.PropsWithChildren, RouteE
 function lazyRoute(element: React.ReactNode) {
   return (
     <RouteErrorBoundary>
-      <Suspense fallback={<RouteFallback />}>{element}</Suspense>
+      <Suspense fallback={<RouteFallback />}>
+        <MobileGlobalTweaks />
+        {element}
+      </Suspense>
     </RouteErrorBoundary>
   );
 }
