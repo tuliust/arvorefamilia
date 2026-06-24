@@ -822,7 +822,8 @@ export function HomeMobileNav({
               >
                 {FILTER_OPTIONS.map((option) => {
                   const Icon = option.icon;
-                  const active = showExtendedSpouseFilters === option.value;
+                  const active = option.value ? showExtendedSpouseFilters : false;
+                  const disabled = !option.value;
 
                   return (
                     <button
@@ -830,12 +831,17 @@ export function HomeMobileNav({
                       type="button"
                       aria-label={option.ariaLabel}
                       aria-pressed={active}
-                      onClick={() => handleFilterOptionClick(option.value)}
+                      onClick={() => {
+                        if (!disabled) handleFilterOptionClick(option.value);
+                      }}
+                      disabled={disabled}
                       className={[
                         'flex min-h-[42px] min-w-0 items-center justify-center gap-1.5 rounded-xl border bg-white px-1.5 py-1.5 text-center shadow-sm transition active:scale-[0.99]',
                         active
                           ? 'border-blue-500 bg-blue-50 text-blue-950 ring-1 ring-blue-500'
-                          : 'border-slate-200 text-slate-500 hover:border-blue-200 hover:bg-blue-50/70 hover:text-blue-950',
+                          : disabled
+                            ? 'cursor-default border-slate-200 text-slate-400 opacity-80'
+                            : 'border-slate-200 text-slate-500 hover:border-blue-200 hover:bg-blue-50/70 hover:text-blue-950',
                       ].join(' ')}
                     >
                       <Icon className={['h-4 w-4 shrink-0', active ? 'text-blue-700' : 'text-slate-400'].join(' ')} />
@@ -1065,14 +1071,15 @@ export function HomeMobileNav({
                     </button>
                     <button
                       type="button"
-                      aria-pressed={!showExtendedSpouseFilters}
-                      onClick={() => setShowExtendedSpouseFilters(false)}
+                      aria-pressed={false}
+                      aria-disabled="true"
+                      disabled
                       data-mobile-family-filter-panel-toggle="true"
-                      className="grid min-h-16 w-full grid-cols-[3rem_minmax(0,1fr)_auto] items-center gap-2 px-4 text-left active:bg-blue-50"
+                      className="grid min-h-16 w-full cursor-default grid-cols-[3rem_minmax(0,1fr)_auto] items-center gap-2 px-4 text-left text-slate-400"
                     >
-                      <UsersRound className="h-8 w-8 text-blue-600" />
+                      <UsersRound className="h-8 w-8 text-blue-500" />
                       <span className="text-base font-semibold leading-tight text-blue-950">Apenas meus familiares</span>
-                      <MobileSwitch active={!showExtendedSpouseFilters} />
+                      <MobileSwitch active={false} />
                     </button>
                   </div>
                 </div>

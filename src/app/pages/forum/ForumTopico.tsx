@@ -138,6 +138,15 @@ function nomeAutor(autorId: string, userId?: string, profile?: AuthorProfile) {
   return `Familiar ${autorId.slice(0, 8)}`;
 }
 
+function formatarNomeCurto(nome: string) {
+  const partes = String(nome || '').trim().split(/\s+/).filter(Boolean);
+  return partes.slice(0, 2).join(' ') || nome;
+}
+
+function formatarContadorRespostas(total: number) {
+  return `${total} ${total === 1 ? 'resposta' : 'respostas'}`;
+}
+
 function iniciais(nome: string) {
   const partes = nome.trim().split(/\s+/).filter(Boolean);
   const primeira = partes[0]?.[0] ?? '';
@@ -425,6 +434,7 @@ export function ForumTopico() {
   const topicoAuthorProfile = authorProfiles[topico.autor_id];
   const topicoAuthorName = nomeAutor(topico.autor_id, user?.id, topicoAuthorProfile);
   const currentUserName = user?.user_metadata?.nome_exibicao || user?.user_metadata?.name || user?.email || 'você';
+  const currentUserShortName = formatarNomeCurto(currentUserName);
   const currentUserAvatar = user?.user_metadata?.avatar_url || user?.user_metadata?.picture || null;
   const pessoasParaMencoes = pessoasRelacionadas.length > 0 ? pessoasRelacionadas : topico.pessoa_relacionada ? [topico.pessoa_relacionada] : [];
   const categoriaLabel = formatarCategoriaForum(topico.categoria?.nome);
@@ -441,8 +451,8 @@ export function ForumTopico() {
         ]}
       />
 
-      <main className="mx-auto max-w-3xl px-0 py-4 sm:px-4 sm:py-6">
-        <Card className="min-w-0 overflow-hidden rounded-none border-x-0 bg-white shadow-sm sm:rounded-2xl sm:border-x">
+      <main className="mx-auto max-w-3xl px-4 py-4 sm:py-6">
+        <Card className="min-w-0 overflow-hidden rounded-2xl bg-white shadow-sm">
           <CardContent className="p-0">
             <article className="border-b border-gray-100">
               <header className="flex items-start gap-3 px-4 py-3 sm:px-5">
@@ -483,7 +493,7 @@ export function ForumTopico() {
 
               <div className="flex items-center justify-between border-t border-gray-100 px-4 py-2 sm:px-5">
                 <ReactionBar alvoTipo="topico" alvoId={topico.id} resumo={resumoTopico} selectedReaction={minhaReacaoTopico} onChange={setResumoTopico} onSelectedChange={setMinhaReacaoTopico} compact />
-                <span className="shrink-0 text-xs text-gray-500">{respostas.length} resposta(s)</span>
+                <span className="shrink-0 text-xs text-gray-500">{formatarContadorRespostas(respostas.length)}</span>
               </div>
             </article>
 
@@ -557,7 +567,7 @@ export function ForumTopico() {
                   <Textarea
                     value={respostaTexto}
                     onChange={(event) => setRespostaTexto(event.target.value)}
-                    placeholder={`Responder como ${currentUserName}`}
+                    placeholder={`Responder como ${currentUserShortName}`}
                     className="min-h-11 flex-1 rounded-2xl bg-gray-50 text-sm"
                   />
                   <Button type="submit" disabled={enviandoResposta} size="icon" className="h-10 w-10 shrink-0 rounded-full" aria-label="Publicar resposta">

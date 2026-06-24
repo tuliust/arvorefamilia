@@ -86,8 +86,8 @@ function applyButtonState() {
 
   familyOnlyButtons.forEach((button) => {
     button.dataset.mobileFamilyFilterOption = 'family-only';
-    button.dataset.mobileFamilyFilterActive = 'true';
-    button.setAttribute('aria-pressed', 'true');
+    button.dataset.mobileFamilyFilterActive = 'false';
+    button.setAttribute('aria-pressed', 'false');
     button.setAttribute('aria-disabled', 'true');
   });
 }
@@ -127,15 +127,16 @@ function ensureStyles() {
   const css = `
     @media (max-width: 767px) {
       button[data-mobile-family-filter-option="family-only"] {
-        border-color: rgb(59 130 246) !important;
+        border-color: rgb(226 232 240) !important;
         background: rgb(255 255 255) !important;
-        color: rgb(23 37 84) !important;
-        box-shadow: 0 1px 2px rgb(15 23 42 / 0.08), 0 0 0 1px rgb(59 130 246) !important;
+        color: rgb(100 116 139) !important;
+        box-shadow: 0 1px 2px rgb(15 23 42 / 0.08) !important;
         cursor: default !important;
+        opacity: 0.82 !important;
       }
 
       button[data-mobile-family-filter-option="family-only"] svg {
-        color: rgb(29 78 216) !important;
+        color: rgb(148 163 184) !important;
       }
 
       button[data-mobile-family-filter-option="extended-spouses"] {

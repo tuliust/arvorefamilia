@@ -18,8 +18,8 @@ export function CuriosidadesCouples({
 
   return (
     <section className={curiositySectionCardClassName}>
-      <div className="flex items-start justify-between gap-4">
-        <div>
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
+        <div className="min-w-0 flex-1">
           <div className="flex items-center gap-3">
             <HeartHandshake className="h-5 w-5 text-blue-700" />
             <h2 className="text-xl font-bold text-gray-950">Bodas</h2>

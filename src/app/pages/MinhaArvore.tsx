@@ -1944,6 +1944,7 @@ export function MinhaArvore() {
                         profiles={socialProfiles}
                         onChange={handleSocialProfilesChange}
                         errors={{ rede_social: errors.rede_social, instagram_usuario: errors.instagram_usuario }}
+                        compactDraftFlow
                       />
                     </div>
                   </div>

@@ -358,28 +358,25 @@ export function ForumNovoTopico() {
                   />
 
                   {mentionOpen && filteredMentionPeople.length > 0 && (
-                    <div className="absolute left-0 right-0 z-50 mt-1 max-h-56 overflow-y-auto rounded-md border border-gray-200 bg-white shadow-lg">
-                      {filteredMentionPeople.map((pessoa, index) => (
-                        <button
-                          key={pessoa.id}
-                          type="button"
-                          onMouseDown={(event) => {
-                            event.preventDefault();
-                            insertMention(pessoa);
-                          }}
-                          className={[
-                            'flex w-full flex-col px-3 py-2 text-left text-sm',
-                            index === selectedMentionIndex ? 'bg-blue-50 text-blue-800' : 'text-gray-700 hover:bg-gray-50',
-                          ].join(' ')}
-                        >
-                          <span className="break-words font-medium">{pessoa.nome_completo}</span>
-                          {(pessoa.data_nascimento || pessoa.local_nascimento) && (
-                            <span className="break-words text-xs text-gray-500">
-                              {[pessoa.data_nascimento, pessoa.local_nascimento].filter(Boolean).join(' • ')}
-                            </span>
-                          )}
-                        </button>
-                      ))}
+                    <div className="fixed inset-0 z-[13000] flex items-center justify-center bg-slate-950/20 px-4 md:absolute md:inset-x-0 md:inset-y-auto md:top-full md:mt-1 md:block md:bg-transparent md:px-0">
+                      <div className="max-h-72 w-full max-w-sm overflow-y-auto rounded-2xl border border-gray-200 bg-white p-2 shadow-2xl md:max-h-56 md:max-w-none md:rounded-md md:p-0 md:shadow-lg">
+                        {filteredMentionPeople.map((pessoa, index) => (
+                          <button
+                            key={pessoa.id}
+                            type="button"
+                            onMouseDown={(event) => {
+                              event.preventDefault();
+                              insertMention(pessoa);
+                            }}
+                            className={[
+                              'flex w-full px-4 py-3 text-left text-base font-semibold md:px-3 md:py-2 md:text-sm',
+                              index === selectedMentionIndex ? 'rounded-xl bg-blue-50 text-blue-800 md:rounded-none' : 'text-gray-700 hover:bg-gray-50',
+                            ].join(' ')}
+                          >
+                            <span className="break-words">{pessoa.nome_completo}</span>
+                          </button>
+                        ))}
+                      </div>
                     </div>
                   )}
                 </div>

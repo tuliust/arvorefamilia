@@ -284,3 +284,21 @@
   }
 
 }
+
+
+@media (max-width: 767px) {
+  #minha-arvore-edit-form > section:nth-of-type(2) > div:first-child {
+    align-items: center !important;
+  }
+
+  #minha-arvore-edit-form > section:nth-of-type(2) > div:first-child h2::after {
+    display: inline-flex !important;
+    min-height: 2.75rem !important;
+    align-items: center !important;
+    transform: translateY(-0.08rem);
+  }
+
+  #minha-arvore-edit-form .space-y-2 > .space-y-3 .inline-flex.min-w-0.flex-1 {
+    min-height: 2.5rem !important;
+  }
+}
