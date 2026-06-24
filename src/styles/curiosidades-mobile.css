@@ -480,3 +480,93 @@
     width: 0.45rem !important;
   }
 }
+
+/* Ajustes sticky nav e refinamentos visuais /curiosidades 2026-06-24 */
+.curiosidades-sticky-nav {
+  position: sticky;
+}
+
+.curiosidades-section-links-wrapper {
+  scrollbar-width: none;
+}
+
+.curiosidades-section-links-wrapper::-webkit-scrollbar {
+  display: none;
+}
+
+@media (min-width: 1280px) {
+  .curiosidades-section-link {
+    min-height: 5rem !important;
+    padding-left: 0.35rem !important;
+    padding-right: 0.35rem !important;
+  }
+
+  .curiosidades-section-link span {
+    font-size: 0.72rem !important;
+  }
+}
+
+@media (max-width: 767px) {
+  .curiosidades-sticky-nav {
+    top: 0 !important;
+    margin-inline: -0.35rem !important;
+    padding-inline: 0.35rem !important;
+  }
+
+  .curiosidades-section-links {
+    auto-columns: 5.55rem !important;
+  }
+
+  .curiosidades-section-link {
+    min-height: 4.65rem !important;
+    border-radius: 1rem !important;
+    font-size: 0.68rem !important;
+  }
+
+  .curiosidades-photo-slider-card {
+    min-height: 15.5rem !important;
+  }
+
+  .curiosidades-photo-slider-card .grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  }
+
+  .curiosidades-photo-slider-card button,
+  .curiosidades-photo-slider-card [aria-hidden='true'] {
+    min-height: 5.4rem !important;
+  }
+
+  .curiosidades-page #graficos .curiosidades-birthday-card {
+    min-height: 18rem !important;
+  }
+
+  .curiosidades-page #graficos .curiosidades-birthday-month-bar-area {
+    height: 10.5rem !important;
+  }
+
+  .curiosidades-page #graficos .curiosidades-professions-card {
+    min-height: 8.5rem !important;
+  }
+
+  .curiosidades-page #exploracoes-familiares section > div:first-child {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    overflow-x: visible !important;
+  }
+
+  .curiosidades-page #exploracoes-familiares section > div:first-child button {
+    min-height: 3.75rem !important;
+    white-space: normal !important;
+  }
+}
+
+@media (max-width: 374px) {
+  .curiosidades-page #exploracoes-familiares section > div:first-child {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+
+  .curiosidades-photo-slider-card button,
+  .curiosidades-photo-slider-card [aria-hidden='true'] {
+    min-height: 4.6rem !important;
+  }
+}

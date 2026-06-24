@@ -123,7 +123,7 @@ export function Curiosidades() {
               <CuriosidadesToday {...curiosityDataProps} className="xl:h-full" />
             </div>
 
-            <div className="curiosidades-photo-slider-slot min-w-0 xl:flex-1">
+            <div id="fotos" className="curiosidades-photo-slider-slot min-w-0 scroll-mt-24 xl:flex-1">
               <CuriosidadesPhotoSlider pessoas={pessoas} loading={loading} className="xl:h-full" />
             </div>
           </div>

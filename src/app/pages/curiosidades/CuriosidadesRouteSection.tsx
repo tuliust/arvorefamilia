@@ -57,7 +57,7 @@ export function CuriosidadesRouteSection({
         <div className="mt-5 space-y-4">
           <div className="rounded-xl border border-blue-100 bg-blue-50 p-4">
             <p className="text-sm font-semibold text-blue-900">Distância aproximada</p>
-            <p className="mt-2 text-4xl font-black tracking-tight text-gray-950">
+            <p className="mt-2 text-3xl font-black tracking-tight text-gray-950 sm:text-4xl">
               {formatRoadDistance(ROAD_ROUTE_TOTAL_KM)}
             </p>
             <p className="mt-3 text-sm font-bold text-blue-900">

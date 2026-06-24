@@ -1,135 +1,55 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   BarChart3,
+  Brain,
   CalendarDays,
-  ChevronLeft,
-  ChevronRight,
-  GitBranch,
-  HeartHandshake,
+  Camera,
   HelpCircle,
-  Lightbulb,
   MapPinned,
-  MessageCircleQuestion,
-  MoonStar,
   Network,
   Route,
   Sparkles,
   Star,
-  UsersRound,
-  type LucideIcon,
+  Users,
 } from 'lucide-react';
 
-type SectionLink = {
-  href: string;
-  label: string;
-  icon: LucideIcon;
-};
-
-const sectionLinks: SectionLink[] = [
-  { href: '#numeros-da-familia', label: 'Números', icon: UsersRound },
+const sectionLinks = [
   { href: '#hoje-na-familia', label: 'Hoje', icon: CalendarDays },
-  { href: '#voce-sabia', label: 'Você Sabia?', icon: Lightbulb },
-  { href: '#graficos', label: 'Gráficos', icon: BarChart3 },
-  { href: '#geracoes', label: 'Gerações', icon: GitBranch },
-  { href: '#bodas', label: 'Bodas', icon: HeartHandshake },
-  { href: '#descobertas', label: 'Descobertas', icon: Sparkles },
-  { href: '#ia', label: 'IA', icon: MessageCircleQuestion },
-  { href: '#conexoes', label: 'Conexões', icon: Network },
+  { href: '#ia', label: 'IA', icon: Brain },
+  { href: '#fotos', label: 'Fotos', icon: Camera },
+  { href: '#numeros-da-familia', label: 'Números', icon: Users },
   { href: '#quiz', label: 'Quiz', icon: HelpCircle },
-  { href: '#rota', label: 'Rota', icon: Route },
-  { href: '#interesses', label: 'Interesses', icon: Star },
-  { href: '#mural', label: 'Mural', icon: MapPinned },
-  { href: '#astrologia', label: 'Astrologia', icon: MoonStar },
+  { href: '#mural', label: 'Mural', icon: Star },
+  { href: '#voce-sabia', label: 'Você Sabia', icon: Sparkles },
+  { href: '#graficos', label: 'Gráficos', icon: BarChart3 },
+  { href: '#geracoes', label: 'Gerações', icon: Network },
+  { href: '#bodas', label: 'Relacionamentos', icon: Network },
+  { href: '#rota', label: 'Rotas', icon: Route },
+  { href: '#conexoes', label: 'Conexões', icon: MapPinned },
 ];
 
 export function CuriosidadesHero() {
-  const linksRef = useRef<HTMLDivElement | null>(null);
-  const [canScrollLeft, setCanScrollLeft] = useState(false);
-  const [canScrollRight, setCanScrollRight] = useState(false);
-
-  const updateScrollState = useCallback(() => {
-    const node = linksRef.current;
-    if (!node) {
-      setCanScrollLeft(false);
-      setCanScrollRight(false);
-      return;
-    }
-
-    const maxScrollLeft = node.scrollWidth - node.clientWidth;
-    setCanScrollLeft(node.scrollLeft > 4);
-    setCanScrollRight(node.scrollLeft < maxScrollLeft - 4);
-  }, []);
-
-  useEffect(() => {
-    const node = linksRef.current;
-    if (!node) return;
-
-    updateScrollState();
-
-    node.addEventListener('scroll', updateScrollState, { passive: true });
-    window.addEventListener('resize', updateScrollState);
-
-    return () => {
-      node.removeEventListener('scroll', updateScrollState);
-      window.removeEventListener('resize', updateScrollState);
-    };
-  }, [updateScrollState]);
-
-  const scrollLinks = (direction: 'left' | 'right') => {
-    const node = linksRef.current;
-    if (!node) return;
-
-    node.scrollBy({
-      left: direction === 'right' ? node.clientWidth * 0.78 : -node.clientWidth * 0.78,
-      behavior: 'smooth',
-    });
-  };
-
   return (
-    <nav className="curiosidades-hero" aria-label="Atalhos para áreas de curiosidades">
-      <div className="curiosidades-section-links-wrapper relative">
-        <div
-          ref={linksRef}
-          className="curiosidades-section-links flex gap-2 md:gap-3"
-        >
-          {sectionLinks.map((link) => {
-            const Icon = link.icon;
+    <section className="curiosidades-sticky-nav sticky top-0 z-[420] -mx-1 rounded-b-2xl bg-gray-50/95 px-1 pb-3 pt-1 backdrop-blur supports-[backdrop-filter]:bg-gray-50/80">
+      <nav aria-label="Seções de curiosidades" className="min-w-0">
+        <div className="curiosidades-section-links-wrapper min-w-0 overflow-x-auto pb-1">
+          <div className="curiosidades-section-links grid min-w-max grid-flow-col auto-cols-[5.8rem] gap-2 xl:min-w-0 xl:grid-flow-row xl:grid-cols-12">
+            {sectionLinks.map((link) => {
+              const Icon = link.icon;
 
-            return (
-              <a
-                key={link.href}
-                href={link.href}
-                className="inline-flex shrink-0 items-center justify-center rounded-full border border-gray-200 bg-white px-3 py-1.5 text-[11px] font-semibold text-gray-700 shadow-sm transition hover:border-blue-200 hover:bg-blue-50 hover:text-blue-800 md:h-20 md:w-[5.15rem] md:flex-col md:gap-2 md:rounded-2xl md:border-gray-200 md:px-2 md:py-3 md:text-center md:text-xs md:leading-tight"
-              >
-                <Icon className="hidden h-5 w-5 shrink-0 text-blue-700 md:block" />
-                <span className="truncate md:whitespace-normal md:leading-tight">{link.label}</span>
-              </a>
-            );
-          })}
+              return (
+                <a
+                  key={link.href}
+                  href={link.href}
+                  className="curiosidades-section-link flex min-h-20 min-w-0 flex-col items-center justify-center gap-2 rounded-2xl border border-gray-200 bg-white px-2 py-2 text-center text-xs font-bold leading-tight text-blue-950 shadow-sm transition hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
+                >
+                  <Icon className="h-5 w-5 shrink-0 text-blue-700" />
+                  <span className="line-clamp-2">{link.label}</span>
+                </a>
+              );
+            })}
+          </div>
         </div>
-
-        {canScrollLeft && (
-          <button
-            type="button"
-            className="curiosidades-section-scroll-button curiosidades-section-scroll-button-left md:hidden"
-            onClick={() => scrollLinks('left')}
-            aria-label="Deslizar atalhos para a esquerda"
-          >
-            <ChevronLeft className="h-4 w-4" />
-          </button>
-        )}
-
-        {canScrollRight && (
-          <button
-            type="button"
-            className="curiosidades-section-scroll-button curiosidades-section-scroll-button-right md:hidden"
-            onClick={() => scrollLinks('right')}
-            aria-label="Deslizar atalhos para a direita"
-          >
-            <ChevronRight className="h-4 w-4" />
-          </button>
-        )}
-      </div>
-    </nav>
+      </nav>
+    </section>
   );
 }

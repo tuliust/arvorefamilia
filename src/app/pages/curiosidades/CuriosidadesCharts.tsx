@@ -29,7 +29,7 @@ function BirthdayMonthChartCard({
   const hasValues = data.some((item) => item.value > 0);
 
   return (
-    <article className={`${curiositySectionCardClassName} curiosidades-birthday-card lg:flex-[1.15]`}>
+    <article className={`${curiositySectionCardClassName} curiosidades-birthday-card lg:flex-[1.85]`}>
       <div className="flex items-center gap-2">
         <CalendarDays className="h-4 w-4 text-blue-700" />
         <h3 className="text-base font-bold text-gray-950">Aniversários por mês</h3>
@@ -39,14 +39,14 @@ function BirthdayMonthChartCard({
       </p>
 
       {loading ? (
-        <div className="mt-5 h-44 animate-pulse rounded-xl bg-gray-100" />
+        <div className="mt-5 h-56 animate-pulse rounded-xl bg-gray-100" />
       ) : !hasValues ? (
         <div className="mt-5 rounded-xl border border-dashed border-gray-200 bg-gray-50 px-4 py-5 text-sm text-gray-600">
           Complete datas de nascimento para gerar este gráfico.
         </div>
       ) : (
         <div className="curiosidades-birthday-month-chart-scroll mt-5 overflow-x-auto">
-          <div className="curiosidades-birthday-month-chart-grid grid min-w-[34rem] grid-cols-12 gap-1 rounded-xl bg-gray-50 px-3 pb-3 pt-5">
+          <div className="curiosidades-birthday-month-chart-grid grid min-w-[34rem] grid-cols-12 gap-1 rounded-xl bg-gray-50 px-3 pb-3 pt-4">
             {data.map((item) => {
               const height = item.value > 0
                 ? Math.max(10, Math.round((item.value / maxValue) * 100))
@@ -54,9 +54,12 @@ function BirthdayMonthChartCard({
 
               return (
                 <div key={item.label} className="flex min-w-0 flex-col items-center gap-2">
-                  <div className="curiosidades-birthday-month-bar-area flex h-36 w-full items-end justify-center border-l border-gray-200">
+                  <span className="inline-flex h-6 min-w-6 items-center justify-center rounded-full bg-white px-1 text-[11px] font-black text-blue-700 shadow-sm">
+                    {item.value}
+                  </span>
+                  <div className="curiosidades-birthday-month-bar-area flex h-44 w-full items-end justify-center border-l border-gray-200">
                     <div
-                      className="w-5 rounded-t-lg bg-blue-600"
+                      className="curiosidades-birthday-month-bar w-5 rounded-t-lg bg-blue-600"
                       style={{ height: `${height}%` }}
                       aria-label={`${item.label}: ${item.value}`}
                       title={`${item.label}: ${item.value}`}
@@ -83,7 +86,7 @@ function ProfessionRankingCard({
   const visibleProfessions = data.slice(0, 5);
 
   return (
-    <article className={`${curiositySectionCardClassName} curiosidades-professions-card lg:flex-1`}>
+    <article className={`${curiositySectionCardClassName} curiosidades-professions-card lg:flex-[0.75]`}>
       <div className="flex items-center gap-2">
         <BriefcaseBusiness className="h-4 w-4 text-blue-700" />
         <h3 className="text-base font-bold text-gray-950">Profissões mais comuns</h3>

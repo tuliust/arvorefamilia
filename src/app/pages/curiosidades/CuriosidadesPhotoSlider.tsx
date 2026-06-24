@@ -1,11 +1,13 @@
 import { useEffect, useMemo, useState } from 'react';
-import { ChevronLeft, ChevronRight, ImageIcon } from 'lucide-react';
+import { Camera, ChevronLeft, ChevronRight, ImageIcon } from 'lucide-react';
 
 import { curiositySectionCardClassName, isPet, type CuriosidadesDataProps } from './curiosidadesUtils';
 
 type CuriosidadesPhotoSliderProps = Pick<CuriosidadesDataProps, 'pessoas' | 'loading'> & {
   className?: string;
 };
+
+const PHOTOS_PER_PAGE = 6;
 
 export function CuriosidadesPhotoSlider({
   pessoas,
@@ -20,68 +22,115 @@ export function CuriosidadesPhotoSlider({
         src: String(pessoa.foto_principal_url),
         caption: pessoa.nome_completo || 'Registro da família',
       }))
-      .slice(0, 12),
+      .slice(0, 18),
     [pessoas]
   );
 
-  const [currentIndex, setCurrentIndex] = useState(0);
+  const [pageIndex, setPageIndex] = useState(0);
+  const [selectedPhotoId, setSelectedPhotoId] = useState<string>('');
+
+  const totalPages = Math.max(1, Math.ceil(photos.length / PHOTOS_PER_PAGE));
+  const safePageIndex = Math.min(pageIndex, totalPages - 1);
+  const visiblePhotos = photos.slice(safePageIndex * PHOTOS_PER_PAGE, safePageIndex * PHOTOS_PER_PAGE + PHOTOS_PER_PAGE);
+  const selectedPhoto = photos.find((photo) => photo.id === selectedPhotoId) ?? visiblePhotos[0] ?? photos[0] ?? null;
+  const placeholderCount = Math.max(0, PHOTOS_PER_PAGE - visiblePhotos.length);
 
   useEffect(() => {
-    if (currentIndex >= photos.length) {
-      setCurrentIndex(0);
+    if (pageIndex !== safePageIndex) {
+      setPageIndex(safePageIndex);
     }
-  }, [currentIndex, photos.length]);
+  }, [pageIndex, safePageIndex]);
 
-  const currentPhoto = photos[currentIndex] ?? null;
+  useEffect(() => {
+    if (!selectedPhotoId && photos[0]) {
+      setSelectedPhotoId(photos[0].id);
+      return;
+    }
+
+    if (selectedPhotoId && !photos.some((photo) => photo.id === selectedPhotoId)) {
+      setSelectedPhotoId(photos[0]?.id ?? '');
+    }
+  }, [photos, selectedPhotoId]);
 
   const goPrevious = () => {
-    if (photos.length <= 1) return;
-    setCurrentIndex((current) => (current - 1 + photos.length) % photos.length);
+    if (totalPages <= 1) return;
+    const nextPage = (safePageIndex - 1 + totalPages) % totalPages;
+    setPageIndex(nextPage);
+    const nextPhoto = photos[nextPage * PHOTOS_PER_PAGE];
+    if (nextPhoto) setSelectedPhotoId(nextPhoto.id);
   };
 
   const goNext = () => {
-    if (photos.length <= 1) return;
-    setCurrentIndex((current) => (current + 1) % photos.length);
+    if (totalPages <= 1) return;
+    const nextPage = (safePageIndex + 1) % totalPages;
+    setPageIndex(nextPage);
+    const nextPhoto = photos[nextPage * PHOTOS_PER_PAGE];
+    if (nextPhoto) setSelectedPhotoId(nextPhoto.id);
   };
 
   return (
-    <section className={`${curiositySectionCardClassName} flex min-h-56 flex-col p-0 ${className}`}>
+    <section className={`${curiositySectionCardClassName} curiosidades-photo-slider-card flex min-h-56 flex-col ${className}`}>
       {loading ? (
         <div className="h-full min-h-56 animate-pulse rounded-2xl bg-gray-100" />
-      ) : currentPhoto ? (
-        <div className="relative min-h-56 flex-1 overflow-hidden rounded-2xl">
-          <img
-            src={currentPhoto.src}
-            alt={currentPhoto.caption}
-            className="h-full min-h-56 w-full object-cover"
-          />
+      ) : photos.length > 0 ? (
+        <div className="flex min-h-0 flex-1 flex-col gap-3">
+          <div className="grid flex-1 grid-cols-3 gap-2">
+            {visiblePhotos.map((photo) => {
+              const active = selectedPhoto?.id === photo.id;
 
-          <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-slate-950/80 via-slate-950/35 to-transparent px-4 pb-4 pt-16">
-            <p className="pr-24 text-sm font-bold leading-5 text-white drop-shadow">
-              {currentPhoto.caption}
-            </p>
+              return (
+                <button
+                  key={photo.id}
+                  type="button"
+                  onClick={() => setSelectedPhotoId(photo.id)}
+                  className={[
+                    'group relative min-h-24 overflow-hidden rounded-xl border bg-gray-100 text-left shadow-sm transition',
+                    active ? 'border-blue-500 ring-2 ring-blue-100' : 'border-gray-200 hover:border-blue-200',
+                  ].join(' ')}
+                  aria-label={`Ver foto de ${photo.caption}`}
+                >
+                  <img src={photo.src} alt={photo.caption} className="h-full w-full object-cover transition group-hover:scale-[1.03]" />
+                </button>
+              );
+            })}
+
+            {Array.from({ length: placeholderCount }).map((_, index) => (
+              <div
+                key={`placeholder-${index}`}
+                className="flex min-h-24 items-center justify-center rounded-xl border border-dashed border-blue-100 bg-blue-50 text-blue-700"
+                aria-hidden="true"
+              >
+                <Camera className="h-5 w-5" />
+              </div>
+            ))}
           </div>
 
-          {photos.length > 1 && (
-            <div className="absolute bottom-3 right-3 flex items-center gap-2">
+          <div className="flex items-center justify-between gap-3 rounded-xl border border-blue-100 bg-blue-50 px-3 py-2">
+            <p className="min-w-0 truncate text-sm font-bold text-blue-950">
+              {selectedPhoto?.caption ?? 'Fotos da família'}
+            </p>
+
+            <div className="flex shrink-0 items-center gap-2">
               <button
                 type="button"
                 onClick={goPrevious}
-                className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-white/95 text-blue-700 shadow-sm transition hover:bg-blue-50"
-                aria-label="Foto anterior"
+                disabled={totalPages <= 1}
+                className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-white text-blue-700 shadow-sm transition hover:bg-blue-50 disabled:opacity-40"
+                aria-label="Fotos anteriores"
               >
                 <ChevronLeft className="h-4 w-4" />
               </button>
               <button
                 type="button"
                 onClick={goNext}
-                className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-white/95 text-blue-700 shadow-sm transition hover:bg-blue-50"
-                aria-label="Próxima foto"
+                disabled={totalPages <= 1}
+                className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-white text-blue-700 shadow-sm transition hover:bg-blue-50 disabled:opacity-40"
+                aria-label="Próximas fotos"
               >
                 <ChevronRight className="h-4 w-4" />
               </button>
             </div>
-          )}
+          </div>
         </div>
       ) : (
         <div className="flex min-h-56 flex-1 items-center justify-center rounded-2xl bg-blue-50 p-5 text-center">

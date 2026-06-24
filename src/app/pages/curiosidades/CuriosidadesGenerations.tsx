@@ -7,6 +7,8 @@ import {
   type CuriosidadesDataProps,
 } from './curiosidadesUtils';
 
+const COLLAPSED_PREVIEW_LIMIT = 4;
+
 function PersonBadge({ pessoa }: { pessoa: CuriosidadesDataProps['pessoas'][number] }) {
   return (
     <span className="inline-flex max-w-full items-center gap-2 rounded-full border border-gray-200 bg-white px-2.5 py-1.5 text-xs font-semibold text-gray-700">
@@ -26,12 +28,27 @@ function PersonBadge({ pessoa }: { pessoa: CuriosidadesDataProps['pessoas'][numb
   );
 }
 
-function GenerationPeopleBadges({ people }: { people: CuriosidadesDataProps['pessoas'] }) {
+function GenerationPeoplePreview({
+  people,
+  expanded,
+}: {
+  people: CuriosidadesDataProps['pessoas'];
+  expanded: boolean;
+}) {
+  const visiblePeople = expanded ? people : people.slice(0, COLLAPSED_PREVIEW_LIMIT);
+  const remainingCount = Math.max(people.length - visiblePeople.length, 0);
+
   return (
     <div className="mt-4 flex flex-wrap gap-2">
-      {people.map((pessoa) => (
+      {visiblePeople.map((pessoa) => (
         <PersonBadge key={pessoa.id} pessoa={pessoa} />
       ))}
+
+      {remainingCount > 0 && (
+        <span className="inline-flex h-9 items-center justify-center rounded-full border border-dashed border-blue-200 bg-white px-3 text-xs font-bold text-blue-700">
+          +{remainingCount}
+        </span>
+      )}
     </div>
   );
 }
@@ -128,7 +145,7 @@ export function CuriosidadesGenerations({
                   <p className="mt-2 text-xs leading-5 text-gray-500">{generation.note}</p>
                 )}
 
-                {expanded && <GenerationPeopleBadges people={generation.people} />}
+                <GenerationPeoplePreview people={generation.people} expanded={expanded} />
               </article>
             );
           })}
