@@ -1,9 +1,11 @@
 import React from 'react';
-import { Navigate } from 'react-router';
+import { Navigate, useLocation } from 'react-router';
 import { useAuth } from '../contexts/AuthContext';
+import { MobileHorizontalFamilyMapPage } from '../pages/MobileHorizontalFamilyMapPage';
 import { resolveFirstAccessLinkForUser } from '../services/memberProfileService';
 
 const RECENT_LOGIN_LIMIT_MS = 60 * 60 * 1000;
+const MOBILE_HORIZONTAL_BREAKPOINT = 768;
 
 function AccessLoading({ message = 'Verificando acesso...' }: { message?: string }) {
   return (
@@ -25,8 +27,34 @@ function hasRecentLogin(lastSignInAt?: string | null) {
   return Date.now() - lastSignInTime <= RECENT_LOGIN_LIMIT_MS;
 }
 
+function getInitialMobileMatch() {
+  return typeof window !== 'undefined' && window.innerWidth < MOBILE_HORIZONTAL_BREAKPOINT;
+}
+
+function useMobileHorizontalRoute() {
+  const location = useLocation();
+  const [isMobile, setIsMobile] = React.useState(getInitialMobileMatch);
+
+  React.useEffect(() => {
+    const mediaQuery = window.matchMedia(`(max-width: ${MOBILE_HORIZONTAL_BREAKPOINT - 1}px)`);
+    const update = () => setIsMobile(window.innerWidth < MOBILE_HORIZONTAL_BREAKPOINT);
+
+    update();
+    mediaQuery.addEventListener('change', update);
+    window.addEventListener('resize', update);
+
+    return () => {
+      mediaQuery.removeEventListener('change', update);
+      window.removeEventListener('resize', update);
+    };
+  }, []);
+
+  return isMobile && location.pathname === '/mapa-familiar-horizontal';
+}
+
 export function TreeAccessRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
+  const shouldUseMobileHorizontalPage = useMobileHorizontalRoute();
   const [checking, setChecking] = React.useState(true);
   const [target, setTarget] = React.useState<'tree' | 'auth' | 'profile'>('auth');
 
@@ -81,6 +109,10 @@ export function TreeAccessRoute({ children }: { children: React.ReactNode }) {
 
   if (target === 'profile') {
     return <Navigate to="/meus-dados" replace />;
+  }
+
+  if (shouldUseMobileHorizontalPage) {
+    return <MobileHorizontalFamilyMapPage />;
   }
 
   return <>{children}</>;
