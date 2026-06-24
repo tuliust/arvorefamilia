@@ -46,4 +46,5 @@ A documentação funcional depende de tabelas ou estruturas equivalentes para:
 3. Confirmar políticas RLS para leitura e escrita.
 4. Confirmar buckets e paths usados por arquivos históricos.
 5. Confirmar que dados sensíveis não são expostos em views públicas.
-6. Rodar a aplicação e validar as rotas documentadas em `QA_MANUAL.md`.
+6. Confirmar RPC `get_person_profile_selected_badges(uuid)` ou fallback da aplicação.
+7. Rodar a aplicação e validar as rotas documentadas em `QA_MANUAL.md`.
