@@ -5,7 +5,7 @@ import { MobileHorizontalFamilyMapPage } from '../pages/MobileHorizontalFamilyMa
 import { resolveFirstAccessLinkForUser } from '../services/memberProfileService';
 
 const RECENT_LOGIN_LIMIT_MS = 60 * 60 * 1000;
-const MOBILE_HORIZONTAL_BREAKPOINT = 768;
+const MOBILE_HORIZONTAL_BREAKPOINT = 1024;
 
 function AccessLoading({ message = 'Verificando acesso...' }: { message?: string }) {
   return (
@@ -37,7 +37,7 @@ function useMobileHorizontalRoute() {
 
   React.useEffect(() => {
     const mediaQuery = window.matchMedia(`(max-width: ${MOBILE_HORIZONTAL_BREAKPOINT - 1}px)`);
-    const update = () => setIsMobile(mediaQuery.matches);
+    const update = () => setIsMobile(window.innerWidth < MOBILE_HORIZONTAL_BREAKPOINT);
 
     update();
     mediaQuery.addEventListener('change', update);
