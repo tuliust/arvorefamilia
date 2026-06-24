@@ -44,13 +44,7 @@ const AdminSolicitacoesVinculos = React.lazy(() => import('./pages/admin/AdminSo
 const AdminNotificacoes = React.lazy(() => import('./pages/admin/AdminNotificacoes').then((module) => ({ default: module.AdminNotificacoes })));
 const AdminDuvidas = React.lazy(() => import('./pages/admin/AdminDuvidas').then((module) => ({ default: module.AdminDuvidas })));
 const MobileHorizontalFamilyMapPageLazy = React.lazy(() => import('./pages/MobileHorizontalFamilyMapPage').then((module) => ({ default: module.MobileHorizontalFamilyMapPage })));
-
-const ROUTE_CHUNK_RELOAD_KEY = 'arvorefamilia:route-chunk-reload-at';
-const ROUTE_CHUNK_RELOAD_COOLDOWN_MS = 10000;
-
-type WindowWithChunkHandler = Window & {
-  __arvorefamiliaChunkReloadHandlerInstalled?: boolean;
-};
+const LinhaGeracionalLazy = React.lazy(() => import('./pages/LinhaGeracional').then((module) => ({ default: module.LinhaGeracional })));
 
 function RouteFallback() {
   return (
@@ -63,37 +57,17 @@ function RouteFallback() {
   );
 }
 
-function reloadForFreshAssets() {
-  try {
-    const lastReloadAt = Number(sessionStorage.getItem(ROUTE_CHUNK_RELOAD_KEY) ?? 0);
-    if (Date.now() - lastReloadAt < ROUTE_CHUNK_RELOAD_COOLDOWN_MS) return false;
-    sessionStorage.setItem(ROUTE_CHUNK_RELOAD_KEY, String(Date.now()));
-  } catch {
-    // Se o storage estiver indisponível, ainda tenta recuperar a versão nova do app.
-  }
-
-  window.location.reload();
-  return true;
-}
-
 function RouteErrorFallback() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
       <div className="max-w-md rounded-xl border border-gray-200 bg-white p-6 text-center shadow-sm">
         <h1 className="text-xl font-semibold text-gray-900">Não foi possível carregar esta página</h1>
         <p className="mt-2 text-sm text-gray-600">
-          A versão do site aberta no navegador pode estar desatualizada. Atualize a página para carregar os arquivos mais recentes.
+          Atualize a página para carregar os arquivos mais recentes.
         </p>
         <button
           type="button"
-          onClick={() => {
-            try {
-              sessionStorage.removeItem(ROUTE_CHUNK_RELOAD_KEY);
-            } catch {
-              // Ignora falhas de storage no clique manual de recuperação.
-            }
-            window.location.reload();
-          }}
+          onClick={() => window.location.reload()}
           className="mt-5 inline-flex items-center justify-center rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
         >
           Atualizar página
@@ -107,51 +81,11 @@ type RouteErrorBoundaryState = {
   hasError: boolean;
 };
 
-function isDynamicImportError(error: unknown) {
-  const message = error instanceof Error ? error.message : String(error);
-  return /Failed to fetch dynamically imported module|Importing a module script failed|error loading dynamically imported module|Expected a JavaScript-or-Wasm module script|MIME type/i.test(message);
-}
-
-function isAssetScriptLoadError(event: ErrorEvent | Event) {
-  if (!(event instanceof Event)) return false;
-  const target = event.target;
-  if (!(target instanceof HTMLScriptElement)) return false;
-  return /\/assets\/.+\.js(\?.*)?$/.test(target.src);
-}
-
-function installChunkLoadErrorReloadHandler() {
-  if (typeof window === 'undefined') return;
-
-  const win = window as WindowWithChunkHandler;
-  if (win.__arvorefamiliaChunkReloadHandlerInstalled) return;
-  win.__arvorefamiliaChunkReloadHandlerInstalled = true;
-
-  window.addEventListener(
-    'error',
-    (event) => {
-      if (isDynamicImportError((event as ErrorEvent).error ?? (event as ErrorEvent).message) || isAssetScriptLoadError(event)) {
-        reloadForFreshAssets();
-      }
-    },
-    true,
-  );
-
-  window.addEventListener('unhandledrejection', (event) => {
-    if (isDynamicImportError(event.reason)) reloadForFreshAssets();
-  });
-}
-
-installChunkLoadErrorReloadHandler();
-
 class RouteErrorBoundary extends React.Component<React.PropsWithChildren, RouteErrorBoundaryState> {
   state: RouteErrorBoundaryState = { hasError: false };
 
   static getDerivedStateFromError(): RouteErrorBoundaryState {
     return { hasError: true };
-  }
-
-  componentDidCatch(error: unknown) {
-    if (isDynamicImportError(error)) reloadForFreshAssets();
   }
 
   render() {
@@ -204,11 +138,16 @@ const horizontalMapRouteElement = lazyRoute(
   <TreeAccessRoute><MobileHorizontalFamilyMapPageLazy /></TreeAccessRoute>,
   { disableMobileGlobalTweaks: true },
 );
+const linhaGeracionalRouteElement = lazyRoute(
+  <TreeAccessRoute><LinhaGeracionalLazy /></TreeAccessRoute>,
+  { disableMobileGlobalTweaks: true },
+);
 
 export const router = createBrowserRouter([
   { path: '/', element: lazyRoute(<TreeAccessRoute><RedirectToMapaFamiliar /></TreeAccessRoute>) },
   { path: '/mapa-familiar', element: treeHomeRouteElement },
   { path: '/mapa-familiar-horizontal', element: horizontalMapRouteElement },
+  { path: '/linha-geracional', element: linhaGeracionalRouteElement },
   { path: '/busca', element: lazyRoute(<TreeAccessRoute><BuscaResultados /></TreeAccessRoute>) },
   { path: '/entrar', element: lazyRoute(<Entrar />) },
   { path: '/termos', element: lazyRoute(<Termos />) },
