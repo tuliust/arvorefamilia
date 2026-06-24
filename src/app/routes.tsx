@@ -195,13 +195,8 @@ const treeHomeRouteElement = lazyRoute(<TreeAccessRoute><TreeHomeShell /></TreeA
 
 export const router = createBrowserRouter([
   { path: '/', element: lazyRoute(<TreeAccessRoute><RedirectToMapaFamiliar /></TreeAccessRoute>) },
-  {
-    element: treeHomeRouteElement,
-    children: [
-      { path: 'mapa-familiar' },
-      { path: 'mapa-familiar-horizontal' },
-    ],
-  },
+  { path: '/mapa-familiar', element: treeHomeRouteElement },
+  { path: '/mapa-familiar-horizontal', element: treeHomeRouteElement },
   { path: '/busca', element: lazyRoute(<TreeAccessRoute><BuscaResultados /></TreeAccessRoute>) },
   { path: '/entrar', element: lazyRoute(<Entrar />) },
   { path: '/termos', element: lazyRoute(<Termos />) },

@@ -40,7 +40,7 @@ export function MobileFamilyMapToolbar({
       ].filter(Boolean).join(' ')}
       style={{
         top: 'calc(env(safe-area-inset-top,0px)+4.5rem)',
-        paddingBottom: activeAction === 'formato' ? '9rem' : activeAction ? '8rem' : undefined,
+        paddingBottom: activeAction === 'formato' ? '9.75rem' : activeAction ? '8rem' : undefined,
       }}
       data-mobile-family-map-toolbar="true"
       data-mobile-family-map-toolbar-active={activeAction ? 'true' : undefined}

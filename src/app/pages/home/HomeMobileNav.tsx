@@ -425,14 +425,14 @@ const TREE_VIEW_OPTIONS: Array<{
   icon: React.ComponentType<{ className?: string }>;
 }> = [
   {
-    path: '/mapa-familiar',
+    path: '/mapa-familiar-horizontal',
     label: 'Linha Geracional',
     subtitle: 'Visualização cronológica por gerações',
     ariaLabel: 'Alternar para Linha Geracional',
     icon: Map,
   },
   {
-    path: '/mapa-familiar-horizontal',
+    path: '/mapa-familiar',
     label: 'Árvore Familiar',
     subtitle: 'Visão de parentesco por grupos',
     ariaLabel: 'Alternar para Árvore Familiar',
@@ -805,17 +805,15 @@ export function HomeMobileNav({
   }, [navigateFromHome, pathname]);
 
   const handleViewOptionClick = useCallback((path: '/mapa-familiar' | '/mapa-familiar-horizontal') => {
-    setActiveToolbarAction(null);
-    setFullControlsOpen(false);
-
-    if (pathname === path) return;
-
     const query = typeof window === 'undefined' ? '' : window.location.search;
     const nextPath = `${path}${query}`;
 
-    window.setTimeout(() => {
+    if (pathname !== path) {
       navigateFromHome(nextPath);
-    }, 0);
+    }
+
+    setActiveToolbarAction(null);
+    setFullControlsOpen(false);
   }, [navigateFromHome, pathname]);
 
   const handleExportOptionClick = useCallback((action: SidebarTreeAction) => {
@@ -857,7 +855,7 @@ export function HomeMobileNav({
 
           {activeToolbarAction === 'visualizacao' && (
             <div
-              className={`fixed inset-x-2 ${mobileTreeViewPopoverTopClass} z-[10001] md:hidden`}
+              className={`fixed inset-x-2 ${mobileTreeViewPopoverTopClass} z-[10001] pb-3 md:hidden`}
               data-tree-export-ignore="true"
             >
               <label className="mx-auto block max-w-md">
@@ -890,7 +888,7 @@ export function HomeMobileNav({
               className={`fixed inset-x-2 ${mobileTreeViewPopoverTopClass} z-[10001] md:hidden`}
               data-tree-export-ignore="true"
             >
-              <div className="mx-auto grid max-w-md grid-cols-2 gap-1.5">
+              <div className="mx-auto grid max-w-md grid-cols-2 gap-2">
                 {TREE_VIEW_OPTIONS.map((option) => {
                   const Icon = option.icon;
                   const active = pathname === option.path;
