@@ -276,6 +276,12 @@ export function Home() {
   }, [isMobile]);
 
   useEffect(() => {
+    if (isMobileHorizontalTreeView) {
+      console.warn('[Home] montado em /mapa-familiar-horizontal mobile — guard de rota ativo?', { isMobile, treeViewMode });
+    }
+  }, [isMobile, isMobileHorizontalTreeView, treeViewMode]);
+
+  useEffect(() => {
     if (!isMobile || !legendOpen) return;
 
     const previousOverflow = document.body.style.overflow;
@@ -616,7 +622,7 @@ export function Home() {
 
   const navigateFromHome = useCallback(
     (path: string) => {
-      navigate(path, { replace: false, flushSync: true });
+      navigate(path, { replace: false });
     },
     [navigate]
   );

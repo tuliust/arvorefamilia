@@ -37,15 +37,13 @@ function useMobileHorizontalRoute() {
 
   React.useEffect(() => {
     const mediaQuery = window.matchMedia(`(max-width: ${MOBILE_HORIZONTAL_BREAKPOINT - 1}px)`);
-    const update = () => setIsMobile(window.innerWidth < MOBILE_HORIZONTAL_BREAKPOINT);
+    const update = () => setIsMobile(mediaQuery.matches);
 
     update();
     mediaQuery.addEventListener('change', update);
-    window.addEventListener('resize', update);
 
     return () => {
       mediaQuery.removeEventListener('change', update);
-      window.removeEventListener('resize', update);
     };
   }, []);
 
@@ -57,6 +55,10 @@ export function TreeAccessRoute({ children }: { children: React.ReactNode }) {
   const shouldUseMobileHorizontalPage = useMobileHorizontalRoute();
   const [checking, setChecking] = React.useState(true);
   const [target, setTarget] = React.useState<'tree' | 'auth' | 'profile'>('auth');
+
+  React.useEffect(() => {
+    console.debug('[TreeAccessRoute] decisao rota horizontal', { shouldUseMobileHorizontalPage });
+  }, [shouldUseMobileHorizontalPage]);
 
   React.useEffect(() => {
     let mounted = true;
