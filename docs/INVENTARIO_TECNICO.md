@@ -76,6 +76,7 @@
 - `/forum`
 - `/meus-favoritos`
 - `/notificacoes`
+- `/ajustar-notificacoes`
 - `/preferencias`
 - `/calendario-familiar`
 
@@ -98,9 +99,3 @@ A limpeza final removeu arquivos de rodada, baseline, QA datado, mobile legado, 
 - `funcionalidades/CURIOSIDADES.md`;
 - `arquitetura/DECISOES_ARQUITETURAIS.md`;
 - `operacao/DEPLOY.md`;
-- `historico/LEGADO_TECNICO.md`;
-- `historico/LIMPEZA_DOCUMENTACAO_FINAL_20260623.md`.
-
-## Regra de inventário
-
-Este inventário deve listar apenas documentos existentes em `docs/`. Se um arquivo for removido, o link correspondente deve ser apagado ou substituído pelo documento canônico que absorveu seu conteúdo.
