@@ -566,6 +566,7 @@ export function HomeMobileNav({
   const [mobilePeople, setMobilePeople] = useState<Pessoa[]>([]);
   const [mobileRelationships, setMobileRelationships] = useState<Relacionamento[]>([]);
   const [defaultViewAsLabel, setDefaultViewAsLabel] = useState('Família principal');
+  const [defaultViewAsPersonId, setDefaultViewAsPersonId] = useState('');
   const [showExtendedSpouseFilters, setShowExtendedSpouseFilters] = useState(readStoredExtendedSpouseFilterState);
   const [fullControlsOpen, setFullControlsOpen] = useState(false);
   const [activeGroupTab, setActiveGroupTab] = useState<MobileFamilyGroupTab>('nucleo');
@@ -666,6 +667,7 @@ export function HomeMobileNav({
     );
     const fallbackLabel = formatFamilyViewLabel(getFirstName(metadataName));
     setDefaultViewAsLabel(fallbackLabel);
+    setDefaultViewAsPersonId('');
 
     if (!user?.id) return;
 
@@ -677,6 +679,9 @@ export function HomeMobileNav({
         if (cancelled) return;
 
         const linkedPersonName = linkedPersonResult.data?.pessoa?.nome_completo;
+        const linkedPersonId = linkedPersonResult.data?.pessoa_id || linkedPersonResult.data?.pessoa?.id || '';
+
+        setDefaultViewAsPersonId(linkedPersonId);
         setDefaultViewAsLabel(formatFamilyViewLabel(getFirstName(linkedPersonName) || getFirstName(metadataName)));
       } catch {
         if (!cancelled) {
@@ -759,14 +764,16 @@ export function HomeMobileNav({
     };
   }, [mobilePeople, viewAsPersonOptions.length]);
 
+  const effectiveMobileCentralPersonId = currentViewAsPersonValue || defaultViewAsPersonId;
+
   const mobileGroupCounts = useMemo(
-    () => getMobileFamilyGroupCounts(currentViewAsPersonValue || mobilePeople[0]?.id, mobileRelationships),
-    [currentViewAsPersonValue, mobilePeople, mobileRelationships]
+    () => getMobileFamilyGroupCounts(effectiveMobileCentralPersonId || undefined, mobileRelationships),
+    [effectiveMobileCentralPersonId, mobileRelationships]
   );
 
   const mobileGroupPeople = useMemo(
-    () => getMobileFamilyGroupPeople(currentViewAsPersonValue || mobilePeople[0]?.id, mobilePeople, mobileRelationships),
-    [currentViewAsPersonValue, mobilePeople, mobileRelationships]
+    () => getMobileFamilyGroupPeople(effectiveMobileCentralPersonId || undefined, mobilePeople, mobileRelationships),
+    [effectiveMobileCentralPersonId, mobilePeople, mobileRelationships]
   );
 
   const openMobileControlsPanel = useCallback((action: MobileFamilyMapToolbarAction) => {
@@ -1202,7 +1209,7 @@ export function HomeMobileNav({
 
                           {people.length > 0 && (
                             <div className="border-t border-slate-100 bg-slate-50/70 px-3 pb-3 pt-3">
-                              <div className="flex w-full flex-wrap gap-2">
+                              <div className="flex w-full flex-col gap-2">
                                 {people.map((person) => (
                                   <button
                                     key={person.id}
@@ -1211,9 +1218,9 @@ export function HomeMobileNav({
                                       setFullControlsOpen(false);
                                       handleViewAsPersonChange(person.id);
                                     }}
-                                    className="max-w-full rounded-full border border-blue-100 bg-white px-3 py-1.5 text-left text-sm font-bold leading-tight text-blue-950 shadow-sm transition hover:border-blue-300 hover:bg-blue-50 active:scale-[0.98]"
+                                    className="w-full rounded-xl border border-blue-100 bg-white px-3 py-2.5 text-left text-sm font-bold leading-tight text-blue-950 shadow-sm transition hover:border-blue-300 hover:bg-blue-50 active:scale-[0.98]"
                                   >
-                                    <span className="block max-w-full truncate">{person.label}</span>
+                                    <span className="block max-w-full whitespace-normal break-words">{person.label}</span>
                                   </button>
                                 ))}
                               </div>

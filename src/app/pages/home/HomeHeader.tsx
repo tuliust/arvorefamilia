@@ -369,6 +369,7 @@ export function HomeHeader({
             iconClassName="h-4 w-4"
             title="Alertas"
             ariaLabel="Abrir menu de alertas"
+            panelClassName="fixed left-4 right-4 top-[calc(env(safe-area-inset-top,0px)+5.25rem)] z-[650] mt-0 max-h-[min(70dvh,32rem)] overflow-hidden rounded-2xl border border-gray-200 bg-white text-left shadow-2xl ring-1 ring-black/5"
           />
 
           <div className="md:hidden" data-tour-target="profile-menu">

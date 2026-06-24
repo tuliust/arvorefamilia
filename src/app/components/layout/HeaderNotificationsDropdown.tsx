@@ -20,6 +20,7 @@ interface HeaderNotificationsDropdownProps {
   title?: string;
   ariaLabel?: string;
   tourTarget?: string;
+  panelClassName?: string;
 }
 
 function formatarHora(data: Date) {
@@ -106,6 +107,7 @@ export function HeaderNotificationsDropdown({
   title = 'Alertas',
   ariaLabel = 'Abrir menu de alertas',
   tourTarget = 'alerts',
+  panelClassName = 'absolute right-0 top-full z-[650] mt-2 w-[min(24rem,calc(100vw-1rem))] overflow-hidden rounded-2xl border border-gray-200 bg-white text-left shadow-2xl ring-1 ring-black/5',
 }: HeaderNotificationsDropdownProps) {
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -241,7 +243,7 @@ export function HeaderNotificationsDropdown({
 
       {open && (
         <div
-          className="absolute right-0 top-full z-[650] mt-2 w-[min(24rem,calc(100vw-1rem))] overflow-hidden rounded-2xl border border-gray-200 bg-white text-left shadow-2xl ring-1 ring-black/5"
+          className={panelClassName}
           role="menu"
           aria-label="Últimas notificações"
         >
