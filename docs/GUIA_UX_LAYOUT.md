@@ -25,6 +25,9 @@
 - Os cards `Núcleo`, `Ascendentes` e `Colaterais` devem preservar largura e gap gerais, com títulos e linhas legíveis em uma linha, sem reticências ou quebra forçada.
 - A área `Exportar` deve permanecer visível; quando houver sobra vertical, pode usar maior espaçamento interno e botões mais altos, desde que os quatro botões continuem no painel.
 - O painel compacto deve preservar acesso aos botões de exportação.
+- No mapa por grupos, o card `Pai` e o card `Mãe` são referências de alinhamento visual: `Irmãos` deve alinhar à esquerda com `Pai`, enquanto `Cônjuge` e `Pets` devem alinhar à direita com `Mãe`.
+- `Filhos` e `Netos` podem ocupar faixa mais à direita, desde que a leitura geracional e os conectores permaneçam claros.
+- Grupos com pares conjugais devem evitar terceira linha desnecessária quando houver espaço para manter solteiros e pares em duas colunas.
 
 ### Mobile
 
@@ -76,10 +79,15 @@ Pessoa marcada como falecida em `/meus-dados` pula `/preferencias` e segue para 
 - A rota `/curiosidades` substitui a experiência de modal isolado para exploração de dados.
 - Cards e rankings devem refletir dados reais carregados.
 - Dropdowns iniciam em estado neutro quando dependem de seleção do usuário.
+- A área “Descubra mais sobre...” deve iniciar com `Selecione` e não selecionar uma pessoa automaticamente.
+- Badges de status, como `classificados` e `uniões`, devem manter o texto em uma linha.
+- Marcadores `+N` em gerações devem ser acionáveis e revelar as pessoas restantes.
+- Bodas devem ser exibidas apenas para casais ativos, sem falecidos, em marcos exatos documentados em `funcionalidades/CURIOSIDADES.md`.
 
 ## Fórum, favoritos e notificações
 
 - `/forum` mantém busca e filtros visíveis no desktop.
+- No desktop, a busca do fórum deve iniciar alinhada a `Categorias` e a ação `Criar novo` deve permanecer alinhada à margem direita do container.
 - `/meus-favoritos` deve usar layout amplo para busca/filtros no desktop.
 - O botão de notificações nos headers de mapa e páginas de membro deve abrir o dropdown, sem redirecionar diretamente para `/notificacoes` no desktop.
 - Notificações devem ter dropdown responsivo e rodapé em duas colunas iguais, com ações curtas sem quebra de linha.
