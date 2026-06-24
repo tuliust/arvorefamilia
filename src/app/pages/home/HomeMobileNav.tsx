@@ -644,7 +644,7 @@ export function HomeMobileNav({
 
   const pathname = getCurrentPathname();
   const currentViewAsPersonValue = getCurrentSearchParams().get('pessoa')?.trim() || '';
-  const isDirectFamilyMap = pathname === '/mapa-familiar' || pathname === '/mapa-familiar-horizontal';
+  const isDirectFamilyMap = pathname === '/mapa-familiar' || pathname === '/mapa-familiar-horizontal' || pathname === '/linha-geracional';
   const selectedViewAsPersonOption = useMemo(
     () => viewAsPersonOptions.find((option) => option.id === currentViewAsPersonValue),
     [currentViewAsPersonValue, viewAsPersonOptions]
