@@ -1,8 +1,8 @@
-﻿import { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Sparkles } from 'lucide-react';
 import { MemberPageHeader, PAGE_CONTAINER_CLASS } from '../components/layout/MemberPageHeader';
 import { obterTodasPessoas, obterTodosRelacionamentos } from '../services/dataService';
-import { getProfileQuestionnaireSelectedBadges } from '../services/profileQuestionnaireService';
+import { getProfileQuestionnaireSelectedBadgesByPersonIds } from '../services/profileQuestionnaireService';
 import type { Pessoa, Relacionamento } from '../types';
 import { CuriosidadesAiSection } from './curiosidades/CuriosidadesAiSection';
 import { CuriosidadesCharts } from './curiosidades/CuriosidadesCharts';
@@ -19,29 +19,32 @@ import { CuriosidadesToday } from './curiosidades/CuriosidadesToday';
 import type { ProfileBadgesByPersonId } from './curiosidades/curiosidadesUtils';
 
 async function loadProfileBadgesByPersonId(pessoas: Pessoa[]): Promise<ProfileBadgesByPersonId> {
-  if (pessoas.length === 0) {
+  const pessoaIds = pessoas.map((pessoa) => pessoa.id).filter(Boolean);
+
+  if (pessoaIds.length === 0) {
     return {};
   }
 
-  const badgesByPersonId: ProfileBadgesByPersonId = {};
+  const result = await getProfileQuestionnaireSelectedBadgesByPersonIds(pessoaIds);
 
-  for (const pessoa of pessoas) {
-    try {
-      const result = await getProfileQuestionnaireSelectedBadges(pessoa.id);
-
-      if (!result.error && Array.isArray(result.data) && result.data.length > 0) {
-        badgesByPersonId[pessoa.id] = result.data.map((badge) => ({
-          id: badge.id,
-          label: badge.label,
-          category: badge.category,
-        }));
-      }
-    } catch (error) {
-      console.warn(`Não foi possível carregar badges do perfil ${pessoa.id}:`, error);
-    }
+  if (result.error) {
+    console.warn('Nao foi possivel carregar badges dos perfis:', result.error);
+    return {};
   }
 
-  return badgesByPersonId;
+  return Object.entries(result.data).reduce<ProfileBadgesByPersonId>((badgesByPersonId, [pessoaId, badges]) => {
+    const normalizedBadges = badges.map((badge) => ({
+      id: badge.id,
+      label: badge.label,
+      category: badge.category,
+    }));
+
+    if (normalizedBadges.length > 0) {
+      badgesByPersonId[pessoaId] = normalizedBadges;
+    }
+
+    return badgesByPersonId;
+  }, {});
 }
 
 export function Curiosidades() {
@@ -58,6 +61,7 @@ export function Curiosidades() {
       try {
         setLoading(true);
         setError(null);
+        setProfileBadgesByPersonId({});
 
         const [loadedPessoas, loadedRelacionamentos] = await Promise.all([
           obterTodasPessoas(),
@@ -68,13 +72,20 @@ export function Curiosidades() {
 
         const normalizedPessoas = Array.isArray(loadedPessoas) ? loadedPessoas : [];
         const normalizedRelacionamentos = Array.isArray(loadedRelacionamentos) ? loadedRelacionamentos : [];
-        const loadedProfileBadgesByPersonId = await loadProfileBadgesByPersonId(normalizedPessoas);
-
-        if (cancelled) return;
 
         setPessoas(normalizedPessoas);
         setRelacionamentos(normalizedRelacionamentos);
-        setProfileBadgesByPersonId(loadedProfileBadgesByPersonId);
+        setLoading(false);
+
+        try {
+          const loadedProfileBadgesByPersonId = await loadProfileBadgesByPersonId(normalizedPessoas);
+
+          if (cancelled) return;
+
+          setProfileBadgesByPersonId(loadedProfileBadgesByPersonId);
+        } catch (badgesError) {
+          console.warn('Nao foi possivel carregar badges dos perfis:', badgesError);
+        }
       } catch (loadError) {
         if (cancelled) return;
 
