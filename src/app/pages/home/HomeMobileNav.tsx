@@ -1,4 +1,4 @@
-﻿import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   Bell,
   CalendarDays,
@@ -1110,7 +1110,7 @@ export function HomeMobileNav({
                           aria-pressed={active}
                           onClick={() => handleViewOptionClick(option.path)}
                           className={[
-                            'flex min-h-16 min-w-0 items-center justify-center gap-2 px-2 text-center text-sm font-extrabold transition',
+                            'flex min-h-16 min-w-0 items-center justify-center gap-2 px-2 text-center text-[13px] font-bold transition',
                             active
                               ? 'rounded-2xl border border-blue-600 bg-blue-50 text-blue-600 shadow-[0_0_0_1px_rgba(37,99,235,0.35)]'
                               : 'text-slate-500',
@@ -1341,7 +1341,7 @@ function SummaryTile({
     <div className={['flex min-h-24 items-center gap-3 rounded-2xl border px-4 py-3', toneClassName].join(' ')}>
       <Icon className="h-10 w-10 shrink-0" />
       <div className="min-w-0">
-        <strong className="block text-4xl font-black leading-none tracking-[-0.04em]">{value}</strong>
+        <strong className="block text-[2rem] font-bold leading-none tracking-[-0.035em]">{value}</strong>
         <span className="mt-1.5 block truncate text-base font-semibold text-blue-950">{label}</span>
       </div>
     </div>
