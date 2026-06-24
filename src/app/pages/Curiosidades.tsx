@@ -106,7 +106,7 @@ export function Curiosidades() {
   };
 
   return (
-    <div className="curiosidades-page min-h-screen overflow-x-hidden bg-gray-50 pb-24 md:pb-0">
+    <div className="curiosidades-page min-h-screen overflow-x-clip bg-gray-50 pb-24 md:pb-0">
       <MemberPageHeader
         title="Curiosidades"
         subtitle="Descobertas, histórias e conexões da família"

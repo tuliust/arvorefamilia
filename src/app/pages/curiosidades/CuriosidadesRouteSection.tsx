@@ -18,6 +18,8 @@ const ROAD_ROUTE_STOPS: RoadRouteStop[] = [
   { label: 'Porto Alegre/RS' },
 ];
 
+const routeMapIllustrationUrl = new URL('../../../../docs/mapa.png', import.meta.url).href;
+
 function formatRoadDistance(value: number) {
   return `${value.toLocaleString('pt-BR')} km`;
 }
@@ -36,16 +38,16 @@ export function CuriosidadesRouteSection({
       <div>
         <div className="flex items-center gap-3">
           <Route className="h-5 w-5 text-blue-700" />
-          <h2 className="text-xl font-bold text-gray-950">Rota da família</h2>
+          <h2 className="text-xl font-bold text-gray-950">Rota da fam?lia</h2>
         </div>
         <p className="mt-3 text-sm leading-6 text-gray-600">
-          Uma rota pelas cidades onde familiares têm residência cadastrada.
+          Uma rota pelas cidades onde familiares t?m resid?ncia cadastrada.
         </p>
       </div>
 
       {error && (
         <div className="mt-5 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
-          Não foi possível carregar as cidades da família agora.
+          N?o foi poss?vel carregar as cidades da fam?lia agora.
         </div>
       )}
 
@@ -55,14 +57,25 @@ export function CuriosidadesRouteSection({
 
       {!error && !loading && (
         <div className="mt-5 space-y-4">
-          <div className="rounded-xl border border-blue-100 bg-blue-50 p-4">
-            <p className="text-sm font-semibold text-blue-900">Distância aproximada</p>
-            <p className="mt-2 text-3xl font-black tracking-tight text-gray-950 sm:text-4xl">
-              {formatRoadDistance(ROAD_ROUTE_TOTAL_KM)}
-            </p>
-            <p className="mt-3 text-sm font-bold text-blue-900">
-              Com transporte rodoviário
-            </p>
+          <div className="overflow-hidden rounded-xl border border-blue-100 bg-blue-50 p-4">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+              <div className="min-w-0">
+                <p className="text-sm font-semibold text-blue-900">Trajeto de carro</p>
+                <p className="mt-2 text-2xl font-black tracking-tight text-gray-950 sm:text-3xl">
+                  {formatRoadDistance(ROAD_ROUTE_TOTAL_KM)}
+                </p>
+              </div>
+
+              <div className="flex justify-center sm:justify-end">
+                <img
+                  src={routeMapIllustrationUrl}
+                  alt=""
+                  aria-hidden="true"
+                  loading="lazy"
+                  className="h-24 w-full max-w-[12rem] object-contain sm:h-28"
+                />
+              </div>
+            </div>
           </div>
 
           <div className="curiosidades-route-list relative space-y-3 overflow-visible">
