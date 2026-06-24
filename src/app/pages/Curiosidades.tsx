@@ -1,4 +1,4 @@
-﻿import { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Sparkles } from 'lucide-react';
 import { MemberPageHeader, PAGE_CONTAINER_CLASS } from '../components/layout/MemberPageHeader';
 import { obterTodasPessoas, obterTodosRelacionamentos } from '../services/dataService';
@@ -26,37 +26,25 @@ async function loadProfileBadgesByPersonId(pessoas: Pessoa[]): Promise<ProfileBa
     return {};
   }
 
-  const entries = await Promise.all(
-    pessoas.map(async (pessoa) => {
-      try {
-        const result = await getProfileQuestionnaireSelectedBadges(pessoa.id);
+  const badgesByPersonId: ProfileBadgesByPersonId = {};
 
-        if (result.error || !Array.isArray(result.data) || result.data.length === 0) {
-          return [pessoa.id, []] as const;
-        }
+  for (const pessoa of pessoas) {
+    try {
+      const result = await getProfileQuestionnaireSelectedBadges(pessoa.id);
 
-        return [
-          pessoa.id,
-          result.data.map((badge) => ({
-            id: badge.id,
-            label: badge.label,
-            category: badge.category,
-          })),
-        ] as const;
-      } catch (error) {
-        console.warn(`NÃ£o foi possÃ­vel carregar badges do perfil ${pessoa.id}:`, error);
-        return [pessoa.id, []] as const;
+      if (!result.error && Array.isArray(result.data) && result.data.length > 0) {
+        badgesByPersonId[pessoa.id] = result.data.map((badge) => ({
+          id: badge.id,
+          label: badge.label,
+          category: badge.category,
+        }));
       }
-    })
-  );
-
-  return entries.reduce<ProfileBadgesByPersonId>((accumulator, [pessoaId, badges]) => {
-    if (badges.length > 0) {
-      accumulator[pessoaId] = [...badges];
+    } catch (error) {
+      console.warn(`N?o foi poss?vel carregar badges do perfil ${pessoa.id}:`, error);
     }
+  }
 
-    return accumulator;
-  }, {});
+  return badgesByPersonId;
 }
 
 export function Curiosidades() {
@@ -94,7 +82,7 @@ export function Curiosidades() {
         if (cancelled) return;
 
         console.error('Erro ao carregar dados de curiosidades:', loadError);
-        setError(loadError instanceof Error ? loadError.message : 'NÃ£o foi possÃ­vel carregar os dados familiares.');
+        setError(loadError instanceof Error ? loadError.message : 'Não foi possível carregar os dados familiares.');
         setPessoas([]);
         setRelacionamentos([]);
         setProfileBadgesByPersonId({});
@@ -124,7 +112,7 @@ export function Curiosidades() {
     <div className="curiosidades-page min-h-screen overflow-x-hidden bg-gray-50 pb-24 md:pb-0">
       <MemberPageHeader
         title="Curiosidades"
-        subtitle="Descobertas, histÃ³rias e conexÃµes da famÃ­lia"
+        subtitle="Descobertas, histórias e conexões da família"
         icon={Sparkles}
       />
 

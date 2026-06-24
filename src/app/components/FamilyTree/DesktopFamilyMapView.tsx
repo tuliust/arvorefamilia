@@ -175,7 +175,7 @@ const ADAPTIVE_UNCLES_GROUP_IDS = new Set<string>([
 
 const FAMILY_MAP_LAYOUT_BASE: FamilyMapLayout = {
   canvas: {
-    width: 1440,
+    width: 1620,
     minHeight: 1020,
     background: '#ecfeff',
     minScale: 0.62,
@@ -208,9 +208,9 @@ const FAMILY_MAP_LAYOUT_BASE: FamilyMapLayout = {
     center: { x: 615, width: 210 },
     maternalAncestors: { x: 745, width: 430 },
     right: { x: 1120, width: 480 },
-    lowerLeft: { x: 340, width: 360 },
-    lowerMiddle: { x: 665, width: 180 },
-    lowerRight: { x: 940, width: 300 },
+    lowerLeft: { x: 375, width: 360 },
+    lowerMiddle: { x: 855, width: 210 },
+    lowerRight: { x: 1160, width: 300 },
   },
   groups: {
     paternalGreatGreatGrandparents: group('paternalGreatGreatGrandparents', 'Tataravós Paternos', 265, 430, 'double', 4, 'horizontal', true, 'always', 'ancestorSpouse'),
@@ -226,12 +226,12 @@ const FAMILY_MAP_LAYOUT_BASE: FamilyMapLayout = {
     maternalGrandparents: group('maternalGrandparents', 'Avós Maternos', 745, 430, 'double', 4, 'horizontal', true, 'always', 'ancestorSpouse'),
     maternalUncles: group('maternalUncles', 'Tios Maternos', 1120, 480, 'quad', 8, 'mini', true, 'filter', undefined, 300),
     maternalCousins: group('maternalCousins', 'Primos Maternos', 1120, 480, 'quad', 8, 'mini', true, 'filter', undefined, 250),
-    siblings: group('siblings', 'Irmãos', 340, 360, 'double', 4, 'horizontal', true, 'filter', undefined, 260),
-    nephews: group('nephews', 'Sobrinhos', 340, 300, 'double', 2, 'mini', true, 'filter', undefined, 220),
-    spouse: group('spouse', 'Cônjuge', 720, 210, 'single', 1, 'compact', false, 'always', 'spouse', undefined, true),
-    children: group('children', 'Filhos', 940, 300, 'double', 2, 'horizontal', true, 'filter', undefined, 260),
-    pets: group('pets', 'Pets', 665, 180, 'single', 2, 'mini', true, 'never', undefined, 180),
-    grandchildren: group('grandchildren', 'Netos', 940, 300, 'double', 2, 'mini', true, 'filter', undefined, 220),
+    siblings: group('siblings', 'Irmãos', 375, 360, 'double', 4, 'horizontal', true, 'filter', undefined, 260),
+    nephews: group('nephews', 'Sobrinhos', 375, 300, 'double', 2, 'mini', true, 'filter', undefined, 220),
+    spouse: group('spouse', 'Cônjuge', 855, 210, 'single', 1, 'compact', false, 'always', 'spouse', undefined, true),
+    children: group('children', 'Filhos', 1160, 300, 'double', 2, 'horizontal', true, 'filter', undefined, 260),
+    pets: group('pets', 'Pets', 855, 210, 'single', 2, 'mini', true, 'never', undefined, 210),
+    grandchildren: group('grandchildren', 'Netos', 1160, 300, 'double', 2, 'mini', true, 'filter', undefined, 220),
   },
 };
 
@@ -283,12 +283,12 @@ function getWideLayout(): FamilyMapLayout {
     maternalGrandparents: { ...base.groups.maternalGrandparents, x: 950 },
     maternalUncles: { ...base.groups.maternalUncles, x: 1300, width: 560, singleWidth: 340 },
     maternalCousins: { ...base.groups.maternalCousins, x: 1300, width: 560, singleWidth: 250 },
-    siblings: { ...base.groups.siblings, x: 520, width: 360, singleWidth: 300 },
-    nephews: { ...base.groups.nephews, x: 520, width: 360, singleWidth: 280 },
-    spouse: { ...base.groups.spouse, x: 950 },
-    children: { ...base.groups.children, x: 1190, width: 420, singleWidth: 300 },
-    pets: { ...base.groups.pets, x: 950, width: 210, singleWidth: 210 },
-    grandchildren: { ...base.groups.grandchildren, x: 1190, width: 420, singleWidth: 280 },
+    siblings: { ...base.groups.siblings, x: 595, width: 360, singleWidth: 300 },
+    nephews: { ...base.groups.nephews, x: 595, width: 360, singleWidth: 280 },
+    spouse: { ...base.groups.spouse, x: 1075 },
+    children: { ...base.groups.children, x: 1380, width: 420, singleWidth: 300 },
+    pets: { ...base.groups.pets, x: 1075, width: 210, singleWidth: 210 },
+    grandchildren: { ...base.groups.grandchildren, x: 1380, width: 420, singleWidth: 280 },
   };
 
   return {
@@ -301,9 +301,9 @@ function getWideLayout(): FamilyMapLayout {
       center: { x: 835, width: 210 },
       maternalAncestors: { x: 950, width: 430 },
       right: { x: 1300, width: 560 },
-      lowerLeft: { x: 520, width: 360 },
-      lowerMiddle: { x: 950, width: 210 },
-      lowerRight: { x: 1190, width: 420 },
+      lowerLeft: { x: 595, width: 360 },
+      lowerMiddle: { x: 1075, width: 210 },
+      lowerRight: { x: 1380, width: 420 },
     },
     groups,
   };
@@ -396,12 +396,50 @@ function getAdaptiveGroupWidth(config: GroupConfig, peopleCount: number, columns
     + Math.max(0, adaptiveColumnCount - 1) * layout.metrics.gridGap;
 }
 
+function getPairAwareGridPeople(
+  people: Pessoa[],
+  columns: GroupColumns,
+  spousePartnerByPersonId: Map<string, string>,
+) {
+  const columnCount = getColumnCount(columns);
+
+  if (columnCount !== 2 || spousePartnerByPersonId.size === 0) {
+    return people;
+  }
+
+  const singles: Pessoa[] = [];
+  const pairs: Pessoa[] = [];
+  const consumed = new Set<string>();
+
+  for (let index = 0; index < people.length; index += 1) {
+    const person = people[index];
+    if (consumed.has(person.id)) continue;
+
+    const nextPerson = people[index + 1];
+    const nextIsSpouse = Boolean(nextPerson && spousePartnerByPersonId.get(nextPerson.id) === person.id);
+
+    if (nextPerson && nextIsSpouse) {
+      pairs.push(person, nextPerson);
+      consumed.add(person.id);
+      consumed.add(nextPerson.id);
+      index += 1;
+      continue;
+    }
+
+    singles.push(person);
+    consumed.add(person.id);
+  }
+
+  return [...singles, ...pairs];
+}
+
 function getGridCellCount(people: Pessoa[], columns: GroupColumns, spousePartnerByPersonId: Map<string, string>) {
   const columnCount = getColumnCount(columns);
+  const orderedPeople = getPairAwareGridPeople(people, columns, spousePartnerByPersonId);
   let cells = 0;
-  people.forEach((person, index) => {
+  orderedPeople.forEach((person, index) => {
     const partnerId = spousePartnerByPersonId.get(person.id);
-    const previousPerson = people[index - 1];
+    const previousPerson = orderedPeople[index - 1];
     if (partnerId && previousPerson?.id === partnerId && cells % columnCount === 0) cells += 1;
     cells += 1;
   });

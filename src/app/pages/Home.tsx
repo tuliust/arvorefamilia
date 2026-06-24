@@ -79,7 +79,6 @@ import {
   Bot,
   Network,
   Monitor,
-  ChevronLeft,
   ChevronRight,
   X,
 } from 'lucide-react';
@@ -1306,18 +1305,8 @@ export function Home() {
                     directRelativeFilters={directRelativeFilters}
                     directRelationCounts={effectiveDirectRelationCounts}
                     onToggleDirectRelative={toggleDirectRelativeFilter}
+                    onCollapse={() => setSidebarOpen(false)}
                   />
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    className="absolute right-1 top-1 z-10 h-7 w-7 shrink-0 bg-white shadow-sm"
-                    onClick={() => setSidebarOpen(false)}
-                    title="Recolher painel lateral"
-                    aria-label="Recolher painel lateral"
-                    data-tour-target="tree-controls-collapse"
-                  >
-                    <ChevronLeft className="h-4 w-4" />
-                  </Button>
                 </div>
               </div>
             )}

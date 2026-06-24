@@ -1,7 +1,7 @@
 # Curiosidades
 
-> Última revisão: 2026-06-23  
-> Escopo: `/curiosidades`, estatísticas familiares, rankings, comparações, badges e exploração dos dados da árvore.  
+> Última revisão: 2026-06-23
+> Escopo: `/curiosidades`, estatísticas familiares, rankings, comparações, badges e exploração dos dados da árvore.
 > Status: canônico.
 
 ## Objetivo
@@ -21,7 +21,8 @@ A página depende principalmente de:
 - profissão;
 - indicador humano/pet;
 - campos de perfil;
-- arquivos e fatos históricos quando disponíveis.
+- arquivos e fatos históricos quando disponíveis;
+- badges selecionadas do questionário de perfil, com fallback quando a RPC de leitura não estiver disponível no ambiente remoto.
 
 ## Tipos de curiosidade
 
@@ -56,6 +57,8 @@ Validar:
 - carregamento com dados incompletos;
 - ausência de quebra quando não houver data ou local;
 - cards responsivos;
+- seletor de conexão entre pessoas não deve quebrar por SelectItem com valor vazio;
+- ausência da RPC de badges deve usar fallback sem rajada contínua de 404;
 - rankings sem duplicidade;
 - consistência com favoritos, pessoa pública e arquivos históricos quando houver ligação.
 

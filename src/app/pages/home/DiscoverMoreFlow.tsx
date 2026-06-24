@@ -54,7 +54,7 @@ function getPersonDisplayName(pessoa?: Pessoa | null) {
 function normalizeDiscoveryId(value: string) {
   return value
     .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[̀-ͯ]/g, '')
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-|-$/g, '');
@@ -145,7 +145,7 @@ export function DiscoverMoreFlow({
   onGenerate,
   onOpenTree,
   selectVariant = 'design-system',
-  generateLabel = 'Avan\u00e7ar',
+  generateLabel = 'Avançar',
   submittedHeaderClassName,
   submittedIcon,
 }: DiscoverMoreFlowProps) {
@@ -172,6 +172,9 @@ export function DiscoverMoreFlow({
               onChange={(event) => handlePersonChange(event.target.value)}
               className="mt-2 w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm text-gray-800 outline-none focus:border-blue-300 focus:ring-2 focus:ring-blue-100"
             >
+              <option value="" disabled>
+                Selecione
+              </option>
               {pessoas.map((pessoa) => (
                 <option key={pessoa.id} value={pessoa.id}>
                   {getPersonDisplayName(pessoa)}
@@ -244,14 +247,14 @@ export function DiscoverMoreFlow({
           <h3 className="mt-1 text-lg font-bold text-gray-950">
             {getPersonDisplayName(selectedPerson)}
           </h3>
-          <p className="mt-1 text-sm text-blue-900">Informa\u00e7\u00f5es selecionadas sobre esta pessoa.</p>
+          <p className="mt-1 text-sm text-blue-900">Informações selecionadas sobre esta pessoa.</p>
         </div>
         {submittedIcon}
       </div>
 
       {loading && (
         <p className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">
-          Carregando informa\u00e7\u00f5es selecionadas...
+          Carregando informações selecionadas...
         </p>
       )}
 
@@ -274,7 +277,7 @@ export function DiscoverMoreFlow({
               {selectedPerson.minibio ? (
                 <p>{selectedPerson.minibio}</p>
               ) : (
-                <p>Esta pessoa ainda n\u00e3o possui biografia cadastrada.</p>
+                <p>Esta pessoa ainda não possui biografia cadastrada.</p>
               )}
             </DiscoverResultCard>
           )}
@@ -284,19 +287,19 @@ export function DiscoverMoreFlow({
               {selectedPerson.curiosidades ? (
                 <p>{selectedPerson.curiosidades}</p>
               ) : (
-                <p>Esta pessoa ainda n\u00e3o possui curiosidades cadastradas.</p>
+                <p>Esta pessoa ainda não possui curiosidades cadastradas.</p>
               )}
             </DiscoverResultCard>
           )}
 
           {selectedTopics.includes(HISTORICAL_TOPIC) && (
-            <DiscoverResultCard title="Fatos Hist\u00f3ricos do Dia do Nascimento" actions={getCardActions(HISTORICAL_TOPIC, 'Fatos Hist\u00f3ricos do Dia do Nascimento')}>
+            <DiscoverResultCard title="Fatos Históricos do Dia do Nascimento" actions={getCardActions(HISTORICAL_TOPIC, 'Fatos Históricos do Dia do Nascimento')}>
               {historicalInsight?.conteudo ? (
                 <div className="space-y-2">
                   <p className="font-semibold text-slate-900">{historicalInsight.conteudo.title}</p>
                   {historicalInsight.conteudo.main_event && <p>{historicalInsight.conteudo.main_event}</p>}
                   <p className="font-semibold text-slate-800">
-                    {historicalInsight.conteudo.period_title || 'O que estava acontecendo na \u00e9poca'}
+                    {historicalInsight.conteudo.period_title || 'O que estava acontecendo na época'}
                   </p>
                   {Array.isArray(historicalInsight.conteudo.brazil?.body) && (
                     <div>
@@ -316,7 +319,7 @@ export function DiscoverMoreFlow({
                   )}
                 </div>
               ) : (
-                <p>Os acontecimentos hist\u00f3ricos ainda n\u00e3o foram gerados para esta pessoa.</p>
+                <p>Os acontecimentos históricos ainda não foram gerados para esta pessoa.</p>
               )}
             </DiscoverResultCard>
           )}
@@ -324,26 +327,26 @@ export function DiscoverMoreFlow({
           {selectedTopics.includes(ASTROLOGY_TOPIC) && (
             <DiscoverResultCard title="O que diz a astrologia" actions={getCardActions(ASTROLOGY_TOPIC, 'O que diz a astrologia')}>
               {selectedPerson.permitir_exibir_data_nascimento === false ? (
-                <p>Esta informa\u00e7\u00e3o est\u00e1 oculta pelas prefer\u00eancias de privacidade.</p>
+                <p>Esta informação está oculta pelas preferências de privacidade.</p>
               ) : astrologyInsight?.conteudo?.body ? (
                 <p>{astrologyInsight.conteudo.body}</p>
               ) : (
-                <p>O texto de astrologia ainda n\u00e3o foi gerado para esta pessoa.</p>
+                <p>O texto de astrologia ainda não foi gerado para esta pessoa.</p>
               )}
             </DiscoverResultCard>
           )}
 
           {selectedTopics.includes(TREE_TOPIC) && (
-            <DiscoverResultCard title="\u00c1rvore Geneal\u00f3gica" actions={getCardActions(TREE_TOPIC, '\u00c1rvore Geneal\u00f3gica')}>
+            <DiscoverResultCard title="Árvore Genealógica" actions={getCardActions(TREE_TOPIC, 'Árvore Genealógica')}>
               <div className="space-y-3">
-                <p>Abrir a \u00e1rvore geneal\u00f3gica de {getPersonDisplayName(selectedPerson)} como pessoa central.</p>
+                <p>Abrir a árvore genealógica de {getPersonDisplayName(selectedPerson)} como pessoa central.</p>
                 <Button
                   type="button"
                   variant="outline"
                   className="w-full bg-white sm:w-auto"
                   onClick={() => onOpenTree(selectedPerson.id)}
                 >
-                  Abrir \u00e1rvore
+                  Abrir árvore
                 </Button>
               </div>
             </DiscoverResultCard>

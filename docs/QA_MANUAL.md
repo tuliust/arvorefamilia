@@ -23,7 +23,7 @@ npm run typecheck
 npm run build
 ```
 
-Confirmar que qualquer alteração nesta frente está restrita a `docs/`.
+Confirmar que as alterações documentais ficaram restritas aos documentos canônicos necessários.
 
 ## Rotas de árvore
 
@@ -32,8 +32,11 @@ Confirmar que qualquer alteração nesta frente está restrita a `docs/`.
 - Abre a partir de `/`.
 - Carrega pessoas e relacionamentos.
 - Exibe pessoa de referência quando houver vínculo ou query `pessoa`.
+- O seletor de visualização não deve exibir mojibake em `Família de X` ou `Sua view padrão`.
+- O cabeçalho do painel desktop deve exibir ícone de olho sem borda e botão de recolher alinhado dentro do container na linha do título.
 - Permite alternar filtros de parentes diretos.
 - Permite alternar vivos, falecidos e pets.
+- Cards `Núcleo`, `Ascendentes` e `Colaterais` devem manter labels e contadores em uma linha, sem reticências.
 - Abre perfil em `/pessoa/:id`.
 - Mantém painel desktop sem cortar exportação.
 - Mobile não deve abrir painéis persistentes por padrão.
@@ -43,6 +46,7 @@ Confirmar que qualquer alteração nesta frente está restrita a `docs/`.
 - Preserva query `pessoa` ao alternar visualização.
 - Renderiza linha geracional horizontal.
 - Mantém filtros aplicáveis e contadores coerentes.
+- Replica no painel desktop os critérios visuais de seletor, cabeçalho, grupos e exportação validados em `/mapa-familiar`.
 
 ## Onboarding de membro
 
@@ -83,6 +87,8 @@ Confirmar que qualquer alteração nesta frente está restrita a `docs/`.
 
 - Cards e rankings carregam a partir dos dados reais.
 - Dropdowns iniciam neutros quando dependem de seleção.
+- O seletor de conexão entre duas pessoas não deve gerar erro Radix por item com valor vazio.
+- Ausência da RPC `get_person_profile_selected_badges` no Supabase remoto deve cair em fallback sem impedir o carregamento da página.
 - Estatísticas de pets, falecidos, casais e cidades devem ser coerentes com os dados.
 
 ### `/forum`
@@ -99,6 +105,8 @@ Confirmar que qualquer alteração nesta frente está restrita a `docs/`.
 ### `/notificacoes`
 
 - Dropdown e página não devem cortar ações.
+- No desktop, o botão `Alertas` dos headers de páginas de membro deve abrir o dropdown em vez de redirecionar diretamente.
+- O rodapé do dropdown deve exibir `Ver todas` e `Preferências` com larguras equivalentes e sem quebra de linha.
 - Ajustes devem estar acessíveis por `/ajustar-notificacoes`.
 
 ### `/pessoa/:id`

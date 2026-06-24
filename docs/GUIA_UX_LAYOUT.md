@@ -21,6 +21,9 @@
 - O painel lateral apresenta seleção de pessoa de referência, temas, métricas, filtros e exportação.
 - O seletor de visualização deve manter label fechado do tipo `Família de X` quando houver pessoa de referência.
 - O placeholder aberto é `Visualize a árvore como...`.
+- O cabeçalho do painel deve manter o título `Visualização`, ícone de olho sem borda visual e ação de recolher alinhada dentro da mesma linha do título.
+- Os cards `Núcleo`, `Ascendentes` e `Colaterais` devem preservar largura e gap gerais, com títulos e linhas legíveis em uma linha, sem reticências ou quebra forçada.
+- A área `Exportar` deve permanecer visível; quando houver sobra vertical, pode usar maior espaçamento interno e botões mais altos, desde que os quatro botões continuem no painel.
 - O painel compacto deve preservar acesso aos botões de exportação.
 
 ### Mobile
@@ -78,5 +81,6 @@ Pessoa marcada como falecida em `/meus-dados` pula `/preferencias` e segue para 
 
 - `/forum` mantém busca e filtros visíveis no desktop.
 - `/meus-favoritos` deve usar layout amplo para busca/filtros no desktop.
-- Notificações devem ter dropdown responsivo e rodapé que não corte ações.
+- O botão de notificações nos headers de mapa e páginas de membro deve abrir o dropdown, sem redirecionar diretamente para `/notificacoes` no desktop.
+- Notificações devem ter dropdown responsivo e rodapé em duas colunas iguais, com ações curtas sem quebra de linha.
 - O menu do avatar mantém atalhos de dúvidas e saída.

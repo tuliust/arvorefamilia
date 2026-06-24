@@ -32,3 +32,11 @@
     gap: 0.375rem;
   }
 }
+
+@media (min-width: 1024px) {
+  .forum-desktop-search-toolbar {
+    margin-left: 0 !important;
+    width: 100% !important;
+    max-width: none !important;
+  }
+}

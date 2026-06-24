@@ -51,7 +51,7 @@ export type TodayFamilyEvent = {
 
 export const curiositySectionCardClassName = 'rounded-2xl border border-gray-200 bg-white p-5 shadow-sm';
 
-export const curiosityStatusClassName = 'inline-flex w-fit items-center rounded-full border border-blue-100 bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700';
+export const curiosityStatusClassName = 'inline-flex min-w-[8rem] w-fit items-center justify-center whitespace-nowrap rounded-full border border-blue-100 bg-blue-50 px-4 py-1 text-center text-xs font-semibold text-blue-700';
 
 export const monthLabels = [
   'Janeiro',
@@ -71,7 +71,7 @@ export const monthLabels = [
 export function normalizeCuriosityText(value: unknown) {
   return String(value ?? '')
     .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[̀-ͯ]/g, '')
     .toLocaleLowerCase('pt-BR')
     .trim();
 }
@@ -497,16 +497,22 @@ export type WeddingMilestone = {
 };
 
 export const WEDDING_MILESTONES: WeddingMilestone[] = [
-  { label: 'Bodas de Jequitibá', years: 100, description: 'um século de união registrado na história da família' },
-  { label: 'Bodas de Platina', years: 65, description: 'uma trajetória rara e muito longeva' },
-  { label: 'Bodas de Diamante', years: 60, description: 'seis décadas de vínculo familiar' },
-  { label: 'Bodas de Ouro', years: 50, description: 'meio século de casamento' },
-  { label: 'Bodas de Prata', years: 25, description: 'vinte e cinco anos de união' },
   { label: 'Bodas de Papel', years: 1, description: 'o primeiro ano de casamento' },
+  { label: 'Bodas de Madeira', years: 5, description: 'cinco anos de uni?o' },
+  { label: 'Bodas de Estanho', years: 10, description: 'dez anos de uni?o' },
+  { label: 'Bodas de Cristal', years: 15, description: 'quinze anos de uni?o' },
+  { label: 'Bodas de Porcelana', years: 20, description: 'vinte anos de uni?o' },
+  { label: 'Bodas de Prata', years: 25, description: 'vinte e cinco anos de uni?o' },
+  { label: 'Bodas de P?rola', years: 30, description: 'trinta anos de uni?o' },
+  { label: 'Bodas de Esmeralda', years: 40, description: 'quarenta anos de uni?o' },
+  { label: 'Bodas de Rubi', years: 45, description: 'quarenta e cinco anos de uni?o' },
+  { label: 'Bodas de Ouro', years: 50, description: 'meio s?culo de casamento' },
+  { label: 'Bodas de Diamante', years: 60, description: 'sessenta anos de uni?o' },
+  { label: 'Bodas de Brilhante', years: 75, description: 'setenta e cinco anos de uni?o' },
 ];
 
 export function getWeddingMilestone(years: number) {
-  return WEDDING_MILESTONES.find((milestone) => years >= milestone.years) ?? null;
+  return WEDDING_MILESTONES.find((milestone) => years === milestone.years) ?? null;
 }
 
 function getEarlierDate(dates: Date[]) {
@@ -522,12 +528,18 @@ export function buildCoupleAnniversaries(
   const seen = new Set<string>();
 
   return relacionamentos
-    .filter((relacionamento) => Boolean(relacionamento.data_casamento))
+    .filter((relacionamento) => (
+      Boolean(relacionamento.ativo) &&
+      Boolean(relacionamento.data_casamento) &&
+      !relacionamento.data_separacao &&
+      relacionamento.subtipo_relacionamento !== 'separado'
+    ))
     .map((relacionamento) => {
       const pessoaA = pessoasMap.get(relacionamento.pessoa_origem_id);
       const pessoaB = pessoasMap.get(relacionamento.pessoa_destino_id);
 
       if (!pessoaA || !pessoaB || !relacionamento.data_casamento) return null;
+      if (isDeceased(pessoaA) || isDeceased(pessoaB)) return null;
 
       const weddingDate = parseFamilyDate(relacionamento.data_casamento);
       if (!weddingDate) return null;

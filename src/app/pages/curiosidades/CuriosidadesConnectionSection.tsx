@@ -58,18 +58,6 @@ export function CuriosidadesConnectionSection({
     setConnectionError(null);
   };
 
-
-  const placeholderPerson = {
-    id: '',
-    nome_completo: 'Selecione',
-    humano_ou_pet: 'Humano',
-  } as (typeof selectablePeople)[number];
-
-  const peopleWithPlaceholder = useMemo(
-    () => [placeholderPerson, ...selectablePeople],
-    [selectablePeople]
-  );
-
   const handleDiscoverConnection = () => {
     if (!personOneId || !personTwoId || connectionLoading) return;
 
@@ -130,7 +118,7 @@ export function CuriosidadesConnectionSection({
       {!error && !loading && selectablePeople.length >= 2 && (
         <div className="mt-5 min-w-0 overflow-hidden break-words">
           <ConnectionDiscoveryPanel
-            pessoas={peopleWithPlaceholder}
+            pessoas={selectablePeople}
             connectionPersonOneId={personOneId}
             connectionPersonTwoId={personTwoId}
             connectionLoading={connectionLoading}
