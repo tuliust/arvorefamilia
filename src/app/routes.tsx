@@ -43,7 +43,6 @@ const AdminAtividades = React.lazy(() => import('./pages/admin/AdminAtividades')
 const AdminSolicitacoesVinculos = React.lazy(() => import('./pages/admin/AdminSolicitacoesVinculos').then((module) => ({ default: module.AdminSolicitacoesVinculos })));
 const AdminNotificacoes = React.lazy(() => import('./pages/admin/AdminNotificacoes').then((module) => ({ default: module.AdminNotificacoes })));
 const AdminDuvidas = React.lazy(() => import('./pages/admin/AdminDuvidas').then((module) => ({ default: module.AdminDuvidas })));
-const MobileHorizontalFamilyMapPageLazy = React.lazy(() => import('./pages/MobileHorizontalFamilyMapPage').then((module) => ({ default: module.MobileHorizontalFamilyMapPage })));
 const LinhaGeracionalLazy = React.lazy(() => import('./pages/LinhaGeracional').then((module) => ({ default: module.LinhaGeracional })));
 
 function RouteFallback() {
@@ -134,10 +133,6 @@ function TreeHomeShell() {
 
 const adminMigrationPath = '/admin/migrar-dados';
 const treeHomeRouteElement = lazyRoute(<TreeAccessRoute><TreeHomeShell /></TreeAccessRoute>);
-const horizontalMapRouteElement = lazyRoute(
-  <TreeAccessRoute><MobileHorizontalFamilyMapPageLazy /></TreeAccessRoute>,
-  { disableMobileGlobalTweaks: true },
-);
 const linhaGeracionalRouteElement = lazyRoute(
   <TreeAccessRoute><LinhaGeracionalLazy /></TreeAccessRoute>,
   { disableMobileGlobalTweaks: true },
@@ -146,7 +141,7 @@ const linhaGeracionalRouteElement = lazyRoute(
 export const router = createBrowserRouter([
   { path: '/', element: lazyRoute(<TreeAccessRoute><RedirectToMapaFamiliar /></TreeAccessRoute>) },
   { path: '/mapa-familiar', element: treeHomeRouteElement },
-  { path: '/mapa-familiar-horizontal', element: horizontalMapRouteElement },
+  { path: '/mapa-familiar-horizontal', element: treeHomeRouteElement },
   { path: '/linha-geracional', element: linhaGeracionalRouteElement },
   { path: '/busca', element: lazyRoute(<TreeAccessRoute><BuscaResultados /></TreeAccessRoute>) },
   { path: '/entrar', element: lazyRoute(<Entrar />) },
