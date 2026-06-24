@@ -45,6 +45,10 @@ function getScrollState(element: HTMLDivElement | null) {
 
 export function CuriosidadesHero() {
   const scrollRef = useRef<HTMLDivElement | null>(null);
+  const stickyAnchorRef = useRef<HTMLDivElement | null>(null);
+  const stickyContentRef = useRef<HTMLElement | null>(null);
+  const [isPinned, setIsPinned] = useState(false);
+  const [stickyHeight, setStickyHeight] = useState(0);
   const [scrollState, setScrollState] = useState(() => getScrollState(null));
 
   const updateScrollState = () => {
@@ -79,6 +83,56 @@ export function CuriosidadesHero() {
     };
   }, []);
 
+  useEffect(() => {
+    const anchor = stickyAnchorRef.current;
+    const content = stickyContentRef.current;
+
+    if (!anchor || !content) return undefined;
+
+    let anchorTop = 0;
+    let frame: number | null = null;
+
+    const updateMetrics = () => {
+      anchorTop = anchor.getBoundingClientRect().top + window.scrollY;
+      setStickyHeight(content.offsetHeight);
+    };
+
+    const updatePinnedState = () => {
+      if (frame !== null) return;
+
+      frame = window.requestAnimationFrame(() => {
+        frame = null;
+        setIsPinned(window.scrollY >= Math.max(0, anchorTop));
+      });
+    };
+
+    const updateAll = () => {
+      updateMetrics();
+      updatePinnedState();
+    };
+
+    updateAll();
+
+    window.addEventListener('scroll', updatePinnedState, { passive: true });
+    window.addEventListener('resize', updateAll);
+
+    const resizeObserver = typeof ResizeObserver !== 'undefined'
+      ? new ResizeObserver(updateAll)
+      : null;
+
+    resizeObserver?.observe(content);
+
+    return () => {
+      window.removeEventListener('scroll', updatePinnedState);
+      window.removeEventListener('resize', updateAll);
+      resizeObserver?.disconnect();
+
+      if (frame !== null) {
+        window.cancelAnimationFrame(frame);
+      }
+    };
+  }, []);
+
   const scrollNav = (direction: 'left' | 'right') => {
     const element = scrollRef.current;
     if (!element) return;
@@ -93,47 +147,57 @@ export function CuriosidadesHero() {
   };
 
   return (
-    <section className="curiosidades-sticky-nav sticky top-0 z-[490] w-full border-b border-gray-200 bg-gray-50/95 py-4 shadow-[0_10px_24px_rgba(15,23,42,0.08)] backdrop-blur supports-[backdrop-filter]:bg-gray-50/85">
-      <nav aria-label="Se??es de curiosidades" className="mx-auto w-full max-w-7xl min-w-0 px-4 sm:px-6 lg:px-8">
-        <div className="flex min-w-0 items-stretch justify-center gap-2">
-          <button
-            type="button"
-            onClick={() => scrollNav('left')}
-            className={["curiosidades-section-scroll-button curiosidades-section-scroll-button-left inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-gray-200 bg-white p-0 text-blue-700 shadow-sm transition md:hidden", scrollState.canScrollLeft ? "opacity-100" : "opacity-40"].join(' ')}
-            aria-label="Ver bot?es anteriores"
-          >
-            <ChevronLeft className="h-5 w-5" />
-          </button>
+    <div ref={stickyAnchorRef} className="curiosidades-sticky-anchor">
+      {isPinned && <div style={{ height: stickyHeight }} aria-hidden="true" />}
 
-          <div ref={scrollRef} className="curiosidades-section-links-wrapper min-w-0 overflow-x-auto pb-1 xl:overflow-visible">
-            <div className="curiosidades-section-links flex min-w-max flex-nowrap justify-start gap-2 xl:min-w-0 xl:justify-center">
-              {sectionLinks.map((link) => {
-                const Icon = link.icon;
+      <section
+        ref={stickyContentRef}
+        className={[
+          'curiosidades-sticky-nav w-full border-b border-gray-200 bg-gray-50/95 py-4 shadow-[0_10px_24px_rgba(15,23,42,0.08)] backdrop-blur supports-[backdrop-filter]:bg-gray-50/85',
+          isPinned ? 'fixed inset-x-0 top-0 z-[700]' : 'relative z-[490]',
+        ].join(' ')}
+      >
+        <nav aria-label="Se??es de curiosidades" className="mx-auto w-full max-w-7xl min-w-0 px-4 sm:px-6 lg:px-8">
+          <div className="flex min-w-0 items-stretch justify-center gap-2">
+            <button
+              type="button"
+              onClick={() => scrollNav('left')}
+              className={["curiosidades-section-scroll-button curiosidades-section-scroll-button-left inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-gray-200 bg-white p-0 text-blue-700 shadow-sm transition md:hidden", scrollState.canScrollLeft ? "opacity-100" : "opacity-40"].join(' ')}
+              aria-label="Ver bot?es anteriores"
+            >
+              <ChevronLeft className="h-5 w-5" />
+            </button>
 
-                return (
-                  <a
-                    key={link.href}
-                    href={link.href}
-                    className="curiosidades-section-link flex min-h-20 w-[5.8rem] shrink-0 flex-col items-center justify-center gap-2 rounded-2xl border border-gray-200 bg-white px-2 py-2 text-center text-xs font-bold leading-tight text-blue-950 shadow-sm transition hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 xl:w-[6.5rem]"
-                  >
-                    <Icon className="h-5 w-5 shrink-0 text-blue-700" />
-                    <span>{link.label}</span>
-                  </a>
-                );
-              })}
+            <div ref={scrollRef} className="curiosidades-section-links-wrapper min-w-0 overflow-x-auto pb-1 xl:overflow-visible">
+              <div className="curiosidades-section-links flex min-w-max flex-nowrap justify-start gap-2 xl:min-w-0 xl:justify-center">
+                {sectionLinks.map((link) => {
+                  const Icon = link.icon;
+
+                  return (
+                    <a
+                      key={link.href}
+                      href={link.href}
+                      className="curiosidades-section-link flex min-h-20 w-[5.8rem] shrink-0 flex-col items-center justify-center gap-2 rounded-2xl border border-gray-200 bg-white px-2 py-2 text-center text-xs font-bold leading-tight text-blue-950 shadow-sm transition hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 xl:w-[6.5rem]"
+                    >
+                      <Icon className="h-5 w-5 shrink-0 text-blue-700" />
+                      <span>{link.label}</span>
+                    </a>
+                  );
+                })}
+              </div>
             </div>
-          </div>
 
-          <button
-            type="button"
-            onClick={() => scrollNav('right')}
-            className={["curiosidades-section-scroll-button curiosidades-section-scroll-button-right inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-gray-200 bg-white p-0 text-blue-700 shadow-sm transition md:hidden", scrollState.canScrollRight ? "opacity-100" : "opacity-40"].join(' ')}
-            aria-label="Ver pr?ximos bot?es"
-          >
-            <ChevronRight className="h-5 w-5" />
-          </button>
-        </div>
-      </nav>
-    </section>
+            <button
+              type="button"
+              onClick={() => scrollNav('right')}
+              className={["curiosidades-section-scroll-button curiosidades-section-scroll-button-right inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-gray-200 bg-white p-0 text-blue-700 shadow-sm transition md:hidden", scrollState.canScrollRight ? "opacity-100" : "opacity-40"].join(' ')}
+              aria-label="Ver pr?ximos bot?es"
+            >
+              <ChevronRight className="h-5 w-5" />
+            </button>
+          </div>
+        </nav>
+      </section>
+    </div>
   );
 }
