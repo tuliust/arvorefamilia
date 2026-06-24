@@ -17,6 +17,13 @@ import {
 } from 'lucide-react';
 
 import { HomeHeader } from './home/HomeHeader';
+import {
+  TREE_COLOR_PALETTE_CSS_VARIABLES,
+  TREE_COLOR_PALETTE_STORAGE_KEY,
+  TREE_COLOR_PALETTES,
+  isTreeColorPalette,
+  type TreeColorPalette,
+} from '../components/FamilyTree/treeColorPalettes';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabaseClient';
 import { getPrimaryLinkedPersonWithPessoa } from '../services/memberProfileService';
@@ -137,6 +144,26 @@ const SCREEN_DEFINITIONS: Array<Omit<LinhaGeracionalScreen, 'cards' | 'position'
 ];
 
 const TOOLBAR_ITEMS = ['Formato', 'Cor', 'Filtros', 'Zoom'];
+
+function getStoredTreeColorPalette(): TreeColorPalette {
+  if (typeof window === 'undefined') return 'white';
+
+  const stored = window.localStorage.getItem(TREE_COLOR_PALETTE_STORAGE_KEY);
+  return isTreeColorPalette(stored) ? stored : 'white';
+}
+
+function applyTreeColorPalette(value: TreeColorPalette) {
+  if (typeof document === 'undefined') return;
+
+  const palette = TREE_COLOR_PALETTES[value];
+  const root = document.documentElement;
+
+  root.dataset.treeColorPalette = value;
+
+  TREE_COLOR_PALETTE_CSS_VARIABLES.forEach((variableName) => {
+    root.style.setProperty(variableName, palette.cssVariables[variableName]);
+  });
+}
 
 function normalizePessoa(row: any): Pessoa {
   return {
@@ -388,6 +415,21 @@ function isPet(person: Pessoa) {
   return entityType === 'pet' || gender === 'pet' || gender === 'animal' || gender === 'mascote';
 }
 
+function getPaletteSlotForCard(card: LinhaGeracionalCard, generation: number) {
+  if (isPet(card.person)) return 'pets';
+  if (card.highlight) return 'central';
+
+  if (generation <= -4) return 'tataravos';
+  if (generation === -3) return 'bisavos';
+  if (generation === -2) return 'avos';
+  if (generation === -1) return 'pais';
+  if (generation === 0) return 'irmaos';
+  if (generation === 1) return 'filhos';
+  if (generation >= 2) return 'netos';
+
+  return 'central';
+}
+
 function getCardLabel(person: Pessoa, centralPersonId: string, generation: number, maps: RelationshipMaps) {
   if (person.id === centralPersonId) return 'Pessoa central';
   if (isPet(person)) return 'Pet da família';
@@ -453,25 +495,32 @@ function buildGenerationScreens(pessoas: Pessoa[], relacionamentos: Relacionamen
   });
 }
 
-function LinhaGeracionalCardView({ card, onClick }: { card: LinhaGeracionalCard; onClick: (person: Pessoa) => void }) {
+function LinhaGeracionalCardView({
+  card,
+  generation,
+  onClick,
+}: {
+  card: LinhaGeracionalCard;
+  generation: number;
+  onClick: (person: Pessoa) => void;
+}) {
+  const colorKey = getPaletteSlotForCard(card, generation);
+
   return (
     <div className="relative pl-8">
-      <span className="absolute left-[13px] top-1/2 h-px w-5 -translate-y-1/2 bg-blue-200" aria-hidden="true" />
+      <span
+        className="absolute left-[13px] top-1/2 h-px w-5 -translate-y-1/2 opacity-60"
+        style={{ backgroundColor: 'var(--tree-palette-edge-child)' }}
+        aria-hidden="true"
+      />
       <button
         type="button"
+        data-family-map-color-key={colorKey}
         onClick={() => onClick(card.person)}
-        className={[
-          'flex min-h-[74px] w-full items-center gap-3 rounded-2xl border px-3 py-2 text-left shadow-sm active:scale-[0.99]',
-          card.highlight
-            ? 'border-blue-200 bg-blue-600 text-white shadow-blue-950/10'
-            : 'border-slate-200 bg-white text-blue-950',
-        ].join(' ')}
+        className="flex min-h-[74px] w-full items-center gap-3 rounded-2xl border px-3 py-2 text-left shadow-sm active:scale-[0.99]"
       >
         <span
-          className={[
-            'flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-full text-sm font-black',
-            card.highlight ? 'bg-white/20 text-white' : 'bg-blue-50 text-blue-700',
-          ].join(' ')}
+          className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-full border border-white/70 bg-white/35 text-sm font-black shadow-inner"
           aria-hidden="true"
         >
           {card.person.foto_principal_url ? (
@@ -482,14 +531,15 @@ function LinhaGeracionalCardView({ card, onClick }: { card: LinhaGeracionalCard;
         </span>
         <span className="min-w-0 flex-1">
           <span className="block truncate text-sm font-black leading-tight">{card.name}</span>
-          <span className={card.highlight ? 'mt-1 block truncate text-[11px] font-bold text-blue-50' : 'mt-1 block truncate text-[11px] font-bold text-slate-500'}>
-            {card.label}{card.years ? ` · ${card.years}` : ''}
+          <span className="mt-1 block truncate text-[11px] font-bold opacity-80">
+            {card.label}{card.years ? ` ? ${card.years}` : ''}
           </span>
         </span>
       </button>
     </div>
   );
 }
+
 
 function GenerationScreen({ generation, onPersonClick }: { generation: LinhaGeracionalScreen; onPersonClick: (person: Pessoa) => void }) {
   return (
@@ -498,26 +548,64 @@ function GenerationScreen({ generation, onPersonClick }: { generation: LinhaGera
       aria-label={generation.title}
     >
       <div className="mx-auto flex w-full max-w-md flex-1 flex-col">
-        <div className="mb-4 rounded-3xl border border-slate-200 bg-white p-4 text-blue-950 shadow-sm">
-          <p className="text-[11px] font-black uppercase tracking-[0.2em] text-blue-600">{generation.position}</p>
+        <div
+          className="mb-4 rounded-3xl border p-4 shadow-sm"
+          style={{
+            background: 'var(--tree-palette-legend-bg)',
+            borderColor: 'var(--tree-palette-group-border)',
+            color: 'var(--tree-palette-text-primary)',
+          }}
+        >
+          <p
+            className="text-[11px] font-black uppercase tracking-[0.2em]"
+            style={{ color: 'var(--tree-palette-edge-sibling)' }}
+          >
+            {generation.position}
+          </p>
           <h2 className="mt-2 text-2xl font-black leading-none tracking-[-0.035em]">{generation.title}</h2>
-          <p className="mt-2 text-sm font-semibold text-slate-500">{generation.subtitle}</p>
+          <p className="mt-2 text-sm font-semibold" style={{ color: 'var(--tree-palette-text-muted)' }}>
+            {generation.subtitle}
+          </p>
         </div>
 
         <div className="relative flex flex-1 flex-col justify-center gap-3 pb-4">
-          {generation.cards.length > 0 && <span className="absolute bottom-10 left-[13px] top-10 w-px bg-blue-200" aria-hidden="true" />}
+          {generation.cards.length > 0 && (
+            <span
+              className="absolute bottom-10 left-[13px] top-10 w-px opacity-60"
+              style={{ backgroundColor: 'var(--tree-palette-edge-child)' }}
+              aria-hidden="true"
+            />
+          )}
           {generation.cards.length > 0 ? (
             generation.cards.map((card) => (
-              <LinhaGeracionalCardView key={card.id} card={card} onClick={onPersonClick} />
+              <LinhaGeracionalCardView
+                key={card.id}
+                card={card}
+                generation={generation.generation}
+                onClick={onPersonClick}
+              />
             ))
           ) : (
-            <div className="rounded-3xl border border-dashed border-slate-200 bg-white/80 p-6 text-center text-sm font-bold text-slate-500">
+            <div
+              className="rounded-3xl border border-dashed p-6 text-center text-sm font-bold"
+              style={{
+                background: 'var(--tree-palette-legend-bg)',
+                borderColor: 'var(--tree-palette-group-border)',
+                color: 'var(--tree-palette-text-muted)',
+              }}
+            >
               {SCREEN_DEFINITIONS.find((screen) => screen.id === generation.id)?.emptyLabel || 'Nenhum familiar encontrado.'}
             </div>
           )}
           {generation.truncated && (
-            <p className="rounded-2xl bg-blue-50 px-3 py-2 text-center text-[11px] font-bold text-blue-700">
-              Mostrando os primeiros {MAX_CARDS_PER_SCREEN} registros desta geração.
+            <p
+              className="rounded-2xl px-3 py-2 text-center text-[11px] font-bold"
+              style={{
+                background: 'var(--tree-palette-legend-bg)',
+                color: 'var(--tree-palette-text-muted)',
+              }}
+            >
+              Mostrando os primeiros {MAX_CARDS_PER_SCREEN} registros desta gera??o.
             </p>
           )}
         </div>
@@ -525,6 +613,7 @@ function GenerationScreen({ generation, onPersonClick }: { generation: LinhaGera
     </section>
   );
 }
+
 
 function LinhaGeracionalToolbar({ mapaFamiliarPath }: { mapaFamiliarPath: string }) {
   return (
@@ -587,7 +676,7 @@ function LinhaGeracionalBottomNav({ navigateTo }: { navigateTo: (path: string) =
 
 function LinhaGeracionalLoading() {
   return (
-    <main className="flex min-h-[100dvh] items-center justify-center bg-[#f8efe4] px-6 text-center lg:hidden">
+    <main className="flex min-h-[100dvh] items-center justify-center px-6 text-center lg:hidden" style={{ background: 'var(--tree-palette-canvas-bg)' }}>
       <div className="rounded-3xl border border-blue-100 bg-white/95 p-6 shadow-xl">
         <RefreshCw className="mx-auto h-7 w-7 animate-spin text-blue-700" aria-hidden="true" />
         <p className="mt-3 text-sm font-bold text-slate-700">Preparando linha geracional...</p>
@@ -598,7 +687,7 @@ function LinhaGeracionalLoading() {
 
 function LinhaGeracionalError({ message, onRetry }: { message: string; onRetry: () => void }) {
   return (
-    <main className="flex min-h-[100dvh] items-center justify-center bg-[#f8efe4] px-6 text-center lg:hidden">
+    <main className="flex min-h-[100dvh] items-center justify-center px-6 text-center lg:hidden" style={{ background: 'var(--tree-palette-canvas-bg)' }}>
       <div className="rounded-3xl border border-red-100 bg-white/95 p-6 shadow-xl">
         <AlertCircle className="mx-auto h-8 w-8 text-red-600" aria-hidden="true" />
         <p className="mt-3 text-sm font-bold text-red-700">{message}</p>
@@ -633,6 +722,10 @@ export function LinhaGeracional() {
   const searchInputRef = React.useRef<HTMLInputElement | null>(null);
   const scrollerRef = React.useRef<HTMLDivElement | null>(null);
   const frameRef = React.useRef<number | null>(null);
+
+  React.useEffect(() => {
+    applyTreeColorPalette(getStoredTreeColorPalette());
+  }, []);
 
   const mapaFamiliarPath = `/mapa-familiar${location.search}`;
   const mapaHorizontalDesktopPath = `/mapa-familiar-horizontal${location.search}`;
@@ -777,7 +870,15 @@ export function LinhaGeracional() {
 
   return (
     <>
-      <main className="flex min-h-[100dvh] flex-col overflow-hidden bg-white text-blue-950 lg:hidden" data-linha-geracional-mobile-root="true">
+      <main
+        className="flex min-h-[100dvh] flex-col overflow-hidden lg:hidden"
+        data-linha-geracional-mobile-root="true"
+        data-family-map-horizontal-root="true"
+        style={{
+          background: 'var(--tree-palette-canvas-bg)',
+          color: 'var(--tree-palette-text-primary)',
+        }}
+      >
         <HomeHeader
           currentTreeViewLabel={centralPerson ? `Família de ${getFirstName(centralPerson.nome_completo)}` : 'Linha Geracional'}
           isSearchExpanded={searchExpanded}
@@ -822,13 +923,19 @@ export function LinhaGeracional() {
                 ))}
               </div>
 
-              <div className="shrink-0 border-t border-slate-200 bg-white px-4 py-3">
+              <div
+                className="shrink-0 border-t px-4 py-3"
+                style={{
+                  background: 'var(--tree-palette-legend-bg)',
+                  borderColor: 'var(--tree-palette-group-border)',
+                }}
+              >
                 <div className="flex items-center justify-between gap-3">
                   <button
                     type="button"
                     onClick={() => goToGeneration(activeIndex - 1)}
                     disabled={activeIndex === 0}
-                    className="flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-white text-blue-700 shadow-sm disabled:opacity-35"
+                    className="flex h-10 w-10 items-center justify-center rounded-full border bg-white/60 shadow-sm disabled:opacity-35" style={{ borderColor: 'var(--tree-palette-group-border)', color: 'var(--tree-palette-edge-sibling)' }}
                     aria-label="Geração anterior"
                   >
                     <ChevronLeft className="h-5 w-5" />
@@ -843,14 +950,15 @@ export function LinhaGeracional() {
                           onClick={() => goToGeneration(index)}
                           className={[
                             'h-2 rounded-full transition-all',
-                            index === activeIndex ? 'w-7 bg-blue-600' : 'w-2 bg-slate-300',
+                            index === activeIndex ? 'w-7' : 'w-2 opacity-35',
                           ].join(' ')}
+                          style={{ backgroundColor: index === activeIndex ? 'var(--tree-palette-edge-sibling)' : 'var(--tree-palette-text-muted)' }}
                           aria-label={`Ir para ${generation.title}`}
                           aria-current={index === activeIndex ? 'step' : undefined}
                         />
                       ))}
                     </div>
-                    <p className="truncate text-center text-[11px] font-bold text-slate-500">
+                    <p className="truncate text-center text-[11px] font-bold" style={{ color: 'var(--tree-palette-text-muted)' }}>
                       Deslize para navegar entre gerações
                     </p>
                   </div>
@@ -859,7 +967,7 @@ export function LinhaGeracional() {
                     type="button"
                     onClick={() => goToGeneration(activeIndex + 1)}
                     disabled={activeIndex === generationScreens.length - 1}
-                    className="flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-white text-blue-700 shadow-sm disabled:opacity-35"
+                    className="flex h-10 w-10 items-center justify-center rounded-full border bg-white/60 shadow-sm disabled:opacity-35" style={{ borderColor: 'var(--tree-palette-group-border)', color: 'var(--tree-palette-edge-sibling)' }}
                     aria-label="Próxima geração"
                   >
                     <ChevronRight className="h-5 w-5" />
