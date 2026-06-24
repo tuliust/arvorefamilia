@@ -9,6 +9,43 @@ type CuriosidadesPhotoSliderProps = Pick<CuriosidadesDataProps, 'pessoas' | 'loa
 
 const PHOTOS_PER_PAGE = 3;
 
+function SliderControl({
+  direction,
+  onClick,
+  disabled = false,
+}: {
+  direction: 'previous' | 'next';
+  onClick: () => void;
+  disabled?: boolean;
+}) {
+  const Icon = direction === 'previous' ? ChevronLeft : ChevronRight;
+  const label = direction === 'previous' ? 'Foto anterior' : 'Próxima foto';
+
+  const handleKeyDown = (event: React.KeyboardEvent<HTMLSpanElement>) => {
+    if (disabled) return;
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      onClick();
+    }
+  };
+
+  return (
+    <span
+      role="button"
+      tabIndex={disabled ? -1 : 0}
+      aria-disabled={disabled}
+      aria-label={label}
+      onClick={() => {
+        if (!disabled) onClick();
+      }}
+      onKeyDown={handleKeyDown}
+      className="inline-flex h-10 w-10 shrink-0 cursor-pointer items-center justify-center rounded-full bg-white/95 text-blue-700 shadow-lg transition hover:bg-blue-50 aria-disabled:cursor-not-allowed aria-disabled:opacity-40"
+    >
+      <Icon className="h-5 w-5" />
+    </span>
+  );
+}
+
 export function CuriosidadesPhotoSlider({
   pessoas,
   loading,
@@ -117,22 +154,12 @@ export function CuriosidadesPhotoSlider({
 
               {photos.length > 1 && (
                 <>
-                  <button
-                    type="button"
-                    onClick={goPrevious}
-                    className="absolute left-3 top-1/2 inline-flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-white/95 text-blue-700 shadow-lg transition hover:bg-blue-50"
-                    aria-label="Foto anterior"
-                  >
-                    <ChevronLeft className="h-5 w-5" />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={goNext}
-                    className="absolute right-3 top-1/2 inline-flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-white/95 text-blue-700 shadow-lg transition hover:bg-blue-50"
-                    aria-label="Próxima foto"
-                  >
-                    <ChevronRight className="h-5 w-5" />
-                  </button>
+                  <div className="absolute left-3 top-1/2 -translate-y-1/2">
+                    <SliderControl direction="previous" onClick={goPrevious} />
+                  </div>
+                  <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                    <SliderControl direction="next" onClick={goNext} />
+                  </div>
                 </>
               )}
             </div>
@@ -144,24 +171,8 @@ export function CuriosidadesPhotoSlider({
             </p>
 
             <div className="hidden shrink-0 items-center gap-2 md:flex">
-              <button
-                type="button"
-                onClick={goPrevious}
-                disabled={photos.length <= 1}
-                className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-white text-blue-700 shadow-sm transition hover:bg-blue-50 disabled:opacity-40"
-                aria-label="Foto anterior"
-              >
-                <ChevronLeft className="h-4 w-4" />
-              </button>
-              <button
-                type="button"
-                onClick={goNext}
-                disabled={photos.length <= 1}
-                className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-white text-blue-700 shadow-sm transition hover:bg-blue-50 disabled:opacity-40"
-                aria-label="Próxima foto"
-              >
-                <ChevronRight className="h-4 w-4" />
-              </button>
+              <SliderControl direction="previous" onClick={goPrevious} disabled={photos.length <= 1} />
+              <SliderControl direction="next" onClick={goNext} disabled={photos.length <= 1} />
             </div>
           </div>
         </div>
