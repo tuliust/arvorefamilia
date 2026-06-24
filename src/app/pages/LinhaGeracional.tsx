@@ -947,15 +947,15 @@ export function LinhaGeracional() {
           navigateFromHome={navigateFromLinhaGeracional}
         />
 
-        <div className="h-[5.9rem] shrink-0" aria-hidden="true" />
+        <div className="h-0 shrink-0" aria-hidden="true" />
 
-        <section className="min-h-0 flex-1 overflow-hidden pb-[calc(env(safe-area-inset-bottom,0px)+5.8rem)]">
-          <div className="flex h-full flex-col rounded-t-2xl bg-transparent px-4 pb-4 pt-3">
-            <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-[1.35rem] shadow-inner" style={{ background: 'var(--tree-palette-canvas-bg)' }}>
+        <section className="min-h-0 flex-1 overflow-hidden pb-[calc(env(safe-area-inset-bottom,0px)+5.8rem)]" style={{ background: 'var(--tree-palette-canvas-bg)' }}>
+          <div className="flex h-full flex-col bg-transparent">
+            <div className="flex min-h-0 flex-1 flex-col overflow-hidden" style={{ background: 'var(--tree-palette-canvas-bg)' }}>
               <div
                 className="shrink-0 border-b px-4 py-3"
                 style={{
-                  background: 'var(--tree-palette-legend-bg)',
+                  background: 'var(--tree-palette-canvas-bg)',
                   borderColor: 'var(--tree-palette-group-border)',
                 }}
               >
@@ -1018,14 +1018,10 @@ export function LinhaGeracional() {
                   </button>
                 </div>
 
-                <p className="text-[11px] font-black uppercase tracking-[0.2em]" style={{ color: 'var(--tree-palette-edge-sibling)' }}>{`Gera??o ${activeIndex + 1}`}</p>
                 <div className="mt-1 flex items-center justify-between gap-3">
                   <h1 className="truncate text-lg font-black tracking-[-0.035em]" style={{ color: 'var(--tree-palette-text-primary)' }}>
-                    {generationScreens[activeIndex]?.title || 'Gerações'}
+                    {`Gera??o ${activeIndex + 1}`}
                   </h1>
-                  <span className="shrink-0 rounded-full px-2.5 py-1 text-[11px] font-black" style={{ background: 'var(--tree-palette-legend-bg)', color: 'var(--tree-palette-edge-sibling)' }}>
-                    {activeIndex + 1}/{generationScreens.length}
-                  </span>
                 </div>
               </div>
 
@@ -1040,57 +1036,7 @@ export function LinhaGeracional() {
                 ))}
               </div>
 
-              <div
-                className="shrink-0 border-t px-4 py-3"
-                style={{
-                  background: 'var(--tree-palette-legend-bg)',
-                  borderColor: 'var(--tree-palette-group-border)',
-                }}
-              >
-                <div className="flex items-center justify-between gap-3">
-                  <button
-                    type="button"
-                    onClick={() => goToGeneration(activeIndex - 1)}
-                    disabled={activeIndex === 0}
-                    className="flex h-10 w-10 items-center justify-center rounded-full border bg-white/60 shadow-sm disabled:opacity-35" style={{ borderColor: 'var(--tree-palette-group-border)', color: 'var(--tree-palette-edge-sibling)' }}
-                    aria-label="Geração anterior"
-                  >
-                    <ChevronLeft className="h-5 w-5" />
-                  </button>
 
-                  <div className="flex min-w-0 flex-1 flex-col items-center gap-2">
-                    <div className="flex items-center gap-1.5" aria-label={`Geração ${activeIndex + 1} de ${generationScreens.length}`}>
-                      {generationScreens.map((generation, index) => (
-                        <button
-                          key={generation.id}
-                          type="button"
-                          onClick={() => goToGeneration(index)}
-                          className={[
-                            'h-2 rounded-full transition-all',
-                            index === activeIndex ? 'w-7' : 'w-2 opacity-35',
-                          ].join(' ')}
-                          style={{ backgroundColor: index === activeIndex ? 'var(--tree-palette-edge-sibling)' : 'var(--tree-palette-text-muted)' }}
-                          aria-label={`Ir para ${generation.title}`}
-                          aria-current={index === activeIndex ? 'step' : undefined}
-                        />
-                      ))}
-                    </div>
-                    <p className="truncate text-center text-[11px] font-bold" style={{ color: 'var(--tree-palette-text-muted)' }}>
-                      Deslize para navegar entre gerações
-                    </p>
-                  </div>
-
-                  <button
-                    type="button"
-                    onClick={() => goToGeneration(activeIndex + 1)}
-                    disabled={activeIndex === generationScreens.length - 1}
-                    className="flex h-10 w-10 items-center justify-center rounded-full border bg-white/60 shadow-sm disabled:opacity-35" style={{ borderColor: 'var(--tree-palette-group-border)', color: 'var(--tree-palette-edge-sibling)' }}
-                    aria-label="Próxima geração"
-                  >
-                    <ChevronRight className="h-5 w-5" />
-                  </button>
-                </div>
-              </div>
             </div>
           </div>
         </section>
