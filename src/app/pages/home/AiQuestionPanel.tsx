@@ -31,7 +31,7 @@ export function AiQuestionPanel({
   hideTitle = false,
 }: AiQuestionPanelProps) {
   return (
-    <section>
+    <section className="w-full max-w-full">
       {!hideTitle && <h2 className="mb-2 text-base font-semibold text-gray-900">Pergunte à IA</h2>}
       {!aiAnswer ? (
         <Textarea
@@ -41,21 +41,21 @@ export function AiQuestionPanel({
             onClearError();
           }}
           placeholder={placeholder}
-          className="min-h-[170px] w-full resize-y rounded-lg border border-slate-400 bg-white px-4 py-3 text-sm leading-relaxed text-slate-900 shadow-sm outline-none transition placeholder:text-slate-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+          className="min-h-[170px] w-full max-w-full resize-y rounded-lg border border-slate-400 bg-white px-4 py-3 text-sm leading-relaxed text-slate-900 shadow-sm outline-none transition placeholder:text-slate-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
         />
       ) : (
-        <div className="min-h-[170px] w-full whitespace-pre-line rounded-lg border border-slate-500 bg-slate-100 px-4 py-3 text-sm leading-relaxed text-slate-800 shadow-inner">
+        <div className="min-h-[170px] w-full max-w-full whitespace-pre-line rounded-lg border border-slate-500 bg-slate-100 px-4 py-3 text-sm leading-relaxed text-slate-800 shadow-inner">
           {aiAnswer}
         </div>
       )}
-      <div className="mt-3 flex flex-col justify-end gap-2 sm:flex-row">
+      <div className="mt-3 flex w-full max-w-full flex-col justify-end gap-2 md:flex-row">
         {aiAnswer && (
-          <Button type="button" variant="outline" onClick={onNewAiQuestion} className="w-full bg-white sm:w-auto">
+          <Button type="button" variant="outline" onClick={onNewAiQuestion} className="w-full bg-white md:w-auto">
             Nova pergunta
           </Button>
         )}
         {!aiAnswer && (
-          <Button onClick={onAskAi} disabled={!canAskAi || aiLoading} className="w-full sm:w-auto">
+          <Button onClick={onAskAi} disabled={!canAskAi || aiLoading} className="w-full md:w-auto">
             {aiLoading ? 'Perguntando...' : 'Perguntar'}
           </Button>
         )}
