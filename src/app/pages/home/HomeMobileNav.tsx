@@ -1218,9 +1218,9 @@ export function HomeMobileNav({
                                       setFullControlsOpen(false);
                                       handleViewAsPersonChange(person.id);
                                     }}
-                                    className="w-full rounded-xl border border-blue-100 bg-white px-3 py-2.5 text-left text-sm font-bold leading-tight text-blue-950 shadow-sm transition hover:border-blue-300 hover:bg-blue-50 active:scale-[0.98]"
+                                    className="flex min-h-11 w-full items-center rounded-xl border border-blue-100 bg-white px-3 py-2.5 text-left text-sm font-bold leading-tight text-blue-950 shadow-sm transition hover:border-blue-300 hover:bg-blue-50 active:scale-[0.98]"
                                   >
-                                    <span className="block max-w-full whitespace-normal break-words">{person.label}</span>
+                                    <span className="block min-w-0 flex-1 truncate">{person.label}</span>
                                   </button>
                                 ))}
                               </div>
