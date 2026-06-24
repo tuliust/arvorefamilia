@@ -257,7 +257,7 @@ function isExternallyVisible(
 function expandHorizontalSpousesForFilter(
   directScopeIds: Set<string>,
   spouseAnchorScopeIds: Set<string>,
-  pessoas: Pessoa[],
+  _pessoas: Pessoa[],
   maps: RelationshipMaps,
   centralPersonId: string,
   visiblePersonIds: Set<string> | undefined,
@@ -266,18 +266,9 @@ function expandHorizontalSpousesForFilter(
   if (!directRelativeFilters.conjuge) return directScopeIds;
 
   const nextScopeIds = new Set(directScopeIds);
-  const peopleById = new Map(pessoas.map((person) => [person.id, person]));
-  const generationByPersonId = inferHorizontalGenerations(pessoas, maps, centralPersonId);
 
   spouseAnchorScopeIds.forEach((anchorId) => {
-    const anchor = peopleById.get(anchorId);
-    if (!anchor) return;
-
-    const generation = getManualGeneration(anchor) ?? generationByPersonId.get(anchorId);
-    if (!generation || !FILTERABLE_HORIZONTAL_SPOUSE_GENERATIONS.has(generation)) return;
-
     maps.spousesByPerson.get(anchorId)?.forEach((spouseId) => {
-      if (!peopleById.has(spouseId)) return;
       if (!isExternallyVisible(spouseId, visiblePersonIds, centralPersonId)) return;
       nextScopeIds.add(spouseId);
     });
