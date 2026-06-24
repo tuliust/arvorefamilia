@@ -445,7 +445,16 @@ export function MemberPageHeader({
           </div>
           <div className="flex shrink-0 items-center justify-end gap-2 md:hidden">
             {!hideHeaderActions && mobileCustomActions}
-            {!hideHeaderActions && !hideMobileHeaderActions && <UserProfileMenu notificationBadgeCount={unreadNotificationsCount} />}
+            {!hideHeaderActions && (
+              <HeaderNotificationsDropdown
+                wrapperClassName="relative z-[502] inline-flex"
+                buttonClassName={memberIconButtonClassName}
+                iconClassName="h-4 w-4"
+                title="Alertas"
+                ariaLabel="Abrir menu de alertas"
+              />
+            )}
+            {!hideHeaderActions && !hideMobileHeaderActions && <UserProfileMenu />}
           </div>
 
           {!hideHeaderActions && (isAdminSection ? (
@@ -453,7 +462,7 @@ export function MemberPageHeader({
               {ADMIN_HEADER_ACTIONS.map((action) => (
                 <HeaderActionButton key={`${action.label}-${action.to ?? 'button'}`} action={action} />
               ))}
-              <UserProfileMenu notificationBadgeCount={unreadNotificationsCount} />
+              <UserProfileMenu />
             </div>
           ) : (
             <div className="hidden min-w-0 shrink-0 flex-row flex-nowrap items-center justify-end gap-2 overflow-visible md:flex">
@@ -462,7 +471,7 @@ export function MemberPageHeader({
                 <HeaderActionButton key={`${action.label}-${action.to ?? 'button'}`} action={action} />
               ))}
               {customActions}
-              <UserProfileMenu notificationBadgeCount={unreadNotificationsCount} />
+              <UserProfileMenu />
             </div>
           ))}
         </div>

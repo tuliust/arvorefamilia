@@ -20,8 +20,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { isAdminUser } from '../../services/permissionService';
 import { getMemberProfile, getPrimaryLinkedPersonWithPessoa, MemberProfile } from '../../services/memberProfileService';
 import { clearTreeDataCache } from '../../services/treeDataCache';
-import { listarNotificacoesSupabase } from '../../services/userEngagementService';
-import type { NotificacaoUsuario, Pessoa } from '../../types';
+import type { Pessoa } from '../../types';
 import {
   TREE_COLOR_PALETTE_CSS_VARIABLES,
   TREE_COLOR_PALETTE_STORAGE_KEY,
@@ -45,9 +44,6 @@ function getInitials(displayName: string) {
     .join('');
 }
 
-function getNotificationTitle(notificacao: NotificacaoUsuario) {
-  return String(notificacao.titulo || notificacao.mensagem || 'Nova notificação').trim();
-}
 
 function getFirstName(value?: string | null) {
   const clean = value?.trim();
@@ -89,20 +85,8 @@ interface UserProfileMenuProps {
   notificationBadgeCount?: number;
 }
 
-function AvatarNotificationBadge({ count }: { count?: number }) {
-  if (!count || count <= 0) return null;
 
-  return (
-    <span
-      className="pointer-events-none absolute -right-1 -top-1 inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-red-600 px-1.5 text-[11px] font-bold leading-5 text-white ring-2 ring-white md:hidden"
-      aria-label={`${count} notificação${count === 1 ? '' : 'es'} não lida${count === 1 ? '' : 's'}`}
-    >
-      {count > 99 ? '99+' : count}
-    </span>
-  );
-}
-
-export function UserProfileMenu({ variant = 'avatar', notificationBadgeCount = 0 }: UserProfileMenuProps) {
+export function UserProfileMenu({ variant = 'avatar' }: UserProfileMenuProps) {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
@@ -112,7 +96,6 @@ export function UserProfileMenu({ variant = 'avatar', notificationBadgeCount = 0
   const [linkedPerson, setLinkedPerson] = useState<Pessoa | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const [treeColorPalette, setTreeColorPalette] = useState<TreeColorPalette>(getStoredPalette);
-  const [recentNotifications, setRecentNotifications] = useState<NotificacaoUsuario[]>([]);
 
   useEffect(() => {
     let cancelled = false;
@@ -150,33 +133,6 @@ export function UserProfileMenu({ variant = 'avatar', notificationBadgeCount = 0
     window.localStorage.setItem(TREE_COLOR_PALETTE_STORAGE_KEY, treeColorPalette);
   }, [treeColorPalette]);
 
-  useEffect(() => {
-    if (!user?.id) {
-      setRecentNotifications([]);
-      return;
-    }
-
-    let cancelled = false;
-
-    async function loadRecentUserNotifications() {
-      try {
-        const notificacoes = await listarNotificacoesSupabase(user.id);
-        if (!cancelled) {
-          setRecentNotifications(notificacoes.slice(0, 8));
-        }
-      } catch {
-        if (!cancelled) {
-          setRecentNotifications([]);
-        }
-      }
-    }
-
-    void loadRecentUserNotifications();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [user?.id]);
 
   useEffect(() => {
     if (typeof document === 'undefined') return undefined;
@@ -239,8 +195,6 @@ export function UserProfileMenu({ variant = 'avatar', notificationBadgeCount = 0
 
   const itemClassName =
     'flex w-full items-center gap-3 rounded-xl px-4 py-3 text-left text-sm font-semibold text-gray-800 transition hover:bg-blue-50 hover:text-blue-800';
-  const notificationPreviewItems = recentNotifications.slice(0, 2);
-  const remainingNotificationCount = Math.max(recentNotifications.length - notificationPreviewItems.length, 0);
   const isHomeHeaderVariant = variant === 'home-header';
 
   return (
@@ -272,7 +226,6 @@ export function UserProfileMenu({ variant = 'avatar', notificationBadgeCount = 0
             <UserCircle2 className="h-6 w-6" />
           )}
         </span>
-        {!isHomeHeaderVariant && <AvatarNotificationBadge count={notificationBadgeCount} />}
         {isHomeHeaderVariant && (
           <>
             <span className="min-w-0 flex-1 leading-none">
@@ -404,34 +357,6 @@ export function UserProfileMenu({ variant = 'avatar', notificationBadgeCount = 0
                     </div>
                   </div>
                 </div>
-
-                {notificationPreviewItems.length > 0 && (
-                  <button
-                    type="button"
-                    className="mb-3 w-full rounded-2xl border border-blue-100 bg-blue-50 p-3 text-left shadow-sm transition hover:bg-blue-100 md:hidden"
-                    onClick={() => goTo('/notificacoes')}
-                    aria-label="Abrir notificações recentes"
-                  >
-                    <div className="mb-2 flex items-center justify-between gap-3">
-                      <span className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-wide text-blue-900">
-                        <Bell className="h-4 w-4" />
-                        Alertas recentes
-                      </span>
-                      {remainingNotificationCount > 0 && (
-                        <span className="rounded-full bg-blue-600 px-2 py-0.5 text-[11px] font-bold text-white">
-                          +{remainingNotificationCount}
-                        </span>
-                      )}
-                    </div>
-                    <div className="space-y-1">
-                      {notificationPreviewItems.map((notificacao) => (
-                        <p key={notificacao.id} className="truncate text-sm font-semibold text-blue-950">
-                          {getNotificationTitle(notificacao)}
-                        </p>
-                      ))}
-                    </div>
-                  </button>
-                )}
 
                 <button type="button" className={itemClassName} onClick={() => goTo('/mapa-familiar')}>
                   <Home className="h-5 w-5 text-blue-700" />

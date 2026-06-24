@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+﻿import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   Bell,
   CalendarDays,
@@ -49,6 +49,7 @@ interface HomeMobileNavProps {
 }
 
 type ViewAsPersonOption = { id: string; label: string };
+type MobileFamilyGroupPersonOption = { id: string; label: string };
 type MobileFamilyGroupTab = 'nucleo' | 'ascendentes' | 'colaterais';
 type MobileFamilyGroupCountKey =
   | 'pais'
@@ -266,6 +267,150 @@ function getMobileFamilyGroupCounts(
     primos: 0,
     sobrinhos: 0,
   };
+}
+
+
+function getMobileFamilyGroupPeople(
+  centralPersonId: string | undefined,
+  pessoas: Pessoa[],
+  relacionamentos: Relacionamento[]
+): Record<MobileFamilyGroupCountKey, MobileFamilyGroupPersonOption[]> {
+  const activeRelationships = relacionamentos.filter((relationship) => relationship.ativo !== false);
+  const pessoasById = new globalThis.Map(pessoas.filter((pessoa) => Boolean(pessoa.id)).map((pessoa) => [pessoa.id, pessoa]));
+  const emptyGroups: Record<MobileFamilyGroupCountKey, Set<string>> = {
+    pais: new Set<string>(),
+    conjuges: new Set<string>(),
+    irmaos: new Set<string>(),
+    filhos: new Set<string>(),
+    avos: new Set<string>(),
+    bisavos: new Set<string>(),
+    tataravos: new Set<string>(),
+    tios: new Set<string>(),
+    primos: new Set<string>(),
+    sobrinhos: new Set<string>(),
+  };
+
+  const addId = (set: Set<string>, value: string | undefined | null) => {
+    if (value) set.add(value);
+  };
+
+  const toOptions = (ids: Set<string>) =>
+    Array.from(ids)
+      .map((id) => {
+        const pessoa = pessoasById.get(id);
+        return {
+          id,
+          label: pessoa ? getShortPersonName(pessoa) : id,
+        };
+      })
+      .sort((a, b) => a.label.localeCompare(b.label, 'pt-BR', { sensitivity: 'base' }));
+
+  if (!centralPersonId) {
+    activeRelationships.forEach((relationship) => {
+      if (relationship.tipo_relacionamento === 'pai' || relationship.tipo_relacionamento === 'mae') {
+        addId(emptyGroups.pais, relationship.pessoa_origem_id);
+        addId(emptyGroups.filhos, relationship.pessoa_destino_id);
+      }
+
+      if (relationship.tipo_relacionamento === 'conjuge') {
+        addId(emptyGroups.conjuges, relationship.pessoa_origem_id);
+        addId(emptyGroups.conjuges, relationship.pessoa_destino_id);
+      }
+
+      if (relationship.tipo_relacionamento === 'irmao') {
+        addId(emptyGroups.irmaos, relationship.pessoa_origem_id);
+        addId(emptyGroups.irmaos, relationship.pessoa_destino_id);
+      }
+
+      if (relationship.tipo_relacionamento === 'filho') {
+        addId(emptyGroups.filhos, relationship.pessoa_destino_id);
+      }
+    });
+
+    return Object.fromEntries(
+      Object.entries(emptyGroups).map(([key, ids]) => [key, toOptions(ids)])
+    ) as Record<MobileFamilyGroupCountKey, MobileFamilyGroupPersonOption[]>;
+  }
+
+  const groups: Record<MobileFamilyGroupCountKey, Set<string>> = {
+    pais: new Set<string>(),
+    conjuges: new Set<string>(),
+    irmaos: new Set<string>(),
+    filhos: new Set<string>(),
+    avos: new Set<string>(),
+    bisavos: new Set<string>(),
+    tataravos: new Set<string>(),
+    tios: new Set<string>(),
+    primos: new Set<string>(),
+    sobrinhos: new Set<string>(),
+  };
+
+  activeRelationships.forEach((relationship) => {
+    if (
+      relationship.pessoa_destino_id === centralPersonId &&
+      (relationship.tipo_relacionamento === 'pai' || relationship.tipo_relacionamento === 'mae')
+    ) {
+      addId(groups.pais, relationship.pessoa_origem_id);
+    }
+
+    if (
+      relationship.pessoa_origem_id === centralPersonId &&
+      (relationship.tipo_relacionamento === 'pai' || relationship.tipo_relacionamento === 'mae' || relationship.tipo_relacionamento === 'filho')
+    ) {
+      addId(groups.filhos, relationship.pessoa_destino_id);
+    }
+
+    if (
+      relationship.tipo_relacionamento === 'irmao' &&
+      (relationship.pessoa_origem_id === centralPersonId || relationship.pessoa_destino_id === centralPersonId)
+    ) {
+      addId(
+        groups.irmaos,
+        relationship.pessoa_origem_id === centralPersonId
+          ? relationship.pessoa_destino_id
+          : relationship.pessoa_origem_id
+      );
+    }
+
+    if (
+      relationship.tipo_relacionamento === 'conjuge' &&
+      (relationship.pessoa_origem_id === centralPersonId || relationship.pessoa_destino_id === centralPersonId)
+    ) {
+      addId(
+        groups.conjuges,
+        relationship.pessoa_origem_id === centralPersonId
+          ? relationship.pessoa_destino_id
+          : relationship.pessoa_origem_id
+      );
+    }
+  });
+
+  groups.pais.forEach((parentId) => {
+    activeRelationships.forEach((relationship) => {
+      if (
+        relationship.pessoa_destino_id === parentId &&
+        (relationship.tipo_relacionamento === 'pai' || relationship.tipo_relacionamento === 'mae')
+      ) {
+        addId(groups.avos, relationship.pessoa_origem_id);
+      }
+
+      if (
+        relationship.tipo_relacionamento === 'irmao' &&
+        (relationship.pessoa_origem_id === parentId || relationship.pessoa_destino_id === parentId)
+      ) {
+        addId(
+          groups.tios,
+          relationship.pessoa_origem_id === parentId
+            ? relationship.pessoa_destino_id
+            : relationship.pessoa_origem_id
+        );
+      }
+    });
+  });
+
+  return Object.fromEntries(
+    Object.entries(groups).map(([key, ids]) => [key, toOptions(ids)])
+  ) as Record<MobileFamilyGroupCountKey, MobileFamilyGroupPersonOption[]>;
 }
 
 const mobileTreeToolbarTopClass = 'top-[calc(env(safe-area-inset-top,0px)+5.05rem)]';
@@ -616,6 +761,11 @@ export function HomeMobileNav({
 
   const mobileGroupCounts = useMemo(
     () => getMobileFamilyGroupCounts(currentViewAsPersonValue || mobilePeople[0]?.id, mobileRelationships),
+    [currentViewAsPersonValue, mobilePeople, mobileRelationships]
+  );
+
+  const mobileGroupPeople = useMemo(
+    () => getMobileFamilyGroupPeople(currentViewAsPersonValue || mobilePeople[0]?.id, mobilePeople, mobileRelationships),
     [currentViewAsPersonValue, mobilePeople, mobileRelationships]
   );
 
@@ -1039,20 +1189,39 @@ export function HomeMobileNav({
                   <div className="mb-5 overflow-hidden rounded-2xl border border-slate-200 bg-white">
                     {MOBILE_GROUP_ROWS[activeGroupTab].map((row) => {
                       const Icon = row.icon;
+                      const people = mobileGroupPeople[row.key];
 
                       return (
-                        <button
-                          key={row.key}
-                          type="button"
-                          className="grid h-16 w-full grid-cols-[3rem_minmax(0,1fr)_auto_1.5rem] items-center gap-2 border-b border-slate-200 px-3 text-left last:border-b-0 active:bg-blue-50"
-                        >
-                          <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-100 text-blue-950" aria-hidden="true">
-                            <Icon className="h-6 w-6" />
-                          </span>
-                          <span className="truncate text-lg font-semibold text-blue-950">{row.label}</span>
-                          <strong className="text-lg font-black text-blue-950">{mobileGroupCounts[row.key]}</strong>
-                          <ChevronRight className="h-5 w-5 text-slate-400" />
-                        </button>
+                        <div key={row.key} className="border-b border-slate-200 last:border-b-0">
+                          <div className="grid min-h-16 w-full grid-cols-[3rem_minmax(0,1fr)_auto_1.5rem] items-center gap-2 px-3 text-left">
+                            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-100 text-blue-950" aria-hidden="true">
+                              <Icon className="h-6 w-6" />
+                            </span>
+                            <span className="truncate text-lg font-semibold text-blue-950">{row.label}</span>
+                            <strong className="text-lg font-black text-blue-950">{mobileGroupCounts[row.key]}</strong>
+                            <ChevronRight className="h-5 w-5 text-slate-400" />
+                          </div>
+
+                          {people.length > 0 && (
+                            <div className="border-t border-slate-100 bg-slate-50/70 px-3 pb-3 pt-3">
+                              <div className="flex w-full flex-wrap gap-2">
+                                {people.map((person) => (
+                                  <button
+                                    key={person.id}
+                                    type="button"
+                                    onClick={() => {
+                                      setFullControlsOpen(false);
+                                      handleViewAsPersonChange(person.id);
+                                    }}
+                                    className="max-w-full rounded-full border border-blue-100 bg-white px-3 py-1.5 text-left text-sm font-bold leading-tight text-blue-950 shadow-sm transition hover:border-blue-300 hover:bg-blue-50 active:scale-[0.98]"
+                                  >
+                                    <span className="block max-w-full truncate">{person.label}</span>
+                                  </button>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                        </div>
                       );
                     })}
                   </div>
@@ -1173,7 +1342,7 @@ function SummaryTile({
       <Icon className="h-10 w-10 shrink-0" />
       <div className="min-w-0">
         <strong className="block text-4xl font-black leading-none tracking-[-0.04em]">{value}</strong>
-        <span className="block truncate text-base font-semibold text-blue-950">{label}</span>
+        <span className="mt-1.5 block truncate text-base font-semibold text-blue-950">{label}</span>
       </div>
     </div>
   );

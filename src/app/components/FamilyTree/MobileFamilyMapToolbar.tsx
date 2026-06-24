@@ -35,12 +35,12 @@ export function MobileFamilyMapToolbar({
     <nav
       aria-label="Controles do mapa familiar"
       className={[
-        'border-b border-slate-200 bg-white/95 px-0 py-2 shadow-sm backdrop-blur transition-[padding-bottom] duration-200 md:hidden',
+        'border-b border-slate-200 bg-white/95 px-0 pb-4 pt-2 shadow-sm backdrop-blur transition-[padding-bottom] duration-200 md:hidden',
         className,
       ].filter(Boolean).join(' ')}
       style={{
         top: 'calc(env(safe-area-inset-top,0px)+4.5rem)',
-        paddingBottom: activeAction === 'formato' ? '8.25rem' : activeAction ? '7.25rem' : undefined,
+        paddingBottom: activeAction === 'formato' ? '9rem' : activeAction ? '8rem' : undefined,
       }}
       data-mobile-family-map-toolbar="true"
       data-mobile-family-map-toolbar-active={activeAction ? 'true' : undefined}
