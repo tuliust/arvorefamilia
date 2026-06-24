@@ -355,6 +355,41 @@ export function VisualEmptyCard({ label }: { label: string }) {
   );
 }
 
+function getPairAwareGridPeople(
+  people: Pessoa[],
+  columnCount: number,
+  spousePartnerByPersonId?: Map<string, string>,
+) {
+  if (columnCount !== 2 || !spousePartnerByPersonId || spousePartnerByPersonId.size === 0) {
+    return people;
+  }
+
+  const singles: Pessoa[] = [];
+  const pairs: Pessoa[] = [];
+  const consumed = new Set<string>();
+
+  for (let index = 0; index < people.length; index += 1) {
+    const person = people[index];
+    if (consumed.has(person.id)) continue;
+
+    const nextPerson = people[index + 1];
+    const nextIsSpouse = Boolean(nextPerson && spousePartnerByPersonId.get(nextPerson.id) === person.id);
+
+    if (nextPerson && nextIsSpouse) {
+      pairs.push(person, nextPerson);
+      consumed.add(person.id);
+      consumed.add(nextPerson.id);
+      index += 1;
+      continue;
+    }
+
+    singles.push(person);
+    consumed.add(person.id);
+  }
+
+  return [...singles, ...pairs];
+}
+
 export function VisualGroup({
   title,
   people,
@@ -418,10 +453,14 @@ export function VisualGroup({
   const effectiveColumns = visiblePeople.length === 1 ? 'single' : columns;
   const gridColumns = effectiveColumns === 'quad' ? 'grid-cols-4' : effectiveColumns === 'triple' ? 'grid-cols-3' : effectiveColumns === 'double' ? 'grid-cols-2' : 'grid-cols-1';
   const columnCount = effectiveColumns === 'quad' ? 4 : effectiveColumns === 'triple' ? 3 : effectiveColumns === 'double' ? 2 : 1;
+  const orderedVisiblePeople = React.useMemo(
+    () => getPairAwareGridPeople(visiblePeople, columnCount, spousePartnerByPersonId),
+    [columnCount, spousePartnerByPersonId, visiblePeople]
+  );
   const renderedItems = React.useMemo(() => {
     const items: Array<{ type: 'person'; person: Pessoa } | { type: 'spacer'; key: string }> = [];
 
-    visiblePeople.forEach((person) => {
+    orderedVisiblePeople.forEach((person) => {
       const partnerId = spousePartnerByPersonId?.get(person.id);
       const previousItem = items[items.length - 1];
       const followsPartner = Boolean(
@@ -442,7 +481,7 @@ export function VisualGroup({
     });
 
     return items;
-  }, [columnCount, spousePartnerByPersonId, visiblePeople]);
+  }, [columnCount, orderedVisiblePeople, spousePartnerByPersonId]);
 
   const handleToggle = (event: React.MouseEvent<HTMLButtonElement>) => {
     event.stopPropagation();

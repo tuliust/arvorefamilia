@@ -36,7 +36,7 @@ export function CuriosidadesDiscoverySection({
   const [discoverError, setDiscoverError] = useState<string | null>(null);
   const [insights, setInsights] = useState<PersonGeneratedInsight[]>([]);
 
-  const selectedPerson = selectablePeople.find((pessoa) => pessoa.id === selectedPersonId) ?? selectablePeople[0] ?? null;
+  const selectedPerson = selectablePeople.find((pessoa) => pessoa.id === selectedPersonId) ?? null;
   const astrologyInsight = getInsightByType(insights, 'astrology');
   const historicalInsight = getInsightByType(insights, 'historical_events');
 
@@ -58,8 +58,8 @@ export function CuriosidadesDiscoverySection({
 
     const selectedPersonStillExists = selectablePeople.some((pessoa) => pessoa.id === selectedPersonId);
 
-    if (!selectedPersonId || !selectedPersonStillExists) {
-      setSelectedPersonId(selectablePeople[0].id);
+    if (selectedPersonId && !selectedPersonStillExists) {
+      setSelectedPersonId('');
       setSelectedTopics([]);
       setSubmitted(false);
       resetDiscoveryResults();
@@ -93,7 +93,7 @@ export function CuriosidadesDiscoverySection({
         setInsights(Array.isArray(result) ? result : []);
       }
     } catch (loadError) {
-      setDiscoverError(loadError instanceof Error ? loadError.message : 'N\u00e3o foi poss\u00edvel carregar as informa\u00e7\u00f5es selecionadas.');
+      setDiscoverError(loadError instanceof Error ? loadError.message : 'Não foi possível carregar as informações selecionadas.');
     } finally {
       setDiscoverLoading(false);
     }
@@ -116,12 +116,12 @@ export function CuriosidadesDiscoverySection({
       </div>
 
       <p className="mt-3 text-sm leading-6 text-gray-600">
-        Escolha uma pessoa da \u00e1rvore e selecione os t\u00f3picos que deseja explorar.
+        Escolha uma pessoa da árvore e selecione os tópicos que deseja explorar.
       </p>
 
       {error && (
         <div className="mt-5 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
-          N\u00e3o foi poss\u00edvel carregar as pessoas para descoberta agora.
+          Não foi possível carregar as pessoas para descoberta agora.
         </div>
       )}
 
@@ -131,11 +131,11 @@ export function CuriosidadesDiscoverySection({
 
       {!error && !loading && selectablePeople.length === 0 && (
         <div className="mt-5 rounded-xl border border-dashed border-gray-200 bg-gray-50 px-4 py-5 text-sm text-gray-600">
-          Ainda n\u00e3o h\u00e1 pessoas cadastradas para explorar nesta se\u00e7\u00e3o.
+          Ainda não há pessoas cadastradas para explorar nesta seção.
         </div>
       )}
 
-      {!error && !loading && selectedPerson && (
+      {!error && !loading && selectablePeople.length > 0 && (
         <div className="mt-5 space-y-4">
           <DiscoverMoreFlow
             pessoas={selectablePeople}

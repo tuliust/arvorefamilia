@@ -396,12 +396,50 @@ function getAdaptiveGroupWidth(config: GroupConfig, peopleCount: number, columns
     + Math.max(0, adaptiveColumnCount - 1) * layout.metrics.gridGap;
 }
 
+function getPairAwareGridPeople(
+  people: Pessoa[],
+  columns: GroupColumns,
+  spousePartnerByPersonId: Map<string, string>,
+) {
+  const columnCount = getColumnCount(columns);
+
+  if (columnCount !== 2 || spousePartnerByPersonId.size === 0) {
+    return people;
+  }
+
+  const singles: Pessoa[] = [];
+  const pairs: Pessoa[] = [];
+  const consumed = new Set<string>();
+
+  for (let index = 0; index < people.length; index += 1) {
+    const person = people[index];
+    if (consumed.has(person.id)) continue;
+
+    const nextPerson = people[index + 1];
+    const nextIsSpouse = Boolean(nextPerson && spousePartnerByPersonId.get(nextPerson.id) === person.id);
+
+    if (nextPerson && nextIsSpouse) {
+      pairs.push(person, nextPerson);
+      consumed.add(person.id);
+      consumed.add(nextPerson.id);
+      index += 1;
+      continue;
+    }
+
+    singles.push(person);
+    consumed.add(person.id);
+  }
+
+  return [...singles, ...pairs];
+}
+
 function getGridCellCount(people: Pessoa[], columns: GroupColumns, spousePartnerByPersonId: Map<string, string>) {
   const columnCount = getColumnCount(columns);
+  const orderedPeople = getPairAwareGridPeople(people, columns, spousePartnerByPersonId);
   let cells = 0;
-  people.forEach((person, index) => {
+  orderedPeople.forEach((person, index) => {
     const partnerId = spousePartnerByPersonId.get(person.id);
-    const previousPerson = people[index - 1];
+    const previousPerson = orderedPeople[index - 1];
     if (partnerId && previousPerson?.id === partnerId && cells % columnCount === 0) cells += 1;
     cells += 1;
   });
