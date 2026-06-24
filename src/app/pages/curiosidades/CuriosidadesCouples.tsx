@@ -118,10 +118,7 @@ export function CuriosidadesCouples({
       {!error && !loading && (
         <div className="mt-5 space-y-6">
           <div>
-            <div className="flex items-center gap-2">
-              <HeartHandshake className="h-4 w-4 text-blue-700" />
-              <h3 className="text-base font-bold text-gray-950">Idade média ao casar</h3>
-            </div>
+            <h3 className="text-base font-bold text-gray-950">Idade média ao casar</h3>
             <p className="mt-2 text-sm leading-6 text-gray-600">
               Estimativa calculada com data de casamento e data de nascimento dos cônjuges.
             </p>
@@ -147,10 +144,7 @@ export function CuriosidadesCouples({
           </div>
 
           <div className="border-t border-gray-100 pt-5">
-            <div className="flex items-center gap-2">
-              <Medal className="h-4 w-4 text-blue-700" />
-              <h3 className="text-base font-bold text-gray-950">Bodas</h3>
-            </div>
+            <h3 className="text-base font-bold text-gray-950">Bodas</h3>
 
             {completedCouples.length === 0 ? (
               <div className="mt-4 rounded-xl border border-dashed border-gray-200 bg-gray-50 px-4 py-5 text-sm text-gray-600">

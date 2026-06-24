@@ -151,15 +151,15 @@ export function Curiosidades() {
             <div id="geracoes" className="scroll-mt-24">
               <CuriosidadesGenerations {...curiosityDataProps} />
             </div>
-
-            <div id="rota" className="scroll-mt-24">
-              <CuriosidadesRouteSection {...curiosityDataProps} />
-            </div>
           </div>
 
           <div className="min-w-0 space-y-4">
             <div id="bodas" className="scroll-mt-24">
               <CuriosidadesCouples {...curiosityDataProps} />
+            </div>
+
+            <div id="rota" className="scroll-mt-24">
+              <CuriosidadesRouteSection {...curiosityDataProps} />
             </div>
           </div>
         </div>

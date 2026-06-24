@@ -46,15 +46,12 @@ export function CuriosidadesGenerations({
   const [expandedGenerationKey, setExpandedGenerationKey] = useState<string>('');
 
   useEffect(() => {
-    if (loading || error || generationsWithPeople.length === 0) {
-      setExpandedGenerationKey('');
-      return;
-    }
+    if (!expandedGenerationKey) return;
 
-    if (!expandedGenerationKey || !generationsWithPeople.some((generation) => generation.key === expandedGenerationKey)) {
-      setExpandedGenerationKey(generationsWithPeople[0].key);
+    if (!generationsWithPeople.some((generation) => generation.key === expandedGenerationKey)) {
+      setExpandedGenerationKey('');
     }
-  }, [error, expandedGenerationKey, generationsWithPeople, loading]);
+  }, [expandedGenerationKey, generationsWithPeople]);
 
   return (
     <section className={curiositySectionCardClassName}>
