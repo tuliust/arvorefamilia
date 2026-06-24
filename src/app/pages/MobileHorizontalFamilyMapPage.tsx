@@ -9,9 +9,9 @@ import { supabase } from '../lib/supabaseClient';
 import { getPrimaryLinkedPersonWithPessoa } from '../services/memberProfileService';
 import type { Pessoa, Relacionamento } from '../types';
 
-const MOBILE_HORIZONTAL_MAX_WAVES = 4;
-const MOBILE_HORIZONTAL_MAX_PEOPLE = 260;
-const SUPABASE_IN_CHUNK_SIZE = 80;
+const MOBILE_HORIZONTAL_MAX_WAVES = 2;
+const MOBILE_HORIZONTAL_MAX_PEOPLE = 90;
+const SUPABASE_IN_CHUNK_SIZE = 40;
 
 const MOBILE_HORIZONTAL_FILTERS: DirectRelativeFilters = {
   pais: true,

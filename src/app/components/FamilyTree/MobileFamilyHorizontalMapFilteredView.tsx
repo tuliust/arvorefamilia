@@ -4,7 +4,6 @@ import { toast } from 'sonner';
 import type { Pessoa, Relacionamento } from '../../types';
 import { isPetFamilyMember } from '../../utils/personEntity';
 import type { FamilyTreeActions } from './FamilyTree';
-import { VisualPersonCard } from './FamilyTreeVisualCards';
 import {
   type DirectRelativeFilters,
   type DirectRelativeGroup,
@@ -34,7 +33,7 @@ type MobileHorizontalGeneration = {
   totalCount: number;
 };
 
-const MAX_PEOPLE_PER_GENERATION = 80;
+const MAX_PEOPLE_PER_GENERATION = 24;
 
 const EMPTY_COUNTS: Record<DirectRelativeGroup, number> = {
   pais: 0,
@@ -287,6 +286,70 @@ function getCardLabel(person: Pessoa, centralPersonId: string, generation: Mobil
   return generation.label;
 }
 
+function getFirstTwoNames(fullName?: string | null) {
+  return (fullName ?? '')
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .join(' ') || 'Pessoa';
+}
+
+function getYear(value?: string | number | null) {
+  if (!value) return '';
+  return String(value).match(/\b(18|19|20|21)\d{2}\b/)?.[0] ?? '';
+}
+
+function MobileHorizontalSimplePersonCard({
+  person,
+  label,
+  central,
+  onClick,
+}: {
+  person: Pessoa;
+  label: string;
+  central: boolean;
+  onClick: (person: Pessoa) => void;
+}) {
+  const birthYear = getYear(person.data_nascimento);
+  const deathYear = getYear(person.data_falecimento);
+  const deceased = Boolean(person.falecido || person.data_falecimento);
+
+  return (
+    <button
+      type="button"
+      onClick={() => onClick(person)}
+      className={[
+        'flex min-h-[64px] w-full items-center gap-3 rounded-2xl border px-3 py-2 text-left shadow-sm active:scale-[0.99]',
+        central
+          ? 'border-cyan-300 bg-cyan-700 text-white'
+          : 'border-slate-200 bg-white text-slate-900',
+      ].join(' ')}
+    >
+      <span
+        className={[
+          'flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-sm font-black',
+          central ? 'bg-white/20 text-white' : 'bg-cyan-50 text-cyan-800',
+        ].join(' ')}
+        aria-hidden="true"
+      >
+        {getFirstTwoNames(person.nome_completo).slice(0, 1)}
+      </span>
+
+      <span className="min-w-0 flex-1">
+        <span className="block truncate text-sm font-black leading-tight">
+          {getFirstTwoNames(person.nome_completo)}
+        </span>
+        <span className={central ? 'mt-0.5 block truncate text-[11px] font-bold text-cyan-50' : 'mt-0.5 block truncate text-[11px] font-bold text-slate-500'}>
+          {label}
+          {birthYear ? ` ? ${birthYear}` : ''}
+          {deceased && deathYear ? ` ? ${deathYear}` : ''}
+        </span>
+      </span>
+    </button>
+  );
+}
+
 function MobileFamilyHorizontalMapFilteredViewComponent({
   pessoas,
   relacionamentos,
@@ -383,12 +446,10 @@ function MobileFamilyHorizontalMapFilteredViewComponent({
           </div>
 
           {activeGeneration.people.map((person) => (
-            <VisualPersonCard
+            <MobileHorizontalSimplePersonCard
               key={person.id}
               person={person}
               label={getCardLabel(person, centralPersonId, activeGeneration)}
-              horizontal
-              roomy
               central={person.id === centralPersonId}
               onClick={onPersonClick}
             />
