@@ -1015,6 +1015,33 @@ function MobileFamilyHorizontalMapViewComponent({
     [activeColumnLeft, spouseConnectors],
   );
 
+  const activeVisibleConnectors = React.useMemo(
+    () => {
+      const viewportLeft = activeConnectorViewportLeft;
+      const viewportRight = activeConnectorViewportLeft + activeConnectorViewportWidth;
+      const horizontalTolerance = 12;
+
+      return connectors.filter((connector) => (
+        connector.points.some(([x]) => (
+          x >= viewportLeft - horizontalTolerance
+          && x <= viewportRight + horizontalTolerance
+        ))
+        || connector.points.some((point, index) => {
+          const previousPoint = connector.points[index - 1];
+          if (!previousPoint) return false;
+
+          const minX = Math.min(previousPoint[0], point[0]);
+          const maxX = Math.max(previousPoint[0], point[0]);
+
+          return minX <= viewportRight + horizontalTolerance
+            && maxX >= viewportLeft - horizontalTolerance;
+        })
+      ));
+    },
+    [activeConnectorViewportLeft, activeConnectorViewportWidth, connectors],
+  );
+
+
   React.useEffect(() => {
     if (activeGenerations.length === 0) {
       onDirectRelationRenderedCounts?.(EMPTY_COUNTS);
@@ -1293,7 +1320,7 @@ function MobileFamilyHorizontalMapViewComponent({
                 strokeLinecap="round"
                 strokeLinejoin="round"
               >
-                {connectors.map((connector) => (
+                {activeVisibleConnectors.map((connector) => (
                   <path key={connector.id} d={connectorPath(connector.points)} />
                 ))}
               </g>
@@ -1318,7 +1345,7 @@ function MobileFamilyHorizontalMapViewComponent({
               );
             })}
 
-            {Array.from(layouts.values()).map((layout) => (
+            {activeLayouts.map((layout) => (
               <div
                 key={layout.person.id}
                 className="absolute z-20"
