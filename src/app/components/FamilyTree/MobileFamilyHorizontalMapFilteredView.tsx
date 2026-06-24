@@ -1,9 +1,10 @@
 import React from 'react';
+import { toast } from 'sonner';
 
 import type { Pessoa, Relacionamento } from '../../types';
 import { isPetFamilyMember } from '../../utils/personEntity';
 import type { FamilyTreeActions } from './FamilyTree';
-import { MobileFamilyHorizontalMapView } from './MobileFamilyHorizontalMapView';
+import { VisualPersonCard } from './FamilyTreeVisualCards';
 import {
   type DirectRelativeFilters,
   type DirectRelativeGroup,
@@ -26,13 +27,31 @@ type RelationshipMaps = {
   spousesByPerson: Map<string, Set<string>>;
 };
 
-const FILTERABLE_HORIZONTAL_SPOUSE_GENERATIONS = new Set([4, 5, 6]);
+type MobileHorizontalGeneration = {
+  generation: number;
+  label: string;
+  people: Pessoa[];
+  totalCount: number;
+};
 
-function isNonEmptyString(value: string | null | undefined): value is string {
-  return Boolean(value);
-}
+const MAX_PEOPLE_PER_GENERATION = 80;
 
-function addToMap(map: Map<string, Set<string>>, key: string, value: string) {
+const EMPTY_COUNTS: Record<DirectRelativeGroup, number> = {
+  pais: 0,
+  avos: 0,
+  bisavos: 0,
+  tataravos: 0,
+  conjuge: 0,
+  filhos: 0,
+  netos: 0,
+  irmaos: 0,
+  sobrinhos: 0,
+  tios: 0,
+  primos: 0,
+  pets: 0,
+};
+
+function addToMap(map: Map<string, Set<string>>, key?: string | null, value?: string | null) {
   if (!key || !value) return;
   if (!map.has(key)) map.set(key, new Set());
   map.get(key)!.add(value);
@@ -89,55 +108,6 @@ function buildRelationshipMaps(relacionamentos: Relacionamento[]): RelationshipM
   return { parentsByChild, childrenByParent, spousesByPerson };
 }
 
-function getManualGeneration(person: Pessoa) {
-  const manualGeneration = Number(person.manual_generation);
-  if (!Number.isFinite(manualGeneration)) return undefined;
-
-  return Math.min(6, Math.max(1, Math.trunc(manualGeneration)));
-}
-
-function inferHorizontalGenerations(
-  pessoas: Pessoa[],
-  maps: RelationshipMaps,
-  centralPersonId: string,
-) {
-  const peopleById = new Map(pessoas.map((person) => [person.id, person]));
-  const generationByPersonId = new Map<string, number>();
-
-  pessoas.forEach((person) => {
-    const manualGeneration = getManualGeneration(person);
-    if (manualGeneration !== undefined) generationByPersonId.set(person.id, manualGeneration);
-  });
-
-  const visited = new Set<string>();
-  const queue: Array<{ personId: string; generation: number }> = [
-    { personId: centralPersonId, generation: generationByPersonId.get(centralPersonId) ?? 5 },
-  ];
-
-  while (queue.length > 0) {
-    const current = queue.shift();
-    if (!current || !peopleById.has(current.personId) || visited.has(current.personId)) continue;
-    visited.add(current.personId);
-
-    const generation = generationByPersonId.get(current.personId)
-      ?? Math.min(6, Math.max(1, current.generation));
-
-    if (!generationByPersonId.has(current.personId)) generationByPersonId.set(current.personId, generation);
-
-    maps.parentsByChild.get(current.personId)?.forEach((parentId) => {
-      queue.push({ personId: parentId, generation: generation - 1 });
-    });
-    maps.childrenByParent.get(current.personId)?.forEach((childId) => {
-      queue.push({ personId: childId, generation: generation + 1 });
-    });
-    maps.spousesByPerson.get(current.personId)?.forEach((spouseId) => {
-      queue.push({ personId: spouseId, generation });
-    });
-  }
-
-  return generationByPersonId;
-}
-
 function collectParents(personIds: Set<string>, maps: RelationshipMaps) {
   const result = new Set<string>();
 
@@ -170,128 +140,151 @@ function collectSiblings(personId: string, maps: RelationshipMaps) {
   return siblings;
 }
 
-function collectLightweightDirectScopePersonIds(
-  pessoas: Pessoa[],
-  maps: RelationshipMaps,
-  centralPersonId: string,
-  filters: DirectRelativeFilters,
-) {
-  const scopeIds = new Set<string>([centralPersonId]);
+function getSortableBirthValue(value?: string | number | null) {
+  if (!value) return Number.POSITIVE_INFINITY;
+  const year = String(value).match(/\d{4}/)?.[0];
+  return year ? Number(year) : Number.POSITIVE_INFINITY;
+}
+
+function sortPeople(a: Pessoa, b: Pessoa, centralPersonId: string) {
+  if (a.id === centralPersonId) return -1;
+  if (b.id === centralPersonId) return 1;
+
+  const birthA = getSortableBirthValue(a.data_nascimento);
+  const birthB = getSortableBirthValue(b.data_nascimento);
+  if (birthA !== birthB) return birthA - birthB;
+
+  return (a.nome_completo || '').localeCompare(b.nome_completo || '', 'pt-BR');
+}
+
+function intersectVisiblePersonIds(ids: Set<string>, visiblePersonIds: Set<string> | undefined, centralPersonId: string) {
+  if (!visiblePersonIds) return ids;
+
+  const visibleIds = new Set<string>();
+  ids.forEach((id) => {
+    if (id === centralPersonId || visiblePersonIds.has(id)) visibleIds.add(id);
+  });
+
+  return visibleIds;
+}
+
+function getPeopleFromIds(ids: Set<string>, peopleById: Map<string, Pessoa>, centralPersonId: string) {
+  return Array.from(ids)
+    .map((id) => peopleById.get(id))
+    .filter((person): person is Pessoa => Boolean(person))
+    .sort((a, b) => sortPeople(a, b, centralPersonId));
+}
+
+function limitPeople(people: Pessoa[]) {
+  return people.slice(0, MAX_PEOPLE_PER_GENERATION);
+}
+
+function createGeneration(generation: number, label: string, people: Pessoa[]): MobileHorizontalGeneration | undefined {
+  if (people.length === 0) return undefined;
+
+  return {
+    generation,
+    label,
+    people: limitPeople(people),
+    totalCount: people.length,
+  };
+}
+
+function buildMobileHorizontalGenerations({
+  pessoas,
+  relacionamentos,
+  centralPersonId,
+  visiblePersonIds,
+  directRelativeFilters,
+}: {
+  pessoas: Pessoa[];
+  relacionamentos: Relacionamento[];
+  centralPersonId: string;
+  visiblePersonIds?: Set<string>;
+  directRelativeFilters: DirectRelativeFilters;
+}) {
+  const maps = buildRelationshipMaps(relacionamentos);
+  const peopleById = new Map(pessoas.map((person) => [person.id, person]));
+  const centralPerson = peopleById.get(centralPersonId);
   const centralIds = new Set([centralPersonId]);
-  const parents = collectParents(centralIds, maps);
-  const grandparents = collectParents(parents, maps);
-  const greatGrandparents = collectParents(grandparents, maps);
-  const greatGreatGrandparents = collectParents(greatGrandparents, maps);
-  const children = collectChildren(centralIds, maps);
-  const grandchildren = collectChildren(children, maps);
-  const siblings = collectSiblings(centralPersonId, maps);
-  const siblingsChildren = collectChildren(siblings, maps);
+  const parents = intersectVisiblePersonIds(collectParents(centralIds, maps), visiblePersonIds, centralPersonId);
+  const grandparents = intersectVisiblePersonIds(collectParents(parents, maps), visiblePersonIds, centralPersonId);
+  const greatGrandparents = intersectVisiblePersonIds(collectParents(grandparents, maps), visiblePersonIds, centralPersonId);
+  const greatGreatGrandparents = intersectVisiblePersonIds(collectParents(greatGrandparents, maps), visiblePersonIds, centralPersonId);
+  const allChildren = intersectVisiblePersonIds(collectChildren(centralIds, maps), visiblePersonIds, centralPersonId);
+  const children = new Set(Array.from(allChildren).filter((id) => {
+    const person = peopleById.get(id);
+    return person && !isPetFamilyMember(person);
+  }));
+  const pets = new Set(Array.from(allChildren).filter((id) => {
+    const person = peopleById.get(id);
+    return person && isPetFamilyMember(person);
+  }));
+  const grandchildren = intersectVisiblePersonIds(collectChildren(children, maps), visiblePersonIds, centralPersonId);
+  const siblings = intersectVisiblePersonIds(collectSiblings(centralPersonId, maps), visiblePersonIds, centralPersonId);
+  const nephews = intersectVisiblePersonIds(collectChildren(siblings, maps), visiblePersonIds, centralPersonId);
   const unclesAndAunts = new Set<string>();
 
   parents.forEach((parentId) => {
     collectSiblings(parentId, maps).forEach((relativeId) => unclesAndAunts.add(relativeId));
   });
 
-  const cousins = collectChildren(unclesAndAunts, maps);
+  const visibleUnclesAndAunts = intersectVisiblePersonIds(unclesAndAunts, visiblePersonIds, centralPersonId);
+  const cousins = intersectVisiblePersonIds(collectChildren(visibleUnclesAndAunts, maps), visiblePersonIds, centralPersonId);
+  const spouses = intersectVisiblePersonIds(maps.spousesByPerson.get(centralPersonId) ?? new Set(), visiblePersonIds, centralPersonId);
+  const nucleus = new Set<string>();
 
-  if (filters.pais) addIds(scopeIds, parents);
-  if (filters.avos) addIds(scopeIds, grandparents);
-  if (filters.bisavos) addIds(scopeIds, greatGrandparents);
-  if (filters.tataravos) addIds(scopeIds, greatGreatGrandparents);
-  if (filters.filhos) addIds(scopeIds, children);
-  if (filters.netos) addIds(scopeIds, grandchildren);
-  if (filters.irmaos) addIds(scopeIds, siblings);
-  if (filters.sobrinhos) addIds(scopeIds, siblingsChildren);
-  if (filters.tios) addIds(scopeIds, unclesAndAunts);
-  if (filters.primos) addIds(scopeIds, cousins);
-  if (filters.conjuge) addIds(scopeIds, maps.spousesByPerson.get(centralPersonId));
+  if (centralPerson) nucleus.add(centralPerson.id);
+  if (directRelativeFilters.conjuge) addIds(nucleus, spouses);
+  if (directRelativeFilters.irmaos) addIds(nucleus, siblings);
+  if (directRelativeFilters.primos) addIds(nucleus, cousins);
 
-  if (filters.pets) {
-    const peopleById = new Map(pessoas.map((person) => [person.id, person]));
-    collectChildren(centralIds, maps).forEach((childId) => {
-      const child = peopleById.get(childId);
-      if (child && isPetFamilyMember(child)) scopeIds.add(child.id);
-    });
-  }
+  const generationOne = directRelativeFilters.tataravos ? getPeopleFromIds(greatGreatGrandparents, peopleById, centralPersonId) : [];
+  const generationTwo = directRelativeFilters.bisavos ? getPeopleFromIds(greatGrandparents, peopleById, centralPersonId) : [];
+  const generationThree = directRelativeFilters.avos ? getPeopleFromIds(grandparents, peopleById, centralPersonId) : [];
+  const generationFourIds = new Set<string>();
+  if (directRelativeFilters.pais) addIds(generationFourIds, parents);
+  if (directRelativeFilters.tios) addIds(generationFourIds, visibleUnclesAndAunts);
 
-  return scopeIds;
+  const generationSixIds = new Set<string>();
+  if (directRelativeFilters.filhos) addIds(generationSixIds, children);
+  if (directRelativeFilters.netos) addIds(generationSixIds, grandchildren);
+  if (directRelativeFilters.sobrinhos) addIds(generationSixIds, nephews);
+  if (directRelativeFilters.pets) addIds(generationSixIds, pets);
+
+  const generations = [
+    createGeneration(1, 'Tataravós', generationOne),
+    createGeneration(2, 'Bisavós', generationTwo),
+    createGeneration(3, 'Avós', generationThree),
+    createGeneration(4, 'Pais e tios', getPeopleFromIds(generationFourIds, peopleById, centralPersonId)),
+    createGeneration(5, 'Núcleo', getPeopleFromIds(nucleus, peopleById, centralPersonId)),
+    createGeneration(6, 'Descendentes', getPeopleFromIds(generationSixIds, peopleById, centralPersonId)),
+  ].filter((generation): generation is MobileHorizontalGeneration => Boolean(generation));
+
+  return {
+    generations,
+    counts: {
+      ...EMPTY_COUNTS,
+      pais: directRelativeFilters.pais ? parents.size : 0,
+      avos: directRelativeFilters.avos ? grandparents.size : 0,
+      bisavos: directRelativeFilters.bisavos ? greatGrandparents.size : 0,
+      tataravos: directRelativeFilters.tataravos ? greatGreatGrandparents.size : 0,
+      conjuge: directRelativeFilters.conjuge ? spouses.size : 0,
+      filhos: directRelativeFilters.filhos ? children.size : 0,
+      netos: directRelativeFilters.netos ? grandchildren.size : 0,
+      irmaos: directRelativeFilters.irmaos ? siblings.size : 0,
+      sobrinhos: directRelativeFilters.sobrinhos ? nephews.size : 0,
+      tios: directRelativeFilters.tios ? visibleUnclesAndAunts.size : 0,
+      primos: directRelativeFilters.primos ? cousins.size : 0,
+      pets: directRelativeFilters.pets ? pets.size : 0,
+    },
+  };
 }
 
-function getParentIdsForPerson(centralPersonId: string, relacionamentos: Relacionamento[]) {
-  return new Set(
-    relacionamentos
-      .filter(isParentChildRelationship)
-      .map(getParentChildIds)
-      .filter(({ childId }) => childId === centralPersonId)
-      .map(({ parentId }) => parentId)
-      .filter(isNonEmptyString)
-  );
-}
-
-function applyHorizontalDirectFilterExceptions(
-  directScopeIds: Set<string>,
-  directRelativeFilters: DirectRelativeFilters,
-  centralPersonId: string,
-  relacionamentos: Relacionamento[]
-) {
-  const nextScopeIds = new Set(directScopeIds);
-
-  if (!directRelativeFilters.pais) {
-    getParentIdsForPerson(centralPersonId, relacionamentos).forEach((parentId) => {
-      nextScopeIds.delete(parentId);
-    });
-  }
-
-  nextScopeIds.add(centralPersonId);
-  return nextScopeIds;
-}
-
-function isExternallyVisible(
-  personId: string,
-  visiblePersonIds: Set<string> | undefined,
-  centralPersonId: string
-) {
-  return personId === centralPersonId || !visiblePersonIds || visiblePersonIds.has(personId);
-}
-
-function expandHorizontalSpousesForFilter(
-  directScopeIds: Set<string>,
-  spouseAnchorScopeIds: Set<string>,
-  _pessoas: Pessoa[],
-  maps: RelationshipMaps,
-  centralPersonId: string,
-  visiblePersonIds: Set<string> | undefined,
-  directRelativeFilters: DirectRelativeFilters
-) {
-  if (!directRelativeFilters.conjuge) return directScopeIds;
-
-  const nextScopeIds = new Set(directScopeIds);
-
-  spouseAnchorScopeIds.forEach((anchorId) => {
-    maps.spousesByPerson.get(anchorId)?.forEach((spouseId) => {
-      if (!isExternallyVisible(spouseId, visiblePersonIds, centralPersonId)) return;
-      nextScopeIds.add(spouseId);
-    });
-  });
-
-  return nextScopeIds;
-}
-
-function intersectVisiblePersonIds(
-  directScopeIds: Set<string>,
-  visiblePersonIds: Set<string> | undefined,
-  centralPersonId: string
-) {
-  if (!visiblePersonIds) return directScopeIds;
-
-  const nextVisibleIds = new Set<string>();
-  directScopeIds.forEach((personId) => {
-    if (personId === centralPersonId || visiblePersonIds.has(personId)) {
-      nextVisibleIds.add(personId);
-    }
-  });
-
-  return nextVisibleIds;
+function getCardLabel(person: Pessoa, centralPersonId: string, generation: MobileHorizontalGeneration) {
+  if (person.id === centralPersonId) return 'Pessoa Central';
+  if (isPetFamilyMember(person)) return 'Pets';
+  return generation.label;
 }
 
 function MobileFamilyHorizontalMapFilteredViewComponent({
@@ -304,115 +297,99 @@ function MobileFamilyHorizontalMapFilteredViewComponent({
   layoutRevision,
   onDirectRelationRenderedCounts,
 }: MobileFamilyHorizontalMapFilteredViewProps, ref: React.ForwardedRef<FamilyTreeActions>) {
-  const [shouldRenderMap, setShouldRenderMap] = React.useState(false);
-  const relationshipMaps = React.useMemo(() => buildRelationshipMaps(relacionamentos), [relacionamentos]);
+  const [activeIndex, setActiveIndex] = React.useState(0);
+  const { generations, counts } = React.useMemo(() => buildMobileHorizontalGenerations({
+    pessoas,
+    relacionamentos,
+    centralPersonId,
+    visiblePersonIds,
+    directRelativeFilters,
+  }), [centralPersonId, directRelativeFilters, pessoas, relacionamentos, visiblePersonIds]);
 
   React.useEffect(() => {
-    setShouldRenderMap(false);
+    setActiveIndex(0);
+  }, [centralPersonId, layoutRevision, generations.length]);
 
-    const frameId = window.requestAnimationFrame(() => {
-      setShouldRenderMap(true);
-    });
+  React.useEffect(() => {
+    onDirectRelationRenderedCounts?.(counts);
+  }, [counts, onDirectRelationRenderedCounts]);
 
-    return () => {
-      window.cancelAnimationFrame(frameId);
-    };
-  }, [centralPersonId, layoutRevision]);
+  React.useImperativeHandle(ref, () => ({
+    zoomIn: () => toast.info('Zoom não é necessário nesta visualização mobile.'),
+    zoomOut: () => toast.info('Zoom não é necessário nesta visualização mobile.'),
+    print: async () => toast.info('Impressão disponível na versão desktop.'),
+    savePdf: async () => toast.info('PDF disponível na versão desktop.'),
+    saveImage: async () => toast.info('Imagem disponível na versão desktop.'),
+    startAreaSelection: () => toast.info('Seleção de área disponível na versão desktop.'),
+  }), []);
 
-  const filteredVisiblePersonIds = React.useMemo(() => {
-    const directScopeIds = collectLightweightDirectScopePersonIds(
-      pessoas,
-      relationshipMaps,
-      centralPersonId,
-      {
-        ...directRelativeFilters,
-        conjuge: true,
-      }
-    );
-    const spouseAnchorScopeIds = collectLightweightDirectScopePersonIds(
-      pessoas,
-      relationshipMaps,
-      centralPersonId,
-      {
-        ...directRelativeFilters,
-        conjuge: false,
-      }
-    );
-    const adjustedDirectScopeIds = applyHorizontalDirectFilterExceptions(
-      directScopeIds,
-      directRelativeFilters,
-      centralPersonId,
-      relacionamentos
-    );
-    const adjustedSpouseAnchorScopeIds = applyHorizontalDirectFilterExceptions(
-      spouseAnchorScopeIds,
-      directRelativeFilters,
-      centralPersonId,
-      relacionamentos
-    );
-    const expandedDirectScopeIds = expandHorizontalSpousesForFilter(
-      adjustedDirectScopeIds,
-      adjustedSpouseAnchorScopeIds,
-      pessoas,
-      relationshipMaps,
-      centralPersonId,
-      visiblePersonIds,
-      directRelativeFilters
-    );
+  const activeGeneration = generations[Math.min(activeIndex, Math.max(0, generations.length - 1))];
 
-    if (expandedDirectScopeIds.size === 0) return visiblePersonIds;
-    return intersectVisiblePersonIds(expandedDirectScopeIds, visiblePersonIds, centralPersonId);
-  }, [centralPersonId, directRelativeFilters, pessoas, relationshipMaps, relacionamentos, visiblePersonIds]);
-
-  const scopedPessoas = React.useMemo(() => {
-    if (!filteredVisiblePersonIds) return pessoas;
-
-    return pessoas.filter((person) => (
-      person.id === centralPersonId || filteredVisiblePersonIds.has(person.id)
-    ));
-  }, [centralPersonId, filteredVisiblePersonIds, pessoas]);
-
-  const scopedPersonIds = React.useMemo(
-    () => new Set(scopedPessoas.map((person) => person.id)),
-    [scopedPessoas],
-  );
-
-  const scopedRelacionamentos = React.useMemo(() => {
-    if (!filteredVisiblePersonIds) return relacionamentos;
-
-    return relacionamentos.filter((relationship) => {
-      const origemId = relationship.pessoa_origem_id;
-      const destinoId = relationship.pessoa_destino_id;
-
-      return Boolean(
-        origemId
-        && destinoId
-        && scopedPersonIds.has(origemId)
-        && scopedPersonIds.has(destinoId)
-      );
-    });
-  }, [filteredVisiblePersonIds, relacionamentos, scopedPersonIds]);
-
-  if (!shouldRenderMap) {
+  if (!activeGeneration) {
     return (
-      <div className="flex min-h-[55vh] items-center justify-center px-4 text-center text-sm font-semibold text-slate-500">
-        Preparando mapa genealógico...
+      <div className="absolute inset-0 flex items-center justify-center bg-[#f8efe4] px-6 text-center">
+        <div className="rounded-2xl border border-dashed border-slate-300 bg-white/90 p-6 text-sm font-semibold text-slate-500 shadow-sm">
+          Nenhuma geração visível para os filtros atuais.
+        </div>
       </div>
     );
   }
 
   return (
-    <MobileFamilyHorizontalMapView
-      ref={ref}
-      pessoas={scopedPessoas}
-      visiblePersonIds={undefined}
-      relacionamentos={scopedRelacionamentos}
-      centralPersonId={centralPersonId}
-      directRelativeFilters={directRelativeFilters}
-      onPersonClick={onPersonClick}
-      layoutRevision={layoutRevision}
-      onDirectRelationRenderedCounts={onDirectRelationRenderedCounts}
-    />
+    <div className="absolute inset-0 overflow-hidden bg-[#f8efe4]" data-family-map-horizontal-mobile-root="true">
+      <nav
+        aria-label="Gerações do Mapa Genealógico"
+        className="absolute inset-x-0 top-0 z-40 border-b border-slate-200 bg-white/95 px-2 py-2 shadow-sm backdrop-blur"
+        data-tree-export-ignore="true"
+      >
+        <div className="flex items-center gap-2 overflow-x-auto overscroll-x-contain pb-0.5 pr-14 [-webkit-overflow-scrolling:touch]">
+          {generations.map((generation, index) => (
+            <button
+              key={generation.generation}
+              type="button"
+              onClick={() => setActiveIndex(index)}
+              aria-current={index === activeIndex ? 'page' : undefined}
+              className={[
+                'shrink-0 rounded-full px-2.5 py-2 text-[10px] font-extrabold uppercase tracking-[0.04em] transition',
+                index === activeIndex
+                  ? 'bg-cyan-700 text-white shadow-sm'
+                  : 'bg-slate-100 text-slate-600 active:bg-slate-200',
+              ].join(' ')}
+            >
+              Ger {generation.generation}
+            </button>
+          ))}
+        </div>
+      </nav>
+
+      <div className="absolute inset-x-0 bottom-[calc(env(safe-area-inset-bottom,0px)+5.65rem)] top-[48px] overflow-y-auto overscroll-y-contain px-4 py-4 [-webkit-overflow-scrolling:touch]">
+        <div className="mx-auto flex w-full max-w-sm flex-col gap-3">
+          <div className="rounded-2xl border border-slate-200 bg-white/90 px-4 py-3 text-center shadow-sm">
+            <p className="text-[11px] font-extrabold uppercase tracking-[0.12em] text-cyan-700">
+              Geração {activeGeneration.generation}
+            </p>
+            <h2 className="mt-1 text-base font-black text-slate-950">{activeGeneration.label}</h2>
+            {activeGeneration.totalCount > activeGeneration.people.length && (
+              <p className="mt-1 text-xs font-semibold text-slate-500">
+                Mostrando {activeGeneration.people.length} de {activeGeneration.totalCount} pessoas nesta geração.
+              </p>
+            )}
+          </div>
+
+          {activeGeneration.people.map((person) => (
+            <VisualPersonCard
+              key={person.id}
+              person={person}
+              label={getCardLabel(person, centralPersonId, activeGeneration)}
+              horizontal
+              roomy
+              central={person.id === centralPersonId}
+              onClick={onPersonClick}
+            />
+          ))}
+        </div>
+      </div>
+    </div>
   );
 }
 
