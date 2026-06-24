@@ -1595,7 +1595,7 @@ function DeathStatusSelector({ checked, onChange }: { checked: boolean; onChange
         <button
           type="button"
           className={[
-            'rounded-full px-3 py-1.5 text-xs font-semibold transition-colors',
+            'min-w-[5rem] rounded-full px-3 py-1.5 text-xs font-semibold transition-colors',
             !checked ? 'bg-blue-600 text-white shadow-sm' : 'text-gray-600 hover:bg-gray-100',
           ].join(' ')}
           onClick={() => onChange(false)}
@@ -1606,7 +1606,7 @@ function DeathStatusSelector({ checked, onChange }: { checked: boolean; onChange
         <button
           type="button"
           className={[
-            'rounded-full px-3 py-1.5 text-xs font-semibold transition-colors',
+            'min-w-[5rem] rounded-full px-3 py-1.5 text-xs font-semibold transition-colors',
             checked ? 'bg-slate-800 text-white shadow-sm' : 'text-gray-600 hover:bg-gray-100',
           ].join(' ')}
           onClick={() => onChange(true)}

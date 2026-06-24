@@ -16,6 +16,7 @@ import {
   Map,
   MessageCircle,
   Network,
+  PawPrint,
   Printer,
   Scan,
   Star,
@@ -39,7 +40,7 @@ import { getPrimaryLinkedPersonWithPessoa } from '../../services/memberProfileSe
 import { contarNotificacoesNaoLidasSupabase } from '../../services/userEngagementService';
 import type { Pessoa, Relacionamento } from '../../types';
 import { isPersonDeceased } from '../../utils/personFields';
-import { isHumanFamilyMember } from '../../utils/personEntity';
+import { isHumanFamilyMember, isPetFamilyMember } from '../../utils/personEntity';
 import { dispatchTreeAction, type SidebarTreeAction } from './SidebarPanelTabs';
 
 interface HomeMobileNavProps {
@@ -56,6 +57,7 @@ type MobileFamilyGroupCountKey =
   | 'conjuges'
   | 'irmaos'
   | 'filhos'
+  | 'pets'
   | 'avos'
   | 'bisavos'
   | 'tataravos'
@@ -140,32 +142,31 @@ function uniqueCount(values: Array<string | undefined | null>) {
 
 function getMobileFamilyGroupCounts(
   centralPersonId: string | undefined,
+  pessoas: Pessoa[],
   relacionamentos: Relacionamento[]
 ): Record<MobileFamilyGroupCountKey, number> {
   const activeRelationships = relacionamentos.filter((relationship) => relationship.ativo !== false);
+  const pessoasById = new globalThis.Map(pessoas.filter((p) => Boolean(p.id)).map((p) => [p.id, p]));
 
   if (!centralPersonId) {
     return {
       pais: uniqueCount(
         activeRelationships
-          .filter((relationship) => relationship.tipo_relacionamento === 'pai' || relationship.tipo_relacionamento === 'mae')
-          .map((relationship) => relationship.pessoa_origem_id)
+          .filter((r) => r.tipo_relacionamento === 'pai' || r.tipo_relacionamento === 'mae')
+          .map((r) => r.pessoa_origem_id)
       ),
       conjuges: uniqueCount(
         activeRelationships
-          .filter((relationship) => relationship.tipo_relacionamento === 'conjuge')
-          .flatMap((relationship) => [relationship.pessoa_origem_id, relationship.pessoa_destino_id])
+          .filter((r) => r.tipo_relacionamento === 'conjuge')
+          .flatMap((r) => [r.pessoa_origem_id, r.pessoa_destino_id])
       ),
       irmaos: uniqueCount(
         activeRelationships
-          .filter((relationship) => relationship.tipo_relacionamento === 'irmao')
-          .flatMap((relationship) => [relationship.pessoa_origem_id, relationship.pessoa_destino_id])
+          .filter((r) => r.tipo_relacionamento === 'irmao')
+          .flatMap((r) => [r.pessoa_origem_id, r.pessoa_destino_id])
       ),
-      filhos: uniqueCount(
-        activeRelationships
-          .filter((relationship) => relationship.tipo_relacionamento === 'filho')
-          .map((relationship) => relationship.pessoa_destino_id)
-      ),
+      filhos: 0,
+      pets: 0,
       avos: 0,
       bisavos: 0,
       tataravos: 0,
@@ -175,91 +176,74 @@ function getMobileFamilyGroupCounts(
     };
   }
 
-  const parentIds = new Set(
-    activeRelationships
-      .filter(
-        (relationship) =>
-          relationship.pessoa_destino_id === centralPersonId &&
-          (relationship.tipo_relacionamento === 'pai' || relationship.tipo_relacionamento === 'mae')
-      )
-      .map((relationship) => relationship.pessoa_origem_id)
-      .filter(Boolean)
-  );
+  // Parents: tipo=pai/mae pointing to centralPerson OR centralPerson with tipo=filho pointing to parent
+  const parentIds = new Set<string>();
+  activeRelationships.forEach((r) => {
+    if (r.pessoa_destino_id === centralPersonId && (r.tipo_relacionamento === 'pai' || r.tipo_relacionamento === 'mae')) {
+      if (r.pessoa_origem_id) parentIds.add(r.pessoa_origem_id);
+    }
+    if (r.pessoa_origem_id === centralPersonId && r.tipo_relacionamento === 'filho') {
+      if (r.pessoa_destino_id) parentIds.add(r.pessoa_destino_id);
+    }
+  });
 
-  const childIds = new Set(
-    activeRelationships
-      .filter(
-        (relationship) =>
-          relationship.pessoa_origem_id === centralPersonId &&
-          (relationship.tipo_relacionamento === 'pai' || relationship.tipo_relacionamento === 'mae' || relationship.tipo_relacionamento === 'filho')
-      )
-      .map((relationship) => relationship.pessoa_destino_id)
-      .filter(Boolean)
-  );
+  // Children: centralPerson with tipo=pai/mae (centralPerson is the parent)
+  const childIds = new Set<string>();
+  const petIds = new Set<string>();
+  activeRelationships.forEach((r) => {
+    if (r.pessoa_origem_id === centralPersonId && (r.tipo_relacionamento === 'pai' || r.tipo_relacionamento === 'mae')) {
+      const id = r.pessoa_destino_id;
+      if (id) {
+        if (isPetFamilyMember(pessoasById.get(id))) petIds.add(id);
+        else childIds.add(id);
+      }
+    }
+  });
+
+  // Also route any parent that is a pet into pets
+  const truePetIds = new Set<string>(petIds);
+  const trueParentIds = new Set<string>();
+  parentIds.forEach((id) => {
+    if (isPetFamilyMember(pessoasById.get(id))) truePetIds.add(id);
+    else trueParentIds.add(id);
+  });
 
   const siblingIds = new Set(
     activeRelationships
-      .filter(
-        (relationship) =>
-          relationship.tipo_relacionamento === 'irmao' &&
-          (relationship.pessoa_origem_id === centralPersonId || relationship.pessoa_destino_id === centralPersonId)
-      )
-      .map((relationship) =>
-        relationship.pessoa_origem_id === centralPersonId
-          ? relationship.pessoa_destino_id
-          : relationship.pessoa_origem_id
-      )
-      .filter(Boolean)
+      .filter((r) => r.tipo_relacionamento === 'irmao' && (r.pessoa_origem_id === centralPersonId || r.pessoa_destino_id === centralPersonId))
+      .map((r) => r.pessoa_origem_id === centralPersonId ? r.pessoa_destino_id : r.pessoa_origem_id)
+      .filter(Boolean) as string[]
   );
 
   const spouseIds = new Set(
     activeRelationships
-      .filter(
-        (relationship) =>
-          relationship.tipo_relacionamento === 'conjuge' &&
-          (relationship.pessoa_origem_id === centralPersonId || relationship.pessoa_destino_id === centralPersonId)
-      )
-      .map((relationship) =>
-        relationship.pessoa_origem_id === centralPersonId
-          ? relationship.pessoa_destino_id
-          : relationship.pessoa_origem_id
-      )
-      .filter(Boolean)
+      .filter((r) => r.tipo_relacionamento === 'conjuge' && (r.pessoa_origem_id === centralPersonId || r.pessoa_destino_id === centralPersonId))
+      .map((r) => r.pessoa_origem_id === centralPersonId ? r.pessoa_destino_id : r.pessoa_origem_id)
+      .filter(Boolean) as string[]
   );
 
   const grandparentIds = new Set<string>();
-  parentIds.forEach((parentId) => {
+  trueParentIds.forEach((parentId) => {
     activeRelationships
-      .filter(
-        (relationship) =>
-          relationship.pessoa_destino_id === parentId &&
-          (relationship.tipo_relacionamento === 'pai' || relationship.tipo_relacionamento === 'mae')
-      )
-      .forEach((relationship) => grandparentIds.add(relationship.pessoa_origem_id));
+      .filter((r) => r.pessoa_destino_id === parentId && (r.tipo_relacionamento === 'pai' || r.tipo_relacionamento === 'mae'))
+      .forEach((r) => grandparentIds.add(r.pessoa_origem_id));
   });
 
   const uncleAuntIds = new Set<string>();
-  parentIds.forEach((parentId) => {
+  trueParentIds.forEach((parentId) => {
     activeRelationships
-      .filter(
-        (relationship) =>
-          relationship.tipo_relacionamento === 'irmao' &&
-          (relationship.pessoa_origem_id === parentId || relationship.pessoa_destino_id === parentId)
-      )
-      .forEach((relationship) => {
-        uncleAuntIds.add(
-          relationship.pessoa_origem_id === parentId
-            ? relationship.pessoa_destino_id
-            : relationship.pessoa_origem_id
-        );
+      .filter((r) => r.tipo_relacionamento === 'irmao' && (r.pessoa_origem_id === parentId || r.pessoa_destino_id === parentId))
+      .forEach((r) => {
+        uncleAuntIds.add(r.pessoa_origem_id === parentId ? r.pessoa_destino_id : r.pessoa_origem_id);
       });
   });
 
   return {
-    pais: parentIds.size,
+    pais: trueParentIds.size,
     conjuges: spouseIds.size,
     irmaos: siblingIds.size,
     filhos: childIds.size,
+    pets: truePetIds.size,
     avos: grandparentIds.size,
     bisavos: 0,
     tataravos: 0,
@@ -282,6 +266,7 @@ function getMobileFamilyGroupPeople(
     conjuges: new Set<string>(),
     irmaos: new Set<string>(),
     filhos: new Set<string>(),
+    pets: new Set<string>(),
     avos: new Set<string>(),
     bisavos: new Set<string>(),
     tataravos: new Set<string>(),
@@ -321,10 +306,6 @@ function getMobileFamilyGroupPeople(
         addId(emptyGroups.irmaos, relationship.pessoa_origem_id);
         addId(emptyGroups.irmaos, relationship.pessoa_destino_id);
       }
-
-      if (relationship.tipo_relacionamento === 'filho') {
-        addId(emptyGroups.filhos, relationship.pessoa_destino_id);
-      }
     });
 
     return Object.fromEntries(
@@ -337,6 +318,7 @@ function getMobileFamilyGroupPeople(
     conjuges: new Set<string>(),
     irmaos: new Set<string>(),
     filhos: new Set<string>(),
+    pets: new Set<string>(),
     avos: new Set<string>(),
     bisavos: new Set<string>(),
     tataravos: new Set<string>(),
@@ -346,18 +328,34 @@ function getMobileFamilyGroupPeople(
   };
 
   activeRelationships.forEach((relationship) => {
+    // Parents: stored as (parent, pai/mae, child=centralPerson)
     if (
       relationship.pessoa_destino_id === centralPersonId &&
       (relationship.tipo_relacionamento === 'pai' || relationship.tipo_relacionamento === 'mae')
     ) {
-      addId(groups.pais, relationship.pessoa_origem_id);
+      const id = relationship.pessoa_origem_id;
+      if (isPetFamilyMember(pessoasById.get(id))) addId(groups.pets, id);
+      else addId(groups.pais, id);
     }
 
+    // Parents stored from child's perspective: (centralPerson, filho, parent)
     if (
       relationship.pessoa_origem_id === centralPersonId &&
-      (relationship.tipo_relacionamento === 'pai' || relationship.tipo_relacionamento === 'mae' || relationship.tipo_relacionamento === 'filho')
+      relationship.tipo_relacionamento === 'filho'
     ) {
-      addId(groups.filhos, relationship.pessoa_destino_id);
+      const id = relationship.pessoa_destino_id;
+      if (isPetFamilyMember(pessoasById.get(id))) addId(groups.pets, id);
+      else addId(groups.pais, id);
+    }
+
+    // Children: centralPerson is parent (centralPerson, pai/mae, child)
+    if (
+      relationship.pessoa_origem_id === centralPersonId &&
+      (relationship.tipo_relacionamento === 'pai' || relationship.tipo_relacionamento === 'mae')
+    ) {
+      const id = relationship.pessoa_destino_id;
+      if (isPetFamilyMember(pessoasById.get(id))) addId(groups.pets, id);
+      else addId(groups.filhos, id);
     }
 
     if (
@@ -412,6 +410,7 @@ function getMobileFamilyGroupPeople(
     Object.entries(groups).map(([key, ids]) => [key, toOptions(ids)])
   ) as Record<MobileFamilyGroupCountKey, MobileFamilyGroupPersonOption[]>;
 }
+
 
 const mobileTreeToolbarTopClass = 'top-[calc(env(safe-area-inset-top,0px)+5.05rem)]';
 const mobileTreeViewPopoverTopClass = 'top-[calc(env(safe-area-inset-top,0px)+8.15rem)]';
@@ -488,6 +487,7 @@ const MOBILE_GROUP_ROWS: Record<MobileFamilyGroupTab, Array<{
     { key: 'conjuges', label: 'Cônjuges', icon: HeartHandshake },
     { key: 'irmaos', label: 'Irmãos', icon: UsersRound },
     { key: 'filhos', label: 'Filhos', icon: UserRound },
+    { key: 'pets', label: 'Pets', icon: PawPrint },
   ],
   ascendentes: [
     { key: 'avos', label: 'Avós', icon: Network },
@@ -767,8 +767,8 @@ export function HomeMobileNav({
   const effectiveMobileCentralPersonId = currentViewAsPersonValue || defaultViewAsPersonId;
 
   const mobileGroupCounts = useMemo(
-    () => getMobileFamilyGroupCounts(effectiveMobileCentralPersonId || undefined, mobileRelationships),
-    [effectiveMobileCentralPersonId, mobileRelationships]
+    () => getMobileFamilyGroupCounts(effectiveMobileCentralPersonId || undefined, mobilePeople, mobileRelationships),
+    [effectiveMobileCentralPersonId, mobilePeople, mobileRelationships]
   );
 
   const mobileGroupPeople = useMemo(
@@ -895,7 +895,8 @@ export function HomeMobileNav({
               className={`fixed inset-x-2 ${mobileTreeViewPopoverTopClass} z-[10001] md:hidden`}
               data-tree-export-ignore="true"
             >
-              <div className="mx-auto grid max-w-md grid-cols-2 gap-2">
+              <div className="mx-auto max-w-md overflow-hidden rounded-xl border border-slate-200 bg-white/95 p-2 pb-5 shadow-sm backdrop-blur">
+              <div className="grid grid-cols-2 gap-2">
                 {TREE_VIEW_OPTIONS.map((option) => {
                   const Icon = option.icon;
                   const active = pathname === option.path;
@@ -924,6 +925,7 @@ export function HomeMobileNav({
                     </button>
                   );
                 })}
+              </div>
               </div>
             </div>
           )}
@@ -1218,9 +1220,9 @@ export function HomeMobileNav({
                                       setFullControlsOpen(false);
                                       handleViewAsPersonChange(person.id);
                                     }}
-                                    className="flex w-full items-center justify-center rounded-xl border border-blue-100 bg-white px-3 py-2 text-left text-sm font-bold leading-tight text-blue-950 shadow-sm transition hover:border-blue-300 hover:bg-blue-50 active:scale-[0.98]"
+                                    className="flex w-full items-center justify-center rounded-xl border border-blue-100 bg-white px-3 py-2 text-sm font-bold leading-tight text-blue-950 shadow-sm transition hover:border-blue-300 hover:bg-blue-50 active:scale-[0.98]"
                                   >
-                                    <span className="block min-w-0 flex-1 truncate">{person.label}</span>
+                                    <span className="min-w-0 truncate">{person.label}</span>
                                   </button>
                                 ))}
                               </div>
