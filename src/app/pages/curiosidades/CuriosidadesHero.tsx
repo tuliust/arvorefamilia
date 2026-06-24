@@ -93,20 +93,20 @@ export function CuriosidadesHero() {
   };
 
   return (
-    <section className="curiosidades-sticky-nav sticky top-0 z-[490] left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] w-screen border-b border-gray-200 bg-gray-50/95 px-4 py-4 shadow-[0_10px_24px_rgba(15,23,42,0.08)] backdrop-blur supports-[backdrop-filter]:bg-gray-50/85 sm:px-6 lg:px-8">
-      <nav aria-label="Seções de curiosidades" className="min-w-0">
-        <div className="flex min-w-0 items-stretch gap-2">
+    <section className="curiosidades-sticky-nav sticky top-0 z-[490] w-full border-b border-gray-200 bg-gray-50/95 py-4 shadow-[0_10px_24px_rgba(15,23,42,0.08)] backdrop-blur supports-[backdrop-filter]:bg-gray-50/85">
+      <nav aria-label="Se??es de curiosidades" className="mx-auto w-full max-w-7xl min-w-0 px-4 sm:px-6 lg:px-8">
+        <div className="flex min-w-0 items-stretch justify-center gap-2">
           <button
             type="button"
             onClick={() => scrollNav('left')}
             className={["curiosidades-section-scroll-button curiosidades-section-scroll-button-left inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-gray-200 bg-white p-0 text-blue-700 shadow-sm transition md:hidden", scrollState.canScrollLeft ? "opacity-100" : "opacity-40"].join(' ')}
-            aria-label="Ver botões anteriores"
+            aria-label="Ver bot?es anteriores"
           >
             <ChevronLeft className="h-5 w-5" />
           </button>
 
-          <div ref={scrollRef} className="curiosidades-section-links-wrapper min-w-0 flex-1 overflow-x-auto pb-1">
-            <div className="curiosidades-section-links grid min-w-max grid-flow-col auto-cols-[5.8rem] gap-2 xl:min-w-0 xl:grid-flow-row xl:grid-cols-11">
+          <div ref={scrollRef} className="curiosidades-section-links-wrapper min-w-0 overflow-x-auto pb-1 xl:overflow-visible">
+            <div className="curiosidades-section-links flex min-w-max flex-nowrap justify-start gap-2 xl:min-w-0 xl:justify-center">
               {sectionLinks.map((link) => {
                 const Icon = link.icon;
 
@@ -114,7 +114,7 @@ export function CuriosidadesHero() {
                   <a
                     key={link.href}
                     href={link.href}
-                    className="curiosidades-section-link flex min-h-20 min-w-0 flex-col items-center justify-center gap-2 rounded-2xl border border-gray-200 bg-white px-2 py-2 text-center text-xs font-bold leading-tight text-blue-950 shadow-sm transition hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
+                    className="curiosidades-section-link flex min-h-20 w-[5.8rem] shrink-0 flex-col items-center justify-center gap-2 rounded-2xl border border-gray-200 bg-white px-2 py-2 text-center text-xs font-bold leading-tight text-blue-950 shadow-sm transition hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 xl:w-[6.5rem]"
                   >
                     <Icon className="h-5 w-5 shrink-0 text-blue-700" />
                     <span>{link.label}</span>
@@ -128,7 +128,7 @@ export function CuriosidadesHero() {
             type="button"
             onClick={() => scrollNav('right')}
             className={["curiosidades-section-scroll-button curiosidades-section-scroll-button-right inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-gray-200 bg-white p-0 text-blue-700 shadow-sm transition md:hidden", scrollState.canScrollRight ? "opacity-100" : "opacity-40"].join(' ')}
-            aria-label="Ver próximos botões"
+            aria-label="Ver pr?ximos bot?es"
           >
             <ChevronRight className="h-5 w-5" />
           </button>

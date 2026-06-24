@@ -124,9 +124,9 @@ export function Curiosidades() {
         icon={Sparkles}
       />
 
-      <main className={`${PAGE_CONTAINER_CLASS} min-w-0 space-y-4 py-4 pb-36 sm:space-y-6 sm:py-6 md:pb-8`}>
-        <CuriosidadesHero />
+      <CuriosidadesHero />
 
+      <main className={`${PAGE_CONTAINER_CLASS} min-w-0 space-y-4 py-4 pb-36 sm:space-y-6 sm:py-6 md:pb-8`}>
         <div className="curiosidades-overview-layout grid min-w-0 gap-4 sm:gap-4 xl:grid-cols-5 xl:items-stretch">
           <div className="curiosidades-today-photo-stack min-w-0 space-y-4 xl:col-span-2 xl:flex xl:h-full xl:flex-col xl:space-y-0 xl:gap-4">
             <div id="hoje-na-familia" className="curiosidades-today-card-slot min-w-0 scroll-mt-32 xl:flex-1">
