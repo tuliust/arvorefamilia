@@ -7,12 +7,17 @@ import {
   type CuriosidadesDataProps,
 } from './curiosidadesUtils';
 
+type CuriosidadesQuizSectionProps = CuriosidadesDataProps & {
+  className?: string;
+};
+
 export function CuriosidadesQuizSection({
   pessoas,
   relacionamentos,
   loading,
   error,
-}: CuriosidadesDataProps) {
+  className = '',
+}: CuriosidadesQuizSectionProps) {
   const questions = useMemo(
     () => buildCuriosityQuizQuestions(pessoas, relacionamentos),
     [pessoas, relacionamentos]
@@ -42,7 +47,7 @@ export function CuriosidadesQuizSection({
   };
 
   return (
-    <section className={curiositySectionCardClassName}>
+    <section className={`${curiositySectionCardClassName} ${className}`}>
       <div className="flex items-center gap-3">
         <BrainCircuit className="h-5 w-5 text-blue-700" />
         <h2 className="text-xl font-bold text-gray-950">Teste seus conhecimentos</h2>
@@ -83,7 +88,7 @@ export function CuriosidadesQuizSection({
             </div>
           </div>
 
-          <div className="mt-4 grid gap-2">
+          <div className="mt-4 grid gap-2 sm:grid-cols-2">
             {currentQuestion.options.map((option) => {
               const isSelected = selectedOptionId === option.id;
               const isCorrect = hasAnswered && option.id === currentQuestion.answerId;

@@ -24,66 +24,51 @@ export function CuriosidadesStats({
       value: totalHumans,
       description: 'Familiares cadastrados no site',
       icon: Users,
-      cardClassName: 'border-blue-100 bg-blue-50',
-      iconClassName: 'bg-white text-blue-700',
-      valueClassName: 'text-blue-900',
     },
     {
       label: 'Localização',
       value: totalCurrentCities,
       description: 'Cidades onde vivem',
       icon: MapPin,
-      cardClassName: 'border-emerald-100 bg-emerald-50',
-      iconClassName: 'bg-white text-emerald-700',
-      valueClassName: 'text-emerald-900',
     },
     {
       label: 'In memoriam',
       value: totalDeceased,
       description: 'Familiares falecidos na árvore genealógica',
       icon: Flower2,
-      cardClassName: 'border-violet-100 bg-violet-50',
-      iconClassName: 'bg-white text-violet-700',
-      valueClassName: 'text-violet-900',
     },
     {
       label: 'Pets',
       value: totalPets,
       description: 'Animais de estimação cadastrados.',
       icon: PawPrint,
-      cardClassName: 'border-orange-100 bg-orange-50',
-      iconClassName: 'bg-white text-orange-700',
-      valueClassName: 'text-orange-900',
     },
     {
       label: 'Casais',
       value: totalWeddings,
       description: 'Relações de união ativas',
       icon: CalendarDays,
-      cardClassName: 'border-rose-100 bg-rose-50',
-      iconClassName: 'bg-white text-rose-700',
-      valueClassName: 'text-rose-900',
     },
   ];
 
   return (
-    <section aria-label="Big numbers" className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-2 xl:grid-cols-5">
+    <section aria-label="Big numbers" className="grid grid-cols-2 items-stretch gap-3 sm:gap-4 md:grid-cols-2 xl:grid-cols-5">
       {stats.map((stat) => {
         const Icon = stat.icon;
 
         return (
           <article
             key={stat.label}
-            className={`min-w-0 rounded-2xl border p-4 shadow-sm sm:p-5 ${stat.cardClassName}`}
+            className="flex min-h-[10.5rem] min-w-0 flex-col justify-between rounded-2xl border border-blue-100 bg-blue-50 p-4 shadow-sm sm:p-5"
           >
             <div className="flex min-w-0 items-start justify-between gap-3 sm:gap-4">
               <div className="min-w-0">
                 <p className="break-words text-xs font-semibold leading-4 text-gray-700 sm:text-sm">{stat.label}</p>
-                <p className={`mt-2 text-3xl font-bold sm:mt-3 sm:text-4xl ${stat.valueClassName}`}>
+                <p className="mt-2 text-3xl font-bold text-blue-900 sm:mt-3 sm:text-4xl">
                   {loading ? '--' : stat.value}
                 </p>
               </div>
-              <span className={`inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl shadow-sm sm:h-11 sm:w-11 ${stat.iconClassName}`}>
+              <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white text-blue-700 shadow-sm sm:h-11 sm:w-11">
                 <Icon className="h-4 w-4 sm:h-5 sm:w-5" />
               </span>
             </div>

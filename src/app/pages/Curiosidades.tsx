@@ -11,6 +11,7 @@ import { CuriosidadesGenerations } from './curiosidades/CuriosidadesGenerations'
 import { CuriosidadesHero } from './curiosidades/CuriosidadesHero';
 import { CuriosidadesInsightTabs } from './curiosidades/CuriosidadesInsightTabs';
 import { CuriosidadesMemoryWall } from './curiosidades/CuriosidadesMemoryWall';
+import { CuriosidadesPhotoSlider } from './curiosidades/CuriosidadesPhotoSlider';
 import { CuriosidadesQuizSection } from './curiosidades/CuriosidadesQuizSection';
 import { CuriosidadesRankings } from './curiosidades/CuriosidadesRankings';
 import { CuriosidadesRouteSection } from './curiosidades/CuriosidadesRouteSection';
@@ -116,12 +117,18 @@ export function Curiosidades() {
       <main className={`${PAGE_CONTAINER_CLASS} min-w-0 space-y-4 py-4 pb-36 sm:space-y-6 sm:py-6 md:pb-8`}>
         <CuriosidadesHero />
 
-        <div className="grid min-w-0 gap-4 sm:gap-4 xl:grid-cols-5 xl:items-start">
-          <div id="hoje-na-familia" className="min-w-0 scroll-mt-24 xl:col-span-2">
-            <CuriosidadesToday {...curiosityDataProps} />
+        <div className="grid min-w-0 gap-4 sm:gap-4 xl:grid-cols-5 xl:items-stretch">
+          <div className="min-w-0 space-y-4 xl:col-span-2 xl:flex xl:h-full xl:flex-col xl:space-y-0 xl:gap-4">
+            <div id="hoje-na-familia" className="min-w-0 scroll-mt-24 xl:flex-1">
+              <CuriosidadesToday {...curiosityDataProps} className="xl:h-full" />
+            </div>
+
+            <div className="min-w-0 xl:flex-1">
+              <CuriosidadesPhotoSlider pessoas={pessoas} loading={loading} className="xl:h-full" />
+            </div>
           </div>
 
-          <div id="ia" className="min-w-0 scroll-mt-24 xl:col-span-3">
+          <div id="ia" className="min-w-0 scroll-mt-24 xl:col-span-3 xl:h-full xl:[&>section]:h-full">
             <CuriosidadesAiSection {...curiosityDataProps} />
           </div>
 
@@ -129,12 +136,12 @@ export function Curiosidades() {
             <CuriosidadesStats {...curiosityDataProps} />
           </div>
 
-          <div id="quiz" className="min-w-0 scroll-mt-24 xl:col-span-3">
-            <CuriosidadesQuizSection {...curiosityDataProps} />
+          <div id="quiz" className="min-w-0 scroll-mt-24 xl:col-span-3 xl:h-full">
+            <CuriosidadesQuizSection {...curiosityDataProps} className="xl:h-full" />
           </div>
 
-          <div id="mural" className="min-w-0 scroll-mt-24 xl:col-span-2">
-            <CuriosidadesMemoryWall />
+          <div id="mural" className="min-w-0 scroll-mt-24 xl:col-span-2 xl:h-full">
+            <CuriosidadesMemoryWall className="xl:h-full" />
           </div>
         </div>
 

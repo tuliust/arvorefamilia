@@ -29,7 +29,11 @@ function formatMemoryDate(value: string) {
   return date.toLocaleDateString('pt-BR');
 }
 
-export function CuriosidadesMemoryWall() {
+type CuriosidadesMemoryWallProps = {
+  className?: string;
+};
+
+export function CuriosidadesMemoryWall({ className = '' }: CuriosidadesMemoryWallProps) {
   const [author, setAuthor] = useState('');
   const [memory, setMemory] = useState('');
   const [visibility, setVisibility] = useState<MemoryWallVisibility>('family');
@@ -88,7 +92,7 @@ export function CuriosidadesMemoryWall() {
   };
 
   return (
-    <section className={curiositySectionCardClassName}>
+    <section className={`${curiositySectionCardClassName} ${className}`}>
       <div className="flex items-center gap-3">
         <MessageSquareHeart className="h-5 w-5 text-blue-700" />
         <h2 className="text-xl font-bold text-gray-950">Mural da família</h2>

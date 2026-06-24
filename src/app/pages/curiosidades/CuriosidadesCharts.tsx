@@ -1,4 +1,4 @@
-import { BarChart3, BriefcaseBusiness, CalendarDays, UsersRound } from 'lucide-react';
+import { BriefcaseBusiness, CalendarDays, UsersRound } from 'lucide-react';
 import {
   curiositySectionCardClassName,
   getBirthMonthCounts,
@@ -10,73 +10,12 @@ import {
 type ChartDatum = {
   label: string;
   value: number;
-  note?: string;
 };
 
 const MONTH_ABBREVIATIONS = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
 
 function getMaxValue(data: ChartDatum[]) {
   return Math.max(1, ...data.map((item) => item.value));
-}
-
-function ChartCard({
-  title,
-  description,
-  data,
-  emptyLabel,
-  icon: Icon,
-  className = '',
-}: {
-  title: string;
-  description: string;
-  data: ChartDatum[];
-  emptyLabel: string;
-  icon: typeof BarChart3;
-  className?: string;
-}) {
-  const maxValue = getMaxValue(data);
-
-  return (
-    <article className={`${curiositySectionCardClassName} ${className}`}>
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-2">
-            <Icon className="h-4 w-4 text-blue-700" />
-            <h3 className="text-base font-bold text-gray-950">{title}</h3>
-          </div>
-          <p className="mt-2 text-sm leading-6 text-gray-600">{description}</p>
-        </div>
-      </div>
-
-      {data.length === 0 ? (
-        <div className="mt-5 rounded-xl border border-dashed border-gray-200 bg-gray-50 px-4 py-5 text-sm text-gray-600">
-          {emptyLabel}
-        </div>
-      ) : (
-        <div className="mt-5 space-y-3">
-          {data.map((item) => {
-            const width = Math.max(8, Math.round((item.value / maxValue) * 100));
-
-            return (
-              <div key={item.label} className="space-y-1">
-                <div className="flex items-center justify-between gap-3 text-xs">
-                  <span className="min-w-0 truncate font-semibold text-gray-700">{item.label}</span>
-                  <span className="shrink-0 font-bold text-gray-950">{item.value}</span>
-                </div>
-                <div className="h-2.5 overflow-hidden rounded-full bg-gray-100">
-                  <div
-                    className="h-full rounded-full bg-blue-600"
-                    style={{ width: `${width}%` }}
-                    aria-label={`${item.label}: ${item.value}`}
-                  />
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      )}
-    </article>
-  );
 }
 
 function BirthdayMonthChartCard({
@@ -178,6 +117,60 @@ function ProfessionRankingCard({
   );
 }
 
+function AgeRangeChartCard({
+  data,
+  loading,
+}: {
+  data: ChartDatum[];
+  loading: boolean;
+}) {
+  const maxValue = getMaxValue(data);
+
+  return (
+    <article className={`${curiositySectionCardClassName} flex h-full min-h-[34rem] flex-col`}>
+      <div className="flex items-center gap-2">
+        <UsersRound className="h-4 w-4 text-blue-700" />
+        <h3 className="text-base font-bold text-gray-950">Faixa Etária</h3>
+      </div>
+      <p className="mt-2 text-sm leading-6 text-gray-600">
+        Distribuição dos familiares por faixa de idade.
+      </p>
+
+      {loading ? (
+        <div className="mt-5 h-full min-h-80 animate-pulse rounded-xl bg-gray-100" />
+      ) : data.length === 0 ? (
+        <div className="mt-5 rounded-xl border border-dashed border-gray-200 bg-gray-50 px-4 py-5 text-sm text-gray-600">
+          Complete datas de nascimento para comparar faixas etárias.
+        </div>
+      ) : (
+        <div className="mt-6 flex flex-1 flex-col justify-between gap-5">
+          {data.map((item) => {
+            const width = Math.max(8, Math.round((item.value / maxValue) * 100));
+
+            return (
+              <div key={item.label} className="space-y-2">
+                <div className="flex items-center justify-between gap-3">
+                  <span className="min-w-0 truncate text-sm font-bold text-gray-800">{item.label}</span>
+                  <span className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-blue-600 text-xs font-black text-white shadow-sm">
+                    {item.value}
+                  </span>
+                </div>
+                <div className="h-4 overflow-hidden rounded-full bg-gray-100">
+                  <div
+                    className="h-full rounded-full bg-blue-600"
+                    style={{ width: `${width}%` }}
+                    aria-label={`${item.label}: ${item.value}`}
+                  />
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </article>
+  );
+}
+
 export function CuriosidadesCharts({
   pessoas,
   loading,
@@ -218,18 +211,7 @@ export function CuriosidadesCharts({
           <ProfessionRankingCard data={professionData} loading={loading && !error} />
         </div>
 
-        {loading && !error ? (
-          <div className="h-full min-h-[34rem] animate-pulse rounded-2xl bg-gray-100" />
-        ) : (
-          <ChartCard
-            title="Faixa Etária"
-            description="Distribuição dos familiares por faixa de idade."
-            data={ageRangeData}
-            emptyLabel="Complete datas de nascimento para comparar faixas etárias."
-            icon={UsersRound}
-            className="h-full min-h-[34rem]"
-          />
-        )}
+        <AgeRangeChartCard data={ageRangeData} loading={loading && !error} />
       </div>
     </section>
   );

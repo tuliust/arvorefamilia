@@ -12,16 +12,21 @@ const eventIconByType: Record<TodayFamilyEvent['type'], typeof Gift> = {
   wedding: Heart,
 };
 
+type CuriosidadesTodayProps = CuriosidadesDataProps & {
+  className?: string;
+};
+
 export function CuriosidadesToday({
   pessoas,
   relacionamentos,
   loading,
   error,
-}: CuriosidadesDataProps) {
+  className = '',
+}: CuriosidadesTodayProps) {
   const events = buildTodayFamilyEvents(pessoas, relacionamentos).slice(0, 6);
 
   return (
-    <section className={curiositySectionCardClassName}>
+    <section className={`${curiositySectionCardClassName} ${className}`}>
       <div className="min-w-0">
         <div className="flex items-center gap-3">
           <CalendarHeart className="h-5 w-5 text-blue-700" />
