@@ -23,6 +23,10 @@
 - Filtros de parentes diretos devem persistir por usuário.
 - Mobile não deve herdar layout desktop de painel fixo.
 - Exportação não pode ser removida do painel desktop sem substituto documentado.
+- O cabeçalho do painel desktop deve manter título, ícone e ação de recolher na mesma linha.
+- Cards do painel desktop devem preservar legibilidade e não podem cortar labels ou botões de exportação.
+- Em `/mapa-familiar` desktop, os alinhamentos de grupos inferiores devem preservar pai e mãe como referências visuais.
+- A ordenação visual de cards deve evitar linhas extras quando houver espaço para singles e pares conjugais.
 
 ## Dados
 
@@ -30,6 +34,21 @@
 - Falecidos devem ser tratados por `falecido` ou por campos de falecimento conforme normalização.
 - Campos de privacidade não devem ser expostos indevidamente no perfil.
 - Alterações de vínculos que dependem de aprovação não devem ser documentadas como gravação direta.
+
+## Curiosidades
+
+- Seletores Radix não podem receber item com `value` vazio.
+- Seleções dependentes de usuário devem iniciar neutras quando o fluxo exigir escolha explícita.
+- A falta da RPC `get_person_profile_selected_badges` não deve impedir o carregamento da página.
+- Badges de status devem preservar texto em uma linha.
+- Bodas devem respeitar apenas marcos exatos permitidos para casais ativos e sem separação registrada.
+- Marcadores `+N` em gerações devem ser acionáveis quando houver pessoas ocultas.
+
+## Fórum e notificações
+
+- A busca do fórum em desktop deve manter alinhamento à esquerda com `Categorias` e ação à direita com `Criar novo`.
+- O botão desktop de notificações deve abrir dropdown sem redirecionar diretamente.
+- O rodapé do dropdown de notificações deve manter `Ver todas` e `Preferências` com larguras equivalentes e sem quebra.
 
 ## IA
 
