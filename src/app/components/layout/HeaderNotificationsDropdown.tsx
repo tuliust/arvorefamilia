@@ -2,7 +2,6 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router';
 import { Bell, Check, Trash2 } from 'lucide-react';
 
-import { AppLink as Link } from '../AppLink';
 import { useAuth } from '../../contexts/AuthContext';
 import {
   contarNotificacoesNaoLidasSupabase,
@@ -359,21 +358,21 @@ export function HeaderNotificationsDropdown({
             )}
           </div>
 
-          <div className="grid grid-cols-2 gap-2 border-t border-gray-100 bg-gray-50 px-3 py-3">
-            <Link
-              to="/notificacoes"
-              onClick={() => setOpen(false)}
-              className="inline-flex min-h-9 w-full min-w-0 items-center justify-center whitespace-nowrap rounded-xl border border-gray-200 bg-white px-3 py-2 text-center text-xs font-bold leading-tight text-gray-700 shadow-sm transition hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700"
+          <div className="flex gap-2 border-t border-gray-100 bg-gray-50 px-3 py-3">
+            <button
+              type="button"
+              onClick={() => navegarPara('/notificacoes')}
+              className="inline-flex min-h-10 flex-1 basis-0 items-center justify-center whitespace-nowrap rounded-xl border border-gray-200 bg-white px-3 py-2 text-center text-xs font-bold leading-none text-gray-700 shadow-sm transition hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
             >
               Ver todas
-            </Link>
-            <Link
-              to="/ajustar-notificacoes"
-              onClick={() => setOpen(false)}
-              className="inline-flex min-h-9 w-full min-w-0 items-center justify-center whitespace-nowrap rounded-xl border border-gray-200 bg-white px-3 py-2 text-center text-xs font-bold leading-tight text-gray-700 shadow-sm transition hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700"
+            </button>
+            <button
+              type="button"
+              onClick={() => navegarPara('/ajustar-notificacoes')}
+              className="inline-flex min-h-10 flex-1 basis-0 items-center justify-center whitespace-nowrap rounded-xl border border-gray-200 bg-white px-3 py-2 text-center text-xs font-bold leading-none text-gray-700 shadow-sm transition hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
             >
               Preferências
-            </Link>
+            </button>
           </div>
         </div>
       )}
