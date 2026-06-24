@@ -24,7 +24,7 @@ const sectionLinks = [
   { href: '#geracoes', label: 'Gerações', icon: Network },
   { href: '#bodas', label: 'Relacionamentos', icon: Network },
   { href: '#rota', label: 'Rotas', icon: Route },
-  { href: '#conexoes', label: 'Conexões', icon: Network },
+  { href: '#exploracoes-familiares', label: 'Conexões', icon: Network },
 ];
 
 function getScrollState(element: HTMLDivElement | null) {
@@ -93,19 +93,17 @@ export function CuriosidadesHero() {
   };
 
   return (
-    <section className="curiosidades-sticky-nav sticky top-0 z-[420] -mx-1 rounded-b-2xl bg-gray-50/95 px-1 pb-3 pt-1 backdrop-blur supports-[backdrop-filter]:bg-gray-50/80">
+    <section className="curiosidades-sticky-nav sticky top-[calc(env(safe-area-inset-top,0px)+4.75rem)] z-[420] -mx-1 rounded-b-2xl bg-gray-50/95 px-1 pb-3 pt-1 backdrop-blur supports-[backdrop-filter]:bg-gray-50/80 md:top-0">
       <nav aria-label="Seções de curiosidades" className="min-w-0">
         <div className="flex min-w-0 items-stretch gap-2">
-          {scrollState.canScrollLeft && (
-            <button
-              type="button"
-              onClick={() => scrollNav('left')}
-              className="curiosidades-section-scroll-button shrink-0 rounded-full border border-gray-200 bg-white px-2 text-blue-700 shadow-sm md:hidden"
-              aria-label="Ver botões anteriores"
-            >
-              <ChevronLeft className="h-5 w-5" />
-            </button>
-          )}
+          <button
+            type="button"
+            onClick={() => scrollNav('left')}
+            className={["curiosidades-section-scroll-button shrink-0 rounded-full border border-gray-200 bg-white px-2 text-blue-700 shadow-sm transition md:hidden", scrollState.canScrollLeft ? "opacity-100" : "opacity-40"].join(' ')}
+            aria-label="Ver botões anteriores"
+          >
+            <ChevronLeft className="h-5 w-5" />
+          </button>
 
           <div ref={scrollRef} className="curiosidades-section-links-wrapper min-w-0 flex-1 overflow-x-auto pb-1">
             <div className="curiosidades-section-links grid min-w-max grid-flow-col auto-cols-[5.8rem] gap-2 xl:min-w-0 xl:grid-flow-row xl:grid-cols-11">
@@ -126,16 +124,14 @@ export function CuriosidadesHero() {
             </div>
           </div>
 
-          {scrollState.canScrollRight && (
-            <button
-              type="button"
-              onClick={() => scrollNav('right')}
-              className="curiosidades-section-scroll-button shrink-0 rounded-full border border-gray-200 bg-white px-2 text-blue-700 shadow-sm md:hidden"
-              aria-label="Ver próximos botões"
-            >
-              <ChevronRight className="h-5 w-5" />
-            </button>
-          )}
+          <button
+            type="button"
+            onClick={() => scrollNav('right')}
+            className={["curiosidades-section-scroll-button shrink-0 rounded-full border border-gray-200 bg-white px-2 text-blue-700 shadow-sm transition md:hidden", scrollState.canScrollRight ? "opacity-100" : "opacity-40"].join(' ')}
+            aria-label="Ver próximos botões"
+          >
+            <ChevronRight className="h-5 w-5" />
+          </button>
         </div>
       </nav>
     </section>
