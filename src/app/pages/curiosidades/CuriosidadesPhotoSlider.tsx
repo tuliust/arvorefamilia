@@ -7,7 +7,7 @@ type CuriosidadesPhotoSliderProps = Pick<CuriosidadesDataProps, 'pessoas' | 'loa
   className?: string;
 };
 
-const PHOTOS_PER_PAGE = 6;
+const PHOTOS_PER_PAGE = 3;
 
 export function CuriosidadesPhotoSlider({
   pessoas,

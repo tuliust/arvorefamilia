@@ -8,7 +8,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { obterTodasPessoas, obterTodosRelacionamentos } from '../../services/dataService';
 import { getActivityActionLabel, getActivitySummary, listRecentActivityLogs } from '../../services/activityLogService';
 import { listPendingRelationshipChangeRequests } from '../../services/relationshipChangeRequestService';
-import { adminListProfilesForLinking, type AdminLinkableProfile } from '../../services/memberProfileService';
+import { adminListProfilesForLinking, getPrimaryLinkedPerson, type AdminLinkableProfile } from '../../services/memberProfileService';
 import { ActivityLog } from '../../types';
 
 type Pessoa = {
@@ -178,6 +178,25 @@ export function AdminDashboard() {
     window.open(`${base}55${localDigits}?text=${encodeURIComponent(message)}`, '_blank', 'noopener,noreferrer');
   };
 
+  const handleOpenCadastroProfile = async (profile: AdminLinkableProfile) => {
+    if (!profile.id) return;
+
+    const linkedPerson = await getPrimaryLinkedPerson(profile.id);
+
+    if (linkedPerson.error) {
+      console.error('Erro ao localizar pessoa vinculada ao cadastro:', linkedPerson.error);
+      window.alert('N?o foi poss?vel localizar o perfil vinculado a este cadastro.');
+      return;
+    }
+
+    if (!linkedPerson.data?.pessoa_id) {
+      window.alert('Este cadastro ainda n?o tem uma pessoa vinculada na ?rvore.');
+      return;
+    }
+
+    navigate(`/pessoa/${linkedPerson.data.pessoa_id}`);
+  };
+
   return (
     <div className="min-h-screen bg-gray-50" data-admin-dashboard-page="true">
       <MemberPageHeader
@@ -324,10 +343,16 @@ export function AdminDashboard() {
               ) : (
                 <div className="space-y-3">
                   {novosCadastros.map((profile) => (
-                    <div key={profile.id} className="rounded-lg border border-gray-100 p-3">
+                    <button
+                      key={profile.id}
+                      type="button"
+                      onClick={() => void handleOpenCadastroProfile(profile)}
+                      className="w-full rounded-lg border border-gray-100 p-3 text-left transition hover:border-blue-200 hover:bg-blue-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
+                      aria-label={`Abrir perfil de ${getCadastroDisplayName(profile)}`}
+                    >
                       <p className="break-words text-sm font-medium text-gray-900">{getCadastroDisplayName(profile)}</p>
                       <p className="mt-1 break-words text-xs text-gray-500">{getCadastroSubtitle(profile)}</p>
-                    </div>
+                    </button>
                   ))}
                 </div>
               )}
