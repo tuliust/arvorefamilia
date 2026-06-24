@@ -1,12 +1,12 @@
 # Curiosidades
 
 > Última revisão: 2026-06-23
-> Escopo: `/curiosidades`, estatísticas familiares, rankings, comparações, badges e exploração dos dados da árvore.
+> Escopo: `/curiosidades`, estatísticas familiares, rankings, comparações, badges, bodas e exploração dos dados da árvore.
 > Status: canônico.
 
 ## Objetivo
 
-Transformar os dados da árvore em exploração visual e textual: pessoas, locais, pets, memórias, casais, aniversários, perfis e padrões familiares.
+Transformar os dados da árvore em exploração visual e textual: pessoas, locais, pets, memórias, casais, aniversários, perfis, gerações e padrões familiares.
 
 Este documento cobre a página geral `/curiosidades`. Textos individuais de perfil e geração assistida por IA ficam em `MINI_BIO_CURIOSIDADES_IA.md`.
 
@@ -16,7 +16,7 @@ A página depende principalmente de:
 
 - pessoas;
 - relacionamentos;
-- datas de nascimento e falecimento;
+- datas de nascimento, casamento e falecimento;
 - locais de nascimento, falecimento e local atual;
 - profissão;
 - indicador humano/pet;
@@ -26,16 +26,7 @@ A página depende principalmente de:
 
 ## Tipos de curiosidade
 
-A página pode apresentar:
-
-- rankings familiares;
-- agrupamentos por local;
-- destaques de aniversários e datas;
-- estatísticas de longevidade;
-- perfis com campos preenchidos;
-- distribuição de pets;
-- contagens de vínculos;
-- fatos derivados de arquivos históricos.
+A página pode apresentar rankings, agrupamentos por local, aniversários, estatísticas de longevidade, perfis com campos preenchidos, pets, vínculos, gerações sociais, bodas e descobertas orientadas por pessoa e tópicos.
 
 ## Regras de exibição
 
@@ -43,7 +34,18 @@ A página pode apresentar:
 - Distinguir dado vazio de dado desconhecido.
 - Não misturar pessoa humana e pet em rankings que exijam semântica humana.
 - Usar badges e cards de forma consistente com `GUIA_UX_LAYOUT.md`.
-- Não duplicar textos de mini bio como se fossem estatísticas gerais.
+- Dropdowns que dependem de escolha do usuário devem iniciar neutros.
+- O fluxo “Descubra mais sobre...” deve iniciar com `Selecione` e não pode quebrar sem pessoa selecionada.
+- Badges de status devem manter texto em uma linha.
+- Marcadores `+N` em gerações devem permitir revelar as pessoas restantes.
+
+## Bodas
+
+Exibir somente casais ativos, sem separação registrada e sem data de falecimento em nenhuma das duas pessoas do casal.
+
+Marcos permitidos: 1 ano Papel; 5 anos Madeira; 10 anos Estanho; 15 anos Cristal; 20 anos Porcelana; 25 anos Prata; 30 anos Pérola; 40 anos Esmeralda; 45 anos Rubi; 50 anos Ouro; 60 anos Diamante; 75 anos Brilhante.
+
+Não exibir boda por aproximação. O número de anos precisa corresponder exatamente a um dos marcos permitidos.
 
 ## Relação com IA
 
@@ -57,8 +59,11 @@ Validar:
 - carregamento com dados incompletos;
 - ausência de quebra quando não houver data ou local;
 - cards responsivos;
-- seletor de conexão entre pessoas não deve quebrar por SelectItem com valor vazio;
-- ausência da RPC de badges deve usar fallback sem rajada contínua de 404;
+- seletor de conexão entre pessoas sem SelectItem vazio;
+- fallback da RPC de badges sem impedir a página;
+- descoberta sem erro quando nenhuma pessoa estiver selecionada;
+- expansão de `+N` nas gerações;
+- regras de bodas listadas neste documento;
 - rankings sem duplicidade;
 - consistência com favoritos, pessoa pública e arquivos históricos quando houver ligação.
 
