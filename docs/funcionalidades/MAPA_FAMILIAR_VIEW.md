@@ -38,6 +38,16 @@ Ao navegar para perfil, o retorno é preservado em `?voltar=`.
 - `treeViewMode.ts` converte rota em modo.
 - A troca entre visualizações preserva a query string.
 - O painel desktop permite selecionar outra pessoa para visualizar a árvore.
+- O título `Visualização` e labels como `Família de X` devem permanecer em UTF-8 válido.
+
+## Layout desktop por grupos
+
+- `DesktopFamilyMapView.tsx` define coordenadas dos grupos no mapa vertical.
+- O card `Pai` e o card `Mãe` são referências visuais que não devem ser deslocadas em ajustes finos.
+- `Irmãos` deve alinhar a borda esquerda com `Pai`.
+- `Cônjuge` e `Pets` devem alinhar a borda direita com `Mãe`.
+- `Filhos` e `Netos` podem ocupar faixa mais à direita para preservar leitura e evitar sobreposição.
+- `FamilyTreeVisualCards.tsx` pode reordenar visualmente singles e pares conjugais para evitar terceira linha desnecessária.
 
 ## Filtros
 
@@ -56,5 +66,7 @@ Ao navegar para perfil, o retorno é preservado em `?voltar=`.
 ## Contratos de UX
 
 - Desktop deve preservar painel compacto sem cortar a área de exportação.
+- O botão de recolher do painel deve ficar dentro do container do painel.
+- Botões de exportação não devem cortar texto.
 - Mobile deve iniciar com painéis fechados quando aplicável.
 - A visualização horizontal não substitui a visualização principal; é rota própria.
