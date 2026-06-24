@@ -1,6 +1,21 @@
 import React from 'react';
-import { Link, useLocation } from 'react-router';
-import { ChevronLeft, ChevronRight, Network, UsersRound } from 'lucide-react';
+import { Link, useLocation, useNavigate } from 'react-router';
+import {
+  CalendarDays,
+  ChevronLeft,
+  ChevronRight,
+  Home as HomeIcon,
+  MessageCircle,
+  Network,
+  Plus,
+  Search,
+  Sparkles,
+  Star,
+  UsersRound,
+} from 'lucide-react';
+
+import { HomeHeader } from './home/HomeHeader';
+import type { Pessoa } from '../types';
 
 type LinhaGeracionalCard = {
   id: string;
@@ -86,6 +101,8 @@ const GENERATION_SCREENS: LinhaGeracionalScreen[] = [
   },
 ];
 
+const TOOLBAR_ITEMS = ['Formato', 'Cor', 'Filtros', 'Zoom'];
+
 function getInitials(name: string) {
   return name
     .split(/\s+/)
@@ -98,19 +115,19 @@ function getInitials(name: string) {
 function LinhaGeracionalCardView({ card }: { card: LinhaGeracionalCard }) {
   return (
     <div className="relative pl-8">
-      <span className="absolute left-[13px] top-1/2 h-px w-5 -translate-y-1/2 bg-cyan-200/70" aria-hidden="true" />
+      <span className="absolute left-[13px] top-1/2 h-px w-5 -translate-y-1/2 bg-blue-200" aria-hidden="true" />
       <article
         className={[
           'flex min-h-[74px] items-center gap-3 rounded-2xl border px-3 py-2 shadow-sm',
           card.highlight
-            ? 'border-cyan-200 bg-cyan-700 text-white shadow-cyan-950/20'
-            : 'border-white/10 bg-white text-slate-950',
+            ? 'border-blue-200 bg-blue-600 text-white shadow-blue-950/10'
+            : 'border-slate-200 bg-white text-blue-950',
         ].join(' ')}
       >
         <span
           className={[
             'flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-sm font-black',
-            card.highlight ? 'bg-white/20 text-white' : 'bg-cyan-50 text-cyan-800',
+            card.highlight ? 'bg-white/20 text-white' : 'bg-blue-50 text-blue-700',
           ].join(' ')}
           aria-hidden="true"
         >
@@ -118,7 +135,7 @@ function LinhaGeracionalCardView({ card }: { card: LinhaGeracionalCard }) {
         </span>
         <span className="min-w-0 flex-1">
           <span className="block truncate text-sm font-black leading-tight">{card.name}</span>
-          <span className={card.highlight ? 'mt-1 block truncate text-[11px] font-bold text-cyan-50' : 'mt-1 block truncate text-[11px] font-bold text-slate-500'}>
+          <span className={card.highlight ? 'mt-1 block truncate text-[11px] font-bold text-blue-50' : 'mt-1 block truncate text-[11px] font-bold text-slate-500'}>
             {card.label}{card.years ? ` · ${card.years}` : ''}
           </span>
         </span>
@@ -130,18 +147,18 @@ function LinhaGeracionalCardView({ card }: { card: LinhaGeracionalCard }) {
 function GenerationScreen({ generation }: { generation: LinhaGeracionalScreen }) {
   return (
     <section
-      className="relative flex h-full min-w-full snap-start flex-col overflow-y-auto px-4 pb-28 pt-28"
+      className="relative flex h-full min-w-full snap-start flex-col overflow-y-auto px-4 py-4"
       aria-label={generation.title}
     >
       <div className="mx-auto flex w-full max-w-md flex-1 flex-col">
-        <div className="mb-5 rounded-3xl border border-white/10 bg-white/10 p-4 text-white shadow-sm backdrop-blur">
-          <p className="text-[11px] font-black uppercase tracking-[0.22em] text-cyan-100">{generation.position}</p>
-          <h2 className="mt-2 text-2xl font-black leading-none">{generation.title}</h2>
-          <p className="mt-2 text-sm font-semibold text-cyan-50/85">{generation.subtitle}</p>
+        <div className="mb-4 rounded-3xl border border-slate-200 bg-white p-4 text-blue-950 shadow-sm">
+          <p className="text-[11px] font-black uppercase tracking-[0.2em] text-blue-600">{generation.position}</p>
+          <h2 className="mt-2 text-2xl font-black leading-none tracking-[-0.035em]">{generation.title}</h2>
+          <p className="mt-2 text-sm font-semibold text-slate-500">{generation.subtitle}</p>
         </div>
 
-        <div className="relative flex flex-1 flex-col justify-center gap-3">
-          <span className="absolute bottom-8 left-[13px] top-8 w-px bg-cyan-200/45" aria-hidden="true" />
+        <div className="relative flex flex-1 flex-col justify-center gap-3 pb-4">
+          <span className="absolute bottom-10 left-[13px] top-10 w-px bg-blue-200" aria-hidden="true" />
           {generation.cards.map((card) => (
             <LinhaGeracionalCardView key={card.id} card={card} />
           ))}
@@ -151,9 +168,72 @@ function GenerationScreen({ generation }: { generation: LinhaGeracionalScreen })
   );
 }
 
+function LinhaGeracionalToolbar({ mapaFamiliarPath }: { mapaFamiliarPath: string }) {
+  return (
+    <div className="shrink-0 border-b border-slate-100 bg-white px-4 py-3 shadow-[0_8px_24px_rgba(15,23,42,0.04)]">
+      <div className="flex items-center gap-3">
+        <div className="grid min-w-0 flex-1 grid-cols-4 overflow-hidden rounded-full bg-slate-100 p-1">
+          {TOOLBAR_ITEMS.map((item) => (
+            <button
+              key={item}
+              type="button"
+              className="h-10 rounded-full px-1 text-center text-[13px] font-black text-slate-600 transition active:bg-white active:text-blue-700"
+            >
+              {item}
+            </button>
+          ))}
+        </div>
+        <Link
+          to={mapaFamiliarPath}
+          className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white text-blue-600 shadow-[0_6px_18px_rgba(15,23,42,0.15)] active:scale-95"
+          aria-label="Abrir painel da árvore familiar"
+        >
+          <Plus className="h-8 w-8" />
+        </Link>
+      </div>
+    </div>
+  );
+}
+
+function LinhaGeracionalBottomNav({ navigateTo }: { navigateTo: (path: string) => void }) {
+  const itemClassName = 'flex min-h-14 flex-col items-center justify-center gap-1 rounded-lg px-1 text-xs font-semibold text-gray-700 transition hover:bg-gray-50 active:bg-gray-100';
+  const activeItemClassName = 'flex min-h-14 flex-col items-center justify-center gap-1 rounded-lg bg-blue-50 px-1 text-xs font-semibold text-blue-700 ring-1 ring-blue-100 transition active:bg-blue-100';
+
+  return (
+    <nav className="fixed inset-x-0 bottom-0 z-50 border-t border-gray-200 bg-white/95 px-3 pb-[calc(env(safe-area-inset-bottom)+0.5rem)] pt-2 shadow-[0_-12px_30px_rgba(15,23,42,0.16)] backdrop-blur" data-tree-export-ignore="true">
+      <div className="mx-auto grid max-w-md grid-cols-5 gap-1.5">
+        <button type="button" className={activeItemClassName} onClick={() => navigateTo('/mapa-familiar')} aria-label="Abrir Home" aria-current="page">
+          <HomeIcon className="h-5 w-5" />
+          <span>Home</span>
+        </button>
+        <button type="button" className={itemClassName} onClick={() => navigateTo('/calendario-familiar')} aria-label="Abrir calendário familiar">
+          <CalendarDays className="h-5 w-5" />
+          <span>Calendário</span>
+        </button>
+        <button type="button" className={itemClassName} onClick={() => navigateTo('/forum')} aria-label="Abrir fórum">
+          <MessageCircle className="h-5 w-5" />
+          <span>Fórum</span>
+        </button>
+        <button type="button" className={itemClassName} onClick={() => navigateTo('/meus-favoritos')} aria-label="Abrir favoritos">
+          <Star className="h-5 w-5" />
+          <span>Favoritos</span>
+        </button>
+        <button type="button" className={itemClassName} onClick={() => navigateTo('/curiosidades')} aria-label="Abrir curiosidades">
+          <Sparkles className="h-5 w-5" />
+          <span>Curiosidades</span>
+        </button>
+      </div>
+    </nav>
+  );
+}
+
 export function LinhaGeracional() {
   const location = useLocation();
+  const navigate = useNavigate();
   const [activeIndex, setActiveIndex] = React.useState(0);
+  const [searchExpanded, setSearchExpanded] = React.useState(false);
+  const [searchTerm, setSearchTerm] = React.useState('');
+  const searchInputRef = React.useRef<HTMLInputElement | null>(null);
   const scrollerRef = React.useRef<HTMLDivElement | null>(null);
   const frameRef = React.useRef<number | null>(null);
 
@@ -163,6 +243,10 @@ export function LinhaGeracional() {
   React.useEffect(() => () => {
     if (frameRef.current !== null) window.cancelAnimationFrame(frameRef.current);
   }, []);
+
+  const navigateFromLinhaGeracional = React.useCallback((path: string) => {
+    navigate(path);
+  }, [navigate]);
 
   const goToGeneration = React.useCallback((nextIndex: number) => {
     const index = Math.max(0, Math.min(GENERATION_SCREENS.length - 1, nextIndex));
@@ -182,85 +266,125 @@ export function LinhaGeracional() {
       const scroller = scrollerRef.current;
       if (!scroller || scroller.clientWidth <= 0) return;
 
-      setActiveIndex(Math.round(scroller.scrollLeft / scroller.clientWidth));
+      const nextIndex = Math.max(0, Math.min(
+        GENERATION_SCREENS.length - 1,
+        Math.round(scroller.scrollLeft / scroller.clientWidth),
+      ));
+      setActiveIndex(nextIndex);
     });
   }, []);
 
+  const handleSearchSubmit = React.useCallback(() => {
+    const trimmedSearchTerm = searchTerm.trim();
+    if (!trimmedSearchTerm) return;
+
+    setSearchExpanded(false);
+    navigate(`/busca?q=${encodeURIComponent(trimmedSearchTerm)}`);
+  }, [navigate, searchTerm]);
+
+  const handlePersonSearchSelect = React.useCallback((pessoa: Pessoa) => {
+    if (!pessoa.id) return;
+    setSearchExpanded(false);
+    setSearchTerm('');
+    navigate(`/pessoa/${pessoa.id}`);
+  }, [navigate]);
+
   return (
     <>
-      <main className="relative h-[100dvh] overflow-hidden bg-slate-950 text-white lg:hidden" data-linha-geracional-mobile-root="true">
-        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(34,211,238,0.22),transparent_34%),linear-gradient(135deg,#0f172a,#164e63_58%,#042f2e)]" />
+      <main className="flex min-h-[100dvh] flex-col overflow-hidden bg-white text-blue-950 lg:hidden" data-linha-geracional-mobile-root="true">
+        <HomeHeader
+          currentTreeViewLabel="Linha Geracional"
+          isSearchExpanded={searchExpanded}
+          searchExpanded={searchExpanded}
+          onSearchExpandedChange={setSearchExpanded}
+          searchTerm={searchTerm}
+          onSearchTermChange={setSearchTerm}
+          onSearchSubmit={handleSearchSubmit}
+          searchInputRef={searchInputRef}
+          pessoasFiltradas={[]}
+          handleSearchSelect={handlePersonSearchSelect}
+          headerActionTextClassName="hidden sm:inline"
+          onCuriosities={() => navigate('/curiosidades')}
+          navigateFromHome={navigateFromLinhaGeracional}
+        />
 
-        <header className="absolute inset-x-0 top-0 z-20 border-b border-white/10 bg-slate-950/75 px-4 pb-3 pt-[calc(env(safe-area-inset-top,0px)+0.75rem)] text-white shadow-lg backdrop-blur">
-          <div className="mx-auto flex max-w-md items-center justify-between gap-3">
-            <div className="min-w-0">
-              <p className="text-[10px] font-black uppercase tracking-[0.24em] text-cyan-100">Nova experiência mobile</p>
-              <h1 className="mt-1 truncate text-lg font-black leading-tight">Linha Geracional</h1>
-            </div>
-            <Link
-              to={mapaFamiliarPath}
-              className="shrink-0 rounded-full border border-white/15 bg-white/10 px-3 py-2 text-xs font-black text-white backdrop-blur active:scale-95"
-            >
-              Árvore
-            </Link>
-          </div>
-        </header>
+        <LinhaGeracionalToolbar mapaFamiliarPath={mapaFamiliarPath} />
 
-        <div
-          ref={scrollerRef}
-          onScroll={handleScroll}
-          className="relative z-10 flex h-full snap-x snap-mandatory overflow-x-auto scroll-smooth [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-          aria-label="Telas de gerações familiares"
-        >
-          {GENERATION_SCREENS.map((generation) => (
-            <GenerationScreen key={generation.id} generation={generation} />
-          ))}
-        </div>
+        <section className="min-h-0 flex-1 overflow-hidden bg-white pb-[calc(env(safe-area-inset-bottom,0px)+5.8rem)]">
+          <div className="flex h-full flex-col rounded-t-2xl bg-yellow-300 p-4">
+            <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-sm bg-slate-50 shadow-inner">
+              <div className="shrink-0 border-b border-slate-200 bg-white px-4 py-3">
+                <p className="text-[11px] font-black uppercase tracking-[0.2em] text-blue-600">Linha Geracional</p>
+                <div className="mt-1 flex items-center justify-between gap-3">
+                  <h1 className="truncate text-lg font-black tracking-[-0.035em] text-blue-950">
+                    {GENERATION_SCREENS[activeIndex]?.title || 'Gerações'}
+                  </h1>
+                  <span className="shrink-0 rounded-full bg-blue-50 px-2.5 py-1 text-[11px] font-black text-blue-700">
+                    {activeIndex + 1}/{GENERATION_SCREENS.length}
+                  </span>
+                </div>
+              </div>
 
-        <footer className="absolute inset-x-0 bottom-0 z-20 border-t border-white/10 bg-slate-950/80 px-4 pb-[calc(env(safe-area-inset-bottom,0px)+0.75rem)] pt-3 backdrop-blur">
-          <div className="mx-auto flex max-w-md items-center justify-between gap-3">
-            <button
-              type="button"
-              onClick={() => goToGeneration(activeIndex - 1)}
-              disabled={activeIndex === 0}
-              className="flex h-11 w-11 items-center justify-center rounded-full border border-white/15 bg-white/10 text-white disabled:opacity-35"
-              aria-label="Geração anterior"
-            >
-              <ChevronLeft className="h-5 w-5" />
-            </button>
-
-            <div className="flex min-w-0 flex-1 flex-col items-center gap-2">
-              <div className="flex items-center gap-1.5" aria-label={`Geração ${activeIndex + 1} de ${GENERATION_SCREENS.length}`}>
-                {GENERATION_SCREENS.map((generation, index) => (
-                  <button
-                    key={generation.id}
-                    type="button"
-                    onClick={() => goToGeneration(index)}
-                    className={[
-                      'h-2 rounded-full transition-all',
-                      index === activeIndex ? 'w-7 bg-cyan-200' : 'w-2 bg-white/35',
-                    ].join(' ')}
-                    aria-label={`Ir para ${generation.title}`}
-                    aria-current={index === activeIndex ? 'step' : undefined}
-                  />
+              <div
+                ref={scrollerRef}
+                onScroll={handleScroll}
+                className="relative z-10 flex min-h-0 flex-1 snap-x snap-mandatory overflow-x-auto scroll-smooth [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+                aria-label="Telas de gerações familiares"
+              >
+                {GENERATION_SCREENS.map((generation) => (
+                  <GenerationScreen key={generation.id} generation={generation} />
                 ))}
               </div>
-              <p className="truncate text-center text-[11px] font-bold text-cyan-50/80">
-                Deslize para navegar entre gerações
-              </p>
-            </div>
 
-            <button
-              type="button"
-              onClick={() => goToGeneration(activeIndex + 1)}
-              disabled={activeIndex === GENERATION_SCREENS.length - 1}
-              className="flex h-11 w-11 items-center justify-center rounded-full border border-white/15 bg-white/10 text-white disabled:opacity-35"
-              aria-label="Próxima geração"
-            >
-              <ChevronRight className="h-5 w-5" />
-            </button>
+              <div className="shrink-0 border-t border-slate-200 bg-white px-4 py-3">
+                <div className="flex items-center justify-between gap-3">
+                  <button
+                    type="button"
+                    onClick={() => goToGeneration(activeIndex - 1)}
+                    disabled={activeIndex === 0}
+                    className="flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-white text-blue-700 shadow-sm disabled:opacity-35"
+                    aria-label="Geração anterior"
+                  >
+                    <ChevronLeft className="h-5 w-5" />
+                  </button>
+
+                  <div className="flex min-w-0 flex-1 flex-col items-center gap-2">
+                    <div className="flex items-center gap-1.5" aria-label={`Geração ${activeIndex + 1} de ${GENERATION_SCREENS.length}`}>
+                      {GENERATION_SCREENS.map((generation, index) => (
+                        <button
+                          key={generation.id}
+                          type="button"
+                          onClick={() => goToGeneration(index)}
+                          className={[
+                            'h-2 rounded-full transition-all',
+                            index === activeIndex ? 'w-7 bg-blue-600' : 'w-2 bg-slate-300',
+                          ].join(' ')}
+                          aria-label={`Ir para ${generation.title}`}
+                          aria-current={index === activeIndex ? 'step' : undefined}
+                        />
+                      ))}
+                    </div>
+                    <p className="truncate text-center text-[11px] font-bold text-slate-500">
+                      Deslize para navegar entre gerações
+                    </p>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => goToGeneration(activeIndex + 1)}
+                    disabled={activeIndex === GENERATION_SCREENS.length - 1}
+                    className="flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-white text-blue-700 shadow-sm disabled:opacity-35"
+                    aria-label="Próxima geração"
+                  >
+                    <ChevronRight className="h-5 w-5" />
+                  </button>
+                </div>
+              </div>
+            </div>
           </div>
-        </footer>
+        </section>
+
+        <LinhaGeracionalBottomNav navigateTo={navigateFromLinhaGeracional} />
       </main>
 
       <main className="hidden min-h-screen items-center justify-center bg-slate-50 px-6 text-slate-900 lg:flex">
