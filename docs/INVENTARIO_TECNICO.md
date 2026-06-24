@@ -1,7 +1,7 @@
 # Inventário técnico
 
-> Última revisão: 2026-06-23  
-> Escopo: rotas, módulos, documentos finais e referências técnicas preservadas após limpeza documental.  
+> Última revisão: 2026-06-23
+> Escopo: rotas, módulos, documentos finais e referências técnicas preservadas após limpeza documental.
 > Status: canônico.
 
 ## Stack
@@ -66,8 +66,6 @@
 
 - `/mapa-familiar`
 - `/mapa-familiar-horizontal`
-- `/minha-arvore`
-- `/minha-arvore/editar`
 - `/meus-dados`
 - `/meus-vinculos`
 - `/arquivos-historicos`

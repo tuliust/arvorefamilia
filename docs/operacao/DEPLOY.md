@@ -1,7 +1,7 @@
 # Deploy
 
-> Última revisão: 2026-06-23  
-> Escopo: checklist operacional de validação, publicação e QA pós-deploy.  
+> Última revisão: 2026-06-23
+> Escopo: checklist operacional de validação, publicação e QA pós-deploy.
 > Status: canônico.
 
 ## Objetivo
@@ -50,7 +50,7 @@ Validar manualmente:
 - login;
 - `/mapa-familiar`;
 - `/mapa-familiar-horizontal`;
-- `/minha-arvore` e `/minha-arvore/editar`;
+- `/meus-dados`;
 - `/meus-dados`;
 - `/meus-vinculos`;
 - `/revisao-dados`;

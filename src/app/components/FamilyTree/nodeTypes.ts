@@ -132,10 +132,10 @@ function DirectFamilyAnchorNode(props: NodeProps) {
 function CentralAreaPersonNode(props: NodeProps<PersonNodeData>) {
   const relation = props.data?.directRelation;
   const currentWidth = Number(props.data?.layoutWidth || props.data?.width);
-  const hasCompactMinhaArvoreWidth = Number.isFinite(currentWidth) && currentWidth > 0 && currentWidth <= CENTRAL_AREA_STRETCH_MAX_BASE_WIDTH;
+  const hasCompactCentralAreaWidth = Number.isFinite(currentWidth) && currentWidth > 0 && currentWidth <= CENTRAL_AREA_STRETCH_MAX_BASE_WIDTH;
   const shouldStretchCard = Boolean(
     relation &&
-    hasCompactMinhaArvoreWidth &&
+    hasCompactCentralAreaWidth &&
     !props.data?.isCentralPerson &&
     CENTRAL_AREA_CARD_RELATIONS.has(relation)
   );

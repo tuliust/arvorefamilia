@@ -307,7 +307,7 @@ export function UserProfileMenu({ variant = 'avatar', notificationBadgeCount = 0
             <div className="mb-3 flex items-start gap-2 border-b border-gray-100 pb-4">
               <button
                 type="button"
-                onClick={() => goTo(user ? '/minha-arvore/editar' : '/entrar')}
+                onClick={() => goTo(user ? '/meus-dados' : '/entrar')}
                 className="flex min-w-0 flex-1 items-center gap-3 rounded-2xl p-1 text-left transition hover:bg-gray-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
                 title={user ? 'Atualizar perfil' : 'Entrar'}
               >
@@ -437,7 +437,7 @@ export function UserProfileMenu({ variant = 'avatar', notificationBadgeCount = 0
                   <Home className="h-5 w-5 text-blue-700" />
                   Home
                 </button>
-                <button type="button" className={itemClassName} onClick={() => goTo('/minha-arvore/editar')}>
+                <button type="button" className={itemClassName} onClick={() => goTo('/meus-dados')}>
                   <Pencil className="h-5 w-5 text-blue-700" />
                   Atualizar perfil
                 </button>

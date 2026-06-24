@@ -17,7 +17,6 @@ const Duvidas = React.lazy(() => import('./pages/Duvidas').then((module) => ({ d
 const Entrar = React.lazy(() => import('./pages/Entrar').then((module) => ({ default: module.Entrar })));
 const Privacidade = React.lazy(() => import('./pages/Privacidade').then((module) => ({ default: module.Privacidade })));
 const Termos = React.lazy(() => import('./pages/Termos').then((module) => ({ default: module.Termos })));
-const MinhaArvore = React.lazy(() => import('./pages/MinhaArvore').then((module) => ({ default: module.MinhaArvore })));
 const MeusDados = React.lazy(() => import('./pages/MeusDados').then((module) => ({ default: module.MeusDados })));
 const MeusVinculos = React.lazy(() => import('./pages/MeusVinculosWithProfileBio').then((module) => ({ default: module.MeusVinculosWithProfileBio })));
 const ArquivosHistoricosPage = React.lazy(() => import('./pages/ArquivosHistoricosPage').then((module) => ({ default: module.ArquivosHistoricosPage })));
@@ -172,6 +171,11 @@ function RedirectToMapaFamiliar() {
   return <Navigate to={`/mapa-familiar${location.search}`} replace />;
 }
 
+function RedirectToMeusDados() {
+  const location = useLocation();
+  return <Navigate to={`/meus-dados${location.search}`} replace />;
+}
+
 function TreeHomeShell() {
   const location = useLocation();
   const treeViewMode = getTreeViewModeFromPath(location.pathname);
@@ -203,7 +207,7 @@ export const router = createBrowserRouter([
   { path: '/termos', element: lazyRoute(<Termos />) },
   { path: '/privacidade', element: lazyRoute(<Privacidade />) },
   { path: '/duvidas', element: lazyRoute(<Duvidas />) },
-  { path: '/minha-arvore/editar', element: lazyRoute(<MemberRoute><MinhaArvore /></MemberRoute>) },
+  { path: '/minha-arvore/editar', element: lazyRoute(<MemberRoute><RedirectToMeusDados /></MemberRoute>) },
   { path: '/meus-dados', element: lazyRoute(<MemberRoute><MeusDados /></MemberRoute>) },
   { path: '/meus-vinculos', element: lazyRoute(<MemberRoute><MeusVinculos /></MemberRoute>) },
   { path: '/arquivos-historicos', element: lazyRoute(<MemberRoute><ArquivosHistoricosPage /></MemberRoute>) },

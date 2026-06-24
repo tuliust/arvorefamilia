@@ -4,7 +4,6 @@ import { MobileTreeControlsPortal } from "./app/components/FamilyTree/MobileTree
 import "./styles/index.css";
 import "./styles/mobile-tree-controls.css";
 import "./styles/mobile-tree-lines.css";
-import "./styles/mobile-edit-profile.css";
 import "./styles/mobile-member-pages.css";
 import "./mobileFamilyMapFullPanelStyleFix";
 

@@ -41,7 +41,7 @@ test('rotas antigas de views da arvore nao devem voltar como rotas ativas', asyn
   }
 });
 
-test('rota vigente de edicao minha-arvore continua protegida', async ({ page }) => {
+test('rota legada de edicao minha-arvore redireciona visitante para login', async ({ page }) => {
   await page.goto('/minha-arvore/editar');
 
   await expect(page).toHaveURL(/\/entrar$/);
