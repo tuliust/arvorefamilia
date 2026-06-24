@@ -18,11 +18,16 @@ import {
   type CuriosidadesDataProps,
 } from './curiosidadesUtils';
 
+type CuriosidadesDiscoverySectionProps = CuriosidadesDataProps & {
+  embedded?: boolean;
+};
+
 export function CuriosidadesDiscoverySection({
   pessoas,
   loading,
   error,
-}: CuriosidadesDataProps) {
+  embedded = false,
+}: CuriosidadesDiscoverySectionProps) {
   const navigate = useNavigate();
   const selectablePeople = useMemo(
     () => pessoas.filter((pessoa) => !isPet(pessoa) && pessoa.nome_completo),
@@ -109,7 +114,7 @@ export function CuriosidadesDiscoverySection({
   };
 
   return (
-    <section className={curiositySectionCardClassName}>
+    <section className={embedded ? 'min-w-0' : curiositySectionCardClassName}>
       <div className="flex items-center gap-3">
         <Search className="h-5 w-5 text-blue-700" />
         <h2 className="text-xl font-bold text-gray-950">Descubra mais sobre...</h2>

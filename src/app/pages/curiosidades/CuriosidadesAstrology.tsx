@@ -30,11 +30,16 @@ function getZodiacSymbol(label: string) {
   return ZODIAC_SYMBOLS[label] ?? '✦';
 }
 
+type CuriosidadesAstrologyProps = CuriosidadesDataProps & {
+  embedded?: boolean;
+};
+
 export function CuriosidadesAstrology({
   pessoas,
   loading,
   error,
-}: CuriosidadesDataProps) {
+  embedded = false,
+}: CuriosidadesAstrologyProps) {
   const selectablePeople = useMemo(
     () => pessoas.filter((pessoa) => !isPet(pessoa) && getZodiacSignFromDate(pessoa.data_nascimento)),
     [pessoas]
@@ -75,7 +80,7 @@ export function CuriosidadesAstrology({
   const ranking = getZodiacRanking(pessoas);
 
   return (
-    <section className={curiositySectionCardClassName}>
+    <section className={embedded ? 'min-w-0' : curiositySectionCardClassName}>
       <div className="flex items-center gap-3">
         <MoonStar className="h-5 w-5 text-blue-700" />
         <h2 className="text-xl font-bold text-gray-950">Astrologia da família</h2>

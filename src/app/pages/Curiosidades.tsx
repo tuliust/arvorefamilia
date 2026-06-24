@@ -5,13 +5,11 @@ import { obterTodasPessoas, obterTodosRelacionamentos } from '../services/dataSe
 import { getProfileQuestionnaireSelectedBadges } from '../services/profileQuestionnaireService';
 import type { Pessoa, Relacionamento } from '../types';
 import { CuriosidadesAiSection } from './curiosidades/CuriosidadesAiSection';
-import { CuriosidadesAstrology } from './curiosidades/CuriosidadesAstrology';
 import { CuriosidadesCharts } from './curiosidades/CuriosidadesCharts';
-import { CuriosidadesConnectionSection } from './curiosidades/CuriosidadesConnectionSection';
 import { CuriosidadesCouples } from './curiosidades/CuriosidadesCouples';
-import { CuriosidadesDiscoverySection } from './curiosidades/CuriosidadesDiscoverySection';
 import { CuriosidadesGenerations } from './curiosidades/CuriosidadesGenerations';
 import { CuriosidadesHero } from './curiosidades/CuriosidadesHero';
+import { CuriosidadesInsightTabs } from './curiosidades/CuriosidadesInsightTabs';
 import { CuriosidadesInterestsSection } from './curiosidades/CuriosidadesInterestsSection';
 import { CuriosidadesMemoryWall } from './curiosidades/CuriosidadesMemoryWall';
 import { CuriosidadesQuizSection } from './curiosidades/CuriosidadesQuizSection';
@@ -40,7 +38,7 @@ async function loadProfileBadgesByPersonId(pessoas: Pessoa[]): Promise<ProfileBa
         }));
       }
     } catch (error) {
-      console.warn(`N?o foi poss?vel carregar badges do perfil ${pessoa.id}:`, error);
+      console.warn(`Não foi possível carregar badges do perfil ${pessoa.id}:`, error);
     }
   }
 
@@ -118,56 +116,63 @@ export function Curiosidades() {
 
       <main className={`${PAGE_CONTAINER_CLASS} min-w-0 space-y-4 py-4 pb-36 sm:space-y-6 sm:py-6 md:pb-8`}>
         <CuriosidadesHero />
-        <div id="numeros-da-familia" className="scroll-mt-24">
-          <CuriosidadesStats {...curiosityDataProps} />
+
+        <div className="grid min-w-0 gap-4 sm:gap-4 xl:grid-cols-5 xl:items-start">
+          <div id="hoje-na-familia" className="min-w-0 scroll-mt-24 xl:col-span-2">
+            <CuriosidadesToday {...curiosityDataProps} />
+          </div>
+
+          <div id="ia" className="min-w-0 scroll-mt-24 xl:col-span-3">
+            <CuriosidadesAiSection {...curiosityDataProps} />
+          </div>
+
+          <div id="numeros-da-familia" className="min-w-0 scroll-mt-24 xl:col-span-5">
+            <CuriosidadesStats {...curiosityDataProps} />
+          </div>
+
+          <div id="quiz" className="min-w-0 scroll-mt-24 xl:col-span-3">
+            <CuriosidadesQuizSection {...curiosityDataProps} />
+          </div>
+
+          <div id="mural" className="min-w-0 scroll-mt-24 xl:col-span-2">
+            <CuriosidadesMemoryWall />
+          </div>
         </div>
-        <div id="hoje-na-familia" className="scroll-mt-24">
-          <CuriosidadesToday {...curiosityDataProps} />
-        </div>
+
         <div id="voce-sabia" className="scroll-mt-24">
           <CuriosidadesRankings {...curiosityDataProps} />
         </div>
+
         <div id="graficos" className="scroll-mt-24">
           <CuriosidadesCharts {...curiosityDataProps} />
         </div>
+
         <div className="grid min-w-0 gap-4 lg:grid-cols-2 lg:items-start">
           <div className="min-w-0 space-y-4">
             <div id="geracoes" className="scroll-mt-24">
               <CuriosidadesGenerations {...curiosityDataProps} />
             </div>
-            <div id="descobertas" className="scroll-mt-24">
-              <CuriosidadesDiscoverySection {...curiosityDataProps} />
-            </div>
-            <div id="conexoes" className="scroll-mt-24">
-              <CuriosidadesConnectionSection {...curiosityDataProps} />
-            </div>
+
             <div id="rota" className="scroll-mt-24">
               <CuriosidadesRouteSection {...curiosityDataProps} />
             </div>
-            <div id="mural" className="scroll-mt-24">
-              <CuriosidadesMemoryWall />
-            </div>
           </div>
+
           <div className="min-w-0 space-y-4">
             <div id="bodas" className="scroll-mt-24">
               <CuriosidadesCouples {...curiosityDataProps} />
             </div>
-            <div id="ia" className="scroll-mt-24">
-              <CuriosidadesAiSection {...curiosityDataProps} />
-            </div>
-            <div id="quiz" className="scroll-mt-24">
-              <CuriosidadesQuizSection {...curiosityDataProps} />
-            </div>
+
             <div id="interesses" className="scroll-mt-24">
               <CuriosidadesInterestsSection {...curiosityDataProps} />
             </div>
-            <div id="astrologia" className="scroll-mt-24">
-              <CuriosidadesAstrology {...curiosityDataProps} />
-            </div>
           </div>
+        </div>
+
+        <div id="exploracoes-familiares" className="scroll-mt-24">
+          <CuriosidadesInsightTabs {...curiosityDataProps} />
         </div>
       </main>
     </div>
   );
 }
-
