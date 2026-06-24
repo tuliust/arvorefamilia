@@ -1,24 +1,58 @@
 import React from 'react';
 import { Link, useLocation, useNavigate } from 'react-router';
 import {
+  AlertCircle,
   CalendarDays,
   ChevronLeft,
   ChevronRight,
   Home as HomeIcon,
+  Layers,
   MessageCircle,
   Network,
   Plus,
-  Search,
+  RefreshCw,
   Sparkles,
   Star,
   UsersRound,
 } from 'lucide-react';
 
 import { HomeHeader } from './home/HomeHeader';
-import type { Pessoa } from '../types';
+import { useAuth } from '../contexts/AuthContext';
+import { supabase } from '../lib/supabaseClient';
+import { getPrimaryLinkedPersonWithPessoa } from '../services/memberProfileService';
+import type { Pessoa, Relacionamento } from '../types';
+
+const LINHA_GERACIONAL_MAX_WAVES = 3;
+const LINHA_GERACIONAL_MAX_PEOPLE = 140;
+const SUPABASE_IN_CHUNK_SIZE = 40;
+const MAX_CARDS_PER_SCREEN = 36;
+
+const PESSOA_SELECT = [
+  'id',
+  'nome_completo',
+  'data_nascimento',
+  'data_falecimento',
+  'falecido',
+  'foto_principal_url',
+  'genero',
+  'humano_ou_pet',
+  'lado',
+  'manual_generation',
+  'permitir_exibir_data_nascimento',
+].join(',');
+
+const RELACIONAMENTO_SELECT = [
+  'id',
+  'pessoa_origem_id',
+  'pessoa_destino_id',
+  'tipo_relacionamento',
+  'subtipo_relacionamento',
+  'ativo',
+].join(',');
 
 type LinhaGeracionalCard = {
   id: string;
+  person: Pessoa;
   name: string;
   label: string;
   years?: string;
@@ -30,78 +64,285 @@ type LinhaGeracionalScreen = {
   title: string;
   subtitle: string;
   position: string;
+  generation: number;
   cards: LinhaGeracionalCard[];
+  truncated?: boolean;
 };
 
-const GENERATION_SCREENS: LinhaGeracionalScreen[] = [
+type LinhaGeracionalLoadState = {
+  loading: boolean;
+  error: string | null;
+  centralPersonId: string;
+  pessoas: Pessoa[];
+  relacionamentos: Relacionamento[];
+};
+
+type RelationshipMaps = {
+  parentsByChild: Map<string, Set<string>>;
+  childrenByParent: Map<string, Set<string>>;
+  spousesByPerson: Map<string, Set<string>>;
+  siblingsByPerson: Map<string, Set<string>>;
+};
+
+const SCREEN_DEFINITIONS: Array<Omit<LinhaGeracionalScreen, 'cards' | 'position'> & { emptyLabel: string }> = [
   {
     id: 'tataravos',
     title: 'Tataravós',
     subtitle: 'Origem remota da família',
-    position: 'Geração 1 de 6',
-    cards: [
-      { id: 'tataravo-1', name: 'Ancestral materno', label: 'Linha materna', years: 'séc. XIX' },
-      { id: 'tataravo-2', name: 'Ancestral paterno', label: 'Linha paterna', years: 'séc. XIX' },
-    ],
+    generation: -4,
+    emptyLabel: 'Nenhum tataravô encontrado neste recorte.',
   },
   {
     id: 'bisavos',
     title: 'Bisavós',
     subtitle: 'Ramos familiares de origem',
-    position: 'Geração 2 de 6',
-    cards: [
-      { id: 'bisavo-1', name: 'Bisavó materna', label: 'Ascendente', years: '1890 – 1975' },
-      { id: 'bisavo-2', name: 'Bisavô materno', label: 'Ascendente', years: '1888 – 1968' },
-      { id: 'bisavo-3', name: 'Bisavó paterna', label: 'Ascendente', years: '1896 – 1981' },
-    ],
+    generation: -3,
+    emptyLabel: 'Nenhum bisavô encontrado neste recorte.',
   },
   {
     id: 'avos',
     title: 'Avós',
     subtitle: 'Geração de ligação familiar',
-    position: 'Geração 3 de 6',
-    cards: [
-      { id: 'avo-1', name: 'Avó materna', label: 'Família materna', years: '1922 – 2008' },
-      { id: 'avo-2', name: 'Avô materno', label: 'Família materna', years: '1919 – 1999' },
-      { id: 'avo-3', name: 'Avó paterna', label: 'Família paterna', years: '1927 – 2012' },
-      { id: 'avo-4', name: 'Avô paterno', label: 'Família paterna', years: '1924 – 2001' },
-    ],
+    generation: -2,
+    emptyLabel: 'Nenhum avô encontrado neste recorte.',
   },
   {
     id: 'pais',
     title: 'Pais e tios',
     subtitle: 'Geração anterior direta',
-    position: 'Geração 4 de 6',
-    cards: [
-      { id: 'pai-1', name: 'Mãe', label: 'Ascendente direta', years: '1956' },
-      { id: 'pai-2', name: 'Pai', label: 'Ascendente direto', years: '1954' },
-      { id: 'tio-1', name: 'Tia', label: 'Colateral', years: '1959' },
-    ],
+    generation: -1,
+    emptyLabel: 'Nenhum registro nessa geração.',
   },
   {
     id: 'nucleo',
     title: 'Núcleo',
-    subtitle: 'Pessoa central e vínculos próximos',
-    position: 'Geração 5 de 6',
-    cards: [
-      { id: 'central', name: 'Pessoa central', label: 'Referência do mapa', years: '1989', highlight: true },
-      { id: 'conjuge', name: 'Cônjuge', label: 'Vínculo afetivo', years: '1988' },
-      { id: 'irmao', name: 'Irmão', label: 'Mesmo núcleo familiar', years: '1992' },
-    ],
+    subtitle: 'Pessoa central, cônjuges e irmãos',
+    generation: 0,
+    emptyLabel: 'Nenhuma pessoa no núcleo.',
   },
   {
-    id: 'descendentes',
-    title: 'Descendentes',
-    subtitle: 'Filhos, netos e novos ramos',
-    position: 'Geração 6 de 6',
-    cards: [
-      { id: 'filho-1', name: 'Filho ou filha', label: 'Descendente direto' },
-      { id: 'neto-1', name: 'Neto ou neta', label: 'Nova geração' },
-    ],
+    id: 'filhos',
+    title: 'Filhos',
+    subtitle: 'Descendentes diretos',
+    generation: 1,
+    emptyLabel: 'Nenhum filho encontrado neste recorte.',
+  },
+  {
+    id: 'netos',
+    title: 'Netos',
+    subtitle: 'Novas gerações da família',
+    generation: 2,
+    emptyLabel: 'Nenhum neto encontrado neste recorte.',
   },
 ];
 
 const TOOLBAR_ITEMS = ['Formato', 'Cor', 'Filtros', 'Zoom'];
+
+function normalizePessoa(row: any): Pessoa {
+  return {
+    ...row,
+    humano_ou_pet: row?.humano_ou_pet || 'Humano',
+    falecido: Boolean(row?.falecido || row?.data_falecimento),
+  } as Pessoa;
+}
+
+function normalizeRelacionamento(row: any): Relacionamento {
+  return {
+    ...row,
+    ativo: row?.ativo ?? true,
+  } as Relacionamento;
+}
+
+function chunkIds(ids: string[], chunkSize = SUPABASE_IN_CHUNK_SIZE) {
+  const chunks: string[][] = [];
+
+  for (let index = 0; index < ids.length; index += chunkSize) {
+    chunks.push(ids.slice(index, index + chunkSize));
+  }
+
+  return chunks;
+}
+
+function getRelationshipKey(relationship: Relacionamento) {
+  return relationship.id || [
+    relationship.pessoa_origem_id,
+    relationship.pessoa_destino_id,
+    relationship.tipo_relacionamento,
+    relationship.subtipo_relacionamento ?? '',
+  ].join('::');
+}
+
+async function fetchPessoaById(id: string) {
+  const { data, error } = await supabase
+    .from('pessoas')
+    .select(PESSOA_SELECT)
+    .eq('id', id)
+    .maybeSingle();
+
+  if (error) throw new Error(error.message);
+  return data ? normalizePessoa(data) : null;
+}
+
+async function fetchPessoasByIds(ids: string[]) {
+  const uniqueIds = Array.from(new Set(ids.filter(Boolean)));
+  const rows: Pessoa[] = [];
+
+  for (const chunk of chunkIds(uniqueIds)) {
+    const { data, error } = await supabase
+      .from('pessoas')
+      .select(PESSOA_SELECT)
+      .in('id', chunk);
+
+    if (error) throw new Error(error.message);
+    rows.push(...((data || []).map(normalizePessoa)));
+  }
+
+  return rows;
+}
+
+async function fetchRelationshipsForIds(ids: string[]) {
+  const uniqueIds = Array.from(new Set(ids.filter(Boolean)));
+  const relationshipsByKey = new Map<string, Relacionamento>();
+
+  for (const chunk of chunkIds(uniqueIds)) {
+    const [originResult, destinationResult] = await Promise.all([
+      supabase
+        .from('relacionamentos')
+        .select(RELACIONAMENTO_SELECT)
+        .in('pessoa_origem_id', chunk),
+      supabase
+        .from('relacionamentos')
+        .select(RELACIONAMENTO_SELECT)
+        .in('pessoa_destino_id', chunk),
+    ]);
+
+    if (originResult.error) throw new Error(originResult.error.message);
+    if (destinationResult.error) throw new Error(destinationResult.error.message);
+
+    [...(originResult.data || []), ...(destinationResult.data || [])]
+      .map(normalizeRelacionamento)
+      .filter((relationship) => relationship.ativo !== false)
+      .forEach((relationship) => {
+        relationshipsByKey.set(getRelationshipKey(relationship), relationship);
+      });
+  }
+
+  return Array.from(relationshipsByKey.values());
+}
+
+async function fetchScopedLinhaGeracionalData(centralPersonId: string) {
+  const personIds = new Set<string>([centralPersonId]);
+  const relationshipsByKey = new Map<string, Relacionamento>();
+  let frontier = new Set<string>([centralPersonId]);
+
+  for (let wave = 0; wave < LINHA_GERACIONAL_MAX_WAVES && frontier.size > 0; wave += 1) {
+    const relationships = await fetchRelationshipsForIds(Array.from(frontier));
+    const nextFrontier = new Set<string>();
+
+    relationships.forEach((relationship) => {
+      relationshipsByKey.set(getRelationshipKey(relationship), relationship);
+
+      [relationship.pessoa_origem_id, relationship.pessoa_destino_id].forEach((personId) => {
+        if (!personId || personIds.has(personId)) return;
+        if (personIds.size >= LINHA_GERACIONAL_MAX_PEOPLE) return;
+
+        personIds.add(personId);
+        nextFrontier.add(personId);
+      });
+    });
+
+    frontier = nextFrontier;
+  }
+
+  const pessoas = await fetchPessoasByIds(Array.from(personIds));
+  const loadedPersonIds = new Set(pessoas.map((person) => person.id));
+  const relacionamentos = Array.from(relationshipsByKey.values()).filter((relationship) => (
+    loadedPersonIds.has(relationship.pessoa_origem_id)
+    && loadedPersonIds.has(relationship.pessoa_destino_id)
+  ));
+
+  return { pessoas, relacionamentos };
+}
+
+function addMapSet(map: Map<string, Set<string>>, key: string, value: string) {
+  if (!key || !value || key === value) return;
+  const set = map.get(key) ?? new Set<string>();
+  set.add(value);
+  map.set(key, set);
+}
+
+function buildRelationshipMaps(relacionamentos: Relacionamento[]): RelationshipMaps {
+  const maps: RelationshipMaps = {
+    parentsByChild: new Map(),
+    childrenByParent: new Map(),
+    spousesByPerson: new Map(),
+    siblingsByPerson: new Map(),
+  };
+
+  relacionamentos
+    .filter((relationship) => relationship.ativo !== false)
+    .forEach((relationship) => {
+      const origemId = relationship.pessoa_origem_id;
+      const destinoId = relationship.pessoa_destino_id;
+      if (!origemId || !destinoId) return;
+
+      if (relationship.tipo_relacionamento === 'pai' || relationship.tipo_relacionamento === 'mae') {
+        addMapSet(maps.parentsByChild, origemId, destinoId);
+        addMapSet(maps.childrenByParent, destinoId, origemId);
+        return;
+      }
+
+      if (relationship.tipo_relacionamento === 'filho') {
+        addMapSet(maps.parentsByChild, destinoId, origemId);
+        addMapSet(maps.childrenByParent, origemId, destinoId);
+        return;
+      }
+
+      if (relationship.tipo_relacionamento === 'conjuge') {
+        addMapSet(maps.spousesByPerson, origemId, destinoId);
+        addMapSet(maps.spousesByPerson, destinoId, origemId);
+        return;
+      }
+
+      if (relationship.tipo_relacionamento === 'irmao') {
+        addMapSet(maps.siblingsByPerson, origemId, destinoId);
+        addMapSet(maps.siblingsByPerson, destinoId, origemId);
+      }
+    });
+
+  return maps;
+}
+
+function inferGenerations(centralPersonId: string, maps: RelationshipMaps) {
+  const generations = new Map<string, number>([[centralPersonId, 0]]);
+  const queue: string[] = [centralPersonId];
+  const visited = new Set<string>();
+
+  while (queue.length > 0) {
+    const personId = queue.shift();
+    if (!personId || visited.has(personId)) continue;
+    visited.add(personId);
+
+    const generation = generations.get(personId) ?? 0;
+
+    const candidates: Array<[string, number]> = [
+      ...Array.from(maps.parentsByChild.get(personId) ?? []).map((parentId): [string, number] => [parentId, generation - 1]),
+      ...Array.from(maps.childrenByParent.get(personId) ?? []).map((childId): [string, number] => [childId, generation + 1]),
+      ...Array.from(maps.spousesByPerson.get(personId) ?? []).map((spouseId): [string, number] => [spouseId, generation]),
+      ...Array.from(maps.siblingsByPerson.get(personId) ?? []).map((siblingId): [string, number] => [siblingId, generation]),
+    ];
+
+    candidates.forEach(([nextPersonId, nextGeneration]) => {
+      if (nextGeneration < -4 || nextGeneration > 2) return;
+      if (!generations.has(nextPersonId)) {
+        generations.set(nextPersonId, nextGeneration);
+        queue.push(nextPersonId);
+      }
+    });
+  }
+
+  return generations;
+}
 
 function getInitials(name: string) {
   return name
@@ -112,13 +353,115 @@ function getInitials(name: string) {
     .join('') || 'F';
 }
 
-function LinhaGeracionalCardView({ card }: { card: LinhaGeracionalCard }) {
+function getShortName(name?: string | null) {
+  const parts = String(name ?? '')
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean);
+
+  if (parts.length <= 2) return parts.join(' ') || 'Pessoa';
+  return [parts[0], parts[1], parts[parts.length - 1]].filter(Boolean).join(' ');
+}
+
+function getFirstName(name?: string | null) {
+  return String(name ?? '').trim().split(/\s+/).filter(Boolean)[0] || 'Família';
+}
+
+function getYear(value?: string | number | null) {
+  if (!value) return '';
+  return String(value).match(/\b(18|19|20|21)\d{2}\b/)?.[0] ?? '';
+}
+
+function getYearsLabel(person: Pessoa) {
+  const birthYear = person.permitir_exibir_data_nascimento === false ? '' : getYear(person.data_nascimento);
+  const deathYear = getYear(person.data_falecimento);
+
+  if (birthYear && deathYear) return `${birthYear} – ${deathYear}`;
+  if (birthYear) return birthYear;
+  if (deathYear) return `† ${deathYear}`;
+  return '';
+}
+
+function isPet(person: Pessoa) {
+  const entityType = String(person.humano_ou_pet ?? '').trim().toLowerCase();
+  const gender = String(person.genero ?? '').trim().toLowerCase();
+  return entityType === 'pet' || gender === 'pet' || gender === 'animal' || gender === 'mascote';
+}
+
+function getCardLabel(person: Pessoa, centralPersonId: string, generation: number, maps: RelationshipMaps) {
+  if (person.id === centralPersonId) return 'Pessoa central';
+  if (isPet(person)) return 'Pet da família';
+
+  if (generation === 0) {
+    if (maps.spousesByPerson.get(centralPersonId)?.has(person.id)) return 'Cônjuge';
+    if (maps.siblingsByPerson.get(centralPersonId)?.has(person.id)) return 'Irmão ou irmã';
+    return 'Núcleo familiar';
+  }
+
+  if (generation < 0) {
+    if (generation === -1 && maps.parentsByChild.get(centralPersonId)?.has(person.id)) return 'Ascendente direto';
+    return 'Ascendente';
+  }
+
+  if (generation === 1) return 'Descendente direto';
+  if (generation === 2) return 'Nova geração';
+  return 'Familiar';
+}
+
+function sortPeopleForGeneration(centralPersonId: string) {
+  return (a: LinhaGeracionalCard, b: LinhaGeracionalCard) => {
+    if (a.id === centralPersonId) return -1;
+    if (b.id === centralPersonId) return 1;
+    if (a.highlight !== b.highlight) return a.highlight ? -1 : 1;
+    return a.name.localeCompare(b.name, 'pt-BR', { sensitivity: 'base' });
+  };
+}
+
+function buildGenerationScreens(pessoas: Pessoa[], relacionamentos: Relacionamento[], centralPersonId: string): LinhaGeracionalScreen[] {
+  const maps = buildRelationshipMaps(relacionamentos);
+  const generations = inferGenerations(centralPersonId, maps);
+  const peopleByGeneration = new Map<number, Pessoa[]>();
+
+  pessoas.forEach((person) => {
+    const generation = generations.get(person.id);
+    if (generation === undefined) return;
+
+    const nextPeople = peopleByGeneration.get(generation) ?? [];
+    nextPeople.push(person);
+    peopleByGeneration.set(generation, nextPeople);
+  });
+
+  return SCREEN_DEFINITIONS.map((definition, index) => {
+    const people = peopleByGeneration.get(definition.generation) ?? [];
+    const cards = people
+      .map((person): LinhaGeracionalCard => ({
+        id: person.id,
+        person,
+        name: getShortName(person.nome_completo),
+        label: getCardLabel(person, centralPersonId, definition.generation, maps),
+        years: getYearsLabel(person),
+        highlight: person.id === centralPersonId,
+      }))
+      .sort(sortPeopleForGeneration(centralPersonId));
+
+    return {
+      ...definition,
+      position: `Geração ${index + 1} de ${SCREEN_DEFINITIONS.length}`,
+      cards: cards.slice(0, MAX_CARDS_PER_SCREEN),
+      truncated: cards.length > MAX_CARDS_PER_SCREEN,
+    };
+  });
+}
+
+function LinhaGeracionalCardView({ card, onClick }: { card: LinhaGeracionalCard; onClick: (person: Pessoa) => void }) {
   return (
     <div className="relative pl-8">
       <span className="absolute left-[13px] top-1/2 h-px w-5 -translate-y-1/2 bg-blue-200" aria-hidden="true" />
-      <article
+      <button
+        type="button"
+        onClick={() => onClick(card.person)}
         className={[
-          'flex min-h-[74px] items-center gap-3 rounded-2xl border px-3 py-2 shadow-sm',
+          'flex min-h-[74px] w-full items-center gap-3 rounded-2xl border px-3 py-2 text-left shadow-sm active:scale-[0.99]',
           card.highlight
             ? 'border-blue-200 bg-blue-600 text-white shadow-blue-950/10'
             : 'border-slate-200 bg-white text-blue-950',
@@ -126,12 +469,16 @@ function LinhaGeracionalCardView({ card }: { card: LinhaGeracionalCard }) {
       >
         <span
           className={[
-            'flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-sm font-black',
+            'flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-full text-sm font-black',
             card.highlight ? 'bg-white/20 text-white' : 'bg-blue-50 text-blue-700',
           ].join(' ')}
           aria-hidden="true"
         >
-          {getInitials(card.name)}
+          {card.person.foto_principal_url ? (
+            <img src={card.person.foto_principal_url} alt="" className="h-full w-full object-cover" loading="lazy" />
+          ) : (
+            getInitials(card.name)
+          )}
         </span>
         <span className="min-w-0 flex-1">
           <span className="block truncate text-sm font-black leading-tight">{card.name}</span>
@@ -139,12 +486,12 @@ function LinhaGeracionalCardView({ card }: { card: LinhaGeracionalCard }) {
             {card.label}{card.years ? ` · ${card.years}` : ''}
           </span>
         </span>
-      </article>
+      </button>
     </div>
   );
 }
 
-function GenerationScreen({ generation }: { generation: LinhaGeracionalScreen }) {
+function GenerationScreen({ generation, onPersonClick }: { generation: LinhaGeracionalScreen; onPersonClick: (person: Pessoa) => void }) {
   return (
     <section
       className="relative flex h-full min-w-full snap-start flex-col overflow-y-auto px-4 py-4"
@@ -158,10 +505,21 @@ function GenerationScreen({ generation }: { generation: LinhaGeracionalScreen })
         </div>
 
         <div className="relative flex flex-1 flex-col justify-center gap-3 pb-4">
-          <span className="absolute bottom-10 left-[13px] top-10 w-px bg-blue-200" aria-hidden="true" />
-          {generation.cards.map((card) => (
-            <LinhaGeracionalCardView key={card.id} card={card} />
-          ))}
+          {generation.cards.length > 0 && <span className="absolute bottom-10 left-[13px] top-10 w-px bg-blue-200" aria-hidden="true" />}
+          {generation.cards.length > 0 ? (
+            generation.cards.map((card) => (
+              <LinhaGeracionalCardView key={card.id} card={card} onClick={onPersonClick} />
+            ))
+          ) : (
+            <div className="rounded-3xl border border-dashed border-slate-200 bg-white/80 p-6 text-center text-sm font-bold text-slate-500">
+              {SCREEN_DEFINITIONS.find((screen) => screen.id === generation.id)?.emptyLabel || 'Nenhum familiar encontrado.'}
+            </div>
+          )}
+          {generation.truncated && (
+            <p className="rounded-2xl bg-blue-50 px-3 py-2 text-center text-[11px] font-bold text-blue-700">
+              Mostrando os primeiros {MAX_CARDS_PER_SCREEN} registros desta geração.
+            </p>
+          )}
         </div>
       </div>
     </section>
@@ -227,12 +585,51 @@ function LinhaGeracionalBottomNav({ navigateTo }: { navigateTo: (path: string) =
   );
 }
 
+function LinhaGeracionalLoading() {
+  return (
+    <main className="flex min-h-[100dvh] items-center justify-center bg-[#f8efe4] px-6 text-center lg:hidden">
+      <div className="rounded-3xl border border-blue-100 bg-white/95 p-6 shadow-xl">
+        <RefreshCw className="mx-auto h-7 w-7 animate-spin text-blue-700" aria-hidden="true" />
+        <p className="mt-3 text-sm font-bold text-slate-700">Preparando linha geracional...</p>
+      </div>
+    </main>
+  );
+}
+
+function LinhaGeracionalError({ message, onRetry }: { message: string; onRetry: () => void }) {
+  return (
+    <main className="flex min-h-[100dvh] items-center justify-center bg-[#f8efe4] px-6 text-center lg:hidden">
+      <div className="rounded-3xl border border-red-100 bg-white/95 p-6 shadow-xl">
+        <AlertCircle className="mx-auto h-8 w-8 text-red-600" aria-hidden="true" />
+        <p className="mt-3 text-sm font-bold text-red-700">{message}</p>
+        <button
+          type="button"
+          onClick={onRetry}
+          className="mt-4 rounded-2xl bg-blue-700 px-4 py-2 text-sm font-bold text-white"
+        >
+          Tentar novamente
+        </button>
+      </div>
+    </main>
+  );
+}
+
 export function LinhaGeracional() {
+  const { user, loading: authLoading } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
+  const requestedPersonId = React.useMemo(() => new URLSearchParams(location.search).get('pessoa') || '', [location.search]);
   const [activeIndex, setActiveIndex] = React.useState(0);
   const [searchExpanded, setSearchExpanded] = React.useState(false);
   const [searchTerm, setSearchTerm] = React.useState('');
+  const [loadRevision, setLoadRevision] = React.useState(0);
+  const [state, setState] = React.useState<LinhaGeracionalLoadState>({
+    loading: true,
+    error: null,
+    centralPersonId: '',
+    pessoas: [],
+    relacionamentos: [],
+  });
   const searchInputRef = React.useRef<HTMLInputElement | null>(null);
   const scrollerRef = React.useRef<HTMLDivElement | null>(null);
   const frameRef = React.useRef<number | null>(null);
@@ -244,19 +641,100 @@ export function LinhaGeracional() {
     if (frameRef.current !== null) window.cancelAnimationFrame(frameRef.current);
   }, []);
 
+  React.useEffect(() => {
+    let cancelled = false;
+
+    async function loadLinhaGeracional() {
+      if (authLoading) return;
+
+      if (!user?.id) {
+        setState({
+          loading: false,
+          error: 'Entre para visualizar a linha geracional.',
+          centralPersonId: '',
+          pessoas: [],
+          relacionamentos: [],
+        });
+        return;
+      }
+
+      setState((current) => ({ ...current, loading: true, error: null }));
+
+      try {
+        const linkedPersonResult = requestedPersonId
+          ? { data: { pessoa_id: requestedPersonId, pessoa: await fetchPessoaById(requestedPersonId) }, error: undefined }
+          : await getPrimaryLinkedPersonWithPessoa(user.id);
+
+        if (linkedPersonResult.error) throw new Error(linkedPersonResult.error);
+
+        const centralPersonId = linkedPersonResult.data?.pessoa_id || linkedPersonResult.data?.pessoa?.id || '';
+        if (!centralPersonId) throw new Error('Nenhuma pessoa principal vinculada ao seu usuário.');
+
+        const scopedData = await fetchScopedLinhaGeracionalData(centralPersonId);
+
+        if (!scopedData.pessoas.some((person) => person.id === centralPersonId)) {
+          const centralPerson = linkedPersonResult.data?.pessoa || await fetchPessoaById(centralPersonId);
+          if (centralPerson) scopedData.pessoas.unshift(centralPerson);
+        }
+
+        if (cancelled) return;
+
+        setState({
+          loading: false,
+          error: null,
+          centralPersonId,
+          pessoas: scopedData.pessoas,
+          relacionamentos: scopedData.relacionamentos,
+        });
+      } catch (error) {
+        if (cancelled) return;
+        const message = error instanceof Error ? error.message : 'Não foi possível carregar a linha geracional.';
+        setState({
+          loading: false,
+          error: message,
+          centralPersonId: '',
+          pessoas: [],
+          relacionamentos: [],
+        });
+      }
+    }
+
+    void loadLinhaGeracional();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [authLoading, loadRevision, requestedPersonId, user?.id]);
+
+  const generationScreens = React.useMemo(
+    () => buildGenerationScreens(state.pessoas, state.relacionamentos, state.centralPersonId),
+    [state.centralPersonId, state.pessoas, state.relacionamentos],
+  );
+
+  const filteredSearchPeople = React.useMemo(() => {
+    const term = searchTerm.trim().toLocaleLowerCase('pt-BR');
+    if (!term) return [];
+
+    return state.pessoas
+      .filter((person) => person.nome_completo.toLocaleLowerCase('pt-BR').includes(term))
+      .slice(0, 8);
+  }, [searchTerm, state.pessoas]);
+
+  const centralPerson = state.pessoas.find((person) => person.id === state.centralPersonId);
+
   const navigateFromLinhaGeracional = React.useCallback((path: string) => {
     navigate(path);
   }, [navigate]);
 
   const goToGeneration = React.useCallback((nextIndex: number) => {
-    const index = Math.max(0, Math.min(GENERATION_SCREENS.length - 1, nextIndex));
+    const index = Math.max(0, Math.min(generationScreens.length - 1, nextIndex));
     const scroller = scrollerRef.current;
 
     setActiveIndex(index);
 
     if (!scroller) return;
     scroller.scrollTo({ left: scroller.clientWidth * index, behavior: 'smooth' });
-  }, []);
+  }, [generationScreens.length]);
 
   const handleScroll = React.useCallback(() => {
     if (frameRef.current !== null) return;
@@ -267,12 +745,12 @@ export function LinhaGeracional() {
       if (!scroller || scroller.clientWidth <= 0) return;
 
       const nextIndex = Math.max(0, Math.min(
-        GENERATION_SCREENS.length - 1,
+        generationScreens.length - 1,
         Math.round(scroller.scrollLeft / scroller.clientWidth),
       ));
       setActiveIndex(nextIndex);
     });
-  }, []);
+  }, [generationScreens.length]);
 
   const handleSearchSubmit = React.useCallback(() => {
     const trimmedSearchTerm = searchTerm.trim();
@@ -289,11 +767,19 @@ export function LinhaGeracional() {
     navigate(`/pessoa/${pessoa.id}`);
   }, [navigate]);
 
+  const handlePersonClick = React.useCallback((pessoa: Pessoa) => {
+    if (!pessoa.id) return;
+    navigate(`/pessoa/${pessoa.id}`);
+  }, [navigate]);
+
+  if (authLoading || state.loading) return <LinhaGeracionalLoading />;
+  if (state.error) return <LinhaGeracionalError message={state.error} onRetry={() => setLoadRevision((current) => current + 1)} />;
+
   return (
     <>
       <main className="flex min-h-[100dvh] flex-col overflow-hidden bg-white text-blue-950 lg:hidden" data-linha-geracional-mobile-root="true">
         <HomeHeader
-          currentTreeViewLabel="Linha Geracional"
+          currentTreeViewLabel={centralPerson ? `Família de ${getFirstName(centralPerson.nome_completo)}` : 'Linha Geracional'}
           isSearchExpanded={searchExpanded}
           searchExpanded={searchExpanded}
           onSearchExpandedChange={setSearchExpanded}
@@ -301,7 +787,7 @@ export function LinhaGeracional() {
           onSearchTermChange={setSearchTerm}
           onSearchSubmit={handleSearchSubmit}
           searchInputRef={searchInputRef}
-          pessoasFiltradas={[]}
+          pessoasFiltradas={filteredSearchPeople}
           handleSearchSelect={handlePersonSearchSelect}
           headerActionTextClassName="hidden sm:inline"
           onCuriosities={() => navigate('/curiosidades')}
@@ -317,10 +803,10 @@ export function LinhaGeracional() {
                 <p className="text-[11px] font-black uppercase tracking-[0.2em] text-blue-600">Linha Geracional</p>
                 <div className="mt-1 flex items-center justify-between gap-3">
                   <h1 className="truncate text-lg font-black tracking-[-0.035em] text-blue-950">
-                    {GENERATION_SCREENS[activeIndex]?.title || 'Gerações'}
+                    {generationScreens[activeIndex]?.title || 'Gerações'}
                   </h1>
                   <span className="shrink-0 rounded-full bg-blue-50 px-2.5 py-1 text-[11px] font-black text-blue-700">
-                    {activeIndex + 1}/{GENERATION_SCREENS.length}
+                    {activeIndex + 1}/{generationScreens.length}
                   </span>
                 </div>
               </div>
@@ -331,8 +817,8 @@ export function LinhaGeracional() {
                 className="relative z-10 flex min-h-0 flex-1 snap-x snap-mandatory overflow-x-auto scroll-smooth [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
                 aria-label="Telas de gerações familiares"
               >
-                {GENERATION_SCREENS.map((generation) => (
-                  <GenerationScreen key={generation.id} generation={generation} />
+                {generationScreens.map((generation) => (
+                  <GenerationScreen key={generation.id} generation={generation} onPersonClick={handlePersonClick} />
                 ))}
               </div>
 
@@ -349,8 +835,8 @@ export function LinhaGeracional() {
                   </button>
 
                   <div className="flex min-w-0 flex-1 flex-col items-center gap-2">
-                    <div className="flex items-center gap-1.5" aria-label={`Geração ${activeIndex + 1} de ${GENERATION_SCREENS.length}`}>
-                      {GENERATION_SCREENS.map((generation, index) => (
+                    <div className="flex items-center gap-1.5" aria-label={`Geração ${activeIndex + 1} de ${generationScreens.length}`}>
+                      {generationScreens.map((generation, index) => (
                         <button
                           key={generation.id}
                           type="button"
@@ -372,7 +858,7 @@ export function LinhaGeracional() {
                   <button
                     type="button"
                     onClick={() => goToGeneration(activeIndex + 1)}
-                    disabled={activeIndex === GENERATION_SCREENS.length - 1}
+                    disabled={activeIndex === generationScreens.length - 1}
                     className="flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-white text-blue-700 shadow-sm disabled:opacity-35"
                     aria-label="Próxima geração"
                   >
@@ -406,8 +892,9 @@ export function LinhaGeracional() {
             </Link>
             <Link
               to={mapaFamiliarPath}
-              className="inline-flex items-center justify-center rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-black text-slate-700 transition hover:bg-slate-50"
+              className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-black text-slate-700 transition hover:bg-slate-50"
             >
+              <Layers className="h-4 w-4" />
               Voltar à árvore
             </Link>
           </div>
