@@ -13,8 +13,8 @@ export function CuriosidadesCouples({
   error,
 }: CuriosidadesDataProps) {
   const couples = buildCoupleAnniversaries(pessoas, relacionamentos);
-  const milestoneCouples = couples.filter((couple) => couple.milestone).slice(0, 4);
-  const displayCouples = milestoneCouples.length > 0 ? milestoneCouples : couples.slice(0, 4);
+  const displayCouples = couples.filter((couple) => couple.milestone).slice(0, 4);
+  const unionCountLabel = `${displayCouples.length} ${displayCouples.length === 1 ? 'uni?o' : 'uni?es'}`;
 
   return (
     <section className={curiositySectionCardClassName}>
@@ -25,17 +25,17 @@ export function CuriosidadesCouples({
             <h2 className="text-xl font-bold text-gray-950">Bodas</h2>
           </div>
           <p className="mt-3 text-sm leading-6 text-gray-600">
-            Casais com datas de casamento registradas e marcos importantes da história familiar.
+            Casais ativos com datas de casamento registradas e marcos importantes da hist?ria familiar.
           </p>
         </div>
         <span className={curiosityStatusClassName}>
-          {loading ? 'Carregando' : `${couples.length} uniões`}
+          {loading ? 'Carregando' : unionCountLabel}
         </span>
       </div>
 
       {error && (
         <div className="mt-5 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
-          Não foi possível carregar os vínculos matrimoniais agora.
+          N?o foi poss?vel carregar os v?nculos matrimoniais agora.
         </div>
       )}
 
@@ -49,7 +49,7 @@ export function CuriosidadesCouples({
 
       {!error && !loading && displayCouples.length === 0 && (
         <div className="mt-5 rounded-xl border border-dashed border-gray-200 bg-gray-50 px-4 py-5 text-sm text-gray-600">
-          Ainda não há datas de casamento suficientes para destacar bodas. Complete datas de união nos vínculos familiares.
+          Ainda n?o h? casais ativos com bodas de 1, 5, 10, 15, 20, 25, 30, 40, 45, 50, 60 ou 75 anos.
         </div>
       )}
 

@@ -1,4 +1,5 @@
-﻿import { GitBranch } from 'lucide-react';
+import { useState } from 'react';
+import { GitBranch } from 'lucide-react';
 import {
   curiositySectionCardClassName,
   curiosityStatusClassName,
@@ -6,6 +7,44 @@ import {
   getPeopleBySocialGeneration,
   type CuriosidadesDataProps,
 } from './curiosidadesUtils';
+
+function GenerationPeopleBadges({ people }: { people: CuriosidadesDataProps['pessoas'] }) {
+  const [expanded, setExpanded] = useState(false);
+  const visiblePeople = expanded ? people : people.slice(0, 8);
+  const remainingCount = Math.max(people.length - 8, 0);
+
+  return (
+    <div className="mt-4 flex flex-wrap gap-2">
+      {visiblePeople.map((pessoa) => (
+        <span key={pessoa.id} className="inline-flex max-w-full items-center gap-2 rounded-full border border-gray-200 bg-white px-2.5 py-1.5 text-xs font-semibold text-gray-700">
+          {pessoa.foto_principal_url ? (
+            <img
+              src={pessoa.foto_principal_url}
+              alt=""
+              className="h-6 w-6 shrink-0 rounded-full object-cover"
+            />
+          ) : (
+            <span className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-blue-50 text-[10px] font-bold text-blue-700">
+              {getInitials(pessoa.nome_completo)}
+            </span>
+          )}
+          <span className="truncate">{pessoa.nome_completo}</span>
+        </span>
+      ))}
+
+      {!expanded && remainingCount > 0 && (
+        <button
+          type="button"
+          onClick={() => setExpanded(true)}
+          className="inline-flex items-center rounded-full border border-dashed border-gray-300 bg-white px-3 py-1.5 text-xs font-semibold text-gray-500 transition hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700"
+          aria-label={`Mostrar mais ${remainingCount} pessoas desta gera??o`}
+        >
+          +{remainingCount}
+        </button>
+      )}
+    </div>
+  );
+}
 
 export function CuriosidadesGenerations({
   pessoas,
@@ -22,10 +61,10 @@ export function CuriosidadesGenerations({
         <div>
           <div className="flex items-center gap-3">
             <GitBranch className="h-5 w-5 text-blue-700" />
-            <h2 className="text-xl font-bold text-gray-950">Gerações da família</h2>
+            <h2 className="text-xl font-bold text-gray-950">Gera??es da fam?lia</h2>
           </div>
           <p className="mt-3 max-w-3xl text-sm leading-6 text-gray-600">
-            Veja quem faz parte de cada geração social a partir do ano de nascimento cadastrado.
+            Veja quem faz parte de cada gera??o social a partir do ano de nascimento cadastrado.
           </p>
         </div>
         <span className={curiosityStatusClassName}>
@@ -35,7 +74,7 @@ export function CuriosidadesGenerations({
 
       {error && (
         <div className="mt-5 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
-          Não foi possível carregar as gerações familiares agora.
+          N?o foi poss?vel carregar as gera??es familiares agora.
         </div>
       )}
 
@@ -49,7 +88,7 @@ export function CuriosidadesGenerations({
 
       {!error && !loading && generationsWithPeople.length === 0 && (
         <div className="mt-5 rounded-xl border border-dashed border-gray-200 bg-gray-50 px-4 py-5 text-sm text-gray-600">
-          Ainda não há datas de nascimento suficientes para classificar familiares por geração.
+          Ainda n?o h? datas de nascimento suficientes para classificar familiares por gera??o.
         </div>
       )}
 
@@ -72,30 +111,7 @@ export function CuriosidadesGenerations({
                 <p className="mt-2 text-xs leading-5 text-gray-500">{generation.note}</p>
               )}
 
-              <div className="mt-4 flex flex-wrap gap-2">
-                {generation.people.slice(0, 8).map((pessoa) => (
-                  <span key={pessoa.id} className="inline-flex max-w-full items-center gap-2 rounded-full border border-gray-200 bg-white px-2.5 py-1.5 text-xs font-semibold text-gray-700">
-                    {pessoa.foto_principal_url ? (
-                      <img
-                        src={pessoa.foto_principal_url}
-                        alt=""
-                        className="h-6 w-6 shrink-0 rounded-full object-cover"
-                      />
-                    ) : (
-                      <span className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-blue-50 text-[10px] font-bold text-blue-700">
-                        {getInitials(pessoa.nome_completo)}
-                      </span>
-                    )}
-                    <span className="truncate">{pessoa.nome_completo}</span>
-                  </span>
-                ))}
-
-                {generation.people.length > 8 && (
-                  <span className="inline-flex items-center rounded-full border border-dashed border-gray-300 bg-white px-3 py-1.5 text-xs font-semibold text-gray-500">
-                    +{generation.people.length - 8}
-                  </span>
-                )}
-              </div>
+              <GenerationPeopleBadges people={generation.people} />
             </article>
           ))}
         </div>

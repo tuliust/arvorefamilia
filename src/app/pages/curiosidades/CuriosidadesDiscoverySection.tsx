@@ -139,7 +139,7 @@ export function CuriosidadesDiscoverySection({
         <div className="mt-5 space-y-4">
           <DiscoverMoreFlow
             pessoas={selectablePeople}
-            selectedPersonId={selectedPerson.id}
+            selectedPersonId={selectedPersonId}
             onSelectedPersonIdChange={setSelectedPersonId}
             selectedPerson={selectedPerson}
             selectedTopics={selectedTopics}
