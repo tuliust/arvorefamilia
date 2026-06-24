@@ -29,7 +29,7 @@ function BirthdayMonthChartCard({
   const hasValues = data.some((item) => item.value > 0);
 
   return (
-    <article className={`${curiositySectionCardClassName} lg:flex-[1.15]`}>
+    <article className={`${curiositySectionCardClassName} curiosidades-birthday-card lg:flex-[1.15]`}>
       <div className="flex items-center gap-2">
         <CalendarDays className="h-4 w-4 text-blue-700" />
         <h3 className="text-base font-bold text-gray-950">Aniversários por mês</h3>
@@ -45,8 +45,8 @@ function BirthdayMonthChartCard({
           Complete datas de nascimento para gerar este gráfico.
         </div>
       ) : (
-        <div className="mt-5 overflow-x-auto">
-          <div className="grid min-w-[34rem] grid-cols-12 gap-1 rounded-xl bg-gray-50 px-3 pb-3 pt-5">
+        <div className="curiosidades-birthday-month-chart-scroll mt-5 overflow-x-auto">
+          <div className="curiosidades-birthday-month-chart-grid grid min-w-[34rem] grid-cols-12 gap-1 rounded-xl bg-gray-50 px-3 pb-3 pt-5">
             {data.map((item) => {
               const height = item.value > 0
                 ? Math.max(10, Math.round((item.value / maxValue) * 100))
@@ -54,7 +54,7 @@ function BirthdayMonthChartCard({
 
               return (
                 <div key={item.label} className="flex min-w-0 flex-col items-center gap-2">
-                  <div className="flex h-36 w-full items-end justify-center border-l border-gray-200">
+                  <div className="curiosidades-birthday-month-bar-area flex h-36 w-full items-end justify-center border-l border-gray-200">
                     <div
                       className="w-5 rounded-t-lg bg-blue-600"
                       style={{ height: `${height}%` }}
@@ -83,7 +83,7 @@ function ProfessionRankingCard({
   const visibleProfessions = data.slice(0, 5);
 
   return (
-    <article className={`${curiositySectionCardClassName} lg:flex-1`}>
+    <article className={`${curiositySectionCardClassName} curiosidades-professions-card lg:flex-1`}>
       <div className="flex items-center gap-2">
         <BriefcaseBusiness className="h-4 w-4 text-blue-700" />
         <h3 className="text-base font-bold text-gray-950">Profissões mais comuns</h3>
@@ -96,7 +96,7 @@ function ProfessionRankingCard({
           Complete profissões nos perfis para gerar este gráfico.
         </div>
       ) : (
-        <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-5">
+        <div className="curiosidades-profession-circles-grid mt-5 grid grid-cols-2 gap-3 sm:grid-cols-5">
           {visibleProfessions.map((item) => (
             <div
               key={item.label}
@@ -127,7 +127,7 @@ function AgeRangeChartCard({
   const maxValue = getMaxValue(data);
 
   return (
-    <article className={`${curiositySectionCardClassName} flex h-full min-h-[34rem] flex-col`}>
+    <article className={`${curiositySectionCardClassName} curiosidades-age-range-card flex h-full min-h-[34rem] flex-col`}>
       <div className="flex items-center gap-2">
         <UsersRound className="h-4 w-4 text-blue-700" />
         <h3 className="text-base font-bold text-gray-950">Faixa Etária</h3>
@@ -143,19 +143,19 @@ function AgeRangeChartCard({
           Complete datas de nascimento para comparar faixas etárias.
         </div>
       ) : (
-        <div className="mt-6 flex flex-1 flex-col justify-between gap-5">
+        <div className="curiosidades-age-range-list mt-6 flex flex-1 flex-col justify-between gap-5">
           {data.map((item) => {
             const width = Math.max(8, Math.round((item.value / maxValue) * 100));
 
             return (
-              <div key={item.label} className="space-y-2">
+              <div key={item.label} className="curiosidades-age-range-row space-y-2">
                 <div className="flex items-center justify-between gap-3">
                   <span className="min-w-0 truncate text-sm font-bold text-gray-800">{item.label}</span>
                   <span className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-blue-600 text-xs font-black text-white shadow-sm">
                     {item.value}
                   </span>
                 </div>
-                <div className="h-4 overflow-hidden rounded-full bg-gray-100">
+                <div className="curiosidades-age-range-progress h-4 overflow-hidden rounded-full bg-gray-100">
                   <div
                     className="h-full rounded-full bg-blue-600"
                     style={{ width: `${width}%` }}
@@ -205,8 +205,8 @@ export function CuriosidadesCharts({
         </div>
       )}
 
-      <div className="grid gap-4 lg:grid-cols-2 lg:items-stretch">
-        <div className="flex min-w-0 flex-col gap-4 lg:h-full lg:min-h-[34rem]">
+      <div className="curiosidades-charts-layout grid gap-4 lg:grid-cols-2 lg:items-stretch">
+        <div className="curiosidades-charts-left-stack flex min-w-0 flex-col gap-4 lg:h-full lg:min-h-[34rem]">
           <BirthdayMonthChartCard data={birthMonthData} loading={loading && !error} />
           <ProfessionRankingCard data={professionData} loading={loading && !error} />
         </div>

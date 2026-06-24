@@ -252,3 +252,231 @@
     min-width: 0 !important;
   }
 }
+
+/* Estrutura mobile integrada com desktop /curiosidades 2026-06-24 */
+@media (max-width: 767px) {
+  .curiosidades-page main {
+    row-gap: 0.85rem !important;
+  }
+
+  .curiosidades-overview-layout,
+  .curiosidades-family-layout,
+  .curiosidades-charts-layout {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 0.85rem !important;
+  }
+
+  .curiosidades-today-photo-stack {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 0.75rem !important;
+  }
+
+  .curiosidades-today-card-slot,
+  .curiosidades-photo-slider-slot,
+  .curiosidades-ai-card-slot,
+  .curiosidades-stats-slot,
+  .curiosidades-quiz-slot,
+  .curiosidades-mural-slot {
+    width: 100% !important;
+  }
+
+  .curiosidades-photo-slider-slot section,
+  .curiosidades-photo-slider-slot img,
+  .curiosidades-photo-slider-slot [class*='min-h-56'] {
+    min-height: 12rem !important;
+  }
+
+  .curiosidades-page #ia section {
+    padding: 1rem !important;
+  }
+
+  .curiosidades-page #ia textarea {
+    min-height: 9.5rem !important;
+  }
+
+  .curiosidades-page #ia .curiosidades-ai-suggestions-card {
+    padding: 0.85rem !important;
+  }
+
+  .curiosidades-page #numeros-da-familia .curiosidades-stats-grid {
+    display: flex !important;
+    grid-template-columns: none !important;
+    gap: 0.75rem !important;
+    margin-inline: -0.15rem !important;
+    overflow-x: auto !important;
+    padding: 0.15rem 0.15rem 0.65rem !important;
+    scroll-padding-left: 0.15rem !important;
+    scroll-snap-type: x mandatory !important;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .curiosidades-page #numeros-da-familia .curiosidades-stats-grid::-webkit-scrollbar {
+    display: none;
+  }
+
+  .curiosidades-page #numeros-da-familia .curiosidades-stat-card {
+    flex: 0 0 min(76vw, 16.5rem) !important;
+    min-height: 8.8rem !important;
+    scroll-snap-align: start;
+  }
+
+  .curiosidades-page #numeros-da-familia .curiosidades-stat-card p:nth-child(2) {
+    font-size: 2.05rem !important;
+  }
+
+  .curiosidades-page #quiz .curiosidades-quiz-options-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 0.55rem !important;
+  }
+
+  .curiosidades-page #quiz .curiosidades-quiz-options-grid button {
+    align-items: center !important;
+    min-height: 4.2rem !important;
+    padding: 0.65rem !important;
+  }
+
+  .curiosidades-page #quiz .curiosidades-quiz-options-grid button > span:last-child {
+    white-space: normal !important;
+    line-height: 1.15 !important;
+  }
+
+  .curiosidades-page #mural form {
+    gap: 0.65rem !important;
+  }
+
+  .curiosidades-page #graficos .curiosidades-charts-layout,
+  .curiosidades-page #graficos .curiosidades-charts-left-stack {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 0.85rem !important;
+    min-height: 0 !important;
+  }
+
+  .curiosidades-page #graficos .curiosidades-birthday-month-chart-scroll {
+    max-width: 100% !important;
+    overflow-x: visible !important;
+  }
+
+  .curiosidades-page #graficos .curiosidades-birthday-month-chart-grid {
+    min-width: 0 !important;
+    grid-template-columns: repeat(12, minmax(0, 1fr)) !important;
+    gap: 0.18rem !important;
+    padding-left: 0.45rem !important;
+    padding-right: 0.45rem !important;
+  }
+
+  .curiosidades-page #graficos .curiosidades-birthday-month-bar-area {
+    height: 7.4rem !important;
+  }
+
+  .curiosidades-page #graficos .curiosidades-birthday-month-bar {
+    width: 0.58rem !important;
+  }
+
+  .curiosidades-page #graficos .curiosidades-profession-circles-grid {
+    display: grid !important;
+    grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+    gap: 0.35rem !important;
+  }
+
+  .curiosidades-page #graficos .curiosidades-profession-circle {
+    min-height: 0 !important;
+    padding: 0.35rem !important;
+  }
+
+  .curiosidades-page #graficos .curiosidades-profession-circle svg {
+    height: 0.9rem !important;
+    width: 0.9rem !important;
+  }
+
+  .curiosidades-page #graficos .curiosidades-profession-circle span:nth-of-type(1) {
+    font-size: 1rem !important;
+  }
+
+  .curiosidades-page #graficos .curiosidades-profession-circle span:nth-of-type(2) {
+    font-size: 0.55rem !important;
+    line-height: 1.05 !important;
+  }
+
+  .curiosidades-page #graficos .curiosidades-age-range-card {
+    min-height: 0 !important;
+  }
+
+  .curiosidades-page #graficos .curiosidades-age-range-list {
+    gap: 0.7rem !important;
+    margin-top: 1rem !important;
+  }
+
+  .curiosidades-page #graficos .curiosidades-age-range-progress {
+    height: 0.78rem !important;
+  }
+
+  .curiosidades-page #geracoes section,
+  .curiosidades-page #bodas section,
+  .curiosidades-page #rota section {
+    height: auto !important;
+  }
+
+  .curiosidades-page #rota .curiosidades-route-list {
+    padding-right: 0.1rem !important;
+  }
+
+  .curiosidades-page #rota .curiosidades-route-card {
+    min-height: 4.25rem !important;
+    padding-right: 0.5rem !important;
+  }
+
+  .curiosidades-page #rota .curiosidades-route-pin-track {
+    width: 4.65rem !important;
+  }
+
+  .curiosidades-page #rota .curiosidades-route-pin {
+    height: 2.35rem !important;
+    width: 2.35rem !important;
+  }
+
+  .curiosidades-page #rota .curiosidades-route-pin svg {
+    height: 1.55rem !important;
+    width: 1.55rem !important;
+  }
+
+  .curiosidades-page #rota .curiosidades-route-distance-badge {
+    right: 1.85rem !important;
+    font-size: 0.66rem !important;
+  }
+
+  .curiosidades-page #rota .curiosidades-route-arrival-badge {
+    right: 0 !important;
+    font-size: 0.66rem !important;
+  }
+
+  .curiosidades-page #exploracoes-familiares section > div:first-child {
+    overflow-x: auto !important;
+    flex-wrap: nowrap !important;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .curiosidades-page #exploracoes-familiares section > div:first-child button {
+    flex: 0 0 auto !important;
+    white-space: nowrap !important;
+  }
+}
+
+@media (max-width: 374px) {
+  .curiosidades-page #quiz .curiosidades-quiz-options-grid,
+  .curiosidades-page #graficos .curiosidades-profession-circles-grid {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+
+  .curiosidades-page #graficos .curiosidades-profession-circle {
+    aspect-ratio: auto !important;
+    border-radius: 1rem !important;
+    min-height: 4rem !important;
+  }
+
+  .curiosidades-page #graficos .curiosidades-birthday-month-bar {
+    width: 0.45rem !important;
+  }
+}

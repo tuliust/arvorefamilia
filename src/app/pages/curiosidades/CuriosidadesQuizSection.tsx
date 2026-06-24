@@ -88,7 +88,7 @@ export function CuriosidadesQuizSection({
             </div>
           </div>
 
-          <div className="mt-4 grid gap-2 sm:grid-cols-2">
+          <div className="curiosidades-quiz-options-grid mt-4 grid gap-2 sm:grid-cols-2">
             {currentQuestion.options.map((option) => {
               const isSelected = selectedOptionId === option.id;
               const isCorrect = hasAnswered && option.id === currentQuestion.answerId;

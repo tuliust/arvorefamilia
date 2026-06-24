@@ -52,14 +52,14 @@ export function CuriosidadesStats({
   ];
 
   return (
-    <section aria-label="Big numbers" className="grid grid-cols-2 items-stretch gap-3 sm:gap-4 md:grid-cols-2 xl:grid-cols-5">
+    <section aria-label="Big numbers" className="curiosidades-stats-grid grid grid-cols-2 items-stretch gap-3 sm:gap-4 md:grid-cols-2 xl:grid-cols-5">
       {stats.map((stat) => {
         const Icon = stat.icon;
 
         return (
           <article
             key={stat.label}
-            className="flex min-h-[10.5rem] min-w-0 flex-col justify-between rounded-2xl border border-blue-100 bg-blue-50 p-4 shadow-sm sm:p-5"
+            className="curiosidades-stat-card flex min-h-[10.5rem] min-w-0 flex-col justify-between rounded-2xl border border-blue-100 bg-blue-50 p-4 shadow-sm sm:p-5"
           >
             <div className="flex min-w-0 items-start justify-between gap-3 sm:gap-4">
               <div className="min-w-0">

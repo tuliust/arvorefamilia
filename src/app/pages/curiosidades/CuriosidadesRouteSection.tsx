@@ -65,7 +65,7 @@ export function CuriosidadesRouteSection({
             </p>
           </div>
 
-          <div className="relative space-y-3 overflow-visible">
+          <div className="curiosidades-route-list relative space-y-3 overflow-visible">
             <div className="pointer-events-none absolute bottom-10 right-[4.35rem] top-10 hidden border-r-2 border-dotted border-slate-400 sm:block" />
 
             {ROAD_ROUTE_STOPS.map((city, index) => {
@@ -74,7 +74,7 @@ export function CuriosidadesRouteSection({
               return (
                 <div
                   key={city.label}
-                  className="relative flex min-h-[4.8rem] items-center justify-between gap-3 overflow-visible rounded-xl border border-gray-200 bg-gray-50 px-3 py-2"
+                  className="curiosidades-route-card relative flex min-h-[4.8rem] items-center justify-between gap-3 overflow-visible rounded-xl border border-gray-200 bg-gray-50 px-3 py-2"
                 >
                   <div className="flex min-w-0 items-center gap-3">
                     <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white text-sm font-black text-blue-700 shadow-sm">
@@ -85,19 +85,19 @@ export function CuriosidadesRouteSection({
                     </span>
                   </div>
 
-                  <div className="relative flex w-28 shrink-0 items-center justify-end">
+                  <div className="curiosidades-route-pin-track relative flex w-28 shrink-0 items-center justify-end">
                     <span className="relative z-10 inline-flex h-11 w-11 items-center justify-center rounded-full bg-white text-blue-700 shadow-md ring-1 ring-blue-100">
                       <MapPin className="h-7 w-7 fill-blue-600 text-blue-700" />
                     </span>
 
                     {city.distanceToNextKm && (
-                      <span className="absolute right-8 top-full z-20 -translate-y-2 rounded-lg border border-blue-100 bg-white px-2.5 py-1 text-xs font-black text-blue-700 shadow-sm">
+                      <span className="curiosidades-route-distance-badge absolute right-8 top-full z-20 -translate-y-2 rounded-lg border border-blue-100 bg-white px-2.5 py-1 text-xs font-black text-blue-700 shadow-sm">
                         {formatRoadDistance(city.distanceToNextKm)}
                       </span>
                     )}
 
                     {isLast && (
-                      <span className="absolute right-0 top-full z-20 -translate-y-2 rounded-lg border border-blue-100 bg-white px-2.5 py-1 text-xs font-black text-blue-700 shadow-sm">
+                      <span className="curiosidades-route-arrival-badge absolute right-0 top-full z-20 -translate-y-2 rounded-lg border border-blue-100 bg-white px-2.5 py-1 text-xs font-black text-blue-700 shadow-sm">
                         Chegada
                       </span>
                     )}
