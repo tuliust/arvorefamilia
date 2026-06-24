@@ -24,7 +24,7 @@ const AI_QUESTION_EXAMPLES = [
   'Quais casais já completaram bodas?',
 ];
 
-const AI_QUESTION_PLACEHOLDER = `Pergunte, por exemplo:\n${AI_QUESTION_EXAMPLES.join('\n')}`;
+const AI_QUESTION_PLACEHOLDER = 'Faça aqui sua pergunta…';
 
 const EMPTY_DIRECT_RELATION_COUNTS: Record<DirectRelativeGroup, number> = {
   pais: 0,

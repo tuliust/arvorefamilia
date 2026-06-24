@@ -184,6 +184,11 @@ export function getFirstName(value: unknown) {
   return clean.split(/\s+/)[0] || '';
 }
 
+export function getFirstTwoNames(value: unknown) {
+  const parts = String(value ?? '').trim().split(/\s+/).filter(Boolean);
+  return parts.slice(0, 2).join(' ') || String(value ?? '').trim();
+}
+
 export function getInitials(value: unknown) {
   const parts = String(value ?? '').trim().split(/\s+/).filter(Boolean);
   return parts.slice(0, 2).map((part) => part[0]?.toLocaleUpperCase('pt-BR')).join('') || '?';
@@ -595,7 +600,7 @@ function sortPeopleByName(people: Pessoa[]) {
   return [...people].sort((a, b) => getPersonDisplayName(a).localeCompare(getPersonDisplayName(b), 'pt-BR', { sensitivity: 'base' }));
 }
 
-function buildQuizOptions(answer: Pessoa, allPeople: Pessoa[], limit = 5) {
+function buildQuizOptions(answer: Pessoa, allPeople: Pessoa[], limit = 6) {
   const unique = new Map<string, Pessoa>();
   unique.set(answer.id, answer);
 
@@ -614,7 +619,7 @@ function buildQuizOptions(answer: Pessoa, allPeople: Pessoa[], limit = 5) {
     }));
 }
 
-function buildControlledQuizOptions(answer: Pessoa, distractors: Pessoa[], limit = 5) {
+function buildControlledQuizOptions(answer: Pessoa, distractors: Pessoa[], limit = 6) {
   return buildQuizOptions(answer, [answer, ...distractors], limit);
 }
 
@@ -632,7 +637,7 @@ export function buildCuriosityQuizQuestions(
     .filter((pessoa) => !isPet(pessoa))
     .filter((pessoa) => Boolean(pessoa.id && pessoa.nome_completo));
 
-  if (people.length < 5) return [];
+  if (people.length < 6) return [];
 
   const livingByAge = people
     .filter((pessoa) => !isDeceased(pessoa))
@@ -647,29 +652,29 @@ export function buildCuriosityQuizQuestions(
 
   const questions: CuriosityQuizQuestion[] = [];
 
-  const fiveOldestLiving = livingByAge.slice(0, 5).map((item) => item.pessoa);
+  const fiveOldestLiving = livingByAge.slice(0, 6).map((item) => item.pessoa);
   const oldestLiving = fiveOldestLiving[0];
-  if (oldestLiving && fiveOldestLiving.length === 5) {
+  if (oldestLiving && fiveOldestLiving.length === 6) {
     questions.push({
       id: 'oldest-living-person',
       prompt: 'Quem é a pessoa viva com mais tempo de vida na árvore?',
       answerId: oldestLiving.id,
       answerLabel: getPersonDisplayName(oldestLiving),
       explanation: `${getPersonDisplayName(oldestLiving)} é a pessoa viva mais velha entre os perfis com data de nascimento cadastrada.`,
-      options: buildControlledQuizOptions(oldestLiving, fiveOldestLiving.filter((pessoa) => pessoa.id !== oldestLiving.id), 5),
+      options: buildControlledQuizOptions(oldestLiving, fiveOldestLiving.filter((pessoa) => pessoa.id !== oldestLiving.id), 6),
     });
   }
 
-  const fiveYoungest = [...byBirthDate].reverse().slice(0, 5).map((item) => item.pessoa);
+  const fiveYoungest = [...byBirthDate].reverse().slice(0, 6).map((item) => item.pessoa);
   const youngest = fiveYoungest[0];
-  if (youngest && fiveYoungest.length === 5) {
+  if (youngest && fiveYoungest.length === 6) {
     questions.push({
       id: 'youngest-person',
       prompt: 'Quem é a pessoa mais jovem na família?',
       answerId: youngest.id,
       answerLabel: getPersonDisplayName(youngest),
       explanation: `${getPersonDisplayName(youngest)} tem a data de nascimento mais recente entre as pessoas cadastradas.`,
-      options: buildControlledQuizOptions(youngest, fiveYoungest.filter((pessoa) => pessoa.id !== youngest.id), 5),
+      options: buildControlledQuizOptions(youngest, fiveYoungest.filter((pessoa) => pessoa.id !== youngest.id), 6),
     });
   }
 
@@ -680,14 +685,14 @@ export function buildCuriosityQuizQuestions(
     const nonCityPeople = sortPeopleByName(people.filter((pessoa) => normalizeCuriosityText(pessoa.local_nascimento) !== cityKey));
     const answer = cityPeople[0];
 
-    if (answer && nonCityPeople.length >= 4) {
+    if (answer && nonCityPeople.length >= 5) {
       questions.push({
         id: 'birth-city',
         prompt: `Quem nasceu em ${topBirthCity.label}?`,
         answerId: answer.id,
         answerLabel: getPersonDisplayName(answer),
         explanation: `${topBirthCity.label} aparece como uma das cidades de nascimento mais recorrentes da família.`,
-        options: buildControlledQuizOptions(answer, nonCityPeople.slice(0, 4), 5),
+        options: buildControlledQuizOptions(answer, nonCityPeople.slice(0, 5), 6),
       });
     }
   }
@@ -695,14 +700,14 @@ export function buildCuriosityQuizQuestions(
   const journalists = sortPeopleByName(people.filter(isJournalist));
   const nonJournalists = sortPeopleByName(people.filter((pessoa) => !isJournalist(pessoa)));
   const journalistAnswer = journalists[0];
-  if (journalistAnswer && nonJournalists.length >= 4) {
+  if (journalistAnswer && nonJournalists.length >= 5) {
     questions.push({
       id: 'profession-journalist',
       prompt: 'Qual destas pessoas abaixo é jornalista?',
       answerId: journalistAnswer.id,
       answerLabel: getPersonDisplayName(journalistAnswer),
       explanation: `${getPersonDisplayName(journalistAnswer)} tem Jornalista como profissão cadastrada.`,
-      options: buildControlledQuizOptions(journalistAnswer, nonJournalists.slice(0, 4), 5),
+      options: buildControlledQuizOptions(journalistAnswer, nonJournalists.slice(0, 5), 6),
     });
   }
 
@@ -716,12 +721,12 @@ export function buildCuriosityQuizQuestions(
         answerId: answer.id,
         answerLabel: getPersonDisplayName(answer),
         explanation: `${getPersonDisplayName(answer)} aparece com ${topParent.count} ${topParent.count === 1 ? 'filho cadastrado' : 'filhos cadastrados'}.`,
-        options: buildQuizOptions(answer, people, 5),
+        options: buildQuizOptions(answer, people, 6),
       });
     }
   }
 
-  return questions.filter((question) => question.options.length >= 5).slice(0, 6);
+  return questions.filter((question) => question.options.length >= 6).slice(0, 6);
 }
 
 export type FamilyRouteSummary = {

@@ -4,7 +4,6 @@ import {
   buildCoupleAnniversaries,
   calculateFullYearsSince,
   curiositySectionCardClassName,
-  curiosityStatusClassName,
   parseFamilyDate,
   type CuriosidadesDataProps,
 } from './curiosidadesUtils';
@@ -86,24 +85,18 @@ export function CuriosidadesCouples({
   const couples = buildCoupleAnniversaries(pessoas, relacionamentos);
   const completedCouples = couples.filter((couple) => couple.years >= 1).slice(0, 6);
   const activeUnionCount = countActiveUnions(relacionamentos);
-  const unionCountLabel = `${activeUnionCount} ${activeUnionCount === 1 ? 'união' : 'uniões'}`;
   const weddingAgeStats = buildWeddingAgeStats(pessoas, relacionamentos);
 
   return (
     <section className={`${curiositySectionCardClassName} ${className}`}>
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
-        <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-3">
-            <HeartHandshake className="h-5 w-5 text-blue-700" />
-            <h2 className="text-xl font-bold text-gray-950">Relacionamentos</h2>
-          </div>
-          <p className="mt-3 text-sm leading-6 text-gray-600">
-            Casamentos, uniões ativas, bodas e indicadores calculados a partir dos vínculos familiares.
-          </p>
+      <div className="min-w-0">
+        <div className="flex items-center gap-3">
+          <HeartHandshake className="h-5 w-5 text-blue-700" />
+          <h2 className="text-xl font-bold text-gray-950">Relacionamentos</h2>
         </div>
-        <span className={curiosityStatusClassName}>
-          {loading ? 'Carregando' : unionCountLabel}
-        </span>
+        <p className="mt-3 text-sm leading-6 text-gray-600">
+          Casamentos, uniões ativas, bodas e indicadores calculados a partir dos vínculos familiares.
+        </p>
       </div>
 
       {error && (
@@ -125,8 +118,16 @@ export function CuriosidadesCouples({
           <div>
             <h3 className="text-base font-bold text-gray-950">Idade média ao casar</h3>
             {!weddingAgeStats ? (
-              <div className="mt-4 rounded-xl border border-dashed border-gray-200 bg-gray-50 px-4 py-5 text-sm text-gray-600">
-                Cadastre datas de casamento e nascimento para calcular este indicador.
+              <div className="mt-4 grid gap-3 sm:grid-cols-3">
+                <div className="rounded-xl border border-dashed border-gray-200 bg-gray-50 px-4 py-5 text-sm text-gray-600 sm:col-span-2">
+                  Cadastre datas de casamento e nascimento para calcular este indicador.
+                </div>
+                <div className="rounded-xl bg-blue-50 p-4">
+                  <p className="text-xs font-semibold text-blue-700">Uniões</p>
+                  <p className="mt-2 text-2xl font-bold text-gray-950">
+                    {activeUnionCount}
+                  </p>
+                </div>
               </div>
             ) : (
               <div className="mt-4 grid gap-3 sm:grid-cols-2">

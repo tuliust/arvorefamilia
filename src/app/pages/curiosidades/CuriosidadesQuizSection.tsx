@@ -3,6 +3,7 @@ import { BrainCircuit, CheckCircle2, XCircle } from 'lucide-react';
 import {
   buildCuriosityQuizQuestions,
   curiositySectionCardClassName,
+  getFirstTwoNames,
   getInitials,
   type CuriosidadesDataProps,
 } from './curiosidadesUtils';
@@ -77,7 +78,7 @@ export function CuriosidadesQuizSection({
           <div className="rounded-xl border border-blue-100 bg-blue-50 p-4">
             <div className="flex items-center justify-between gap-3">
               <p className="text-xs font-black uppercase tracking-wide text-blue-700">
-                Etapa {questionIndex + 1}/{questions.length}
+                {questionIndex + 1}/{questions.length}
               </p>
               <div className="flex shrink-0 items-center gap-1" aria-label={`Pergunta ${questionIndex + 1} de ${questions.length}`}>
                 {questions.map((question, index) => (
@@ -123,7 +124,7 @@ export function CuriosidadesQuizSection({
                       {getInitials(option.label)}
                     </span>
                   )}
-                  <span className="min-w-0 flex-1 truncate text-sm font-semibold">{option.label}</span>
+                  <span className="min-w-0 flex-1 truncate text-sm font-semibold">{getFirstTwoNames(option.label)}</span>
                   {isCorrect && <CheckCircle2 className="h-5 w-5 shrink-0 text-green-700" />}
                   {isWrong && <XCircle className="h-5 w-5 shrink-0 text-red-700" />}
                 </button>

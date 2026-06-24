@@ -1,6 +1,7 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Heart, MessageSquareHeart, Send } from 'lucide-react';
 
+import { useAuth } from '../../contexts/AuthContext';
 import {
   createMemoryWallPost,
   listMemoryWallPosts,
@@ -9,14 +10,10 @@ import {
 } from '../../services/memoryWallService';
 import { curiositySectionCardClassName } from './curiosidadesUtils';
 
-const VISIBILITY_OPTIONS: Array<{ value: MemoryWallVisibility; label: string }> = [
-  { value: 'family', label: 'Todos da família' },
-  { value: 'close_relatives', label: 'Parentes próximos' },
-  { value: 'private', label: 'Privado' },
-];
-
 function getVisibilityLabel(value: MemoryWallVisibility) {
-  return VISIBILITY_OPTIONS.find((option) => option.value === value)?.label ?? 'Todos da família';
+  if (value === 'close_relatives') return 'Parentes próximos';
+  if (value === 'private') return 'Privado';
+  return 'Todos da família';
 }
 
 function formatMemoryDate(value: string) {
@@ -29,14 +26,27 @@ function formatMemoryDate(value: string) {
   return date.toLocaleDateString('pt-BR');
 }
 
+function getLoggedUserDisplayName(user: ReturnType<typeof useAuth>['user']) {
+  const metadata = user?.user_metadata ?? {};
+  const name = String(
+    metadata.nome_exibicao ||
+    metadata.name ||
+    metadata.full_name ||
+    user?.email ||
+    'Familiar'
+  ).trim();
+
+  return name || 'Familiar';
+}
+
 type CuriosidadesMemoryWallProps = {
   className?: string;
 };
 
 export function CuriosidadesMemoryWall({ className = '' }: CuriosidadesMemoryWallProps) {
-  const [author, setAuthor] = useState('');
+  const { user } = useAuth();
+  const authorName = useMemo(() => getLoggedUserDisplayName(user), [user]);
   const [memory, setMemory] = useState('');
-  const [visibility, setVisibility] = useState<MemoryWallVisibility>('family');
   const [items, setItems] = useState<MemoryWallPost[]>([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -77,9 +87,9 @@ export function CuriosidadesMemoryWall({ className = '' }: CuriosidadesMemoryWal
 
     try {
       const post = await createMemoryWallPost({
-        author_name: author,
+        author_name: authorName,
         body: cleanMemory,
-        visibility,
+        visibility: 'family',
       });
 
       setItems((current) => [post, ...current]);
@@ -98,18 +108,11 @@ export function CuriosidadesMemoryWall({ className = '' }: CuriosidadesMemoryWal
         <h2 className="text-xl font-bold text-gray-950">Mural da família</h2>
       </div>
 
-      <p className="mt-3 text-sm leading-6 text-gray-600">
-        Responda: qual sua lembrança favorita da família?
-      </p>
+      <h3 className="mt-4 text-base font-bold leading-6 text-gray-950">
+        Qual sua lembrança favorita da família?
+      </h3>
 
-      <div className="mt-5 space-y-3">
-        <input
-          value={author}
-          onChange={(event) => setAuthor(event.target.value)}
-          placeholder="Seu nome"
-          className="w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm outline-none focus:border-blue-300 focus:ring-2 focus:ring-blue-100"
-        />
-
+      <div className="mt-4 space-y-3">
         <textarea
           value={memory}
           onChange={(event) => setMemory(event.target.value)}
@@ -118,19 +121,7 @@ export function CuriosidadesMemoryWall({ className = '' }: CuriosidadesMemoryWal
           className="w-full resize-none rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm outline-none focus:border-blue-300 focus:ring-2 focus:ring-blue-100"
         />
 
-        <div className="flex flex-col gap-3 sm:flex-row">
-          <select
-            value={visibility}
-            onChange={(event) => setVisibility(event.target.value as MemoryWallVisibility)}
-            className="rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm outline-none focus:border-blue-300 focus:ring-2 focus:ring-blue-100 sm:w-52"
-          >
-            {VISIBILITY_OPTIONS.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
-
+        <div className="flex flex-col gap-3 sm:flex-row sm:justify-end">
           <button
             type="button"
             onClick={submitMemory}

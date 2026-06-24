@@ -701,3 +701,10 @@
     font-size: 0.52rem !important;
   }
 }
+
+/* Sticky nav desktop/mobile /curiosidades 2026-06-25 */
+.curiosidades-sticky-nav {
+  position: sticky !important;
+  top: 0 !important;
+}
+
