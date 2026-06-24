@@ -1,12 +1,10 @@
 import React from 'react';
 
 import type { Pessoa, Relacionamento } from '../../types';
+import { isPetFamilyMember } from '../../utils/personEntity';
 import type { FamilyTreeActions } from './FamilyTree';
 import { MobileFamilyHorizontalMapView } from './MobileFamilyHorizontalMapView';
-import { buildTreeGraph } from './buildTreeGraph';
-import { collectDirectFamilyScopePersonIds } from './layouts/directFamilyDistributedLayout';
 import {
-  DEFAULT_EDGE_FILTERS,
   type DirectRelativeFilters,
   type DirectRelativeGroup,
 } from './types';
@@ -38,6 +36,10 @@ function addToMap(map: Map<string, Set<string>>, key: string, value: string) {
   if (!key || !value) return;
   if (!map.has(key)) map.set(key, new Set());
   map.get(key)!.add(value);
+}
+
+function addIds(target: Set<string>, ids?: Set<string>) {
+  ids?.forEach((id) => target.add(id));
 }
 
 function isParentChildRelationship(relationship: Relacionamento) {
@@ -136,6 +138,85 @@ function inferHorizontalGenerations(
   return generationByPersonId;
 }
 
+function collectParents(personIds: Set<string>, maps: RelationshipMaps) {
+  const result = new Set<string>();
+
+  personIds.forEach((personId) => {
+    addIds(result, maps.parentsByChild.get(personId));
+  });
+
+  return result;
+}
+
+function collectChildren(personIds: Set<string>, maps: RelationshipMaps) {
+  const result = new Set<string>();
+
+  personIds.forEach((personId) => {
+    addIds(result, maps.childrenByParent.get(personId));
+  });
+
+  return result;
+}
+
+function collectSiblings(personId: string, maps: RelationshipMaps) {
+  const siblings = new Set<string>();
+
+  maps.parentsByChild.get(personId)?.forEach((parentId) => {
+    maps.childrenByParent.get(parentId)?.forEach((siblingId) => {
+      if (siblingId !== personId) siblings.add(siblingId);
+    });
+  });
+
+  return siblings;
+}
+
+function collectLightweightDirectScopePersonIds(
+  pessoas: Pessoa[],
+  maps: RelationshipMaps,
+  centralPersonId: string,
+  filters: DirectRelativeFilters,
+) {
+  const scopeIds = new Set<string>([centralPersonId]);
+  const centralIds = new Set([centralPersonId]);
+  const parents = collectParents(centralIds, maps);
+  const grandparents = collectParents(parents, maps);
+  const greatGrandparents = collectParents(grandparents, maps);
+  const greatGreatGrandparents = collectParents(greatGrandparents, maps);
+  const children = collectChildren(centralIds, maps);
+  const grandchildren = collectChildren(children, maps);
+  const siblings = collectSiblings(centralPersonId, maps);
+  const siblingsChildren = collectChildren(siblings, maps);
+  const unclesAndAunts = new Set<string>();
+
+  parents.forEach((parentId) => {
+    collectSiblings(parentId, maps).forEach((relativeId) => unclesAndAunts.add(relativeId));
+  });
+
+  const cousins = collectChildren(unclesAndAunts, maps);
+
+  if (filters.pais) addIds(scopeIds, parents);
+  if (filters.avos) addIds(scopeIds, grandparents);
+  if (filters.bisavos) addIds(scopeIds, greatGrandparents);
+  if (filters.tataravos) addIds(scopeIds, greatGreatGrandparents);
+  if (filters.filhos) addIds(scopeIds, children);
+  if (filters.netos) addIds(scopeIds, grandchildren);
+  if (filters.irmaos) addIds(scopeIds, siblings);
+  if (filters.sobrinhos) addIds(scopeIds, siblingsChildren);
+  if (filters.tios) addIds(scopeIds, unclesAndAunts);
+  if (filters.primos) addIds(scopeIds, cousins);
+  if (filters.conjuge) addIds(scopeIds, maps.spousesByPerson.get(centralPersonId));
+
+  if (filters.pets) {
+    const peopleById = new Map(pessoas.map((person) => [person.id, person]));
+    collectChildren(centralIds, maps).forEach((childId) => {
+      const child = peopleById.get(childId);
+      if (child && isPetFamilyMember(child)) scopeIds.add(child.id);
+    });
+  }
+
+  return scopeIds;
+}
+
 function getParentIdsForPerson(centralPersonId: string, relacionamentos: Relacionamento[]) {
   return new Set(
     relacionamentos
@@ -177,7 +258,7 @@ function expandHorizontalSpousesForFilter(
   directScopeIds: Set<string>,
   spouseAnchorScopeIds: Set<string>,
   pessoas: Pessoa[],
-  relacionamentos: Relacionamento[],
+  maps: RelationshipMaps,
   centralPersonId: string,
   visiblePersonIds: Set<string> | undefined,
   directRelativeFilters: DirectRelativeFilters
@@ -186,7 +267,6 @@ function expandHorizontalSpousesForFilter(
 
   const nextScopeIds = new Set(directScopeIds);
   const peopleById = new Map(pessoas.map((person) => [person.id, person]));
-  const maps = buildRelationshipMaps(relacionamentos);
   const generationByPersonId = inferHorizontalGenerations(pessoas, maps, centralPersonId);
 
   spouseAnchorScopeIds.forEach((anchorId) => {
@@ -233,29 +313,40 @@ function MobileFamilyHorizontalMapFilteredViewComponent({
   layoutRevision,
   onDirectRelationRenderedCounts,
 }: MobileFamilyHorizontalMapFilteredViewProps, ref: React.ForwardedRef<FamilyTreeActions>) {
-  const filteredVisiblePersonIds = React.useMemo(() => {
-    const graph = buildTreeGraph({
-      pessoas,
-      relacionamentos,
-      selectedPersonId: centralPersonId,
-      onPersonClick,
-      edgeFilters: DEFAULT_EDGE_FILTERS,
+  const [shouldRenderMap, setShouldRenderMap] = React.useState(false);
+  const relationshipMaps = React.useMemo(() => buildRelationshipMaps(relacionamentos), [relacionamentos]);
+
+  React.useEffect(() => {
+    setShouldRenderMap(false);
+
+    const frameId = window.requestAnimationFrame(() => {
+      setShouldRenderMap(true);
     });
 
-    const directScopeIds = collectDirectFamilyScopePersonIds(graph, {
+    return () => {
+      window.cancelAnimationFrame(frameId);
+    };
+  }, [centralPersonId, layoutRevision]);
+
+  const filteredVisiblePersonIds = React.useMemo(() => {
+    const directScopeIds = collectLightweightDirectScopePersonIds(
+      pessoas,
+      relationshipMaps,
       centralPersonId,
-      filters: {
+      {
         ...directRelativeFilters,
         conjuge: true,
-      },
-    });
-    const spouseAnchorScopeIds = collectDirectFamilyScopePersonIds(graph, {
+      }
+    );
+    const spouseAnchorScopeIds = collectLightweightDirectScopePersonIds(
+      pessoas,
+      relationshipMaps,
       centralPersonId,
-      filters: {
+      {
         ...directRelativeFilters,
         conjuge: false,
-      },
-    });
+      }
+    );
     const adjustedDirectScopeIds = applyHorizontalDirectFilterExceptions(
       directScopeIds,
       directRelativeFilters,
@@ -272,7 +363,7 @@ function MobileFamilyHorizontalMapFilteredViewComponent({
       adjustedDirectScopeIds,
       adjustedSpouseAnchorScopeIds,
       pessoas,
-      relacionamentos,
+      relationshipMaps,
       centralPersonId,
       visiblePersonIds,
       directRelativeFilters
@@ -280,7 +371,7 @@ function MobileFamilyHorizontalMapFilteredViewComponent({
 
     if (expandedDirectScopeIds.size === 0) return visiblePersonIds;
     return intersectVisiblePersonIds(expandedDirectScopeIds, visiblePersonIds, centralPersonId);
-  }, [centralPersonId, directRelativeFilters, onPersonClick, pessoas, relacionamentos, visiblePersonIds]);
+  }, [centralPersonId, directRelativeFilters, pessoas, relationshipMaps, relacionamentos, visiblePersonIds]);
 
   const scopedPessoas = React.useMemo(() => {
     if (!filteredVisiblePersonIds) return pessoas;
@@ -310,6 +401,14 @@ function MobileFamilyHorizontalMapFilteredViewComponent({
       );
     });
   }, [filteredVisiblePersonIds, relacionamentos, scopedPersonIds]);
+
+  if (!shouldRenderMap) {
+    return (
+      <div className="flex min-h-[55vh] items-center justify-center px-4 text-center text-sm font-semibold text-slate-500">
+        Preparando mapa genealógico...
+      </div>
+    );
+  }
 
   return (
     <MobileFamilyHorizontalMapView
