@@ -10,12 +10,17 @@ import {
   type CuriosidadesDataProps,
 } from './curiosidadesUtils';
 
+type CuriosidadesInterestsSectionProps = CuriosidadesDataProps & {
+  embedded?: boolean;
+};
+
 export function CuriosidadesInterestsSection({
   pessoas,
   profileBadgesByPersonId,
   loading,
   error,
-}: CuriosidadesDataProps) {
+  embedded = false,
+}: CuriosidadesInterestsSectionProps) {
   const selectablePeople = useMemo(
     () => pessoas.filter((pessoa) => !isPet(pessoa) && pessoa.nome_completo),
     [pessoas]
@@ -55,7 +60,7 @@ export function CuriosidadesInterestsSection({
   const secondProfile = secondPerson ? getPersonInterestProfile(secondPerson, profileBadgesByPersonId) : null;
 
   return (
-    <section className={curiositySectionCardClassName}>
+    <section className={embedded ? 'min-w-0' : curiositySectionCardClassName}>
       <div className="flex items-center gap-3">
         <GitCompareArrows className="h-5 w-5 text-blue-700" />
         <h2 className="text-xl font-bold text-gray-950">Comparar interesses</h2>

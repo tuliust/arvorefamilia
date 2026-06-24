@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { ChevronDown, GitBranch } from 'lucide-react';
 import {
   curiositySectionCardClassName,
@@ -27,59 +27,11 @@ function PersonBadge({ pessoa }: { pessoa: CuriosidadesDataProps['pessoas'][numb
 }
 
 function GenerationPeopleBadges({ people }: { people: CuriosidadesDataProps['pessoas'] }) {
-  const [expanded, setExpanded] = useState(false);
-  const visiblePeople = expanded ? people : people.slice(0, 8);
-  const remainingCount = Math.max(people.length - 8, 0);
-
   return (
     <div className="mt-4 flex flex-wrap gap-2">
-      {visiblePeople.map((pessoa) => (
+      {people.map((pessoa) => (
         <PersonBadge key={pessoa.id} pessoa={pessoa} />
       ))}
-
-      {!expanded && remainingCount > 0 && (
-        <button
-          type="button"
-          onClick={() => setExpanded(true)}
-          className="inline-flex items-center rounded-full border border-dashed border-gray-300 bg-white px-3 py-1.5 text-xs font-semibold text-gray-500 transition hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700"
-          aria-label={`Mostrar mais ${remainingCount} pessoas desta geração`}
-        >
-          +{remainingCount}
-        </button>
-      )}
-    </div>
-  );
-}
-
-function MobileGenerationPeopleDisclosure({ people }: { people: CuriosidadesDataProps['pessoas'] }) {
-  const [expanded, setExpanded] = useState(false);
-
-  if (people.length === 0) return null;
-
-  return (
-    <div className="mt-4 md:hidden">
-      <button
-        type="button"
-        onClick={() => setExpanded((current) => !current)}
-        aria-expanded={expanded}
-        className="flex w-full items-center justify-between gap-3 rounded-xl border border-gray-200 bg-white px-3 py-2 text-left text-sm font-bold text-blue-800 transition hover:border-blue-200 hover:bg-blue-50"
-      >
-        <span>{expanded ? 'Ocultar pessoas' : `Ver ${people.length} ${people.length === 1 ? 'pessoa' : 'pessoas'}`}</span>
-        <ChevronDown
-          className={[
-            'h-4 w-4 shrink-0 transition-transform',
-            expanded ? 'rotate-180' : '',
-          ].join(' ')}
-        />
-      </button>
-
-      {expanded && (
-        <div className="mt-3 flex flex-col gap-2">
-          {people.map((pessoa) => (
-            <PersonBadge key={pessoa.id} pessoa={pessoa} />
-          ))}
-        </div>
-      )}
     </div>
   );
 }
@@ -91,6 +43,18 @@ export function CuriosidadesGenerations({
 }: CuriosidadesDataProps) {
   const generations = getPeopleBySocialGeneration(pessoas);
   const generationsWithPeople = generations.filter((generation) => generation.people.length > 0);
+  const [expandedGenerationKey, setExpandedGenerationKey] = useState<string>('');
+
+  useEffect(() => {
+    if (loading || error || generationsWithPeople.length === 0) {
+      setExpandedGenerationKey('');
+      return;
+    }
+
+    if (!expandedGenerationKey || !generationsWithPeople.some((generation) => generation.key === expandedGenerationKey)) {
+      setExpandedGenerationKey(generationsWithPeople[0].key);
+    }
+  }, [error, expandedGenerationKey, generationsWithPeople, loading]);
 
   return (
     <section className={curiositySectionCardClassName}>
@@ -126,29 +90,46 @@ export function CuriosidadesGenerations({
 
       {!error && !loading && generationsWithPeople.length > 0 && (
         <div className="mt-5 space-y-4">
-          {generationsWithPeople.map((generation) => (
-            <article key={generation.key} className="rounded-xl border border-gray-200 bg-gray-50 p-4">
-              <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                <div>
-                  <p className="text-base font-bold text-gray-950">{generation.label}</p>
-                  <p className="mt-1 text-xs font-semibold uppercase tracking-wide text-blue-700">{generation.period}</p>
-                </div>
-                <span className="inline-flex w-fit rounded-full border border-gray-200 bg-white px-3 py-1 text-xs font-bold text-gray-700">
-                  {generation.people.length} {generation.people.length === 1 ? 'pessoa' : 'pessoas'}
-                </span>
-              </div>
+          {generationsWithPeople.map((generation) => {
+            const expanded = expandedGenerationKey === generation.key;
 
-              <p className="mt-3 text-sm leading-6 text-gray-600">{generation.description}</p>
-              {generation.note && (
-                <p className="mt-2 text-xs leading-5 text-gray-500">{generation.note}</p>
-              )}
+            return (
+              <article key={generation.key} className="rounded-xl border border-gray-200 bg-gray-50 p-4">
+                <button
+                  type="button"
+                  className="flex w-full items-start justify-between gap-3 text-left"
+                  onClick={() => setExpandedGenerationKey((current) => current === generation.key ? '' : generation.key)}
+                  aria-expanded={expanded}
+                >
+                  <span className="min-w-0">
+                    <span className="block text-base font-bold text-gray-950">{generation.label}</span>
+                    <span className="mt-1 block text-xs font-semibold uppercase tracking-wide text-blue-700">{generation.period}</span>
+                  </span>
 
-              <div className="hidden md:block">
-                <GenerationPeopleBadges people={generation.people} />
-              </div>
-              <MobileGenerationPeopleDisclosure people={generation.people} />
-            </article>
-          ))}
+                  <span className="inline-flex shrink-0 items-center gap-2">
+                    <span className="hidden rounded-full border border-gray-200 bg-white px-3 py-1 text-xs font-bold text-gray-700 sm:inline-flex">
+                      {generation.people.length} {generation.people.length === 1 ? 'pessoa' : 'pessoas'}
+                    </span>
+                    <span className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-gray-200 bg-white text-blue-700 shadow-sm">
+                      <ChevronDown
+                        className={[
+                          'h-4 w-4 transition-transform',
+                          expanded ? 'rotate-180' : '',
+                        ].join(' ')}
+                      />
+                    </span>
+                  </span>
+                </button>
+
+                <p className="mt-3 text-sm leading-6 text-gray-600">{generation.description}</p>
+                {generation.note && (
+                  <p className="mt-2 text-xs leading-5 text-gray-500">{generation.note}</p>
+                )}
+
+                {expanded && <GenerationPeopleBadges people={generation.people} />}
+              </article>
+            );
+          })}
         </div>
       )}
     </section>

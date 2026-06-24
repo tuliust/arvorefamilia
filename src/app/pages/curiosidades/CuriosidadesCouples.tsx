@@ -1,10 +1,20 @@
 import { HeartHandshake, Medal } from 'lucide-react';
+import type { Pessoa, Relacionamento } from '../../types';
 import {
   buildCoupleAnniversaries,
+  calculateFullYearsSince,
   curiositySectionCardClassName,
   curiosityStatusClassName,
+  parseFamilyDate,
   type CuriosidadesDataProps,
 } from './curiosidadesUtils';
+
+type WeddingAgeStats = {
+  average: number;
+  min: number;
+  max: number;
+  count: number;
+};
 
 function getRelationshipPairKey(relacionamento: CuriosidadesDataProps['relacionamentos'][number]) {
   const ids = [relacionamento.pessoa_origem_id, relacionamento.pessoa_destino_id]
@@ -28,6 +38,40 @@ function countActiveUnions(relacionamentos: CuriosidadesDataProps['relacionament
   return activeUnionKeys.size;
 }
 
+function buildWeddingAgeStats(pessoas: Pessoa[], relacionamentos: Relacionamento[]): WeddingAgeStats | null {
+  const pessoasMap = new Map(pessoas.map((pessoa) => [pessoa.id, pessoa]));
+  const ages: number[] = [];
+
+  relacionamentos.forEach((relacionamento) => {
+    const weddingDate = parseFamilyDate(relacionamento.data_casamento);
+    if (!weddingDate) return;
+
+    const pessoaA = pessoasMap.get(relacionamento.pessoa_origem_id);
+    const pessoaB = pessoasMap.get(relacionamento.pessoa_destino_id);
+
+    [pessoaA, pessoaB].forEach((pessoa) => {
+      if (!pessoa?.data_nascimento) return;
+
+      const age = calculateFullYearsSince(pessoa.data_nascimento, weddingDate);
+
+      if (age >= 12 && age <= 100) {
+        ages.push(age);
+      }
+    });
+  });
+
+  if (ages.length === 0) return null;
+
+  const total = ages.reduce((sum, age) => sum + age, 0);
+
+  return {
+    average: Math.round(total / ages.length),
+    min: Math.min(...ages),
+    max: Math.max(...ages),
+    count: ages.length,
+  };
+}
+
 export function CuriosidadesCouples({
   pessoas,
   relacionamentos,
@@ -38,6 +82,7 @@ export function CuriosidadesCouples({
   const completedCouples = couples.filter((couple) => couple.years >= 1).slice(0, 6);
   const activeUnionCount = countActiveUnions(relacionamentos);
   const unionCountLabel = `${activeUnionCount} ${activeUnionCount === 1 ? 'união' : 'uniões'}`;
+  const weddingAgeStats = buildWeddingAgeStats(pessoas, relacionamentos);
 
   return (
     <section className={curiositySectionCardClassName}>
@@ -45,10 +90,10 @@ export function CuriosidadesCouples({
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-3">
             <HeartHandshake className="h-5 w-5 text-blue-700" />
-            <h2 className="text-xl font-bold text-gray-950">Bodas</h2>
+            <h2 className="text-xl font-bold text-gray-950">Relacionamentos</h2>
           </div>
           <p className="mt-3 text-sm leading-6 text-gray-600">
-            Casais ativos com datas de casamento registradas e marcos importantes da história familiar.
+            Casamentos, uniões ativas, bodas e indicadores calculados a partir dos vínculos familiares.
           </p>
         </div>
         <span className={curiosityStatusClassName}>
@@ -70,36 +115,74 @@ export function CuriosidadesCouples({
         </div>
       )}
 
-      {!error && !loading && completedCouples.length === 0 && (
-        <div className="mt-5 rounded-xl border border-dashed border-gray-200 bg-gray-50 px-4 py-5 text-sm text-gray-600">
-          Ainda não há casais ativos com bodas de 1, 5, 10, 15, 20, 25, 30, 40, 45, 50, 60 ou 75 anos.
-        </div>
-      )}
+      {!error && !loading && (
+        <div className="mt-5 space-y-6">
+          <div>
+            <div className="flex items-center gap-2">
+              <HeartHandshake className="h-4 w-4 text-blue-700" />
+              <h3 className="text-base font-bold text-gray-950">Idade média ao casar</h3>
+            </div>
+            <p className="mt-2 text-sm leading-6 text-gray-600">
+              Estimativa calculada com data de casamento e data de nascimento dos cônjuges.
+            </p>
 
-      {!error && !loading && completedCouples.length > 0 && (
-        <div className="mt-5">
-          <h3 className="text-sm font-bold text-gray-900">Casais que já completaram bodas</h3>
-          <div className="mt-3 space-y-3">
-            {completedCouples.map((couple) => (
-              <article key={couple.id} className="rounded-xl border border-gray-200 bg-gray-50 p-4">
-                <div className="flex items-start gap-3">
-                  <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white text-blue-700 shadow-sm">
-                    <Medal className="h-5 w-5" />
-                  </span>
-                  <div className="min-w-0 flex-1">
-                    <p className="font-bold leading-6 text-gray-950">{couple.coupleName}</p>
-                    <p className="mt-1 text-sm text-gray-600">
-                      {couple.durationLabel}
-                    </p>
-                    {couple.milestone && (
-                      <p className="mt-3 rounded-lg border border-blue-100 bg-blue-50 px-3 py-2 text-sm font-semibold text-blue-800">
-                        {couple.milestone.label}: {couple.milestone.description}.
-                      </p>
-                    )}
-                  </div>
+            {!weddingAgeStats ? (
+              <div className="mt-4 rounded-xl border border-dashed border-gray-200 bg-gray-50 px-4 py-5 text-sm text-gray-600">
+                Cadastre datas de casamento e nascimento para calcular este indicador.
+              </div>
+            ) : (
+              <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                <div className="rounded-xl bg-blue-50 p-4">
+                  <p className="text-xs font-semibold text-blue-700">Média</p>
+                  <p className="mt-2 text-2xl font-bold text-gray-950">{weddingAgeStats.average} anos</p>
                 </div>
-              </article>
-            ))}
+                <div className="rounded-xl bg-gray-50 p-4">
+                  <p className="text-xs font-semibold text-gray-600">Faixa</p>
+                  <p className="mt-2 text-2xl font-bold text-gray-950">
+                    {weddingAgeStats.min}-{weddingAgeStats.max}
+                  </p>
+                </div>
+              </div>
+            )}
+          </div>
+
+          <div className="border-t border-gray-100 pt-5">
+            <div className="flex items-center gap-2">
+              <Medal className="h-4 w-4 text-blue-700" />
+              <h3 className="text-base font-bold text-gray-950">Bodas</h3>
+            </div>
+
+            {completedCouples.length === 0 ? (
+              <div className="mt-4 rounded-xl border border-dashed border-gray-200 bg-gray-50 px-4 py-5 text-sm text-gray-600">
+                Ainda não há casais ativos com bodas de 1, 5, 10, 15, 20, 25, 30, 40, 45, 50, 60 ou 75 anos.
+              </div>
+            ) : (
+              <div className="mt-4">
+                <h4 className="text-sm font-bold text-gray-950">Casais que já completaram bodas</h4>
+                <div className="mt-3 space-y-3">
+                  {completedCouples.map((couple) => (
+                    <article key={couple.id} className="rounded-xl border border-gray-200 bg-gray-50 p-4">
+                      <div className="flex items-start gap-3">
+                        <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white text-blue-700 shadow-sm">
+                          <Medal className="h-5 w-5" />
+                        </span>
+                        <div className="min-w-0 flex-1">
+                          <p className="font-bold leading-6 text-gray-950">{couple.coupleName}</p>
+                          <p className="mt-1 text-sm text-gray-600">
+                            {couple.durationLabel}
+                          </p>
+                          {couple.milestone && (
+                            <p className="mt-3 rounded-lg border border-blue-100 bg-blue-50 px-3 py-2 text-sm font-semibold text-blue-800">
+                              {couple.milestone.label}: {couple.milestone.description}.
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    </article>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         </div>
       )}

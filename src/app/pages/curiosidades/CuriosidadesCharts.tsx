@@ -1,12 +1,9 @@
-import { BarChart3, BriefcaseBusiness, CalendarDays, HeartHandshake, UsersRound } from 'lucide-react';
-import type { Pessoa, Relacionamento } from '../../types';
+import { BarChart3, BriefcaseBusiness, CalendarDays, UsersRound } from 'lucide-react';
 import {
-  calculateFullYearsSince,
   curiositySectionCardClassName,
   getBirthMonthCounts,
   getPeopleByAgeRange,
   getProfessionRanking,
-  parseFamilyDate,
   type CuriosidadesDataProps,
 } from './curiosidadesUtils';
 
@@ -14,13 +11,6 @@ type ChartDatum = {
   label: string;
   value: number;
   note?: string;
-};
-
-type WeddingAgeStats = {
-  average: number;
-  min: number;
-  max: number;
-  count: number;
 };
 
 function getMaxValue(data: ChartDatum[]) {
@@ -88,43 +78,8 @@ function ChartCard({
   );
 }
 
-function buildWeddingAgeStats(pessoas: Pessoa[], relacionamentos: Relacionamento[]): WeddingAgeStats | null {
-  const pessoasMap = new Map(pessoas.map((pessoa) => [pessoa.id, pessoa]));
-  const ages: number[] = [];
-
-  relacionamentos.forEach((relacionamento) => {
-    const weddingDate = parseFamilyDate(relacionamento.data_casamento);
-    if (!weddingDate) return;
-
-    const pessoaA = pessoasMap.get(relacionamento.pessoa_origem_id);
-    const pessoaB = pessoasMap.get(relacionamento.pessoa_destino_id);
-
-    [pessoaA, pessoaB].forEach((pessoa) => {
-      if (!pessoa?.data_nascimento) return;
-
-      const age = calculateFullYearsSince(pessoa.data_nascimento, weddingDate);
-
-      if (age >= 12 && age <= 100) {
-        ages.push(age);
-      }
-    });
-  });
-
-  if (ages.length === 0) return null;
-
-  const total = ages.reduce((sum, age) => sum + age, 0);
-
-  return {
-    average: Math.round(total / ages.length),
-    min: Math.min(...ages),
-    max: Math.max(...ages),
-    count: ages.length,
-  };
-}
-
 export function CuriosidadesCharts({
   pessoas,
-  relacionamentos,
   loading,
   error,
 }: CuriosidadesDataProps) {
@@ -148,11 +103,9 @@ export function CuriosidadesCharts({
     value: profession.count,
   }));
 
-  const weddingAgeStats = buildWeddingAgeStats(pessoas, relacionamentos);
-
   return (
     <section>
-      <div className="mb-4 rounded-2xl bg-slate-200 px-4 py-3">
+      <div className="mb-4 rounded-2xl bg-slate-100 px-4 py-3">
         <h2 className="text-xl font-bold text-gray-950">Gráficos da família</h2>
       </div>
 
@@ -163,12 +116,13 @@ export function CuriosidadesCharts({
       )}
 
       {loading && !error ? (
-        <div className="grid gap-4 md:grid-cols-2">
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+          <div className="h-72 animate-pulse rounded-2xl bg-gray-100" />
           <div className="h-72 animate-pulse rounded-2xl bg-gray-100" />
           <div className="h-72 animate-pulse rounded-2xl bg-gray-100" />
         </div>
       ) : (
-        <div className="grid gap-4 md:grid-cols-2">
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
           <ChartCard
             title="Aniversários por mês"
             description="Distribuição dos nascimentos cadastrados ao longo do ano."
@@ -192,35 +146,6 @@ export function CuriosidadesCharts({
             emptyLabel="Complete profissões nos perfis para gerar este gráfico."
             icon={BriefcaseBusiness}
           />
-
-          <article className={curiositySectionCardClassName}>
-            <div className="flex items-center gap-2">
-              <HeartHandshake className="h-4 w-4 text-blue-700" />
-              <h3 className="text-base font-bold text-gray-950">Idade média ao casar</h3>
-            </div>
-            <p className="mt-2 text-sm leading-6 text-gray-600">
-              Estimativa calculada com data de casamento e data de nascimento dos cônjuges.
-            </p>
-
-            {!weddingAgeStats ? (
-              <div className="mt-5 rounded-xl border border-dashed border-gray-200 bg-gray-50 px-4 py-5 text-sm text-gray-600">
-                Cadastre datas de casamento e nascimento para calcular este indicador.
-              </div>
-            ) : (
-              <div className="mt-5 grid gap-3 sm:grid-cols-2">
-                <div className="rounded-xl bg-blue-50 p-4">
-                  <p className="text-xs font-semibold text-blue-700">Média</p>
-                  <p className="mt-2 text-2xl font-bold text-gray-950">{weddingAgeStats.average} anos</p>
-                </div>
-                <div className="rounded-xl bg-gray-50 p-4">
-                  <p className="text-xs font-semibold text-gray-600">Faixa</p>
-                  <p className="mt-2 text-2xl font-bold text-gray-950">
-                    {weddingAgeStats.min}-{weddingAgeStats.max}
-                  </p>
-                </div>
-              </div>
-            )}
-          </article>
         </div>
       )}
     </section>

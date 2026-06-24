@@ -1,15 +1,16 @@
 import { useEffect, useMemo, useState } from 'react';
-import { MoonStar, Network, Search } from 'lucide-react';
+import { GitCompareArrows, MoonStar, Network, Search } from 'lucide-react';
 
 import { CuriosidadesAstrology } from './CuriosidadesAstrology';
 import { CuriosidadesConnectionSection } from './CuriosidadesConnectionSection';
 import { CuriosidadesDiscoverySection } from './CuriosidadesDiscoverySection';
+import { CuriosidadesInterestsSection } from './CuriosidadesInterestsSection';
 import {
   curiositySectionCardClassName,
   type CuriosidadesDataProps,
 } from './curiosidadesUtils';
 
-type CuriosidadesInsightTabKey = 'discovery' | 'connections' | 'astrology';
+type CuriosidadesInsightTabKey = 'discovery' | 'connections' | 'interests' | 'astrology';
 
 const insightTabs = [
   {
@@ -23,6 +24,12 @@ const insightTabs = [
     label: 'Qual a minha conexão?',
     hash: '#conexoes',
     icon: Network,
+  },
+  {
+    key: 'interests',
+    label: 'Comparar interesses',
+    hash: '#interesses',
+    icon: GitCompareArrows,
   },
   {
     key: 'astrology',
@@ -39,6 +46,7 @@ const insightTabs = [
 
 function getTabFromHash(hash: string): CuriosidadesInsightTabKey {
   if (hash === '#conexoes') return 'connections';
+  if (hash === '#interesses') return 'interests';
   if (hash === '#astrologia') return 'astrology';
   return 'discovery';
 }
@@ -82,6 +90,7 @@ export function CuriosidadesInsightTabs(props: CuriosidadesDataProps) {
     <section className={`${curiositySectionCardClassName} relative`}>
       <span id="descobertas" className="pointer-events-none absolute -top-24" aria-hidden="true" />
       <span id="conexoes" className="pointer-events-none absolute -top-24" aria-hidden="true" />
+      <span id="interesses" className="pointer-events-none absolute -top-24" aria-hidden="true" />
       <span id="astrologia" className="pointer-events-none absolute -top-24" aria-hidden="true" />
 
       <div className="flex flex-wrap gap-2 rounded-2xl border border-gray-200 bg-gray-50 p-1.5">
@@ -116,6 +125,10 @@ export function CuriosidadesInsightTabs(props: CuriosidadesDataProps) {
 
         {activeTab === 'connections' && (
           <CuriosidadesConnectionSection {...props} embedded />
+        )}
+
+        {activeTab === 'interests' && (
+          <CuriosidadesInterestsSection {...props} embedded />
         )}
 
         {activeTab === 'astrology' && (

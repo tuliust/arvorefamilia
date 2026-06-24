@@ -10,7 +10,6 @@ import { CuriosidadesCouples } from './curiosidades/CuriosidadesCouples';
 import { CuriosidadesGenerations } from './curiosidades/CuriosidadesGenerations';
 import { CuriosidadesHero } from './curiosidades/CuriosidadesHero';
 import { CuriosidadesInsightTabs } from './curiosidades/CuriosidadesInsightTabs';
-import { CuriosidadesInterestsSection } from './curiosidades/CuriosidadesInterestsSection';
 import { CuriosidadesMemoryWall } from './curiosidades/CuriosidadesMemoryWall';
 import { CuriosidadesQuizSection } from './curiosidades/CuriosidadesQuizSection';
 import { CuriosidadesRankings } from './curiosidades/CuriosidadesRankings';
@@ -161,10 +160,6 @@ export function Curiosidades() {
           <div className="min-w-0 space-y-4">
             <div id="bodas" className="scroll-mt-24">
               <CuriosidadesCouples {...curiosityDataProps} />
-            </div>
-
-            <div id="interesses" className="scroll-mt-24">
-              <CuriosidadesInterestsSection {...curiosityDataProps} />
             </div>
           </div>
         </div>
