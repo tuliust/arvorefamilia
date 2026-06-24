@@ -120,6 +120,7 @@ export function ArquivosHistoricosPage() {
   }, [user]);
 
   const pessoa = link?.pessoa;
+  const isOnboarding = link?.dados_confirmados === false;
 
   useEffect(() => {
     if (!user || !pessoa?.id || !draftHydrated) return;
@@ -148,7 +149,7 @@ export function ArquivosHistoricosPage() {
 
   const handleContinue = async () => {
     const saved = await saveArchives();
-    if (saved) navigate(pessoa?.falecido === true ? '/revisao-dados' : '/preferencias');
+    if (saved && isOnboarding) navigate(pessoa?.falecido === true ? '/revisao-dados' : '/preferencias');
   };
 
   if (loading) {
@@ -181,13 +182,14 @@ export function ArquivosHistoricosPage() {
     <div className="min-h-screen bg-gray-50">
       <MemberPageHeader
         title="Fatos e Arquivos Históricos"
-        subtitle="Etapa 3 de 5: registre fatos, memórias, histórias e, se quiser, anexe fotos ou documentos."
+        subtitle={isOnboarding ? 'Etapa 3 de 5: registre fatos, memórias, histórias e, se quiser, anexe fotos ou documentos.' : 'Atualize fatos, memórias, histórias, fotos e documentos do seu perfil.'}
         icon={Archive}
-        hideHeaderActions
-        hideMobileHeaderActions
+        hideHeaderActions={isOnboarding}
+        hideMobileHeaderActions={isOnboarding}
+        hideMobileBottomNav={isOnboarding}
       />
 
-      <MemberOnboardingSteps activeStep={3} hidePreferences={pessoa.falecido === true} />
+      {isOnboarding && <MemberOnboardingSteps activeStep={3} hidePreferences={pessoa.falecido === true} />}
 
       <main className={`${PAGE_CONTAINER_CLASS} space-y-6 py-6 pb-[calc(7rem+env(safe-area-inset-bottom))] md:pb-6`}>
         <ArquivosHistoricos
@@ -201,7 +203,7 @@ export function ArquivosHistoricosPage() {
 
         <div className="flex justify-end">
           <Button type="button" onClick={handleContinue} disabled={saving}>
-            {saving ? 'Salvando...' : 'Salvar e Continuar'}
+            {saving ? 'Salvando...' : isOnboarding ? 'Salvar e Continuar' : 'Salvar fatos e arquivos'}
           </Button>
         </div>
       </main>

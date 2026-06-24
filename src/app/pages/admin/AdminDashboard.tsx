@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router';
-import { Bell, Clock, GitPullRequest, HelpCircle, Link2, MessageCircle, Palette, PlusCircle, Send, Settings, ShieldCheck, Users } from 'lucide-react';
+import { Bell, ChevronDown, ChevronUp, Clock, GitPullRequest, HelpCircle, Link2, MessageCircle, Palette, PlusCircle, Send, Settings, ShieldCheck, Users } from 'lucide-react';
 import { DEFAULT_MEMBER_HEADER_ACTIONS, MemberPageHeader, PAGE_CONTAINER_CLASS } from '../../components/layout/MemberPageHeader';
 import { Button } from '../../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
@@ -75,6 +75,7 @@ export function AdminDashboard() {
   const [selectedPessoaId, setSelectedPessoaId] = useState('');
   const [whatsappLocal, setWhatsappLocal] = useState('');
   const [message, setMessage] = useState(buildInviteMessage(null));
+  const [inviteExpanded, setInviteExpanded] = useState(false);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -137,9 +138,6 @@ export function AdminDashboard() {
 
   const quickActions = [
     { title: 'Adicionar Pessoa', description: 'Cadastrar novo membro', icon: PlusCircle, onClick: () => navigate('/admin/pessoas/nova'), color: 'bg-blue-500' },
-    { title: 'Ver Pessoas', description: 'Listar todos os membros', icon: Users, onClick: () => navigate('/admin/pessoas'), color: 'bg-emerald-500' },
-    { title: 'Relacionamentos', description: 'Gerenciar vínculos', icon: Link2, onClick: () => navigate('/admin/relacionamentos'), color: 'bg-purple-500' },
-    { title: 'Solicitações de vínculos', description: `${stats.pendingRelationshipRequests} pendente(s)`, icon: GitPullRequest, onClick: () => navigate('/admin/solicitacoes-vinculos'), color: 'bg-amber-600' },
     { title: 'Dúvidas', description: 'Gerenciar perguntas, respostas e categorias', icon: HelpCircle, onClick: () => navigate('/admin/duvidas'), color: 'bg-indigo-600' },
     { title: 'Histórico', description: 'Ver atividades recentes', icon: Clock, onClick: () => navigate('/admin/atividades'), color: 'bg-slate-800' },
     { title: 'Notificações', description: 'Diagnóstico e envios', icon: Bell, onClick: () => navigate('/admin/notificacoes'), color: 'bg-blue-700' },
@@ -263,61 +261,89 @@ export function AdminDashboard() {
                 </CardTitle>
                 <p className="mt-1 text-sm text-gray-600">Selecione a pessoa, confirme o WhatsApp e envie a mensagem de primeiro acesso.</p>
               </div>
-              {selectedPessoa && <span className="rounded-full bg-white px-3 py-1 text-xs font-medium text-blue-700 ring-1 ring-blue-100">Código: {selectedPessoa.id}</span>}
-            </div>
-          </CardHeader>
-          <CardContent className="space-y-4 p-4 sm:p-6">
-            <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_320px]">
-              <label className="block">
-                <span className="mb-1 block text-sm font-medium text-gray-700">Usuário</span>
-                <select
-                  className="w-full rounded-xl border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
-                  value={selectedPessoaId}
-                  onChange={(event) => setSelectedPessoaId(event.target.value)}
-                  disabled={loading || pessoas.length === 0}
-                >
-                  <option value="">Selecione um usuário</option>
-                  {pessoas.map((pessoa) => <option key={pessoa.id} value={pessoa.id}>{pessoa.nome_completo}</option>)}
-                </select>
-              </label>
-
-              <label className="block">
-                <span className="mb-1 block text-sm font-medium text-gray-700">WhatsApp</span>
-                <div className="flex rounded-xl border border-gray-300 bg-white shadow-sm focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-500/20">
-                  <span className="inline-flex items-center rounded-l-xl border-r border-gray-200 bg-gray-50 px-3 text-sm font-semibold text-gray-700">+55</span>
-                  <input
-                    className="min-w-0 flex-1 rounded-r-xl border-0 px-3 py-2.5 text-sm text-gray-900 outline-none"
-                    inputMode="tel"
-                    placeholder="(XX) XXXXX-XXXX"
-                    value={whatsappLocal}
-                    onChange={(event) => setWhatsappLocal(formatLocalPhone(event.target.value))}
-                  />
-                </div>
-              </label>
-            </div>
-
-            <label className="block">
-              <span className="mb-1 block text-sm font-medium text-gray-700">Mensagem</span>
-              <textarea
-                className="min-h-[170px] w-full rounded-xl border border-gray-300 px-3 py-3 text-sm leading-6 text-gray-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
-                value={message}
-                onChange={(event) => setMessage(event.target.value)}
-              />
-            </label>
-
-            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-              <p className="text-xs text-gray-500">O código enviado é o ID da pessoa selecionada para o fluxo de primeiro acesso.</p>
-              <Button type="button" onClick={handleOpenInvite} disabled={!selectedPessoa || !whatsappLocal.trim()} className="w-full sm:w-auto">
-                <Send className="mr-2 h-4 w-4" />
-                Enviar pelo WhatsApp
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setInviteExpanded((current) => !current)}
+                aria-expanded={inviteExpanded}
+                aria-controls="admin-whatsapp-invite-content"
+                className="w-full bg-white sm:w-auto"
+              >
+                {inviteExpanded ? (
+                  <>
+                    <ChevronUp className="mr-2 h-4 w-4" />
+                    Recolher
+                  </>
+                ) : (
+                  <>
+                    <ChevronDown className="mr-2 h-4 w-4" />
+                    Expandir
+                  </>
+                )}
               </Button>
             </div>
-          </CardContent>
+          </CardHeader>
+          {inviteExpanded && (
+            <CardContent id="admin-whatsapp-invite-content" className="space-y-4 p-4 sm:p-6">
+              <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_320px]">
+                <label className="block">
+                  <span className="mb-1 block text-sm font-medium text-gray-700">Usuário</span>
+                  <select
+                    className="w-full rounded-xl border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                    value={selectedPessoaId}
+                    onChange={(event) => setSelectedPessoaId(event.target.value)}
+                    disabled={loading || pessoas.length === 0}
+                  >
+                    <option value="">Selecione um usuário</option>
+                    {pessoas.map((pessoa) => <option key={pessoa.id} value={pessoa.id}>{pessoa.nome_completo}</option>)}
+                  </select>
+                </label>
+
+                <label className="block">
+                  <span className="mb-1 block text-sm font-medium text-gray-700">WhatsApp</span>
+                  <div className="flex rounded-xl border border-gray-300 bg-white shadow-sm focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-500/20">
+                    <span className="inline-flex items-center rounded-l-xl border-r border-gray-200 bg-gray-50 px-3 text-sm font-semibold text-gray-700">+55</span>
+                    <input
+                      className="min-w-0 flex-1 rounded-r-xl border-0 px-3 py-2.5 text-sm text-gray-900 outline-none"
+                      inputMode="tel"
+                      placeholder="(XX) XXXXX-XXXX"
+                      value={whatsappLocal}
+                      onChange={(event) => setWhatsappLocal(formatLocalPhone(event.target.value))}
+                    />
+                  </div>
+                </label>
+              </div>
+
+              <label className="block">
+                <span className="mb-1 block text-sm font-medium text-gray-700">Mensagem</span>
+                <textarea
+                  className="min-h-[170px] w-full rounded-xl border border-gray-300 px-3 py-3 text-sm leading-6 text-gray-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                  value={message}
+                  onChange={(event) => setMessage(event.target.value)}
+                />
+              </label>
+
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div className="min-h-7">
+                  {selectedPessoa && (
+                    <span className="inline-flex max-w-full items-center rounded-full bg-blue-50 px-3 py-1 text-xs font-medium text-blue-700 ring-1 ring-blue-100">
+                      <span className="truncate">Código: {selectedPessoa.id}</span>
+                    </span>
+                  )}
+                </div>
+                <Button type="button" onClick={handleOpenInvite} disabled={!selectedPessoa || !whatsappLocal.trim()} className="w-full sm:w-auto">
+                  <Send className="mr-2 h-4 w-4" />
+                  Enviar pelo WhatsApp
+                </Button>
+              </div>
+            </CardContent>
+          )}
         </Card>
 
         <div className="mb-8">
           <h2 className="mb-4 break-words text-lg font-semibold text-gray-900">Ações Rápidas</h2>
-          <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
+          <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-3 xl:grid-cols-6">
             {quickActions.map((action) => (
               <button key={action.title} onClick={action.onClick} className="min-w-0 rounded-lg border border-gray-200 bg-white p-3 text-left transition-shadow hover:shadow-md sm:p-6" type="button">
                 <div className={`mb-3 flex h-10 w-10 items-center justify-center rounded-lg sm:h-12 sm:w-12 ${action.color}`}>

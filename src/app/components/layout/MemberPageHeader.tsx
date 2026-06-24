@@ -43,6 +43,7 @@ interface MemberPageHeaderProps {
   hideFavoriteButton?: boolean;
   hideMobileHeaderActions?: boolean;
   hideHeaderActions?: boolean;
+  hideMobileBottomNav?: boolean;
   className?: string;
 }
 
@@ -278,6 +279,7 @@ export function MemberPageHeader({
   hideFavoriteButton,
   hideMobileHeaderActions = false,
   hideHeaderActions = false,
+  hideMobileBottomNav = false,
   className = '',
 }: MemberPageHeaderProps) {
   const location = useLocation();
@@ -476,7 +478,7 @@ export function MemberPageHeader({
           ))}
         </div>
       </header>
-      <MemberMobileBottomNav unreadNotificationsCount={unreadNotificationsCount} />
+      {!hideMobileBottomNav && <MemberMobileBottomNav unreadNotificationsCount={unreadNotificationsCount} />}
     </>
   );
 }

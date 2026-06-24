@@ -294,6 +294,11 @@ export function RevisaoDados() {
         return;
       }
 
+      if (data.dados_confirmados !== false) {
+        navigate('/meus-dados', { replace: true });
+        return;
+      }
+
       const pessoa = data.pessoa;
       setLink(data);
       setForm(buildEditablePersonFormState(pessoa));
@@ -451,6 +456,7 @@ export function RevisaoDados() {
         icon={ClipboardCheck}
         hideHeaderActions
         hideMobileHeaderActions
+        hideMobileBottomNav
       />
 
       <MemberOnboardingSteps activeStep={5} hidePreferences={pessoa.falecido === true} />

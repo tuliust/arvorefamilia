@@ -75,6 +75,8 @@ export function PreferenciasPage() {
 
       const pessoa = data.pessoa;
 
+      const isOnboardingLink = data.dados_confirmados === false;
+
       if (pessoa.falecido === true) {
         await updateOwnLinkedPerson(pessoa.id, {
           permitir_exibir_data_nascimento: true,
@@ -98,7 +100,7 @@ export function PreferenciasPage() {
           receber_email_novos_registros_historicos: false,
           receber_email_evento_historico_familia: false,
         });
-        if (mounted) navigate('/revisao-dados', { replace: true });
+        if (mounted) navigate(isOnboardingLink ? '/revisao-dados' : '/meus-dados', { replace: true });
         return;
       }
 
@@ -122,6 +124,7 @@ export function PreferenciasPage() {
   }, [user]);
 
   const pessoa = link?.pessoa;
+  const isOnboarding = link?.dados_confirmados === false;
 
   const handleSavePrivacy = async () => {
     if (!pessoa?.id || !privacy) return false;
@@ -145,7 +148,7 @@ export function PreferenciasPage() {
 
   const handleContinue = async () => {
     const saved = await handleSavePrivacy();
-    if (saved) navigate('/revisao-dados');
+    if (saved && isOnboarding) navigate('/revisao-dados');
   };
 
   if (loading) {
@@ -178,13 +181,14 @@ export function PreferenciasPage() {
     <div className="min-h-screen bg-gray-50">
       <MemberPageHeader
         title="Preferências"
-        subtitle="Etapa 4 de 5: configure notificações e permissões de exibição."
+        subtitle={isOnboarding ? 'Etapa 4 de 5: configure notificações e permissões de exibição.' : 'Atualize notificações e permissões de exibição do seu perfil.'}
         icon={Settings}
-        hideHeaderActions
-        hideMobileHeaderActions
+        hideHeaderActions={isOnboarding}
+        hideMobileHeaderActions={isOnboarding}
+        hideMobileBottomNav={isOnboarding}
       />
 
-      <MemberOnboardingSteps activeStep={4} />
+      {isOnboarding && <MemberOnboardingSteps activeStep={4} />}
 
       <main className={`${PAGE_CONTAINER_CLASS} space-y-6 py-6 pb-[calc(7rem+env(safe-area-inset-bottom))] md:pb-6`}>
         <NotificationPreferencesPanel userId={user.id} />
@@ -224,7 +228,7 @@ export function PreferenciasPage() {
 
         <div className="flex justify-end">
           <Button type="button" onClick={handleContinue} disabled={savingPrivacy}>
-            {savingPrivacy ? 'Salvando...' : 'Continuar para revisão'}
+            {savingPrivacy ? 'Salvando...' : isOnboarding ? 'Continuar para revisão' : 'Salvar preferências'}
           </Button>
         </div>
       </main>

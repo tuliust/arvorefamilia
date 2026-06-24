@@ -449,6 +449,7 @@ export function MeusDados() {
   ]);
 
   const pessoa = link?.pessoa;
+  const isOnboarding = link?.dados_confirmados === false;
   const canEditSelectedProfile = link?.can_edit !== false;
   const previewName = useMemo(() => {
     const name = formatPersonName(String(form.nome_completo ?? '').trim());
@@ -799,7 +800,7 @@ export function MeusDados() {
       return;
     }
 
-    const questionnaireValidationError = validateQuestionnaire();
+    const questionnaireValidationError = isOnboarding ? validateQuestionnaire() : null;
     if (questionnaireValidationError) {
       setAiError(questionnaireValidationError);
       toast.error(questionnaireValidationError);
@@ -808,11 +809,15 @@ export function MeusDados() {
 
     setSaving(true);
 
-    const questionnaireSave = await saveProfileQuestionnaire({ requireMinimum: true });
-    if (!questionnaireSave.ok) {
+    const questionnaireSave = await saveProfileQuestionnaire({ requireMinimum: isOnboarding, quiet: !isOnboarding });
+    if (!questionnaireSave.ok && isOnboarding) {
       setSaving(false);
       toast.error(questionnaireSave.error || 'Não foi possível salvar o questionário.');
       return;
+    }
+
+    if (!questionnaireSave.ok && !isOnboarding) {
+      toast.warning(questionnaireSave.error || 'Dados pessoais serão salvos, mas o questionário de perfil não foi atualizado.');
     }
 
     const completedSocialProfiles = getCompleteSocialProfiles();
@@ -907,8 +912,10 @@ export function MeusDados() {
     setAvatarCropSourceDataUrl(null);
     setCroppedPhotoBlob(null);
     isDirtyRef.current = false;
-    toast.success('Dados pessoais salvos.');
-    navigate('/meus-vinculos', { replace: true });
+    toast.success(isOnboarding ? 'Dados pessoais salvos.' : 'Alterações salvas.');
+    if (isOnboarding) {
+      navigate('/meus-vinculos', { replace: true });
+    }
   };
 
   const renderAiBadgeGroup = (group: AiBadgeGroup) => {
@@ -1060,14 +1067,15 @@ export function MeusDados() {
   return (
     <div className="min-h-screen bg-gray-50">
       <MemberPageHeader
-        title="Revisar meus dados"
-        subtitle="Confira suas informações antes de acessar a árvore principal."
+        title={isOnboarding ? 'Revisar meus dados' : 'Editar meus dados'}
+        subtitle={isOnboarding ? 'Confira suas informações antes de acessar a árvore principal.' : 'Atualize seus dados pessoais, contatos, redes e foto de perfil.'}
         icon={UserCircle2}
-        hideHeaderActions
-        hideMobileHeaderActions
+        hideHeaderActions={isOnboarding}
+        hideMobileHeaderActions={isOnboarding}
+        hideMobileBottomNav={isOnboarding}
       />
 
-      <MemberOnboardingSteps activeStep={1} hidePreferences={form.falecido === true} />
+      {isOnboarding && <MemberOnboardingSteps activeStep={1} hidePreferences={form.falecido === true} />}
 
       <main className="mx-auto grid max-w-6xl grid-cols-1 gap-6 px-4 py-6 pb-[calc(7rem+env(safe-area-inset-bottom))] lg:grid-cols-[minmax(0,1.4fr)_minmax(280px,320px)] lg:pb-6">
         <form onSubmit={handleConfirm} className="order-2 min-w-0 rounded-2xl border border-gray-200 bg-white p-4 shadow-sm sm:p-5 lg:order-1">
@@ -1335,7 +1343,7 @@ export function MeusDados() {
               ) : (
                 <>
                   <Save className="h-4 w-4" />
-                  Confirmar meus dados
+                  {isOnboarding ? 'Confirmar meus dados' : 'Salvar alterações'}
                 </>
               )}
             </Button>

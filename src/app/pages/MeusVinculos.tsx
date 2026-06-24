@@ -322,6 +322,7 @@ export function MeusVinculos() {
   const draftDirtyRef = useRef(false);
 
   const pessoa = link?.pessoa;
+  const isOnboarding = link?.dados_confirmados === false;
 
   async function reloadRelationships(pessoaId: string) {
     const [nextRelationships, nextAllRelationships] = await Promise.all([
@@ -1270,7 +1271,9 @@ export function MeusVinculos() {
     } else {
       toast.success('Vínculos confirmados.');
     }
-    navigate('/arquivos-historicos', { replace: true });
+    if (isOnboarding) {
+      navigate('/arquivos-historicos', { replace: true });
+    }
   };
 
   if (loading) {
@@ -1302,14 +1305,15 @@ export function MeusVinculos() {
   return (
     <div className="min-h-screen bg-gray-50">
       <MemberPageHeader
-        title="Confirmar vínculos familiares"
-        subtitle="Revise quem são seus pais, filhos, pets, cônjuges e irmãos antes de seguir."
+        title={isOnboarding ? 'Confirmar vínculos familiares' : 'Editar vínculos familiares'}
+        subtitle={isOnboarding ? 'Revise quem são seus pais, filhos, pets, cônjuges e irmãos antes de seguir.' : 'Atualize pais, filhos, pets, cônjuges, irmãos e solicitações de controle de perfil.'}
         icon={Users}
-        hideHeaderActions
-        hideMobileHeaderActions
+        hideHeaderActions={isOnboarding}
+        hideMobileHeaderActions={isOnboarding}
+        hideMobileBottomNav={isOnboarding}
       />
 
-      <MemberOnboardingSteps activeStep={2} hidePreferences={pessoa?.falecido === true} />
+      {isOnboarding && <MemberOnboardingSteps activeStep={2} hidePreferences={pessoa?.falecido === true} />}
 
       <main className="mx-auto max-w-7xl px-4 py-6 pb-[calc(7rem+env(safe-area-inset-bottom))] md:pb-6">
         {hasPendingRelationshipRequest && (
@@ -1647,8 +1651,8 @@ export function MeusVinculos() {
 
           <section className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
             <div className="space-y-2">
-              <h2 className="text-lg font-semibold text-gray-950">Finalizar revisão</h2>
-              <p className="text-sm text-gray-600">Confirme os vínculos familiares para continuar.</p>
+              <h2 className="text-lg font-semibold text-gray-950">{isOnboarding ? 'Finalizar revisão' : 'Salvar vínculos'}</h2>
+              <p className="text-sm text-gray-600">{isOnboarding ? 'Confirme os vínculos familiares para continuar.' : 'Salve as alterações desta área sem avançar pelo fluxo de primeiro acesso.'}</p>
             </div>
 
             <div className="mt-4 space-y-3">
@@ -1666,7 +1670,11 @@ export function MeusVinculos() {
             </div>
 
             <Button className="mt-5 w-full" onClick={handleFinish} disabled={finishing}>
-              {finishing ? 'Finalizando...' : getRelationshipFinalButtonLabel(reviewChanges.totalPending > 0, reviewChanges.controlRequests > 0)}
+              {finishing
+                ? 'Salvando...'
+                : isOnboarding
+                  ? getRelationshipFinalButtonLabel(reviewChanges.totalPending > 0, reviewChanges.controlRequests > 0)
+                  : 'Salvar vínculos'}
             </Button>
           </section>
         </section>
