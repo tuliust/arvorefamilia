@@ -78,11 +78,18 @@ function RelationshipMetricCard({
 }: {
   label: string;
   value: string | number;
-  variant?: 'blue' | 'muted';
+  variant?: 'blue' | 'indigo' | 'teal' | 'muted';
 }) {
+  const styles = {
+    blue: 'bg-blue-50 sm:bg-blue-50 text-blue-700 sm:text-blue-700',
+    indigo: 'bg-indigo-50 sm:bg-blue-50 text-indigo-700 sm:text-blue-700',
+    teal: 'bg-teal-50 sm:bg-gray-50 text-teal-700 sm:text-gray-600',
+    muted: 'bg-gray-50 text-gray-600',
+  }[variant];
+
   return (
-    <div className={variant === 'blue' ? 'rounded-xl bg-blue-50 p-4' : 'rounded-xl bg-gray-50 p-4'}>
-      <p className={variant === 'blue' ? 'text-xs font-semibold text-blue-700' : 'text-xs font-semibold text-gray-600'}>
+    <div className={`rounded-xl p-4 ${styles}`}>
+      <p className="text-xs font-semibold">
         {label}
       </p>
       <p className="mt-2 text-2xl font-bold text-gray-950">{value}</p>
@@ -140,8 +147,8 @@ export function CuriosidadesCouples({
             {weddingAgeStats ? (
               <div className="mt-4 grid gap-3 sm:grid-cols-3">
                 <RelationshipMetricCard label="Uniões" value={activeUnionCount} variant="blue" />
-                <RelationshipMetricCard label="Média" value={`${weddingAgeStats.average} anos`} variant="blue" />
-                <RelationshipMetricCard label="Faixa" value={`${weddingAgeStats.min}-${weddingAgeStats.max}`} />
+                <RelationshipMetricCard label="Média" value={`${weddingAgeStats.average} anos`} variant="indigo" />
+                <RelationshipMetricCard label="Faixa" value={`${weddingAgeStats.min}-${weddingAgeStats.max}`} variant="teal" />
               </div>
             ) : (
               <div className="mt-4 grid gap-3 sm:grid-cols-3">
