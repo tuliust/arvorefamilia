@@ -129,55 +129,55 @@ export function Curiosidades() {
 
         <div className="curiosidades-overview-layout grid min-w-0 gap-4 sm:gap-4 xl:grid-cols-5 xl:items-stretch">
           <div className="curiosidades-today-photo-stack min-w-0 space-y-4 xl:col-span-2 xl:flex xl:h-full xl:flex-col xl:space-y-0 xl:gap-4">
-            <div id="hoje-na-familia" className="curiosidades-today-card-slot min-w-0 scroll-mt-24 xl:flex-1">
+            <div id="hoje-na-familia" className="curiosidades-today-card-slot min-w-0 scroll-mt-32 xl:flex-1">
               <CuriosidadesToday {...curiosityDataProps} className="xl:h-full" />
             </div>
 
-            <div id="fotos" className="curiosidades-photo-slider-slot min-w-0 scroll-mt-24 xl:flex-1">
+            <div id="fotos" className="curiosidades-photo-slider-slot min-w-0 scroll-mt-32 xl:flex-1">
               <CuriosidadesPhotoSlider pessoas={pessoas} loading={loading} className="xl:h-full" />
             </div>
           </div>
 
-          <div id="ia" className="curiosidades-ai-card-slot min-w-0 scroll-mt-24 xl:col-span-3 xl:h-full xl:[&>section]:h-full">
+          <div id="ia" className="curiosidades-ai-card-slot min-w-0 scroll-mt-32 xl:col-span-3 xl:h-full xl:[&>section]:h-full">
             <CuriosidadesAiSection {...curiosityDataProps} />
           </div>
 
-          <div id="quiz" className="curiosidades-quiz-slot min-w-0 scroll-mt-24 xl:col-span-3 xl:h-full">
+          <div id="quiz" className="curiosidades-quiz-slot min-w-0 scroll-mt-32 xl:col-span-3 xl:h-full">
             <CuriosidadesQuizSection {...curiosityDataProps} className="xl:h-full" />
           </div>
 
-          <div id="mural" className="curiosidades-mural-slot min-w-0 scroll-mt-24 xl:col-span-2 xl:h-full">
+          <div id="mural" className="curiosidades-mural-slot min-w-0 scroll-mt-32 xl:col-span-2 xl:h-full">
             <CuriosidadesMemoryWall className="xl:h-full" />
           </div>
         </div>
 
-        <div id="voce-sabia" className="scroll-mt-24">
+        <div id="voce-sabia" className="scroll-mt-32">
           <CuriosidadesRankings {...curiosityDataProps} />
         </div>
 
-        <div id="graficos" className="scroll-mt-24">
+        <div id="graficos" className="scroll-mt-32">
           <CuriosidadesCharts {...curiosityDataProps} />
         </div>
 
         <div className="curiosidades-family-layout grid min-w-0 gap-4 lg:grid-cols-2 lg:items-stretch">
           <div className="min-w-0 lg:h-full">
-            <div id="geracoes" className="scroll-mt-24 lg:h-full">
+            <div id="geracoes" className="scroll-mt-32 lg:h-full">
               <CuriosidadesGenerations {...curiosityDataProps} className="lg:h-full" />
             </div>
           </div>
 
           <div className="min-w-0 space-y-4 lg:flex lg:h-full lg:flex-col lg:space-y-0 lg:gap-4">
-            <div id="bodas" className="scroll-mt-24 lg:flex-1">
+            <div id="bodas" className="scroll-mt-32 lg:flex-1">
               <CuriosidadesCouples {...curiosityDataProps} className="lg:h-full" />
             </div>
 
-            <div id="rota" className="scroll-mt-24 lg:flex-1">
+            <div id="rota" className="scroll-mt-32 lg:flex-1">
               <CuriosidadesRouteSection {...curiosityDataProps} className="lg:h-full" />
             </div>
           </div>
         </div>
 
-        <div id="exploracoes-familiares" className="scroll-mt-24">
+        <div id="exploracoes-familiares" className="scroll-mt-32">
           <CuriosidadesInsightTabs {...curiosityDataProps} />
         </div>
       </main>

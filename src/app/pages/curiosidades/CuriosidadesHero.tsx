@@ -93,7 +93,7 @@ export function CuriosidadesHero() {
   };
 
   return (
-    <section className="curiosidades-sticky-nav sticky top-[calc(env(safe-area-inset-top,0px)+4.75rem)] z-[420] -mx-1 rounded-b-2xl bg-gray-50/95 px-1 pb-3 pt-1 backdrop-blur supports-[backdrop-filter]:bg-gray-50/80 md:top-0">
+    <section className="curiosidades-sticky-nav sticky top-0 z-[490] left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] w-screen border-b border-gray-200 bg-gray-50/95 px-4 py-4 shadow-[0_10px_24px_rgba(15,23,42,0.08)] backdrop-blur supports-[backdrop-filter]:bg-gray-50/85 sm:px-6 lg:px-8">
       <nav aria-label="Seções de curiosidades" className="min-w-0">
         <div className="flex min-w-0 items-stretch gap-2">
           <button
