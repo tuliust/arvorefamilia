@@ -152,14 +152,8 @@ export function CuriosidadesCharts({
 
   return (
     <section>
-      <div className="mb-4">
-        <div className="flex items-center gap-3">
-          <BarChart3 className="h-5 w-5 text-blue-700" />
-          <h2 className="text-xl font-bold text-gray-950">Gráficos da família</h2>
-        </div>
-        <p className="mt-2 text-sm text-gray-600">
-          Visualizações simples baseadas nos dados reais cadastrados nos perfis e vínculos.
-        </p>
+      <div className="mb-4 rounded-2xl bg-slate-200 px-4 py-3">
+        <h2 className="text-xl font-bold text-gray-950">Gráficos da família</h2>
       </div>
 
       {error && (

@@ -1,4 +1,4 @@
-import { CalendarDays, Heart, Lightbulb, MapPin, Signature } from 'lucide-react';
+import { CalendarDays, Heart, MapPin, Signature, type LucideIcon } from 'lucide-react';
 import {
   curiositySectionCardClassName,
   curiosityStatusClassName,
@@ -15,7 +15,7 @@ type RankingCard = {
   headline: string;
   description: string;
   items: TopCount[];
-  icon: typeof Lightbulb;
+  icon: LucideIcon;
 };
 
 function formatRankingList(items: TopCount[]) {
@@ -83,14 +83,8 @@ export function CuriosidadesRankings({
 
   return (
     <section>
-      <div className="mb-4">
-        <div className="flex items-center gap-3">
-          <Lightbulb className="h-5 w-5 text-blue-700" />
-          <h2 className="text-xl font-bold text-gray-950">Você Sabia?</h2>
-        </div>
-        <p className="mt-2 text-sm text-gray-600">
-          Curiosidades calculadas a partir dos dados cadastrados na árvore familiar.
-        </p>
+      <div className="mb-4 rounded-2xl bg-slate-200 px-4 py-3">
+        <h2 className="text-xl font-bold text-gray-950">Você Sabia?</h2>
       </div>
 
       {error && (

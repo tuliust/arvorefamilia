@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Network } from 'lucide-react';
 
+import { useAuth } from '../../contexts/AuthContext';
+import { getPrimaryLinkedPersonWithPessoa } from '../../services/memberProfileService';
 import { ConnectionDiscoveryPanel } from '../home/ConnectionDiscoveryPanel';
 import {
   calculateRelationshipDegree,
@@ -18,6 +20,7 @@ export function CuriosidadesConnectionSection({
   loading,
   error,
 }: CuriosidadesDataProps) {
+  const { user } = useAuth();
   const selectablePeople = useMemo(
     () => pessoas.filter((pessoa) => !isPet(pessoa) && pessoa.nome_completo),
     [pessoas]
@@ -25,9 +28,50 @@ export function CuriosidadesConnectionSection({
 
   const [personOneId, setPersonOneId] = useState('');
   const [personTwoId, setPersonTwoId] = useState('');
+  const [linkedPersonId, setLinkedPersonId] = useState('');
+  const [appliedLinkedPersonDefault, setAppliedLinkedPersonDefault] = useState(false);
   const [connectionLoading, setConnectionLoading] = useState(false);
   const [connectionError, setConnectionError] = useState<string | null>(null);
   const [connectionResult, setConnectionResult] = useState<RelationshipDegreeResult | null>(null);
+
+  useEffect(() => {
+    if (!user?.id) {
+      setLinkedPersonId('');
+      setAppliedLinkedPersonDefault(false);
+      return;
+    }
+
+    let cancelled = false;
+
+    async function loadLinkedPerson() {
+      try {
+        const result = await getPrimaryLinkedPersonWithPessoa(user.id);
+        if (!cancelled) {
+          setLinkedPersonId(result.data?.pessoa?.id ?? '');
+          setAppliedLinkedPersonDefault(false);
+        }
+      } catch {
+        if (!cancelled) {
+          setLinkedPersonId('');
+          setAppliedLinkedPersonDefault(false);
+        }
+      }
+    }
+
+    void loadLinkedPerson();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [user?.id]);
+
+  useEffect(() => {
+    if (appliedLinkedPersonDefault || personOneId || !linkedPersonId) return;
+    if (!selectablePeople.some((pessoa) => pessoa.id === linkedPersonId)) return;
+
+    setPersonOneId(linkedPersonId);
+    setAppliedLinkedPersonDefault(true);
+  }, [appliedLinkedPersonDefault, linkedPersonId, personOneId, selectablePeople]);
 
   useEffect(() => {
     if (selectablePeople.length < 2) {
@@ -126,6 +170,7 @@ export function CuriosidadesConnectionSection({
             connectionResult={connectionResult}
             onPersonOneChange={(value) => {
               setPersonOneId(value);
+              setAppliedLinkedPersonDefault(true);
               clearConnectionState();
             }}
             onPersonTwoChange={(value) => {

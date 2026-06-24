@@ -11,6 +11,25 @@ import {
   type CuriosidadesDataProps,
 } from './curiosidadesUtils';
 
+const ZODIAC_SYMBOLS: Record<string, string> = {
+  Áries: '♈',
+  Touro: '♉',
+  Gêmeos: '♊',
+  Câncer: '♋',
+  Leão: '♌',
+  Virgem: '♍',
+  Libra: '♎',
+  Escorpião: '♏',
+  Sagitário: '♐',
+  Capricórnio: '♑',
+  Aquário: '♒',
+  Peixes: '♓',
+};
+
+function getZodiacSymbol(label: string) {
+  return ZODIAC_SYMBOLS[label] ?? '✦';
+}
+
 export function CuriosidadesAstrology({
   pessoas,
   loading,
@@ -170,12 +189,17 @@ export function CuriosidadesAstrology({
           {ranking.length > 0 && (
             <div className="rounded-xl border border-gray-200 bg-gray-50 p-4">
               <p className="text-sm font-bold text-gray-950">Signos mais comuns na família</p>
-              <div className="mt-3 grid gap-2">
+              <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
                 {ranking.slice(0, 5).map((item) => (
-                  <div key={item.label} className="flex items-center justify-between rounded-lg bg-white px-3 py-2 text-sm">
-                    <span className="font-semibold text-gray-700">{item.label}</span>
-                    <span className="font-bold text-gray-950">{item.count}</span>
-                  </div>
+                  <article key={item.label} className="rounded-2xl border border-white bg-white p-3 text-center shadow-sm">
+                    <span className="mx-auto inline-flex h-11 w-11 items-center justify-center rounded-full bg-blue-50 text-2xl font-black text-blue-700">
+                      {getZodiacSymbol(item.label)}
+                    </span>
+                    <p className="mt-2 truncate text-sm font-bold text-gray-950">{item.label}</p>
+                    <p className="mt-1 inline-flex rounded-full bg-gray-100 px-2.5 py-1 text-xs font-bold text-gray-700">
+                      {item.count}
+                    </p>
+                  </article>
                 ))}
               </div>
             </div>

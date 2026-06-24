@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { ChevronDown, GitBranch } from 'lucide-react';
 import {
   curiositySectionCardClassName,
-  curiosityStatusClassName,
   getInitials,
   getPeopleBySocialGeneration,
   type CuriosidadesDataProps,
@@ -92,23 +91,17 @@ export function CuriosidadesGenerations({
 }: CuriosidadesDataProps) {
   const generations = getPeopleBySocialGeneration(pessoas);
   const generationsWithPeople = generations.filter((generation) => generation.people.length > 0);
-  const peopleWithBirthGeneration = generationsWithPeople.reduce((total, generation) => total + generation.people.length, 0);
 
   return (
     <section className={curiositySectionCardClassName}>
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-        <div>
-          <div className="flex items-center gap-3">
-            <GitBranch className="h-5 w-5 text-blue-700" />
-            <h2 className="text-xl font-bold text-gray-950">Gerações da família</h2>
-          </div>
-          <p className="mt-3 max-w-3xl text-sm leading-6 text-gray-600">
-            Veja quem faz parte de cada geração social a partir do ano de nascimento cadastrado.
-          </p>
+      <div>
+        <div className="flex items-center gap-3">
+          <GitBranch className="h-5 w-5 text-blue-700" />
+          <h2 className="text-xl font-bold text-gray-950">Gerações da família</h2>
         </div>
-        <span className={curiosityStatusClassName}>
-          {loading ? 'Carregando' : `${peopleWithBirthGeneration} classificados`}
-        </span>
+        <p className="mt-3 max-w-3xl text-sm leading-6 text-gray-600">
+          Veja quem faz parte de cada geração social a partir do ano de nascimento cadastrado.
+        </p>
       </div>
 
       {error && (

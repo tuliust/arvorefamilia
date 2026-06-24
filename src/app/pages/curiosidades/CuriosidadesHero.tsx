@@ -1,21 +1,45 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { ChevronLeft, ChevronRight, Sparkles } from 'lucide-react';
+import {
+  BarChart3,
+  CalendarDays,
+  ChevronLeft,
+  ChevronRight,
+  GitBranch,
+  HeartHandshake,
+  HelpCircle,
+  Lightbulb,
+  MapPinned,
+  MessageCircleQuestion,
+  MoonStar,
+  Network,
+  Route,
+  Sparkles,
+  Star,
+  UsersRound,
+  type LucideIcon,
+} from 'lucide-react';
 
-const sectionLinks = [
-  { href: '#numeros-da-familia', label: 'Números' },
-  { href: '#hoje-na-familia', label: 'Hoje' },
-  { href: '#voce-sabia', label: 'Você Sabia?' },
-  { href: '#graficos', label: 'Gráficos' },
-  { href: '#geracoes', label: 'Gerações' },
-  { href: '#bodas', label: 'Bodas' },
-  { href: '#descobertas', label: 'Descobertas' },
-  { href: '#ia', label: 'IA' },
-  { href: '#conexoes', label: 'Conexões' },
-  { href: '#quiz', label: 'Quiz' },
-  { href: '#rota', label: 'Rota' },
-  { href: '#interesses', label: 'Interesses' },
-  { href: '#mural', label: 'Mural' },
-  { href: '#astrologia', label: 'Astrologia' },
+type SectionLink = {
+  href: string;
+  label: string;
+  icon: LucideIcon;
+};
+
+const sectionLinks: SectionLink[] = [
+  { href: '#numeros-da-familia', label: 'Números', icon: UsersRound },
+  { href: '#hoje-na-familia', label: 'Hoje', icon: CalendarDays },
+  { href: '#voce-sabia', label: 'Você Sabia?', icon: Lightbulb },
+  { href: '#graficos', label: 'Gráficos', icon: BarChart3 },
+  { href: '#geracoes', label: 'Gerações', icon: GitBranch },
+  { href: '#bodas', label: 'Bodas', icon: HeartHandshake },
+  { href: '#descobertas', label: 'Descobertas', icon: Sparkles },
+  { href: '#ia', label: 'IA', icon: MessageCircleQuestion },
+  { href: '#conexoes', label: 'Conexões', icon: Network },
+  { href: '#quiz', label: 'Quiz', icon: HelpCircle },
+  { href: '#rota', label: 'Rota', icon: Route },
+  { href: '#interesses', label: 'Interesses', icon: Star },
+  { href: '#mural', label: 'Mural', icon: MapPinned },
+  { href: '#astrologia', label: 'Astrologia', icon: MoonStar },
 ];
 
 export function CuriosidadesHero() {
@@ -62,55 +86,50 @@ export function CuriosidadesHero() {
   };
 
   return (
-    <section className="curiosidades-hero rounded-2xl border border-gray-200 bg-white p-4 shadow-sm sm:p-5 md:p-8">
-      <div className="min-w-0">
-        <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-blue-100 bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700 sm:text-sm">
-          <Sparkles className="h-4 w-4" />
-          Curiosidades da família
-        </div>
-        <h2 className="text-2xl font-bold leading-tight text-gray-950 sm:text-3xl md:text-4xl">
-          Uma área para reunir descobertas, memórias e conexões familiares.
-        </h2>
-        <div className="curiosidades-section-links-wrapper relative mt-4 sm:mt-5">
-          <div
-            ref={linksRef}
-            className="curiosidades-section-links flex flex-wrap gap-2"
-            aria-label="Atalhos para áreas de curiosidades"
-          >
-            {sectionLinks.map((link) => (
+    <nav className="curiosidades-hero" aria-label="Atalhos para áreas de curiosidades">
+      <div className="curiosidades-section-links-wrapper relative">
+        <div
+          ref={linksRef}
+          className="curiosidades-section-links flex gap-2 md:gap-3"
+        >
+          {sectionLinks.map((link) => {
+            const Icon = link.icon;
+
+            return (
               <a
                 key={link.href}
                 href={link.href}
-                className="rounded-full border border-gray-200 bg-gray-50 px-3 py-1.5 text-[11px] font-semibold text-gray-700 transition hover:border-blue-200 hover:bg-blue-50 hover:text-blue-800 sm:text-xs"
+                className="inline-flex shrink-0 items-center justify-center rounded-full border border-gray-200 bg-white px-3 py-1.5 text-[11px] font-semibold text-gray-700 shadow-sm transition hover:border-blue-200 hover:bg-blue-50 hover:text-blue-800 md:h-20 md:w-[5.15rem] md:flex-col md:gap-2 md:rounded-2xl md:border-gray-200 md:px-2 md:py-3 md:text-center md:text-xs md:leading-tight"
               >
-                {link.label}
+                <Icon className="hidden h-5 w-5 shrink-0 text-blue-700 md:block" />
+                <span className="truncate md:whitespace-normal md:leading-tight">{link.label}</span>
               </a>
-            ))}
-          </div>
-
-          {canScrollLeft && (
-            <button
-              type="button"
-              className="curiosidades-section-scroll-button curiosidades-section-scroll-button-left md:hidden"
-              onClick={() => scrollLinks('left')}
-              aria-label="Deslizar atalhos para a esquerda"
-            >
-              <ChevronLeft className="h-4 w-4" />
-            </button>
-          )}
-
-          {canScrollRight && (
-            <button
-              type="button"
-              className="curiosidades-section-scroll-button curiosidades-section-scroll-button-right md:hidden"
-              onClick={() => scrollLinks('right')}
-              aria-label="Deslizar atalhos para a direita"
-            >
-              <ChevronRight className="h-4 w-4" />
-            </button>
-          )}
+            );
+          })}
         </div>
+
+        {canScrollLeft && (
+          <button
+            type="button"
+            className="curiosidades-section-scroll-button curiosidades-section-scroll-button-left md:hidden"
+            onClick={() => scrollLinks('left')}
+            aria-label="Deslizar atalhos para a esquerda"
+          >
+            <ChevronLeft className="h-4 w-4" />
+          </button>
+        )}
+
+        {canScrollRight && (
+          <button
+            type="button"
+            className="curiosidades-section-scroll-button curiosidades-section-scroll-button-right md:hidden"
+            onClick={() => scrollLinks('right')}
+            aria-label="Deslizar atalhos para a direita"
+          >
+            <ChevronRight className="h-4 w-4" />
+          </button>
+        )}
       </div>
-    </section>
+    </nav>
   );
 }

@@ -227,3 +227,28 @@
     min-width: 32rem;
   }
 }
+
+
+/* Ajustes integrados /curiosidades 2026-06-24 */
+@media (max-width: 767px) {
+  .curiosidades-hero {
+    padding: 0 !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+  }
+
+  .curiosidades-section-links-wrapper {
+    margin-top: 0 !important;
+  }
+
+  .curiosidades-section-links {
+    padding-block: 0.15rem 0.45rem !important;
+  }
+
+  .curiosidades-page #rota section .grid > div,
+  .curiosidades-page #astrologia section .grid > article {
+    min-width: 0 !important;
+  }
+}

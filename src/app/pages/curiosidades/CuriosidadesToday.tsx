@@ -1,8 +1,7 @@
-﻿import { CalendarHeart, Flower2, Gift, Heart } from 'lucide-react';
+import { CalendarHeart, Flower2, Gift, Heart } from 'lucide-react';
 import {
   buildTodayFamilyEvents,
   curiositySectionCardClassName,
-  curiosityStatusClassName,
   type CuriosidadesDataProps,
   type TodayFamilyEvent,
 } from './curiosidadesUtils';
@@ -23,19 +22,14 @@ export function CuriosidadesToday({
 
   return (
     <section className={curiositySectionCardClassName}>
-      <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
-        <div className="min-w-0">
-          <div className="flex items-center gap-3">
-            <CalendarHeart className="h-5 w-5 text-blue-700" />
-            <h2 className="text-xl font-bold text-gray-950">Hoje na família</h2>
-          </div>
-          <p className="mt-2 max-w-3xl text-sm leading-6 text-gray-600">
-            Aniversários, memórias, casamentos e acontecimentos cadastrados para a data de hoje.
-          </p>
+      <div className="min-w-0">
+        <div className="flex items-center gap-3">
+          <CalendarHeart className="h-5 w-5 text-blue-700" />
+          <h2 className="text-xl font-bold text-gray-950">Hoje na família</h2>
         </div>
-        <span className={curiosityStatusClassName}>
-          {loading ? 'Carregando dados' : `${events.length} ${events.length === 1 ? 'registro' : 'registros'}`}
-        </span>
+        <p className="mt-2 max-w-3xl text-sm leading-6 text-gray-600">
+          Aniversários, memórias, casamentos e acontecimentos cadastrados para a data de hoje.
+        </p>
       </div>
 
       {error && (
