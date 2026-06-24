@@ -53,19 +53,23 @@ export function CuriosidadesPhotoSlider({
   }, [photos, selectedPhotoId]);
 
   const goPrevious = () => {
-    if (totalPages <= 1) return;
-    const nextPage = (safePageIndex - 1 + totalPages) % totalPages;
-    setPageIndex(nextPage);
-    const nextPhoto = photos[nextPage * PHOTOS_PER_PAGE];
-    if (nextPhoto) setSelectedPhotoId(nextPhoto.id);
+    if (photos.length <= 1) return;
+
+    const selectedIndex = Math.max(0, photos.findIndex((photo) => photo.id === selectedPhoto?.id));
+    const nextIndex = (selectedIndex - 1 + photos.length) % photos.length;
+
+    setSelectedPhotoId(photos[nextIndex]?.id ?? '');
+    setPageIndex(Math.floor(nextIndex / PHOTOS_PER_PAGE));
   };
 
   const goNext = () => {
-    if (totalPages <= 1) return;
-    const nextPage = (safePageIndex + 1) % totalPages;
-    setPageIndex(nextPage);
-    const nextPhoto = photos[nextPage * PHOTOS_PER_PAGE];
-    if (nextPhoto) setSelectedPhotoId(nextPhoto.id);
+    if (photos.length <= 1) return;
+
+    const selectedIndex = Math.max(0, photos.findIndex((photo) => photo.id === selectedPhoto?.id));
+    const nextIndex = (selectedIndex + 1) % photos.length;
+
+    setSelectedPhotoId(photos[nextIndex]?.id ?? '');
+    setPageIndex(Math.floor(nextIndex / PHOTOS_PER_PAGE));
   };
 
   return (
@@ -74,7 +78,7 @@ export function CuriosidadesPhotoSlider({
         <div className="h-full min-h-56 animate-pulse rounded-2xl bg-gray-100" />
       ) : photos.length > 0 ? (
         <div className="flex min-h-0 flex-1 flex-col gap-3">
-          <div className="grid flex-1 grid-cols-3 gap-2">
+          <div className="hidden flex-1 grid-cols-3 gap-2 md:grid">
             {visiblePhotos.map((photo) => {
               const active = selectedPhoto?.id === photo.id;
 
@@ -105,6 +109,16 @@ export function CuriosidadesPhotoSlider({
             ))}
           </div>
 
+          {selectedPhoto && (
+            <div className="relative min-h-[17rem] overflow-hidden rounded-xl border border-blue-100 bg-gray-100 md:hidden">
+              <img
+                src={selectedPhoto.src}
+                alt={selectedPhoto.caption}
+                className="h-full min-h-[17rem] w-full object-cover"
+              />
+            </div>
+          )}
+
           <div className="flex items-center justify-between gap-3 rounded-xl border border-blue-100 bg-blue-50 px-3 py-2">
             <p className="min-w-0 truncate text-sm font-bold text-blue-950">
               {selectedPhoto?.caption ?? 'Fotos da família'}
@@ -114,18 +128,18 @@ export function CuriosidadesPhotoSlider({
               <button
                 type="button"
                 onClick={goPrevious}
-                disabled={totalPages <= 1}
+                disabled={photos.length <= 1}
                 className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-white text-blue-700 shadow-sm transition hover:bg-blue-50 disabled:opacity-40"
-                aria-label="Fotos anteriores"
+                aria-label="Foto anterior"
               >
                 <ChevronLeft className="h-4 w-4" />
               </button>
               <button
                 type="button"
                 onClick={goNext}
-                disabled={totalPages <= 1}
+                disabled={photos.length <= 1}
                 className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-white text-blue-700 shadow-sm transition hover:bg-blue-50 disabled:opacity-40"
-                aria-label="Próximas fotos"
+                aria-label="Próxima foto"
               >
                 <ChevronRight className="h-4 w-4" />
               </button>

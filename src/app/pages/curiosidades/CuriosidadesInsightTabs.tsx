@@ -93,7 +93,7 @@ export function CuriosidadesInsightTabs(props: CuriosidadesDataProps) {
       <span id="interesses" className="pointer-events-none absolute -top-24" aria-hidden="true" />
       <span id="astrologia" className="pointer-events-none absolute -top-24" aria-hidden="true" />
 
-      <div className="grid gap-2 rounded-2xl border border-gray-200 bg-gray-50 p-1.5 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="curiosidades-insight-tabs-grid grid grid-cols-4 gap-2 rounded-2xl border border-gray-200 bg-gray-50 p-1.5">
         {insightTabs.map((tab) => {
           const Icon = tab.icon;
           const active = tab.key === activeTabConfig.key;
@@ -104,7 +104,7 @@ export function CuriosidadesInsightTabs(props: CuriosidadesDataProps) {
               type="button"
               onClick={() => updateActiveTab(tab.key, tab.hash)}
               className={[
-                'inline-flex min-h-14 w-full items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-bold transition',
+                'inline-flex min-h-16 w-full flex-col items-center justify-center gap-1 rounded-xl px-2 py-2 text-center text-[11px] font-bold leading-tight transition sm:text-sm',
                 active
                   ? 'bg-white text-blue-800 shadow-sm ring-1 ring-blue-100'
                   : 'text-gray-600 hover:bg-white hover:text-blue-700',

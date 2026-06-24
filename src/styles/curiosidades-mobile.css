@@ -570,3 +570,134 @@
     min-height: 4.6rem !important;
   }
 }
+
+/* Ajustes finais mobile /curiosidades 2026-06-24 */
+@media (max-width: 767px) {
+  .curiosidades-sticky-nav {
+    top: 0 !important;
+  }
+
+  .curiosidades-section-links {
+    auto-columns: 5.9rem !important;
+    gap: 0.6rem !important;
+  }
+
+  .curiosidades-section-link {
+    width: 5.9rem !important;
+    min-height: 4.65rem !important;
+    padding: 0.55rem 0.35rem !important;
+  }
+
+  .curiosidades-section-scroll-button {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    min-width: 2.45rem !important;
+    min-height: 4.65rem !important;
+  }
+
+  .curiosidades-page #numeros-da-familia .curiosidades-stats-grid {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 0.75rem !important;
+    overflow: visible !important;
+    margin-inline: 0 !important;
+    padding: 0 !important;
+    scroll-snap-type: none !important;
+  }
+
+  .curiosidades-page #numeros-da-familia .curiosidades-stat-card {
+    flex: initial !important;
+    min-height: 8.75rem !important;
+    width: auto !important;
+  }
+
+  .curiosidades-photo-slider-card {
+    min-height: 22rem !important;
+  }
+
+  .curiosidades-photo-slider-card .md\:hidden {
+    display: block !important;
+  }
+
+  .curiosidades-photo-slider-card img {
+    min-height: 17rem !important;
+  }
+
+  .curiosidades-page #ia .curiosidades-ai-suggestions-list {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) !important;
+    gap: 0.45rem !important;
+  }
+
+  .curiosidades-page #ia .curiosidades-ai-suggestion-chip {
+    width: 100% !important;
+    border-radius: 0.85rem !important;
+    text-align: left !important;
+    white-space: normal !important;
+    line-height: 1.2 !important;
+  }
+
+  .curiosidades-page #ia textarea {
+    min-height: 12rem !important;
+  }
+
+  .curiosidades-page #quiz .curiosidades-quiz-options-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  .curiosidades-page #graficos .curiosidades-profession-circles-grid {
+    grid-template-columns: repeat(2, minmax(0, 5.75rem)) !important;
+    justify-content: start !important;
+  }
+
+  .curiosidades-page #graficos .curiosidades-profession-circle {
+    aspect-ratio: 1 / 1 !important;
+    width: 5.75rem !important;
+    height: 5.75rem !important;
+    min-height: 0 !important;
+    border-radius: 9999px !important;
+  }
+
+  .curiosidades-page #exploracoes-familiares .curiosidades-insight-tabs-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+    gap: 0.35rem !important;
+  }
+
+  .curiosidades-page #exploracoes-familiares .curiosidades-insight-tabs-grid button {
+    min-height: 4.8rem !important;
+    padding: 0.35rem 0.25rem !important;
+    font-size: 0.58rem !important;
+    line-height: 1.05 !important;
+    white-space: normal !important;
+  }
+
+  .curiosidades-page #exploracoes-familiares .curiosidades-insight-tabs-grid button svg {
+    height: 1.1rem !important;
+    width: 1.1rem !important;
+  }
+}
+
+@media (max-width: 374px) {
+  .curiosidades-section-links {
+    auto-columns: 5.35rem !important;
+  }
+
+  .curiosidades-section-link {
+    width: 5.35rem !important;
+    font-size: 0.62rem !important;
+  }
+
+  .curiosidades-page #graficos .curiosidades-profession-circle {
+    width: 5.1rem !important;
+    height: 5.1rem !important;
+  }
+
+  .curiosidades-page #exploracoes-familiares .curiosidades-insight-tabs-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+  }
+
+  .curiosidades-page #exploracoes-familiares .curiosidades-insight-tabs-grid button {
+    font-size: 0.52rem !important;
+  }
+}

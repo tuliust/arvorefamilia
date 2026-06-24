@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { BrainCircuit, CheckCircle2, HelpCircle, XCircle } from 'lucide-react';
+import { BrainCircuit, CheckCircle2, XCircle } from 'lucide-react';
 import {
   buildCuriosityQuizQuestions,
   curiositySectionCardClassName,
@@ -75,17 +75,26 @@ export function CuriosidadesQuizSection({
       {!error && !loading && currentQuestion && (
         <div className="mt-5">
           <div className="rounded-xl border border-blue-100 bg-blue-50 p-4">
-            <div className="flex items-start gap-3">
-              <HelpCircle className="mt-0.5 h-5 w-5 shrink-0 text-blue-700" />
-              <div>
-                <p className="text-sm font-semibold uppercase tracking-wide text-blue-700">
-                  Pergunta {questionIndex + 1} de {questions.length}
-                </p>
-                <h3 className="mt-2 text-lg font-bold leading-7 text-gray-950">
-                  {currentQuestion.prompt}
-                </h3>
+            <div className="flex items-center justify-between gap-3">
+              <p className="text-xs font-black uppercase tracking-wide text-blue-700">
+                Etapa {questionIndex + 1}/{questions.length}
+              </p>
+              <div className="flex shrink-0 items-center gap-1" aria-label={`Pergunta ${questionIndex + 1} de ${questions.length}`}>
+                {questions.map((question, index) => (
+                  <span
+                    key={question.id}
+                    className={[
+                      'h-2 rounded-full transition-all',
+                      index === questionIndex ? 'w-6 bg-blue-600' : 'w-2 bg-blue-200',
+                    ].join(' ')}
+                  />
+                ))}
               </div>
             </div>
+
+            <h3 className="mt-3 text-lg font-bold leading-7 text-gray-950">
+              {currentQuestion.prompt}
+            </h3>
           </div>
 
           <div className="curiosidades-quiz-options-grid mt-4 grid gap-2 sm:grid-cols-2">

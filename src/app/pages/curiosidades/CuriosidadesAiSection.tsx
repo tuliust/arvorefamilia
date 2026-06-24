@@ -18,6 +18,10 @@ const AI_QUESTION_EXAMPLES = [
   'Quantas pessoas da família nasceram em Recife?',
   'Quais parentes moram em Porto Alegre?',
   'Monte um resumo da linha genealógica de uma pessoa.',
+  'Quais sobrenomes aparecem com mais frequência?',
+  'Quais cidades concentram mais familiares?',
+  'Quem são os familiares mais longevos?',
+  'Quais casais já completaram bodas?',
 ];
 
 const AI_QUESTION_PLACEHOLDER = `Pergunte, por exemplo:\n${AI_QUESTION_EXAMPLES.join('\n')}`;
