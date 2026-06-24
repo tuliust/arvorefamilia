@@ -258,11 +258,6 @@ export function MobileHorizontalFamilyMapPage() {
   });
 
   React.useEffect(() => {
-    console.debug('[MobileHorizontalMap] montado');
-    return () => console.debug('[MobileHorizontalMap] desmontado');
-  }, []);
-
-  React.useEffect(() => {
     if (authLoading) return;
 
     let cancelled = false;
