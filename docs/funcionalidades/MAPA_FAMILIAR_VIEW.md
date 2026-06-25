@@ -1,6 +1,6 @@
 # Mapa familiar
 
-> Última revisão: 2026-06-23
+> Última revisão: 2026-06-25
 > Escopo: `/mapa-familiar`, `/mapa-familiar-horizontal`, `Home.tsx` e componentes `FamilyTree`.
 > Status: canônico.
 
@@ -61,7 +61,23 @@ Ao navegar para perfil, o retorno é preservado em `?voltar=`.
 - Abrir detalhes de casamento.
 - Abrir modal de conexão.
 - Alternar tema visual.
+- Restaurar visualização.
 - Exportar imagem, PDF, impressão ou área selecionada, quando a ação estiver disponível no painel.
+
+## Exportação
+
+As ações de exportação são disparadas pelo painel lateral e executadas pelo componente de árvore ativo.
+
+Comportamento atual:
+
+- `Imagem`, `PDF` e `Imprimir` exibem overlay global de preparação antes da operação pesada;
+- o overlay é mantido até sinal provável de abertura do diálogo do sistema por `blur`/`visibilitychange`, ou até fallback temporal quando o navegador não emite esses eventos;
+- o overlay deve cobrir canvas e painel para evitar impressão visual de travamento;
+- o overlay deve usar atributos de ignorar exportação, para não aparecer em capturas geradas por `html2canvas`;
+- `Área` continua usando o fluxo de seleção visível da árvore e seus estados próprios de loading;
+- a geração da imagem/PDF continua baseada no canvas capturado do elemento exportável.
+
+A implementação atual não abre preview intermediário de PNG/PDF em nova aba antes do download; essa alternativa deve ser tratada como evolução futura, não como comportamento implementado.
 
 ## Contratos de UX
 
@@ -70,3 +86,4 @@ Ao navegar para perfil, o retorno é preservado em `?voltar=`.
 - Botões de exportação não devem cortar texto.
 - Mobile deve iniciar com painéis fechados quando aplicável.
 - A visualização horizontal não substitui a visualização principal; é rota própria.
+- Exportações longas devem manter feedback visual contínuo até que o navegador assuma o fluxo de salvar/imprimir ou o fallback finalize o overlay.
