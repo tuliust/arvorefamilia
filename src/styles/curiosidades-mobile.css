@@ -228,7 +228,6 @@
   }
 }
 
-
 /* Ajustes integrados /curiosidades 2026-06-24 */
 @media (max-width: 767px) {
   .curiosidades-hero {
@@ -485,11 +484,6 @@
   }
 }
 
-/* Ajustes sticky nav e refinamentos visuais /curiosidades 2026-06-24 */
-.curiosidades-sticky-nav {
-  position: sticky;
-}
-
 .curiosidades-section-links-wrapper {
   scrollbar-width: none;
 }
@@ -511,13 +505,8 @@
 }
 
 @media (max-width: 767px) {
-  .curiosidades-sticky-nav {
-    top: 0 !important;
-    margin-inline: -0.35rem !important;
-    padding-inline: 0.35rem !important;
-  }
 
-  .curiosidades-section-links {
+.curiosidades-section-links {
     auto-columns: 5.55rem !important;
   }
 
@@ -577,11 +566,8 @@
 
 /* Ajustes finais mobile /curiosidades 2026-06-24 */
 @media (max-width: 767px) {
-  .curiosidades-sticky-nav {
-    top: 0 !important;
-  }
 
-  .curiosidades-section-links {
+.curiosidades-section-links {
     auto-columns: 5.9rem !important;
     gap: 0.6rem !important;
   }
@@ -704,12 +690,6 @@
   .curiosidades-page #exploracoes-familiares .curiosidades-insight-tabs-grid button {
     font-size: 0.52rem !important;
   }
-}
-
-/* Sticky nav desktop/mobile /curiosidades 2026-06-25 */
-.curiosidades-sticky-nav {
-  position: sticky !important;
-  top: 0 !important;
 }
 
 /* QA mobile curiosidades setas fotos ia profissoes abas 2026-06-25 */
