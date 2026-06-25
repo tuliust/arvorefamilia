@@ -1,6 +1,6 @@
 # Curiosidades
 
-> Última revisão: 2026-06-24
+> Última revisão: 2026-06-25
 > Escopo: `/curiosidades`, exploração visual e textual dos dados familiares, rankings, IA, quiz, mural, fotos, relacionamentos, rota, gerações e abas de descoberta.
 > Status: canônico.
 
@@ -58,6 +58,8 @@ A barra superior deve funcionar como navegação sticky da página. Os atalhos c
 - Conexões.
 
 No mobile, a barra usa rolagem horizontal com botões circulares laterais para avançar e voltar. Esses botões devem ficar ao lado da lista de atalhos, sem sobrepor os cards.
+
+A página usa desbloqueio de overflow específico para permitir o comportamento sticky da navegação sem afetar outras rotas. Enquanto `/curiosidades` está montada, `html`, `body` e o wrapper direto da página devem permitir overflow compatível com a fixação da barra.
 
 ## Hoje na família e fotos
 
@@ -153,8 +155,12 @@ A rota apresenta um percurso editorial pelas cidades familiares cadastradas.
 
 Regras atuais:
 
-- exibir `Distância aproximada` com total rodoviário;
-- exibir `Com transporte rodoviário`;
+- exibir título `Rota da família` em UTF-8 válido;
+- exibir subtítulo `Uma rota pelas cidades onde familiares têm residência cadastrada.`;
+- exibir `Trajeto de carro` com o total rodoviário `4.231 km`;
+- usar a ilustração `src/app/components/layout/mapa.png`;
+- no desktop, renderizar a ilustração no card com 575 x 327 px, permitindo que a imagem extrapole visualmente o card sem alterar a altura principal;
+- no mobile, manter a imagem contida e proporcional;
 - ordenar as cidades como Natal/RN, Recife/PE, Paulo Afonso/BA, Aracaju/SE, Belo Horizonte/MG e Porto Alegre/RS;
 - mostrar pins, linha pontilhada e badges de distância;
 - a última cidade deve exibir estado de chegada.
@@ -219,6 +225,7 @@ Validar:
 - ranking de profissões sem corte visual nos círculos;
 - IA com placeholder e limite visual de sugestões no mobile;
 - mural publicando com usuário logado e visibilidade familiar;
+- rota com textos acentuados em UTF-8 válido e ilustração `mapa.png` no tamanho desktop documentado;
 - consistência com favoritos, pessoa pública e arquivos históricos quando houver ligação.
 
 ## Regra de manutenção
