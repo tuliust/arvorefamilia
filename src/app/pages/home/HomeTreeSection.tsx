@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { useLocation } from 'react-router';
 
 import type { FamilyTreeActions } from '../../components/FamilyTree/actions';
@@ -49,16 +49,16 @@ const TREE_EXPORT_LOADING_CONTENT: Record<TreeExportAction, { title: string; mes
 
 function getTreeTitleFirstName(value?: string | null) {
   const clean = value?.trim();
-  if (!clean) return 'Família';
+  if (!clean) return 'FamÃ­lia';
   return clean.split(/\s+/)[0] || clean;
 }
 
 function getDesktopTreeTitle(viewMode: TreeViewMode, firstName: string) {
   if (viewMode === 'mapa-familiar') {
-    return `Árvore Familiar de ${firstName}`;
+    return `Ãrvore Familiar de ${firstName}`;
   }
 
-  return `Mapa Genealógico de ${firstName}`;
+  return `Mapa GenealÃ³gico de ${firstName}`;
 }
 
 interface HomeTreeSectionProps {
@@ -137,7 +137,7 @@ export function HomeTreeSection({
 
   const effectiveVisiblePersonIds = visiblePersonIdsByLifeStatus;
 
-  const clearExportLoading = React.useCallback((action: TreeExportAction) => {
+  const clearExportLoading = React.useCallback((action: TreeExportAction, delay = 0) => {
     if (exportLoadingTimeoutRef.current !== null) {
       window.clearTimeout(exportLoadingTimeoutRef.current);
     }
@@ -147,7 +147,56 @@ export function HomeTreeSection({
         currentAction === action ? null : currentAction
       ));
       exportLoadingTimeoutRef.current = null;
-    }, 350);
+    }, delay);
+  }, []);
+
+  const waitForSystemExportDialog = React.useCallback((action: TreeExportAction) => {
+    return new Promise<void>((resolve) => {
+      let settled = false;
+      let fallbackTimer: number | null = null;
+      let postBlurTimer: number | null = null;
+
+      const cleanup = () => {
+        window.removeEventListener('blur', handleLikelyDialogOpen);
+        document.removeEventListener('visibilitychange', handleVisibilityChange);
+
+        if (fallbackTimer !== null) {
+          window.clearTimeout(fallbackTimer);
+        }
+
+        if (postBlurTimer !== null) {
+          window.clearTimeout(postBlurTimer);
+        }
+      };
+
+      const finish = () => {
+        if (settled) return;
+
+        settled = true;
+        cleanup();
+        resolve();
+      };
+
+      const handleLikelyDialogOpen = () => {
+        // Mantem o modal por um curto intervalo depois do blur para evitar
+        // piscada antes da janela do sistema assumir o foco visual.
+        postBlurTimer = window.setTimeout(finish, 900);
+      };
+
+      const handleVisibilityChange = () => {
+        if (document.visibilityState !== 'visible') {
+          handleLikelyDialogOpen();
+        }
+      };
+
+      window.addEventListener('blur', handleLikelyDialogOpen, { once: true });
+      document.addEventListener('visibilitychange', handleVisibilityChange);
+
+      // Fallback: alguns navegadores/downloads n?o disparam blur.
+      // Nestes casos, manter o modal durante o per?odo cr?tico evita a sensa??o de travamento.
+      const fallbackMs = action === 'print' ? 45000 : 60000;
+      fallbackTimer = window.setTimeout(finish, fallbackMs);
+    });
   }, []);
 
   const runExportAction = React.useCallback(async (
@@ -158,10 +207,11 @@ export function HomeTreeSection({
 
     try {
       await executor();
+      await waitForSystemExportDialog(action);
     } finally {
-      clearExportLoading(action);
+      clearExportLoading(action, 250);
     }
-  }, [clearExportLoading]);
+  }, [clearExportLoading, waitForSystemExportDialog]);
 
   React.useEffect(() => () => {
     if (exportLoadingTimeoutRef.current !== null) {
@@ -255,7 +305,7 @@ export function HomeTreeSection({
       {isMobile && (
         <style>
           {`
-            [data-export-root="family-tree"] button[aria-label="Mover árvore para cima"] {
+            [data-export-root="family-tree"] button[aria-label="Mover Ã¡rvore para cima"] {
               top: 1rem !important;
               right: 6.75rem !important;
               left: auto !important;
@@ -266,7 +316,7 @@ export function HomeTreeSection({
               box-shadow: 0 4px 12px rgba(15, 23, 42, 0.16) !important;
             }
 
-            [data-export-root="family-tree"] button[aria-label="Mover árvore para baixo"] {
+            [data-export-root="family-tree"] button[aria-label="Mover Ã¡rvore para baixo"] {
               bottom: 6.25rem !important;
               z-index: 60 !important;
             }
@@ -292,14 +342,14 @@ export function HomeTreeSection({
       )}
 
       {!isMobile && canRenderTree && (
-        <div className="tree-canvas-zoom-controls" aria-label="Controles de zoom da árvore" data-tree-export-ignore="true">
+        <div className="tree-canvas-zoom-controls" aria-label="Controles de zoom da Ã¡rvore" data-tree-export-ignore="true">
           <button type="button" onClick={() => dispatchTreeAction('zoom-in')} aria-label="Aumentar zoom" title="Aumentar zoom">
             <Plus className="h-4 w-4" />
           </button>
           <button type="button" onClick={() => dispatchTreeAction('zoom-out')} aria-label="Diminuir zoom" title="Diminuir zoom">
             <Minus className="h-4 w-4" />
           </button>
-          <button type="button" onClick={() => dispatchTreeAction('restore-view')} aria-label="Restaurar visualização" title="Restaurar visualização">
+          <button type="button" onClick={() => dispatchTreeAction('restore-view')} aria-label="Restaurar visualizaÃ§Ã£o" title="Restaurar visualizaÃ§Ã£o">
             <Scan className="h-4 w-4" />
           </button>
         </div>
@@ -307,19 +357,19 @@ export function HomeTreeSection({
 
       {isTreeResolving ? (
         renderStateMessage({
-          title: 'Carregando árvore',
-          message: 'Buscando pessoas e relacionamentos…',
+          title: 'Carregando Ã¡rvore',
+          message: 'Buscando pessoas e relacionamentosâ€¦',
         })
       ) : loadError ? (
         renderStateMessage({
-          title: 'Erro ao carregar a árvore',
+          title: 'Erro ao carregar a Ã¡rvore',
           message: loadError,
           tone: 'error',
         })
       ) : pessoas.length === 0 || !centralReferencePersonId ? (
         renderStateMessage({
           title: 'Nenhuma pessoa encontrada',
-          message: 'A tabela pessoas não retornou registros para renderizar a árvore.',
+          message: 'A tabela pessoas nÃ£o retornou registros para renderizar a Ã¡rvore.',
         })
       ) : canRenderTree && isMobile && treeViewMode === 'mapa-familiar' ? (
         <MobileFamilyTreeView
@@ -383,8 +433,8 @@ export function HomeTreeSection({
         />
       ) : (
         renderStateMessage({
-          title: 'Carregando árvore',
-          message: 'Preparando a referência principal da árvore.',
+          title: 'Carregando Ã¡rvore',
+          message: 'Preparando a referÃªncia principal da Ã¡rvore.',
         })
       )}
     </section>
@@ -421,3 +471,4 @@ function TreeGlobalExportLoadingOverlay({
     </div>
   );
 }
+
