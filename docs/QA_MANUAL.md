@@ -1,6 +1,6 @@
 # QA manual
 
-> Última revisão: 2026-06-24
+> Última revisão: 2026-06-25
 > Escopo: validação manual das rotas e contratos documentados.
 > Status: canônico.
 
@@ -39,6 +39,8 @@ Confirmar que as alterações documentais ficaram restritas aos documentos canô
 - Cards `Núcleo`, `Ascendentes` e `Colaterais` devem manter labels e contadores em uma linha, sem reticências.
 - Abre perfil em `/pessoa/:id`.
 - Mantém painel desktop sem cortar exportação.
+- Ao acionar `Imagem`, `PDF` ou `Imprimir`, deve exibir loading global de exportação e mantê-lo até o diálogo do sistema assumir o fluxo ou até fallback.
+- O overlay de exportação não deve aparecer no arquivo exportado.
 - Mobile não deve abrir painéis persistentes por padrão.
 
 ### `/mapa-familiar-horizontal`
@@ -47,6 +49,7 @@ Confirmar que as alterações documentais ficaram restritas aos documentos canô
 - Renderiza linha geracional horizontal.
 - Mantém filtros aplicáveis e contadores coerentes.
 - Replica no painel desktop os critérios visuais de seletor, cabeçalho, grupos e exportação validados em `/mapa-familiar`.
+- Ao acionar `Imagem`, `PDF` ou `Imprimir`, deve exibir o mesmo feedback global de preparação da exportação.
 
 ## Onboarding de membro
 
@@ -107,7 +110,9 @@ Validar desktop e mobile:
 - `Gerações da família` inicia recolhida, mostra contador por categoria e revela usuários apenas no card expandido.
 - `Relacionamentos` exibe três métricas: Uniões, Média e Faixa, com Uniões como primeiro card.
 - Bodas respeitam casais ativos, sem separação e sem falecidos.
-- `Rota da família` exibe distância total, transporte rodoviário, pins, linha pontilhada, badges de distância e chegada.
+- `Rota da família` exibe título e subtítulo com acentuação correta, distância total, texto `Trajeto de carro`, pins, linha pontilhada, badges de distância e chegada.
+- No desktop, a ilustração de `Rota da família` usa `mapa.png` em 575 x 327 px e pode extrapolar visualmente o card sem alterar a estrutura da lista.
+- No mobile, a ilustração de `Rota da família` permanece contida e proporcional.
 - O card inferior alterna entre Descubra mais sobre, Qual a minha conexão, Comparar interesses e Astrologia da família.
 - No mobile, as abas inferiores ficam em uma linha, com ícone acima do título e título interno da aba alinhado à esquerda.
 - O seletor de conexão entre duas pessoas não deve gerar erro Radix por item com valor vazio.
