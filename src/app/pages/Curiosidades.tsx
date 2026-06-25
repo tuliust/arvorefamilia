@@ -8,7 +8,7 @@ import { CuriosidadesAiSection } from './curiosidades/CuriosidadesAiSection';
 import { CuriosidadesCharts } from './curiosidades/CuriosidadesCharts';
 import { CuriosidadesCouples } from './curiosidades/CuriosidadesCouples';
 import { CuriosidadesGenerations } from './curiosidades/CuriosidadesGenerations';
-import { CuriosidadesHero } from './curiosidades/CuriosidadesHero';
+import { CuriosidadesStickyNav } from './curiosidades/CuriosidadesStickyNav';
 import { CuriosidadesInsightTabs } from './curiosidades/CuriosidadesInsightTabs';
 import { CuriosidadesMemoryWall } from './curiosidades/CuriosidadesMemoryWall';
 import { CuriosidadesPhotoSlider } from './curiosidades/CuriosidadesPhotoSlider';
@@ -124,7 +124,7 @@ export function Curiosidades() {
         icon={Sparkles}
       />
 
-      <CuriosidadesHero />
+      <CuriosidadesStickyNav />
 
       <main className={`${PAGE_CONTAINER_CLASS} min-w-0 space-y-4 py-4 pb-36 sm:space-y-6 sm:py-6 md:pb-8`}>
         <div className="curiosidades-overview-layout grid min-w-0 gap-4 sm:gap-4 xl:grid-cols-5 xl:items-stretch">

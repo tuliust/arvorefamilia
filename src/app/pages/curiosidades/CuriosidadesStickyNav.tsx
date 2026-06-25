@@ -43,7 +43,7 @@ function getScrollState(element: HTMLDivElement | null) {
   };
 }
 
-export function CuriosidadesHero() {
+export function CuriosidadesStickyNav() {
   const scrollRef = useRef<HTMLDivElement | null>(null);
   const [scrollState, setScrollState] = useState(() => getScrollState(null));
 
@@ -93,14 +93,17 @@ export function CuriosidadesHero() {
   };
 
   return (
-    <section className="curiosidades-sticky-nav sticky top-0 z-[700] w-full border-b border-gray-200 bg-gray-50/95 py-4 shadow-[0_10px_24px_rgba(15,23,42,0.08)] backdrop-blur supports-[backdrop-filter]:bg-gray-50/85">
-      <nav aria-label="Secoes de curiosidades" className="mx-auto w-full max-w-7xl min-w-0 px-4 sm:px-6 lg:px-8">
+    <section
+      className="curiosidades-top-sticky-nav z-[700] w-full border-b border-gray-200 bg-gray-50/95 py-4 shadow-[0_10px_24px_rgba(15,23,42,0.08)] backdrop-blur supports-[backdrop-filter]:bg-gray-50/85"
+      style={{ position: 'sticky', top: 0 }}
+    >
+      <nav aria-label="Se??es de curiosidades" className="mx-auto w-full max-w-7xl min-w-0 px-4 sm:px-6 lg:px-8">
         <div className="flex min-w-0 items-stretch justify-center gap-2">
           <button
             type="button"
             onClick={() => scrollNav('left')}
             className={["curiosidades-section-scroll-button curiosidades-section-scroll-button-left inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-gray-200 bg-white p-0 text-blue-700 shadow-sm transition md:hidden", scrollState.canScrollLeft ? "opacity-100" : "opacity-40"].join(' ')}
-            aria-label="Ver botoes anteriores"
+            aria-label="Ver bot?es anteriores"
           >
             <ChevronLeft className="h-5 w-5" />
           </button>
@@ -128,7 +131,7 @@ export function CuriosidadesHero() {
             type="button"
             onClick={() => scrollNav('right')}
             className={["curiosidades-section-scroll-button curiosidades-section-scroll-button-right inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-gray-200 bg-white p-0 text-blue-700 shadow-sm transition md:hidden", scrollState.canScrollRight ? "opacity-100" : "opacity-40"].join(' ')}
-            aria-label="Ver proximos botoes"
+            aria-label="Ver pr?ximos bot?es"
           >
             <ChevronRight className="h-5 w-5" />
           </button>
@@ -137,3 +140,4 @@ export function CuriosidadesHero() {
     </section>
   );
 }
+
