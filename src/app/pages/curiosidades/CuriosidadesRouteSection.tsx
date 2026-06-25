@@ -1,5 +1,9 @@
 import { MapPin, Route } from 'lucide-react';
 
+import routeMapIllustrationUrl from '../../components/layout/mapa.png';
+
+import routeMapIllustrationUrl from '../../components/layout/mapa.png';
+
 import { curiositySectionCardClassName, type CuriosidadesDataProps } from './curiosidadesUtils';
 
 type RoadRouteStop = {
@@ -17,8 +21,6 @@ const ROAD_ROUTE_STOPS: RoadRouteStop[] = [
   { label: 'Belo Horizonte/MG', distanceToNextKm: 1706 },
   { label: 'Porto Alegre/RS' },
 ];
-
-const routeMapIllustrationUrl = new URL('../../../../docs/mapa.png', import.meta.url).href;
 
 function formatRoadDistance(value: number) {
   return `${value.toLocaleString('pt-BR')} km`;
@@ -57,22 +59,22 @@ export function CuriosidadesRouteSection({
 
       {!error && !loading && (
         <div className="mt-5 space-y-4">
-          <div className="overflow-hidden rounded-xl border border-blue-100 bg-blue-50 p-4">
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-              <div className="min-w-0">
+          <div className="overflow-hidden rounded-xl border border-blue-100 bg-blue-50 p-4 lg:relative lg:h-[9rem] lg:overflow-visible">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between lg:h-full">
+              <div className="relative z-10 min-w-0">
                 <p className="text-sm font-semibold text-blue-900">Trajeto de carro</p>
                 <p className="mt-2 text-2xl font-black tracking-tight text-gray-950 sm:text-3xl">
                   {formatRoadDistance(ROAD_ROUTE_TOTAL_KM)}
                 </p>
               </div>
 
-              <div className="flex w-full justify-center sm:w-auto sm:justify-end">
+              <div className="flex w-full justify-center sm:w-auto sm:justify-end lg:pointer-events-none lg:absolute lg:right-[-35rem] lg:top-1/2 lg:w-[1275px] lg:-translate-y-1/2">
                 <img
                   src={routeMapIllustrationUrl}
                   alt=""
                   aria-hidden="true"
                   loading="lazy"
-                  className="h-auto w-full max-w-none object-contain sm:h-28 sm:max-w-[12rem]"
+                  className="h-auto w-full max-w-none object-contain sm:h-28 sm:max-w-[12rem] lg:h-[725px] lg:w-[1275px] lg:max-w-none"
                 />
               </div>
             </div>
