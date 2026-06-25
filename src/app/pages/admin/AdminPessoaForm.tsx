@@ -216,10 +216,15 @@ function removeAdminPessoaDraft(key: string) {
   }
 }
 
-export function AdminPessoaForm() {
+interface AdminPessoaFormProps {
+  variant?: 'standalone' | 'details-tab';
+}
+
+export function AdminPessoaForm({ variant = 'standalone' }: AdminPessoaFormProps) {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
   const isEdit = !!id;
+  const isDetailsTabVariant = variant === 'details-tab';
 
   const [formData, setFormData] = useState<AdminPessoaFormData>(() => createEmptyAdminPessoaFormData());
 
@@ -870,8 +875,9 @@ export function AdminPessoaForm() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <MemberPageHeader
+    <div className={isDetailsTabVariant ? '' : 'min-h-screen bg-gray-50'}>
+      {!isDetailsTabVariant ? (
+        <MemberPageHeader
         title={isEdit ? 'Editar Pessoa' : 'Nova Pessoa'}
         subtitle={isEdit ? 'Atualize os dados desta pessoa da árvore' : 'Cadastre uma nova pessoa na árvore familiar'}
         icon={User}
@@ -880,9 +886,10 @@ export function AdminPessoaForm() {
           { label: 'Pessoas', to: '/admin/pessoas', icon: User },
           { label: 'Mapa Familiar', to: '/mapa-familiar', icon: HEADER_ACTION_ICONS.Network },
         ]}
-      />
+        />
+      ) : null}
 
-      <main className="mx-auto max-w-4xl px-4 py-6 sm:px-6 sm:py-8">
+      <main className={isDetailsTabVariant ? '' : 'mx-auto max-w-4xl px-4 py-6 sm:px-6 sm:py-8'}>
         <form id="pessoa-form" onSubmit={handleSubmit} className="min-w-0 space-y-6">
           <Card className="min-w-0">
             <CardHeader>
@@ -908,7 +915,7 @@ export function AdminPessoaForm() {
             onChange={(field, value) => handleChange(field, value)}
           />
 
-          {shouldShowGeneratedInsightsCard && (
+          {shouldShowGeneratedInsightsCard && !isDetailsTabVariant && (
             <Card className="min-w-0">
               <CardHeader>
                 <CardTitle className="break-words">Astrologia e acontecimentos do nascimento</CardTitle>
@@ -1004,17 +1011,19 @@ export function AdminPessoaForm() {
             </>
           )}
 
-          <ArquivosHistoricos
-            arquivos={formData.arquivos_historicos}
-            onChange={(arquivos) => handleChange('arquivos_historicos', arquivos)}
-            pessoaId={id}
-            variant="interactive"
-            participantOptions={todasPessoas.map((person) => ({
-              id: person.id,
-              nome_completo: person.nome_completo,
-            }))}
-            draftStorageKey={`admin-pessoa-arquivo-historico:${id ?? 'nova'}`}
-          />
+          {!isDetailsTabVariant && (
+            <ArquivosHistoricos
+              arquivos={formData.arquivos_historicos}
+              onChange={(arquivos) => handleChange('arquivos_historicos', arquivos)}
+              pessoaId={id}
+              variant="interactive"
+              participantOptions={todasPessoas.map((person) => ({
+                id: person.id,
+                nome_completo: person.nome_completo,
+              }))}
+              draftStorageKey={`admin-pessoa-arquivo-historico:${id ?? 'nova'}`}
+            />
+          )}
 
           {!isEdit && (
             <Card className="min-w-0">
@@ -1197,14 +1206,14 @@ export function AdminPessoaForm() {
             </Card>
           )}
 
-          {isEdit && id && (
+          {isEdit && id && !isDetailsTabVariant && (
             <RelacionamentoManagerWrapper
               pessoaId={id}
               pessoaNome={formData.nome_completo || 'Pessoa'}
             />
           )}
 
-          {isEdit && id && (
+          {isEdit && id && !isDetailsTabVariant && (
             <Card className="min-w-0">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 break-words">

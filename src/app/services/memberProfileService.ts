@@ -1,6 +1,6 @@
 import { User } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabaseClient';
-import { Pessoa } from '../types';
+import { Pessoa, UserPersonPermissionRole } from '../types';
 import { buildActivityActorFromUser, createActivityLog } from './activityLogService';
 import { notifyNewUserLinked } from './notificationTriggersService';
 import { emitTreeDataChanged } from './treeDataCache';
@@ -16,6 +16,7 @@ export interface UserPersonLinkRecord {
   id: string;
   user_id: string;
   pessoa_id: string;
+  permission_role?: UserPersonPermissionRole | null;
   relacao_com_perfil?: string | null;
   principal?: boolean | null;
   dados_confirmados?: boolean | null;
@@ -417,6 +418,21 @@ export async function adminListLinksForPerson(pessoaId: string) {
   };
 }
 
+export async function adminListAllUserPersonLinks() {
+  const { data, error } = await supabase
+    .from('user_person_links')
+    .select('*, pessoa:pessoas(*)')
+    .order('created_at', { ascending: false });
+
+  return {
+    error: error?.message,
+    data: ((data || []) as Array<UserPersonLinkRecord & { pessoa?: Pessoa | null }>).map((link) => ({
+      ...link,
+      pessoa: (link as any).pessoa ?? null,
+    })),
+  };
+}
+
 async function getPessoaLabel(pessoaId: string) {
   const { data } = await supabase
     .from('pessoas')
@@ -454,6 +470,7 @@ export async function adminCreateUserPersonLink(params: {
   relacaoComPerfil?: string | null;
   principal?: boolean;
   canEdit?: boolean;
+  permissionRole?: UserPersonPermissionRole | null;
 }) {
   const { data, error } = await supabase
     .rpc('admin_create_user_person_link', {
@@ -465,11 +482,29 @@ export async function adminCreateUserPersonLink(params: {
     })
     .maybeSingle();
 
-  if (!error && data) {
-    await registerUserPersonLinkActivity('user_person_link.created', data as UserPersonLinkRecord);
+  let normalizedData = (data as UserPersonLinkRecord) ?? null;
+  let normalizedError = error?.message;
+
+  if (!error && data && params.permissionRole) {
+    const roleUpdate = await supabase
+      .from('user_person_links')
+      .update({ permission_role: params.permissionRole })
+      .eq('id', normalizedData.id)
+      .select('*')
+      .single();
+
+    if (roleUpdate.error) {
+      normalizedError = roleUpdate.error.message;
+    } else {
+      normalizedData = roleUpdate.data as UserPersonLinkRecord;
+    }
   }
 
-  return { error: error?.message, data: (data as UserPersonLinkRecord) ?? null };
+  if (!normalizedError && normalizedData) {
+    await registerUserPersonLinkActivity('user_person_link.created', normalizedData);
+  }
+
+  return { error: normalizedError, data: normalizedData };
 }
 
 export async function adminUpdateUserPersonLink(params: {
@@ -477,6 +512,7 @@ export async function adminUpdateUserPersonLink(params: {
   relacaoComPerfil?: string | null;
   principal?: boolean;
   canEdit?: boolean;
+  permissionRole?: UserPersonPermissionRole | null;
 }) {
   const { data, error } = await supabase
     .rpc('admin_update_user_person_link', {
@@ -487,11 +523,29 @@ export async function adminUpdateUserPersonLink(params: {
     })
     .maybeSingle();
 
-  if (!error && data) {
-    await registerUserPersonLinkActivity('user_person_link.updated', data as UserPersonLinkRecord);
+  let normalizedData = (data as UserPersonLinkRecord) ?? null;
+  let normalizedError = error?.message;
+
+  if (!error && data && params.permissionRole) {
+    const roleUpdate = await supabase
+      .from('user_person_links')
+      .update({ permission_role: params.permissionRole })
+      .eq('id', normalizedData.id)
+      .select('*')
+      .single();
+
+    if (roleUpdate.error) {
+      normalizedError = roleUpdate.error.message;
+    } else {
+      normalizedData = roleUpdate.data as UserPersonLinkRecord;
+    }
   }
 
-  return { error: error?.message, data: (data as UserPersonLinkRecord) ?? null };
+  if (!normalizedError && normalizedData) {
+    await registerUserPersonLinkActivity('user_person_link.updated', normalizedData);
+  }
+
+  return { error: normalizedError, data: normalizedData };
 }
 
 export async function adminDeleteUserPersonLink(linkId: string) {

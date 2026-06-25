@@ -13,6 +13,7 @@ import {
   TableRow,
 } from '../../components/ui/table';
 import { NotificationStatusBadge } from '../../components/admin/NotificationStatusBadge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../components/ui/tabs';
 import { useAuth } from '../../contexts/AuthContext';
 import { dispatchNotification } from '../../services/notificationDispatchService';
 import { DailyNotificationRunSummary, runDailyNotificationChecks } from '../../services/notificationScheduledService';
@@ -33,6 +34,7 @@ import {
   NotificacaoUsuario,
   PreferenciaNotificacao,
 } from '../../types';
+import { AdminNotificationGroupsTab } from './AdminNotificationGroupsTab';
 
 function formatDate(value?: string) {
   if (!value) return 'Data não informada';
@@ -216,6 +218,17 @@ export function AdminNotificacoes() {
       />
 
       <main className="mx-auto max-w-7xl px-4 py-6 sm:px-6 sm:py-8">
+        <Tabs defaultValue="envios" className="space-y-6">
+          <TabsList className="grid w-full grid-cols-1 gap-2 bg-transparent p-0 md:grid-cols-2">
+            <TabsTrigger value="envios" className="rounded-lg border border-gray-200 bg-white data-[state=active]:border-blue-200 data-[state=active]:bg-blue-50">
+              Envios
+            </TabsTrigger>
+            <TabsTrigger value="grupos-preferencias" className="rounded-lg border border-gray-200 bg-white data-[state=active]:border-blue-200 data-[state=active]:bg-blue-50">
+              Grupos e preferencias
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="envios" className="space-y-6">
         <div className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
           <Card className="min-w-0">
             <CardHeader className="pb-2">
@@ -546,6 +559,12 @@ export function AdminNotificacoes() {
             )}
           </CardContent>
         </Card>
+          </TabsContent>
+
+          <TabsContent value="grupos-preferencias">
+            <AdminNotificationGroupsTab />
+          </TabsContent>
+        </Tabs>
       </main>
     </div>
   );

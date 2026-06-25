@@ -14,6 +14,8 @@ import { Relacionamento, Pessoa, SubtipoRelacionamento } from '../../types';
 import { isPersonDeceased } from '../../utils/personFields';
 import { Edit3, Plus, Save, Settings, Trash2, Heart, Users as UsersIcon, X } from 'lucide-react';
 import { DEFAULT_MEMBER_HEADER_ACTIONS, MemberPageHeader } from '../../components/layout/MemberPageHeader';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../components/ui/tabs';
+import { AdminUserPersonLinksTab } from './AdminUserPersonLinksTab';
 
 type MarriageEditForm = {
   subtipo_relacionamento: SubtipoRelacionamento;
@@ -183,6 +185,17 @@ export function AdminRelacionamentos() {
       />
 
       <main className="mx-auto max-w-7xl space-y-6 px-4 py-6 sm:px-6 sm:py-8">
+        <Tabs defaultValue="relacionamentos" className="space-y-6">
+          <TabsList className="grid w-full grid-cols-1 gap-2 bg-transparent p-0 md:grid-cols-2">
+            <TabsTrigger value="relacionamentos" className="rounded-lg border border-gray-200 bg-white data-[state=active]:border-blue-200 data-[state=active]:bg-blue-50">
+              Relacionamentos
+            </TabsTrigger>
+            <TabsTrigger value="vinculos-usuarios" className="rounded-lg border border-gray-200 bg-white data-[state=active]:border-blue-200 data-[state=active]:bg-blue-50">
+              Vinculos de usuarios
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="relacionamentos" className="space-y-6">
         <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
           <Card className="min-w-0">
             <CardHeader className="pb-3">
@@ -427,6 +440,12 @@ export function AdminRelacionamentos() {
             </div>
           </CardContent>
         </Card>
+          </TabsContent>
+
+          <TabsContent value="vinculos-usuarios">
+            <AdminUserPersonLinksTab />
+          </TabsContent>
+        </Tabs>
       </main>
     </div>
   );
