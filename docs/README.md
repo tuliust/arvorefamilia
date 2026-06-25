@@ -1,6 +1,6 @@
 # Documentação do produto — arvorefamilia
 
-> Última revisão: 2026-06-23
+> Última revisão: 2026-06-25
 > Escopo: documentação canônica mantida em `docs/` após auditoria e limpeza final.
 > Status: canônico.
 
@@ -83,7 +83,7 @@ Arquivos residuais fora desse índice não devem ser usados como contrato operac
 
 ## Rotas funcionais cobertas
 
-- `/mapa-familiar` e `/mapa-familiar-horizontal`;
+- `/mapa-familiar`, `/mapa-familiar-horizontal` e `/linha-geracional`;
 - `/meus-dados`;
 - `/meus-vinculos`;
 - `/arquivos-historicos`;
