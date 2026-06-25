@@ -1,10 +1,8 @@
 import { MapPin, Route } from 'lucide-react';
 
-import routeMapIllustrationUrl from '../../components/layout/mapa.png';
-
-import routeMapIllustrationUrl from '../../components/layout/mapa.png';
-
 import { curiositySectionCardClassName, type CuriosidadesDataProps } from './curiosidadesUtils';
+
+const routeMapIllustrationUrl = new URL('../../components/layout/mapa.png', import.meta.url).href;
 
 type RoadRouteStop = {
   label: string;
@@ -40,16 +38,16 @@ export function CuriosidadesRouteSection({
       <div>
         <div className="flex items-center gap-3">
           <Route className="h-5 w-5 text-blue-700" />
-          <h2 className="text-xl font-bold text-gray-950">Rota da fam?lia</h2>
+          <h2 className="text-xl font-bold text-gray-950">Rota da família</h2>
         </div>
         <p className="mt-3 text-sm leading-6 text-gray-600">
-          Uma rota pelas cidades onde familiares t?m resid?ncia cadastrada.
+          Uma rota pelas cidades onde familiares têm residência cadastrada.
         </p>
       </div>
 
       {error && (
         <div className="mt-5 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
-          N?o foi poss?vel carregar as cidades da fam?lia agora.
+          Não foi possível carregar as cidades da família agora.
         </div>
       )}
 
@@ -59,8 +57,8 @@ export function CuriosidadesRouteSection({
 
       {!error && !loading && (
         <div className="mt-5 space-y-4">
-          <div className="overflow-hidden rounded-xl border border-blue-100 bg-blue-50 p-4 lg:relative lg:h-[9rem] lg:overflow-visible">
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between lg:h-full">
+          <div className="overflow-hidden rounded-xl border border-blue-100 bg-blue-50 p-4 lg:relative lg:min-h-[9rem] lg:overflow-visible">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between lg:min-h-[9rem]">
               <div className="relative z-10 min-w-0">
                 <p className="text-sm font-semibold text-blue-900">Trajeto de carro</p>
                 <p className="mt-2 text-2xl font-black tracking-tight text-gray-950 sm:text-3xl">
@@ -68,13 +66,13 @@ export function CuriosidadesRouteSection({
                 </p>
               </div>
 
-              <div className="flex w-full justify-center sm:w-auto sm:justify-end lg:pointer-events-none lg:absolute lg:right-[-35rem] lg:top-1/2 lg:w-[1275px] lg:-translate-y-1/2">
+              <div className="flex w-full justify-center sm:w-auto sm:justify-end lg:pointer-events-none lg:absolute lg:right-[-10rem] lg:top-1/2 lg:h-[327px] lg:w-[575px] lg:-translate-y-1/2">
                 <img
                   src={routeMapIllustrationUrl}
                   alt=""
                   aria-hidden="true"
                   loading="lazy"
-                  className="h-auto w-full max-w-none object-contain sm:h-28 sm:max-w-[12rem] lg:h-[725px] lg:w-[1275px] lg:max-w-none"
+                  className="h-auto w-full max-w-[16rem] object-contain sm:max-w-[18rem] lg:h-[327px] lg:w-[575px] lg:max-w-none"
                 />
               </div>
             </div>
