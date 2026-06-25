@@ -1,6 +1,6 @@
 # Inventário técnico
 
-> Última revisão: 2026-06-23
+> Última revisão: 2026-06-25
 > Escopo: rotas, módulos, documentos finais e referências técnicas preservadas após limpeza documental.
 > Status: canônico.
 
@@ -18,7 +18,7 @@
 
 | Área | Documento canônico |
 |---|---|
-| Mapa familiar vertical e horizontal | `funcionalidades/MAPA_FAMILIAR_VIEW.md` |
+| Mapa familiar vertical, horizontal e linha geracional | `funcionalidades/MAPA_FAMILIAR_VIEW.md` |
 | Árvore, conectores, painel e edição | `funcionalidades/ARVORE_LEGENDAS_CONECTORES_PAINEL.md` |
 | Meus dados, IA, mini bio e textos de perfil | `funcionalidades/MINI_BIO_CURIOSIDADES_IA.md` |
 | Meus vínculos | `funcionalidades/MEUS_VINCULOS.md` |
@@ -66,6 +66,7 @@
 
 - `/mapa-familiar`
 - `/mapa-familiar-horizontal`
+- `/linha-geracional`
 - `/meus-dados`
 - `/meus-vinculos`
 - `/arquivos-historicos`
