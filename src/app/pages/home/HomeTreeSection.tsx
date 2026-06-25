@@ -22,13 +22,30 @@ import {
   SIDEBAR_TREE_ACTION_EVENT,
   type SidebarTreeAction,
 } from './SidebarPanelTabs';
-import { Minus, Plus, Scan } from 'lucide-react';
+import { Loader2, Minus, Plus, Scan } from 'lucide-react';
 
 interface StateMessageProps {
   title: string;
   message: string;
   tone?: 'neutral' | 'error';
 }
+
+type TreeExportAction = Extract<SidebarTreeAction, 'save-image' | 'save-pdf' | 'print'>;
+
+const TREE_EXPORT_LOADING_CONTENT: Record<TreeExportAction, { title: string; message: string }> = {
+  'save-image': {
+    title: 'Preparando imagem',
+    message: 'Gerando a imagem da ?rvore. A janela de salvar ser? aberta em instantes.',
+  },
+  'save-pdf': {
+    title: 'Preparando PDF',
+    message: 'Gerando o PDF da ?rvore. A janela de salvar ser? aberta em instantes.',
+  },
+  print: {
+    title: 'Preparando impress?o',
+    message: 'Gerando a visualiza??o de impress?o da ?rvore.',
+  },
+};
 
 function getTreeTitleFirstName(value?: string | null) {
   const clean = value?.trim();
@@ -102,6 +119,8 @@ export function HomeTreeSection({
   const location = useLocation();
   const [familyMapHasScrolled, setFamilyMapHasScrolled] = React.useState(false);
   const [restoreViewRevision, setRestoreViewRevision] = React.useState(0);
+  const [activeExportAction, setActiveExportAction] = React.useState<TreeExportAction | null>(null);
+  const exportLoadingTimeoutRef = React.useRef<number | null>(null);
   const effectiveTreeLayoutRevision = treeLayoutRevision + restoreViewRevision;
   const desktopTitleFirstName = React.useMemo(() => {
     const centralPerson = pessoas.find((pessoa) => pessoa.id === centralReferencePersonId);
@@ -117,6 +136,38 @@ export function HomeTreeSection({
   }, [centralReferencePersonId, treeLayoutRevision, treeViewMode]);
 
   const effectiveVisiblePersonIds = visiblePersonIdsByLifeStatus;
+
+  const clearExportLoading = React.useCallback((action: TreeExportAction) => {
+    if (exportLoadingTimeoutRef.current !== null) {
+      window.clearTimeout(exportLoadingTimeoutRef.current);
+    }
+
+    exportLoadingTimeoutRef.current = window.setTimeout(() => {
+      setActiveExportAction((currentAction) => (
+        currentAction === action ? null : currentAction
+      ));
+      exportLoadingTimeoutRef.current = null;
+    }, 350);
+  }, []);
+
+  const runExportAction = React.useCallback(async (
+    action: TreeExportAction,
+    executor: () => Promise<void>
+  ) => {
+    setActiveExportAction(action);
+
+    try {
+      await executor();
+    } finally {
+      clearExportLoading(action);
+    }
+  }, [clearExportLoading]);
+
+  React.useEffect(() => () => {
+    if (exportLoadingTimeoutRef.current !== null) {
+      window.clearTimeout(exportLoadingTimeoutRef.current);
+    }
+  }, []);
 
   React.useEffect(() => {
     const handleSidebarTreeAction = (event: Event) => {
@@ -134,17 +185,37 @@ export function HomeTreeSection({
       if (action === 'zoom-in') treeActions.zoomIn();
       if (action === 'zoom-out') treeActions.zoomOut();
       if (action === 'select-area') treeActions.startAreaSelection();
-      if (action === 'save-image') void treeActions.saveImage();
-      if (action === 'save-pdf') void treeActions.savePdf();
-      if (action === 'print') void treeActions.print();
+
+      if (action === 'save-image') {
+        void runExportAction(action, () => treeActions.saveImage());
+      }
+
+      if (action === 'save-pdf') {
+        void runExportAction(action, () => treeActions.savePdf());
+      }
+
+      if (action === 'print') {
+        void runExportAction(action, () => treeActions.print());
+      }
     };
 
     window.addEventListener(SIDEBAR_TREE_ACTION_EVENT, handleSidebarTreeAction);
     return () => window.removeEventListener(SIDEBAR_TREE_ACTION_EVENT, handleSidebarTreeAction);
-  }, [familyTreeRef]);
+  }, [familyTreeRef, runExportAction]);
+
+  const activeExportContent = activeExportAction
+    ? TREE_EXPORT_LOADING_CONTENT[activeExportAction]
+    : null;
 
   return (
     <section className="relative min-w-0 w-0 flex-1 overflow-hidden overscroll-none bg-gray-100">
+      {activeExportContent && (
+        <TreeGlobalExportLoadingOverlay
+          title={activeExportContent.title}
+          message={activeExportContent.message}
+        />
+      )}
+
       {!isMobile && (
         <>
           <style>
@@ -317,5 +388,36 @@ export function HomeTreeSection({
         })
       )}
     </section>
+  );
+}
+
+function TreeGlobalExportLoadingOverlay({
+  title,
+  message,
+}: {
+  title: string;
+  message: string;
+}) {
+  return (
+    <div
+      data-tree-export-ignore="true"
+      data-tree-export-loading="true"
+      className="fixed inset-0 z-[1200] flex items-center justify-center bg-slate-950/35 px-4 backdrop-blur-sm"
+      role="dialog"
+      aria-modal="true"
+      aria-busy="true"
+      aria-labelledby="tree-global-export-loading-title"
+      aria-describedby="tree-global-export-loading-message"
+    >
+      <div className="w-full max-w-sm rounded-2xl border border-slate-200 bg-white p-6 text-center shadow-2xl">
+        <Loader2 className="mx-auto h-7 w-7 animate-spin text-blue-700" aria-hidden="true" />
+        <p id="tree-global-export-loading-title" className="mt-3 text-sm font-bold text-slate-950">
+          {title}
+        </p>
+        <p id="tree-global-export-loading-message" className="mt-1 text-xs font-medium leading-relaxed text-slate-600">
+          {message}
+        </p>
+      </div>
+    </div>
   );
 }
