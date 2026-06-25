@@ -862,3 +862,14 @@
 .curiosidades-page {
   overflow: visible !important;
 }
+
+html.curiosidades-scroll-unlocked,
+body.curiosidades-scroll-unlocked {
+  overflow: visible !important;
+  overflow-x: visible !important;
+  overflow-y: visible !important;
+}
+
+.curiosidades-page {
+  overflow: visible !important;
+}

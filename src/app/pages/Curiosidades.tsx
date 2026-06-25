@@ -55,6 +55,19 @@ export function Curiosidades() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    const root = document.documentElement;
+    const body = document.body;
+
+    root.classList.add('curiosidades-scroll-unlocked');
+    body.classList.add('curiosidades-scroll-unlocked');
+
+    return () => {
+      root.classList.remove('curiosidades-scroll-unlocked');
+      body.classList.remove('curiosidades-scroll-unlocked');
+    };
+  }, []);
+
+  useEffect(() => {
     let cancelled = false;
 
     async function loadCuriosidadesData() {
