@@ -117,7 +117,7 @@ export function Curiosidades() {
   };
 
   return (
-    <div className="curiosidades-page min-h-screen bg-gray-50 pb-24 md:pb-0">
+    <div className="curiosidades-page overflow-visible min-h-screen bg-gray-50 pb-24 md:pb-0" style={{ overflow: 'visible' }}>
       <MemberPageHeader
         title="Curiosidades"
         subtitle="Descobertas, histórias e conexões da família"

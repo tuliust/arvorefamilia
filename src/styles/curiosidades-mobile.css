@@ -858,3 +858,7 @@
     max-width: 100% !important;
   }
 }
+
+.curiosidades-page {
+  overflow: visible !important;
+}
