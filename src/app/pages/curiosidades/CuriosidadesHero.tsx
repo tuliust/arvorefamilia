@@ -45,7 +45,7 @@ function getScrollState(element: HTMLDivElement | null) {
 
 export function CuriosidadesHero() {
   const scrollRef = useRef<HTMLDivElement | null>(null);
-  const stickySentinelRef = useRef<HTMLDivElement | null>(null);
+  const stickyAnchorRef = useRef<HTMLDivElement | null>(null);
   const stickyContentRef = useRef<HTMLElement | null>(null);
   const [isPinned, setIsPinned] = useState(false);
   const [stickyHeight, setStickyHeight] = useState(0);
@@ -84,41 +84,46 @@ export function CuriosidadesHero() {
   }, []);
 
   useEffect(() => {
-    const sentinel = stickySentinelRef.current;
+    const anchor = stickyAnchorRef.current;
     const content = stickyContentRef.current;
 
-    if (!sentinel || !content) return undefined;
+    if (!anchor || !content) return undefined;
 
-    const updateHeight = () => {
-      setStickyHeight(content.offsetHeight);
+    let frame: number | null = null;
+
+    const updateStickyState = () => {
+      if (frame !== null) return;
+
+      frame = window.requestAnimationFrame(() => {
+        frame = null;
+
+        const anchorTop = anchor.getBoundingClientRect().top;
+        const shouldPin = anchorTop <= 0;
+
+        setStickyHeight(content.offsetHeight);
+        setIsPinned(shouldPin);
+      });
     };
 
-    updateHeight();
+    updateStickyState();
+
+    window.addEventListener('scroll', updateStickyState, { passive: true });
+    window.addEventListener('resize', updateStickyState);
 
     const resizeObserver = typeof ResizeObserver !== 'undefined'
-      ? new ResizeObserver(updateHeight)
+      ? new ResizeObserver(updateStickyState)
       : null;
 
     resizeObserver?.observe(content);
 
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        setIsPinned(!entry.isIntersecting && entry.boundingClientRect.top < 0);
-      },
-      {
-        root: null,
-        threshold: 0,
-      },
-    );
-
-    observer.observe(sentinel);
-
-    window.addEventListener('resize', updateHeight);
-
     return () => {
-      observer.disconnect();
+      window.removeEventListener('scroll', updateStickyState);
+      window.removeEventListener('resize', updateStickyState);
       resizeObserver?.disconnect();
-      window.removeEventListener('resize', updateHeight);
+
+      if (frame !== null) {
+        window.cancelAnimationFrame(frame);
+      }
     };
   }, []);
 
@@ -136,9 +141,7 @@ export function CuriosidadesHero() {
   };
 
   return (
-    <div className="curiosidades-sticky-anchor">
-      <div ref={stickySentinelRef} className="h-px" aria-hidden="true" />
-
+    <div ref={stickyAnchorRef} className="curiosidades-sticky-anchor">
       {isPinned && <div style={{ height: stickyHeight }} aria-hidden="true" />}
 
       <section
@@ -148,13 +151,13 @@ export function CuriosidadesHero() {
           isPinned ? 'fixed inset-x-0 top-0 z-[700]' : 'relative z-[490]',
         ].join(' ')}
       >
-        <nav aria-label="Secoes de curiosidades" className="mx-auto w-full max-w-7xl min-w-0 px-4 sm:px-6 lg:px-8">
+        <nav aria-label="Se??es de curiosidades" className="mx-auto w-full max-w-7xl min-w-0 px-4 sm:px-6 lg:px-8">
           <div className="flex min-w-0 items-stretch justify-center gap-2">
             <button
               type="button"
               onClick={() => scrollNav('left')}
               className={["curiosidades-section-scroll-button curiosidades-section-scroll-button-left inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-gray-200 bg-white p-0 text-blue-700 shadow-sm transition md:hidden", scrollState.canScrollLeft ? "opacity-100" : "opacity-40"].join(' ')}
-              aria-label="Ver botoes anteriores"
+              aria-label="Ver bot?es anteriores"
             >
               <ChevronLeft className="h-5 w-5" />
             </button>
@@ -182,7 +185,7 @@ export function CuriosidadesHero() {
               type="button"
               onClick={() => scrollNav('right')}
               className={["curiosidades-section-scroll-button curiosidades-section-scroll-button-right inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-gray-200 bg-white p-0 text-blue-700 shadow-sm transition md:hidden", scrollState.canScrollRight ? "opacity-100" : "opacity-40"].join(' ')}
-              aria-label="Ver proximos botoes"
+              aria-label="Ver pr?ximos bot?es"
             >
               <ChevronRight className="h-5 w-5" />
             </button>
