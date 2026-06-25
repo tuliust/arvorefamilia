@@ -125,6 +125,26 @@ export async function listRecentNotificationPreferencesAdmin(limit = 50): Promis
   return (data || []).map(mapPreferenciaRow);
 }
 
+export async function adminUpsertNotificationPreferences(
+  userId: string,
+  payload: Partial<PreferenciaNotificacao>,
+): Promise<PreferenciaNotificacao> {
+  const { data, error } = await supabase
+    .from('preferencias_notificacao')
+    .upsert({
+      user_id: userId,
+      ...payload,
+    }, { onConflict: 'user_id' })
+    .select('*')
+    .single();
+
+  if (error) {
+    throw new Error(error.message || 'Nao foi possivel salvar preferencias de notificacao.');
+  }
+
+  return mapPreferenciaRow(data);
+}
+
 export async function listRecentNotificationDispatchLogs(limit = 50): Promise<NotificationDispatchLog[]> {
   const { data, error } = await supabase
     .from('notification_dispatch_logs')

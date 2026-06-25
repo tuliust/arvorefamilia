@@ -72,6 +72,13 @@ export type FavoriteEntityType =
 
 export type TipoCanalNotificacao = 'interna' | 'email' | 'push' | 'whatsapp';
 
+export type UserPersonPermissionRole =
+  | 'owner'
+  | 'editor'
+  | 'legacy_editor'
+  | 'guardian'
+  | 'viewer';
+
 export type NotificationTargetChannel = TipoCanalNotificacao;
 
 export type NotificationDispatchStatus =
@@ -201,6 +208,47 @@ export interface PersonEvent {
   local?: string | null;
   descricao?: string | null;
   ordem?: number;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface PersonVisibilitySettings {
+  id: string;
+  pessoa_id: string;
+  perfil_visivel: boolean;
+  arvore_visivel: boolean;
+  mapa_familiar_visivel: boolean;
+  curiosidades_visivel: boolean;
+  arquivos_historicos_visivel: boolean;
+  calendario_visivel: boolean;
+  forum_visivel: boolean;
+  dados_sensiveis_visiveis: boolean;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface NotificationGroup {
+  id: string;
+  nome: string;
+  descricao?: string | null;
+  ativo: boolean;
+  created_by?: string | null;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface NotificationGroupMember {
+  id: string;
+  group_id: string;
+  user_id: string;
+  created_at?: string;
+}
+
+export interface NotificationGroupRule {
+  id: string;
+  group_id: string;
+  notification_type: string;
+  enabled: boolean;
   created_at?: string;
   updated_at?: string;
 }
