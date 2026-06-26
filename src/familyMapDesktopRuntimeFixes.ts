@@ -16,6 +16,33 @@ const INTERACTIVE_TARGET_SELECTOR = [
   '[data-tree-selection-overlay="true"]',
 ].join(',');
 
+const TEXT_REPLACEMENTS: Array<[RegExp, string]> = [
+  [/Ã\u0081rvore/g, 'Árvore'],
+  [/Ã¡rvore/g, 'árvore'],
+  [/Ãrvore/g, 'Árvore'],
+  [/\?rvore/g, 'árvore'],
+  [/FamÃ\u00adlia/g, 'Família'],
+  [/FamÃ­lia/g, 'Família'],
+  [/GenealÃ³gico/g, 'Genealógico'],
+  [/visualizaÃ§Ã£o/g, 'visualização'],
+  [/visualiza\?\?o/g, 'visualização'],
+  [/impressÃ£o/g, 'impressão'],
+  [/impress\?o/g, 'impressão'],
+  [/serÃ¡/g, 'será'],
+  [/ser\?/g, 'será'],
+  [/nÃ£o/g, 'não'],
+  [/n\?o/g, 'não'],
+  [/perÃ­odo/g, 'período'],
+  [/per\?odo/g, 'período'],
+  [/crÃ­tico/g, 'crítico'],
+  [/cr\?tico/g, 'crítico'],
+  [/Carregando Ã¡rvore/g, 'Carregando árvore'],
+  [/Erro ao carregar a Ã¡rvore/g, 'Erro ao carregar a árvore'],
+  [/Buscando pessoas e relacionamentosâ€¦/g, 'Buscando pessoas e relacionamentos…'],
+  [/nÃ£o retornou/g, 'não retornou'],
+  [/referÃªncia/g, 'referência'],
+];
+
 const FAMILY_TREE_ICON_SVG = `
 <svg ${VIEW_ICON_ATTR}="family-tree" viewBox="0 0 48 48" fill="none" aria-hidden="true" class="h-5 w-5 shrink-0 text-current">
   <path d="M24 8v8" stroke="currentColor" stroke-width="3" stroke-linecap="round" />
@@ -210,6 +237,31 @@ function normalizeText(value: string) {
     .toLowerCase();
 }
 
+function applyTextReplacements(value: string) {
+  return TEXT_REPLACEMENTS.reduce((current, [pattern, replacement]) => current.replace(pattern, replacement), value);
+}
+
+function fixMojibakeTextNodes() {
+  const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+  let node = walker.nextNode();
+
+  while (node) {
+    const currentValue = node.nodeValue ?? '';
+    const nextValue = applyTextReplacements(currentValue);
+    if (nextValue !== currentValue) node.nodeValue = nextValue;
+    node = walker.nextNode();
+  }
+
+  document.querySelectorAll<HTMLElement>('[aria-label], [title], [placeholder]').forEach((element) => {
+    ['aria-label', 'title', 'placeholder'].forEach((attributeName) => {
+      const currentValue = element.getAttribute(attributeName);
+      if (!currentValue) return;
+      const nextValue = applyTextReplacements(currentValue);
+      if (nextValue !== currentValue) element.setAttribute(attributeName, nextValue);
+    });
+  });
+}
+
 function getCustomIconForButton(button: HTMLButtonElement) {
   const text = normalizeText(button.textContent ?? '');
   if (text.includes('arvore familiar')) return FAMILY_TREE_ICON_SVG;
@@ -259,6 +311,7 @@ function installDomRuntimeSync() {
     window.requestAnimationFrame(() => {
       scheduled = false;
       syncMapViewports();
+      fixMojibakeTextNodes();
       replaceTreeViewModeIcons();
       hideLegacyBloodRelationshipOptions();
     });
