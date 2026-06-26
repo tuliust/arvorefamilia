@@ -26,21 +26,11 @@ const TIPOS_RELACIONAMENTO: Array<{ value: TipoRelacionamento; label: string }> 
   { value: 'irmao', label: 'Irmão/Irmã' },
 ];
 
-const SUBTIPOS_RELACIONAMENTO: Array<{ value: SubtipoRelacionamento; label: string }> = [
-  { value: 'sangue', label: 'Sangue' },
-  { value: 'adotivo', label: 'Adotivo' },
-  { value: 'uniao', label: 'União' },
+const SUBTIPOS_CONJUGAIS: Array<{ value: SubtipoRelacionamento; label: string }> = [
   { value: 'casamento', label: 'Casamento' },
+  { value: 'uniao', label: 'União' },
   { value: 'separado', label: 'Separado' },
 ];
-
-const SUBTIPOS_FAMILIARES = SUBTIPOS_RELACIONAMENTO.filter((subtipo) =>
-  subtipo.value === 'sangue' || subtipo.value === 'adotivo'
-);
-
-const SUBTIPOS_CONJUGAIS = SUBTIPOS_RELACIONAMENTO.filter((subtipo) =>
-  subtipo.value === 'casamento' || subtipo.value === 'uniao' || subtipo.value === 'separado'
-);
 
 export function AdminRelacionamentoForm() {
   const navigate = useNavigate();
@@ -48,7 +38,7 @@ export function AdminRelacionamentoForm() {
   const [pessoaOrigemId, setPessoaOrigemId] = useState('');
   const [pessoaDestinoId, setPessoaDestinoId] = useState('');
   const [tipoRelacionamento, setTipoRelacionamento] = useState<TipoRelacionamento>('pai');
-  const [subtipoRelacionamento, setSubtipoRelacionamento] = useState<SubtipoRelacionamento>('sangue');
+  const [subtipoRelacionamento, setSubtipoRelacionamento] = useState<SubtipoRelacionamento>('casamento');
   const [ativo, setAtivo] = useState(true);
   const [dataSeparacao, setDataSeparacao] = useState('');
   const [localSeparacao, setLocalSeparacao] = useState('');
@@ -106,7 +96,7 @@ export function AdminRelacionamentoForm() {
 
   const handleTipoChange = (value: TipoRelacionamento) => {
     setTipoRelacionamento(value);
-    setSubtipoRelacionamento(value === 'conjuge' ? 'casamento' : 'sangue');
+    setSubtipoRelacionamento(value === 'conjuge' ? 'casamento' : 'casamento');
     if (value !== 'conjuge') {
       setAtivo(true);
       setDataSeparacao('');
@@ -135,7 +125,7 @@ export function AdminRelacionamentoForm() {
         pessoa_origem_id: pessoaOrigemId,
         pessoa_destino_id: pessoaDestinoId,
         tipo_relacionamento: tipoRelacionamento,
-        subtipo_relacionamento: subtipoRelacionamento,
+        subtipo_relacionamento: isConjugal ? subtipoRelacionamento : undefined,
         ativo: isConjugal ? ativo : true,
         data_separacao: isConjugal ? dataSeparacao || undefined : undefined,
         local_separacao: isConjugal ? localSeparacao.trim() || undefined : undefined,
@@ -241,25 +231,27 @@ export function AdminRelacionamentoForm() {
                   )}
                 </div>
 
-                <div className="min-w-0 space-y-2">
-                  <label className="text-sm font-medium text-gray-700">Subtipo</label>
-                  <Select
-                    value={subtipoRelacionamento}
-                    onValueChange={(value) => setSubtipoRelacionamento(value as SubtipoRelacionamento)}
-                    disabled={saving}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {(isConjugal ? SUBTIPOS_CONJUGAIS : SUBTIPOS_FAMILIARES).map((subtipo) => (
-                        <SelectItem key={subtipo.value} value={subtipo.value}>
-                          {subtipo.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+                {isConjugal && (
+                  <div className="min-w-0 space-y-2">
+                    <label className="text-sm font-medium text-gray-700">Subtipo conjugal</label>
+                    <Select
+                      value={subtipoRelacionamento}
+                      onValueChange={(value) => setSubtipoRelacionamento(value as SubtipoRelacionamento)}
+                      disabled={saving}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {SUBTIPOS_CONJUGAIS.map((subtipo) => (
+                          <SelectItem key={subtipo.value} value={subtipo.value}>
+                            {subtipo.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
               </div>
 
               {isConjugal && (
