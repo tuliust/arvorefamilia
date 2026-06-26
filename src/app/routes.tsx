@@ -43,7 +43,7 @@ const AdminIntegridade = React.lazy(() => import('./pages/admin/AdminIntegridade
 const AdminAtividades = React.lazy(() => import('./pages/admin/AdminAtividades').then((module) => ({ default: module.AdminAtividades })));
 const AdminSolicitacoesVinculos = React.lazy(() => import('./pages/admin/AdminSolicitacoesVinculos').then((module) => ({ default: module.AdminSolicitacoesVinculos })));
 const AdminNotificacoes = React.lazy(() => import('./pages/admin/AdminNotificacoes').then((module) => ({ default: module.AdminNotificacoes })));
-const AdminDuvidas = React.lazy(() => import('./pages/admin/AdminDuvidas').then((module) => ({ default: module.AdminDuvidas })));
+const AdminDuvidas = React.lazy(() => import('./pages/admin/AdminDuvidasRefined').then((module) => ({ default: module.AdminDuvidasRefined })));
 const AdminPeopleContentSettings = React.lazy(() => import('./pages/admin/AdminPeopleContentSettings').then((module) => ({ default: module.AdminPeopleContentSettings })));
 const LinhaGeracionalLazy = React.lazy(() => import('./pages/LinhaGeracional').then((module) => ({ default: module.LinhaGeracional })));
 
@@ -89,20 +89,21 @@ class RouteErrorBoundary extends React.Component<React.PropsWithChildren, RouteE
     return { hasError: true };
   }
 
+  componentDidCatch(error: unknown) {
+    console.error('Erro ao renderizar rota:', error);
+  }
+
   render() {
     if (this.state.hasError) return <RouteErrorFallback />;
     return this.props.children;
   }
 }
 
-function lazyRoute(
-  element: React.ReactNode,
-  options: { disableMobileGlobalTweaks?: boolean } = {},
-) {
+function lazyRoute(element: React.ReactElement, options?: { disableMobileGlobalTweaks?: boolean }) {
   return (
     <RouteErrorBoundary>
       <Suspense fallback={<RouteFallback />}>
-        {!options.disableMobileGlobalTweaks && <MobileGlobalTweaks />}
+        {options?.disableMobileGlobalTweaks ? null : <MobileGlobalTweaks />}
         {element}
       </Suspense>
     </RouteErrorBoundary>
@@ -110,13 +111,11 @@ function lazyRoute(
 }
 
 function RedirectToMapaFamiliar() {
-  const location = useLocation();
-  return <Navigate to={`/mapa-familiar${location.search}`} replace />;
+  return <Navigate to="/mapa-familiar" replace />;
 }
 
 function RedirectToMeusDados() {
-  const location = useLocation();
-  return <Navigate to={`/meus-dados${location.search}`} replace />;
+  return <Navigate to="/meus-dados" replace />;
 }
 
 function TreeHomeShell() {
