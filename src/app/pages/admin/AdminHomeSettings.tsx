@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Clock, Globe2, History, ImageIcon, Link2, Monitor, Palette, Save, Search, Settings, Smartphone, Sparkles, Trash2, Type, Upload } from 'lucide-react';
+import { Clock, Diff, Globe2, History, ImageIcon, Link2, Monitor, Palette, Save, Search, Settings, Smartphone, Sparkles, Trash2, Type, Upload } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '../../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
@@ -11,13 +11,16 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../components/ui/ta
 import {
   DEFAULT_SITE_VISUAL_SETTINGS,
   getSiteVisualSettings,
+  getSiteVisualSettingsDiff,
   GLOBAL_THEME_COLOR_OPTIONS,
   HOME_BACKGROUND_COLORS,
+  publishDueSiteVisualSettings,
   publishSiteVisualSettingsDraft,
   saveSiteVisualSettings,
   saveSiteVisualSettingsDraft,
   scheduleSiteVisualSettingsPublication,
   SiteVisualSettings,
+  SiteVisualSettingsDiff,
 } from '../../services/siteVisualSettingsService';
 import {
   createSiteVisualSettingsAudit,
@@ -79,6 +82,8 @@ export function AdminHomeSettings() {
   const [auditLoading, setAuditLoading] = useState(false);
   const [previewMode, setPreviewMode] = useState<PreviewMode>('desktop');
   const [scheduledPublishAt, setScheduledPublishAt] = useState('');
+
+  const draftDiff = useMemo(() => getSiteVisualSettingsDiff(settings), [settings]);
 
   const publicationLabel = useMemo(() => {
     if (settings.publication_status === 'draft') return 'Rascunho salvo';
@@ -233,6 +238,23 @@ export function AdminHomeSettings() {
     }
   };
 
+  const handlePublishDue = async () => {
+    setSaving(true);
+    try {
+      const result = await publishDueSiteVisualSettings();
+      await loadSettings();
+      if (result.published) {
+        toast.success(result.message);
+      } else {
+        toast.info(result.message);
+      }
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Não foi possível executar publicações vencidas.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
   const resetSettings = () => {
     if (!window.confirm('Restaurar os textos, cores e links padrão? As imagens enviadas serão removidas desta configuração.')) return;
     setSettings(DEFAULT_SITE_VISUAL_SETTINGS);
@@ -269,10 +291,12 @@ export function AdminHomeSettings() {
         <StatusCard
           publicationLabel={publicationLabel}
           settings={settings}
+          draftDiff={draftDiff}
           scheduledPublishAt={scheduledPublishAt}
           onScheduledPublishAtChange={setScheduledPublishAt}
           onSchedule={handleSchedulePublication}
           onPublishDraft={handlePublishDraft}
+          onPublishDue={handlePublishDue}
           saving={saving || loading}
         />
 
@@ -548,14 +572,15 @@ export function AdminHomeSettings() {
                     'Rascunho persistido no banco',
                     'Agendamento persistido no banco',
                     'Publicação manual de rascunho',
+                    'Publicação automática por RPC e Edge Function',
                   ]}
                 />
                 <RoadmapCard
                   title="Longo prazo"
                   items={[
-                    'Job automático para publicar agendamentos',
+                    'Configurar scheduler externo da Edge Function',
                     'Templates por família ou domínio',
-                    'Comparativo visual entre versão publicada e rascunho',
+                    'Comparativo visual com screenshots',
                   ]}
                 />
               </CardContent>
@@ -570,54 +595,103 @@ export function AdminHomeSettings() {
 function StatusCard({
   publicationLabel,
   settings,
+  draftDiff,
   scheduledPublishAt,
   onScheduledPublishAtChange,
   onSchedule,
   onPublishDraft,
+  onPublishDue,
   saving,
 }: {
   publicationLabel: string;
   settings: SiteVisualSettings;
+  draftDiff: SiteVisualSettingsDiff[];
   scheduledPublishAt: string;
   onScheduledPublishAtChange: (value: string) => void;
   onSchedule: () => void;
   onPublishDraft: () => void;
+  onPublishDue: () => void;
   saving: boolean;
 }) {
   return (
     <Card>
-      <CardContent className="grid grid-cols-1 gap-4 p-4 lg:grid-cols-[1fr_auto] lg:items-center">
-        <div className="space-y-1">
-          <p className="text-sm font-semibold text-gray-950">Status: {publicationLabel}</p>
-          <p className="text-sm text-gray-500">
-            {settings.publication_status === 'scheduled' && settings.scheduled_publish_at
-              ? `Agendada para ${new Date(settings.scheduled_publish_at).toLocaleString('pt-BR')}.`
-              : settings.draft_payload
-                ? 'Há um rascunho salvo que pode ser publicado manualmente.'
-                : 'A versão pública está sincronizada com a última publicação manual.'}
-          </p>
-          {settings.last_published_at ? (
-            <p className="text-xs text-gray-400">Última publicação: {new Date(settings.last_published_at).toLocaleString('pt-BR')}</p>
-          ) : null}
+      <CardContent className="space-y-4 p-4">
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1fr_auto] lg:items-start">
+          <div className="space-y-1">
+            <p className="text-sm font-semibold text-gray-950">Status: {publicationLabel}</p>
+            <p className="text-sm text-gray-500">
+              {settings.publication_status === 'scheduled' && settings.scheduled_publish_at
+                ? `Agendada para ${new Date(settings.scheduled_publish_at).toLocaleString('pt-BR')}.`
+                : settings.draft_payload
+                  ? 'Há um rascunho salvo que pode ser publicado manualmente.'
+                  : 'A versão pública está sincronizada com a última publicação manual.'}
+            </p>
+            {settings.last_published_at ? (
+              <p className="text-xs text-gray-400">Última publicação: {new Date(settings.last_published_at).toLocaleString('pt-BR')}</p>
+            ) : null}
+          </div>
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+            <Input
+              type="datetime-local"
+              value={scheduledPublishAt}
+              onChange={(event) => onScheduledPublishAtChange(event.target.value)}
+              className="sm:w-56"
+              aria-label="Data e hora de publicação agendada"
+            />
+            <Button type="button" variant="outline" onClick={onSchedule} disabled={saving}>
+              <Clock className="mr-2 h-4 w-4" />
+              Agendar
+            </Button>
+            <Button type="button" variant="outline" onClick={onPublishDue} disabled={saving}>
+              Executar vencidas
+            </Button>
+            <Button type="button" variant="outline" onClick={onPublishDraft} disabled={saving || !settings.draft_payload}>
+              Publicar rascunho
+            </Button>
+          </div>
         </div>
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-          <Input
-            type="datetime-local"
-            value={scheduledPublishAt}
-            onChange={(event) => onScheduledPublishAtChange(event.target.value)}
-            className="sm:w-56"
-            aria-label="Data e hora de publicação agendada"
-          />
-          <Button type="button" variant="outline" onClick={onSchedule} disabled={saving}>
-            <Clock className="mr-2 h-4 w-4" />
-            Agendar
-          </Button>
-          <Button type="button" variant="outline" onClick={onPublishDraft} disabled={saving || !settings.draft_payload}>
-            Publicar rascunho
-          </Button>
-        </div>
+        <DraftComparisonPanel diff={draftDiff} />
       </CardContent>
     </Card>
+  );
+}
+
+function DraftComparisonPanel({ diff }: { diff: SiteVisualSettingsDiff[] }) {
+  if (diff.length === 0) {
+    return (
+      <div className="rounded-xl border border-gray-200 bg-gray-50 p-4 text-sm text-gray-500">
+        Não há diferenças entre a versão publicada e o rascunho salvo.
+      </div>
+    );
+  }
+
+  return (
+    <div className="rounded-xl border border-blue-100 bg-blue-50 p-4">
+      <div className="flex items-center gap-2 text-sm font-semibold text-blue-950">
+        <Diff className="h-4 w-4" />
+        Comparativo publicado x rascunho ({diff.length} alterações)
+      </div>
+      <div className="mt-3 max-h-72 overflow-auto rounded-lg border border-blue-100 bg-white">
+        <table className="w-full min-w-[680px] text-left text-sm">
+          <thead className="border-b border-blue-100 bg-blue-50/60 text-xs uppercase tracking-wide text-blue-900">
+            <tr>
+              <th className="px-3 py-2">Campo</th>
+              <th className="px-3 py-2">Publicado</th>
+              <th className="px-3 py-2">Rascunho</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-gray-100">
+            {diff.map((item) => (
+              <tr key={item.field}>
+                <td className="px-3 py-2 font-medium text-gray-900">{item.label}</td>
+                <td className="max-w-xs break-words px-3 py-2 text-gray-500">{item.publishedValue}</td>
+                <td className="max-w-xs break-words px-3 py-2 text-gray-700">{item.draftValue}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
   );
 }
 
@@ -837,21 +911,42 @@ function AuditPanel({ records, loading, onRefresh }: { records: SiteVisualSettin
           <p className="text-sm text-gray-500">Nenhum registro de auditoria encontrado.</p>
         ) : (
           <div className="space-y-3">
-            {records.map((record) => (
-              <div key={record.id} className="rounded-xl border border-gray-200 bg-white p-4">
-                <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
-                  <p className="text-sm font-semibold text-gray-900">{getAuditActionLabel(record.action)}</p>
-                  <p className="text-xs text-gray-500">{new Date(record.created_at).toLocaleString('pt-BR')}</p>
+            {records.map((record) => {
+              const changeCount = countAuditChangedFields(record);
+              return (
+                <div key={record.id} className="rounded-xl border border-gray-200 bg-white p-4">
+                  <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+                    <p className="text-sm font-semibold text-gray-900">{getAuditActionLabel(record.action)}</p>
+                    <p className="text-xs text-gray-500">{new Date(record.created_at).toLocaleString('pt-BR')}</p>
+                  </div>
+                  {record.note ? <p className="mt-2 text-sm text-gray-600">{record.note}</p> : null}
+                  <div className="mt-3 flex flex-wrap gap-2 text-xs">
+                    <span className="rounded-full bg-gray-100 px-2 py-1 text-gray-600">Campos alterados: {changeCount}</span>
+                    {record.created_by ? <span className="rounded-full bg-gray-100 px-2 py-1 text-gray-600">Usuário: {record.created_by}</span> : null}
+                  </div>
+                  <p className="mt-2 text-xs text-gray-400">ID: {record.id}</p>
                 </div>
-                {record.note ? <p className="mt-2 text-sm text-gray-600">{record.note}</p> : null}
-                <p className="mt-2 text-xs text-gray-400">ID: {record.id}</p>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </CardContent>
     </Card>
   );
+}
+
+function countAuditChangedFields(record: SiteVisualSettingsAuditRecord) {
+  if (!record.previous_payload || !record.next_payload) return record.next_payload ? Object.keys(record.next_payload).length : 0;
+
+  const keys = new Set([
+    ...Object.keys(record.previous_payload),
+    ...Object.keys(record.next_payload),
+  ]);
+
+  return Array.from(keys).filter((key) => (
+    JSON.stringify(record.previous_payload?.[key as keyof typeof record.previous_payload] ?? null) !==
+    JSON.stringify(record.next_payload?.[key as keyof typeof record.next_payload] ?? null)
+  )).length;
 }
 
 function getAuditActionLabel(action: SiteVisualSettingsAuditRecord['action']) {
