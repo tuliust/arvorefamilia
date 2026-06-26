@@ -1,8 +1,9 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { useLocation, useNavigate } from 'react-router';
+import { useLocation } from 'react-router';
 import { AppLink as Link } from '../AppLink';
 import { UserProfileMenu } from './UserProfileMenu';
 import { HeaderNotificationsDropdown } from './HeaderNotificationsDropdown';
+import { HeaderGlobalSearch } from './HeaderGlobalSearch';
 import { useAuth } from '../../contexts/AuthContext';
 import { contarNotificacoesNaoLidasSupabase } from '../../services/userEngagementService';
 import {
@@ -283,13 +284,10 @@ export function MemberPageHeader({
   className = '',
 }: MemberPageHeaderProps) {
   const location = useLocation();
-  const navigate = useNavigate();
   const { user } = useAuth();
-  const searchRootRef = useRef<HTMLDivElement | null>(null);
   const searchInputRef = useRef<HTMLInputElement | null>(null);
   const [unreadNotificationsCount, setUnreadNotificationsCount] = useState(0);
   const [searchExpanded, setSearchExpanded] = useState(false);
-  const [searchTerm, setSearchTerm] = useState('');
   const currentHeaderSection = getCurrentHeaderSection(location.pathname);
   const isAdminSection = location.pathname.startsWith('/admin');
   void hideFavoriteButton;
@@ -320,32 +318,6 @@ export function MemberPageHeader({
       window.removeEventListener('focus', refreshUnreadNotificationsCount);
     };
   }, [refreshUnreadNotificationsCount]);
-
-  useEffect(() => {
-    if (!searchExpanded) return;
-
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') setSearchExpanded(false);
-    };
-
-    document.addEventListener('keydown', handleKeyDown);
-    window.requestAnimationFrame(() => searchInputRef.current?.focus());
-
-    return () => {
-      document.removeEventListener('keydown', handleKeyDown);
-    };
-  }, [searchExpanded]);
-
-  const submitSearch = useCallback(() => {
-    const trimmed = searchTerm.trim();
-    if (!trimmed) {
-      setSearchExpanded(false);
-      return;
-    }
-
-    setSearchExpanded(false);
-    navigate('/busca?q=' + encodeURIComponent(trimmed));
-  }, [navigate, searchTerm]);
 
   const extraActions = actions
     .filter((action) => !isStandardNavigationAction(action))
@@ -393,34 +365,12 @@ export function MemberPageHeader({
       </div>
 
       <div className={[searchExpanded ? 'hidden md:flex' : 'flex', 'min-w-0 shrink-0 items-center justify-end gap-2 overflow-visible'].join(' ')}>
-        <div ref={searchRootRef} className="relative z-[502] flex min-w-0 flex-row-reverse items-center overflow-visible">
-          <button
-            type="button"
-            className={`relative z-[504] flex ${memberIconButtonClassName}`}
-            title="Buscar por pessoa ou página"
-            aria-label={searchExpanded ? 'Fechar busca' : 'Abrir busca'}
-            data-tour-target="search"
-            onClick={() => setSearchExpanded((current) => !current)}
-          >
-            <Search className="pointer-events-none h-4 w-4" />
-          </button>
-
-          <div className={['relative z-[503] min-w-0 overflow-visible transition-all duration-300 ease-out', searchExpanded ? 'pointer-events-auto w-[min(50vw,380px)] opacity-100' : 'pointer-events-none w-0 opacity-0'].join(' ')}>
-            <div className="pr-2">
-              <form onSubmit={(event) => { event.preventDefault(); submitSearch(); }}>
-                <input
-                  ref={searchInputRef}
-                  type="text"
-                  placeholder="Buscar pessoa ou página..."
-                  value={searchTerm}
-                  onChange={(event) => setSearchTerm(event.target.value)}
-                  className="h-10 w-full rounded-md border border-gray-200 bg-white px-3 text-sm text-gray-900 shadow-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
-                  tabIndex={searchExpanded ? 0 : -1}
-                />
-              </form>
-            </div>
-          </div>
-        </div>
+        <HeaderGlobalSearch
+          searchExpanded={searchExpanded}
+          onSearchExpandedChange={setSearchExpanded}
+          buttonClassName={memberIconButtonClassName}
+          inputRef={searchInputRef}
+        />
       </div>
     </>
   );
