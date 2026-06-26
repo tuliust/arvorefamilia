@@ -12,7 +12,7 @@ import {
 import type { LucideIcon } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '../../components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
+import { Card, CardContent } from '../../components/ui/card';
 import { Input } from '../../components/ui/input';
 import { Textarea } from '../../components/ui/textarea';
 import { HEADER_ACTION_ICONS, MemberPageHeader } from '../../components/layout/MemberPageHeader';
@@ -68,6 +68,22 @@ function getCategoryIcon(categoria: ForumCategoria): LucideIcon {
   return MessageCircle;
 }
 
+function getCategoryLabelLines(categoria: ForumCategoria): [string, string] {
+  const normalized = normalizeSearch(`${categoria.slug} ${categoria.nome}`);
+
+  if (normalized.includes('duvida')) return ['Dúvidas', 'da Família'];
+  if (normalized.includes('historia') || normalized.includes('memoria')) return ['Histórias', 'e Memórias'];
+  if (normalized.includes('document') || normalized.includes('foto')) return ['Documentos', 'e Fotos'];
+  if (normalized.includes('evento') || normalized.includes('encontro')) return ['Eventos e', 'Encontros'];
+  if (normalized.includes('ajuda') || normalized.includes('arvore')) return ['Ajuda com', 'a Árvore'];
+
+  const parts = categoria.nome.trim().split(/\s+/).filter(Boolean);
+  if (parts.length <= 1) return [categoria.nome, ''];
+
+  const splitIndex = Math.ceil(parts.length / 2);
+  return [parts.slice(0, splitIndex).join(' '), parts.slice(splitIndex).join(' ')];
+}
+
 function extractMentionedPersonIds(conteudo: string, pessoas: Pessoa[]) {
   const normalizedContent = normalizeSearch(conteudo);
 
@@ -79,6 +95,42 @@ function extractMentionedPersonIds(conteudo: string, pessoas: Pessoa[]) {
       return normalizedContent.includes(mention);
     })
     .map((pessoa) => pessoa.id);
+}
+
+function getTextareaCaretCoordinates(textarea: HTMLTextAreaElement, position: number) {
+  const computed = window.getComputedStyle(textarea);
+  const mirror = document.createElement('div');
+  const marker = document.createElement('span');
+  const lineHeight = Number.parseFloat(computed.lineHeight) || 20;
+
+  mirror.style.position = 'absolute';
+  mirror.style.visibility = 'hidden';
+  mirror.style.whiteSpace = 'pre-wrap';
+  mirror.style.wordBreak = 'break-word';
+  mirror.style.overflowWrap = 'break-word';
+  mirror.style.boxSizing = computed.boxSizing;
+  mirror.style.width = computed.width;
+  mirror.style.minHeight = computed.height;
+  mirror.style.padding = computed.padding;
+  mirror.style.border = computed.border;
+  mirror.style.font = computed.font;
+  mirror.style.letterSpacing = computed.letterSpacing;
+  mirror.style.lineHeight = computed.lineHeight;
+  mirror.style.top = '0';
+  mirror.style.left = '-9999px';
+
+  mirror.textContent = textarea.value.slice(0, position);
+  marker.textContent = '\u200b';
+  mirror.appendChild(marker);
+  document.body.appendChild(mirror);
+
+  const coordinates = {
+    top: marker.offsetTop - textarea.scrollTop + lineHeight + 8,
+    left: Math.max(8, marker.offsetLeft - textarea.scrollLeft),
+  };
+
+  mirror.remove();
+  return coordinates;
 }
 
 export function ForumNovoTopico() {
@@ -95,6 +147,7 @@ export function ForumNovoTopico() {
   const [mentionOpen, setMentionOpen] = useState(false);
   const [mentionStartIndex, setMentionStartIndex] = useState<number | null>(null);
   const [mentionCursorIndex, setMentionCursorIndex] = useState<number | null>(null);
+  const [mentionPosition, setMentionPosition] = useState({ top: 0, left: 0 });
   const [selectedMentionIndex, setSelectedMentionIndex] = useState(0);
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   const [salvando, setSalvando] = useState(false);
@@ -141,6 +194,19 @@ export function ForumNovoTopico() {
     );
   }
 
+  function updateMentionPosition(cursorPosition: number) {
+    window.requestAnimationFrame(() => {
+      const textarea = textareaRef.current;
+      if (!textarea) return;
+
+      const coordinates = getTextareaCaretCoordinates(textarea, cursorPosition);
+      setMentionPosition({
+        top: Math.max(44, coordinates.top),
+        left: Math.min(Math.max(8, coordinates.left), Math.max(8, textarea.clientWidth - 270)),
+      });
+    });
+  }
+
   function detectMention(text: string, cursorPosition: number) {
     const textBeforeCursor = text.slice(0, cursorPosition);
     const match = textBeforeCursor.match(/(^|\s)@([\p{L}\p{N}_-]*)$/u);
@@ -161,6 +227,7 @@ export function ForumNovoTopico() {
     setMentionStartIndex(startIndex);
     setMentionCursorIndex(cursorPosition);
     setSelectedMentionIndex(0);
+    updateMentionPosition(startIndex + 1);
   }
 
   function handleConteudoChange(event: React.ChangeEvent<HTMLTextAreaElement>) {
@@ -168,6 +235,11 @@ export function ForumNovoTopico() {
     const cursorPosition = event.target.selectionStart ?? nextText.length;
     setConteudo(nextText);
     detectMention(nextText, cursorPosition);
+  }
+
+  function handleConteudoClick(event: React.MouseEvent<HTMLTextAreaElement>) {
+    const textarea = event.currentTarget;
+    detectMention(textarea.value, textarea.selectionStart ?? textarea.value.length);
   }
 
   function insertMention(pessoa: Pessoa) {
@@ -288,10 +360,7 @@ export function ForumNovoTopico() {
 
       <main className="mx-auto max-w-4xl px-4 py-6">
         <Card className="min-w-0">
-          <CardHeader>
-            <CardTitle className="break-words">Novo tópico</CardTitle>
-          </CardHeader>
-          <CardContent>
+          <CardContent className="pt-6">
             <form onSubmit={publicar} className="space-y-5">
               <div className="min-w-0 space-y-2">
                 <label className="text-sm font-medium text-gray-700" htmlFor="titulo">Título</label>
@@ -310,6 +379,7 @@ export function ForumNovoTopico() {
                   {categorias.map((categoria) => {
                     const selected = categoriaId === categoria.id;
                     const Icon = getCategoryIcon(categoria);
+                    const [firstLine, secondLine] = getCategoryLabelLines(categoria);
 
                     return (
                       <button
@@ -333,8 +403,9 @@ export function ForumNovoTopico() {
                         >
                           <Icon className="h-5 w-5" />
                         </span>
-                        <span className="mt-3 line-clamp-2 min-w-0 break-words font-medium leading-snug">
-                          {categoria.nome}
+                        <span className="mt-3 flex min-w-0 flex-col items-center justify-center font-medium leading-snug">
+                          <span>{firstLine}</span>
+                          {secondLine && <span>{secondLine}</span>}
                         </span>
                       </button>
                     );
@@ -353,13 +424,17 @@ export function ForumNovoTopico() {
                     id="conteudo"
                     value={conteudo}
                     onChange={handleConteudoChange}
+                    onClick={handleConteudoClick}
                     onKeyDown={handleConteudoKeyDown}
                     className="min-h-[160px] rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
                   />
 
                   {mentionOpen && filteredMentionPeople.length > 0 && (
-                    <div className="fixed inset-0 z-[13000] flex items-center justify-center bg-slate-950/20 px-4 md:absolute md:inset-x-0 md:inset-y-auto md:top-full md:mt-1 md:block md:bg-transparent md:px-0">
-                      <div className="max-h-72 w-full max-w-sm overflow-y-auto rounded-2xl border border-gray-200 bg-white p-2 shadow-2xl md:max-h-56 md:max-w-none md:rounded-md md:p-0 md:shadow-lg">
+                    <div
+                      className="absolute z-[13000] w-[min(17rem,calc(100%-1rem))] overflow-hidden rounded-xl border border-gray-200 bg-white shadow-xl"
+                      style={{ top: mentionPosition.top, left: mentionPosition.left }}
+                    >
+                      <div className="max-h-44 overflow-y-auto py-1">
                         {filteredMentionPeople.map((pessoa, index) => (
                           <button
                             key={pessoa.id}
@@ -369,11 +444,11 @@ export function ForumNovoTopico() {
                               insertMention(pessoa);
                             }}
                             className={[
-                              'flex w-full px-4 py-3 text-left text-base font-semibold md:px-3 md:py-2 md:text-sm',
-                              index === selectedMentionIndex ? 'rounded-xl bg-blue-50 text-blue-800 md:rounded-none' : 'text-gray-700 hover:bg-gray-50',
+                              'flex w-full px-3 py-2 text-left text-sm font-semibold',
+                              index === selectedMentionIndex ? 'bg-blue-50 text-blue-800' : 'text-gray-700 hover:bg-gray-50',
                             ].join(' ')}
                           >
-                            <span className="break-words">{pessoa.nome_completo}</span>
+                            <span className="truncate">{pessoa.nome_completo}</span>
                           </button>
                         ))}
                       </div>
