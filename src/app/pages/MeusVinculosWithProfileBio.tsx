@@ -20,6 +20,7 @@ import {
 import type { Pessoa } from '../types';
 import type { PersonProfileQuestionnaireAnswers } from '../types/profileQuestionnaire';
 import { MeusVinculos } from './MeusVinculos';
+import { MeusVinculosPetEditorPortal } from './meus-vinculos/MeusVinculosPetEditorPortal';
 import { obterRelacionamentosDaPessoa } from '../services/dataService';
 import { listarArquivosHistoricosPorPessoa } from '../services/arquivosHistoricosService';
 
@@ -529,6 +530,7 @@ export function MeusVinculosWithProfileBio() {
   return (
     <div>
       <MeusVinculosProfileBioPortal />
+      <MeusVinculosPetEditorPortal />
       <MeusVinculos />
     </div>
   );

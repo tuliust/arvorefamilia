@@ -28,15 +28,28 @@ export function canEditPerson(params: {
 }
 
 export function canEditLinkedPersonRecord(
-  link?: Pick<UserPersonLinkRecord, 'can_edit' | 'relacao_com_perfil'> | null
+  link?: Pick<UserPersonLinkRecord, 'can_edit' | 'relacao_com_perfil' | 'permission_role'> | null
 ) {
-  return Boolean(
-    link &&
-    (
-      link.can_edit !== false ||
-      link.relacao_com_perfil === 'Sou esta pessoa'
-    )
-  );
+  if (!link) return false;
+
+  if (link.can_edit === false && link.relacao_com_perfil !== 'Sou esta pessoa') {
+    return false;
+  }
+
+  if (link.permission_role === 'viewer') {
+    return false;
+  }
+
+  if (
+    link.permission_role === 'owner' ||
+    link.permission_role === 'editor' ||
+    link.permission_role === 'legacy_editor' ||
+    link.permission_role === 'guardian'
+  ) {
+    return true;
+  }
+
+  return link.can_edit !== false || link.relacao_com_perfil === 'Sou esta pessoa';
 }
 
 export async function getLinkedPessoaIdForUser(userId: string) {

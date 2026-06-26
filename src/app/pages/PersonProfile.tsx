@@ -27,6 +27,8 @@ import {
   MessageCircle,
   Pencil,
   Plus,
+  Send,
+  ShieldCheck,
   Star,
   UserCircle2,
 } from 'lucide-react';
@@ -43,6 +45,13 @@ import { FavoriteButton } from '../components/favorites/FavoriteButton';
 import { MemberPageHeader, type HeaderAction } from '../components/layout/MemberPageHeader';
 import { buildPersonTimeline } from '../utils/buildPersonTimeline';
 import { getLinkedPersonWithPessoa } from '../services/memberProfileService';
+import {
+  createProfileControlRequest,
+  listMyProfileControlRequests,
+  listProfileManagersForPerson,
+  type ProfileManagerSummary,
+} from '../services/profileControlRequestService';
+import { getManageableProfileEligibility } from '../utils/manageableProfiles';
 
 const TREE_RETURN_FALLBACK_PATH = '/mapa-familiar';
 const ALLOWED_TREE_RETURN_PATHS = ['/', '/mapa-familiar', '/mapa-familiar-horizontal'];
@@ -101,6 +110,9 @@ export function PersonProfile() {
   const [forumLoading, setForumLoading] = useState(false);
   const [linkedPessoaId, setLinkedPessoaId] = useState<string | null>(null);
   const [currentPersonCanEditLink, setCurrentPersonCanEditLink] = useState(false);
+  const [profileManagers, setProfileManagers] = useState<ProfileManagerSummary[]>([]);
+  const [pendingProfileControlTargetIds, setPendingProfileControlTargetIds] = useState<Set<string>>(() => new Set());
+  const [profileControlSubmitting, setProfileControlSubmitting] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
   const [allPeople, setAllPeople] = useState<Pessoa[]>([]);
   const [allRelationships, setAllRelationships] = useState<Relacionamento[]>([]);
@@ -108,6 +120,16 @@ export function PersonProfile() {
   const canEdit = useMemo(
     () => canEditPerson({ currentUser: user, pessoaId: id, linkedPessoaId, isAdmin }) || currentPersonCanEditLink,
     [id, linkedPessoaId, user, isAdmin, currentPersonCanEditLink],
+  );
+  const manageableProfileEligibility = useMemo(() => getManageableProfileEligibility(pessoa), [pessoa]);
+  const hasPendingProfileControlRequest = Boolean(pessoa?.id && pendingProfileControlTargetIds.has(pessoa.id));
+  const canRequestProfileAdministration = Boolean(
+    user &&
+    pessoa?.id &&
+    manageableProfileEligibility.eligible &&
+    !canEdit &&
+    pessoa.id !== linkedPessoaId &&
+    !hasPendingProfileControlRequest
   );
   const treeReturnPath = useMemo(
     () => getSafeTreeReturnPath(searchParams.get('voltar')),
@@ -218,6 +240,49 @@ export function PersonProfile() {
   useEffect(() => {
     let mounted = true;
 
+    async function loadProfileManagementContext() {
+      if (!user || !pessoa?.id) {
+        setProfileManagers([]);
+        setPendingProfileControlTargetIds(new Set());
+        return;
+      }
+
+      const [managersResult, requestsResult] = await Promise.all([
+        listProfileManagersForPerson(pessoa.id),
+        listMyProfileControlRequests(),
+      ]);
+
+      if (!mounted) return;
+
+      if (managersResult.error) {
+        console.warn('Não foi possível carregar responsáveis do perfil:', managersResult.error);
+        setProfileManagers([]);
+      } else {
+        setProfileManagers(managersResult.data);
+      }
+
+      if (requestsResult.error) {
+        console.warn('Não foi possível carregar solicitações de administração:', requestsResult.error);
+        setPendingProfileControlTargetIds(new Set());
+      } else {
+        setPendingProfileControlTargetIds(new Set(
+          requestsResult.data
+            .filter((request) => request.status === 'pending')
+            .map((request) => request.target_pessoa_id)
+        ));
+      }
+    }
+
+    void loadProfileManagementContext();
+
+    return () => {
+      mounted = false;
+    };
+  }, [pessoa?.id, user]);
+
+  useEffect(() => {
+    let mounted = true;
+
     async function loadRelationships() {
       if (!id || pessoa?.id !== id) return;
 
@@ -277,6 +342,45 @@ export function PersonProfile() {
 
   const handleEditProfile = () => {
     navigate(isAdmin ? `/admin/pessoas/${id}` : '/meus-dados');
+  };
+
+  const handleRequestProfileAdministration = async () => {
+    if (!user || !pessoa?.id || !manageableProfileEligibility.eligible || profileControlSubmitting) return;
+
+    const description = window.prompt(
+      'Explique brevemente sua relação com este perfil e por que você deve administrá-lo.',
+      ''
+    );
+
+    if (description === null) return;
+
+    const trimmedDescription = description.trim();
+    if (trimmedDescription && trimmedDescription.length < 10) {
+      toast.error('A justificativa deve ter pelo menos 10 caracteres.');
+      return;
+    }
+
+    const reason = manageableProfileEligibility.reason === 'deceased'
+      ? 'deceased'
+      : 'minor_or_dependent';
+
+    setProfileControlSubmitting(true);
+    try {
+      const result = await createProfileControlRequest({
+        targetPessoaId: pessoa.id,
+        reason,
+        description: trimmedDescription || manageableProfileEligibility.detail,
+      });
+
+      if (result.error) throw new Error(result.error);
+
+      setPendingProfileControlTargetIds((current) => new Set([...current, pessoa.id]));
+      toast.success('Solicitação enviada para análise administrativa.');
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Não foi possível enviar a solicitação.');
+    } finally {
+      setProfileControlSubmitting(false);
+    }
   };
 
 
@@ -446,7 +550,51 @@ export function PersonProfile() {
           )}
         />
 
+        {(profileManagers.length > 0 || manageableProfileEligibility.eligible) && (
+          <section>
+            <Card>
+              <CardContent className="p-4 sm:p-5">
+                <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                  <div className="min-w-0">
+                    <h2 className="flex min-w-0 items-center gap-2 break-words text-lg font-semibold text-gray-900">
+                      <ShieldCheck className="h-5 w-5 shrink-0 text-blue-600" />
+                      <span className="min-w-0 break-words">Administração do perfil</span>
+                    </h2>
 
+                    {profileManagers.length > 0 ? (
+                      <p className="mt-2 break-words text-sm text-gray-600">
+                        Perfil gerenciado por {profileManagers.map((manager) => manager.nome_exibicao).join(', ')}.
+                      </p>
+                    ) : (
+                      <p className="mt-2 break-words text-sm text-gray-600">
+                        {manageableProfileEligibility.detail}
+                      </p>
+                    )}
+
+                    {hasPendingProfileControlRequest && (
+                      <p className="mt-3 rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 text-sm text-blue-900">
+                        Sua solicitação para administrar esta página está em análise.
+                      </p>
+                    )}
+                  </div>
+
+                  {canRequestProfileAdministration && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={handleRequestProfileAdministration}
+                      disabled={profileControlSubmitting}
+                      className="w-full lg:w-auto"
+                    >
+                      <Send className="h-4 w-4" />
+                      {profileControlSubmitting ? 'Enviando...' : 'Solicitar administração da página'}
+                    </Button>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          </section>
+        )}
 
         <PersonEventsList eventos={personEvents} />
 

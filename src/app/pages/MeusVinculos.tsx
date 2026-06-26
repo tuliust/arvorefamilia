@@ -43,13 +43,14 @@ import {
   findPendingDuplicateRelationshipChangeRequest,
 } from '../services/relationshipChangeRequestService';
 import {
-  getPrimaryLinkedPersonWithPessoa,
+  getCurrentUserLinkedPeople,
   getLinkedPersonIds,
   resolveFirstAccessLinkForUser,
   searchPeopleForRelationship,
   UserPersonLinkRecord,
 } from '../services/memberProfileService';
 import { Pessoa, Relacionamento } from '../types';
+import { createProfileControlRequest, listMyProfileControlRequests } from '../services/profileControlRequestService';
 import { normalizeLocationByMode, validateLocationByMode } from '../utils/personFields';
 import { ProfileControlRequestDialog } from './meus-vinculos/ProfileControlRequestDialog';
 import { RelativeCard } from './meus-vinculos/RelativeCard';
@@ -283,6 +284,8 @@ export function MeusVinculos() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [link, setLink] = useState<(UserPersonLinkRecord & { pessoa: Pessoa | null }) | null>(null);
+  const [linkedPeople, setLinkedPeople] = useState<Array<UserPersonLinkRecord & { pessoa: Pessoa | null }>>([]);
+  const [selectedPessoaId, setSelectedPessoaId] = useState('');
   const [relationships, setRelationships] = useState<RelationshipGroups>(EMPTY_GROUPS);
   const [initialRelationships, setInitialRelationships] = useState<RelationshipGroups>(EMPTY_GROUPS);
   const [allRelacionamentos, setAllRelacionamentos] = useState<Relacionamento[]>([]);
@@ -308,7 +311,6 @@ export function MeusVinculos() {
   const [removedRelationshipIds, setRemovedRelationshipIds] = useState<RemovedRelationshipIds>(EMPTY_REMOVED_RELATIONSHIP_IDS);
   const [hasLocalRelationshipChanges, setHasLocalRelationshipChanges] = useState(false);
   const [hasPendingRelationshipRequest, setHasPendingRelationshipRequest] = useState(false);
-  // TODO: Persistir solicitação de controle de perfil quando o fluxo administrativo estiver disponível.
   const [controlRequestDialogOpen, setControlRequestDialogOpen] = useState(false);
   const [selectedControlPerson, setSelectedControlPerson] = useState<Pessoa | null>(null);
   const [controlRequestReason, setControlRequestReason] = useState<ProfileControlRequestReason>('deceased');
@@ -371,7 +373,7 @@ export function MeusVinculos() {
       draftHydratedRef.current = false;
       draftDirtyRef.current = false;
       await resolveFirstAccessLinkForUser(user);
-      const { data, error } = await getPrimaryLinkedPersonWithPessoa(user.id);
+      const { data: linksData, error } = await getCurrentUserLinkedPeople();
 
       if (!mounted) return;
 
@@ -381,26 +383,56 @@ export function MeusVinculos() {
         return;
       }
 
-      setLink(data);
+      setLinkedPeople(linksData);
+      const selectedLink = (
+        selectedPessoaId
+          ? linksData.find((item) => item.pessoa_id === selectedPessoaId)
+          : null
+      ) || linksData.find((item) => item.principal) || linksData[0] || null;
 
-      if (data?.pessoa?.id) {
-        const draftKey = getMeusVinculosDraftKey(user.id, data.pessoa.id);
+      if (selectedLink && selectedLink.pessoa_id !== selectedPessoaId) {
+        setSelectedPessoaId(selectedLink.pessoa_id);
+      }
+
+      setLink(selectedLink);
+
+      if (selectedLink?.pessoa?.id) {
+        const draftKey = getMeusVinculosDraftKey(user.id, selectedLink.pessoa.id);
         const draft = readMeusVinculosDraft(draftKey);
-        await reloadRelationships(data.pessoa.id);
-        setProfileControlRequests([]);
+        await reloadRelationships(selectedLink.pessoa.id);
+
+        const controlRequestsResult = await listMyProfileControlRequests();
+        if (mounted && controlRequestsResult.error) {
+          console.warn('Não foi possível carregar solicitações de controle de perfil:', controlRequestsResult.error);
+        }
+        if (mounted) {
+          setProfileControlRequests(
+            controlRequestsResult.error
+              ? []
+              : controlRequestsResult.data
+                  .filter((request) => request.status === 'pending')
+                  .map((request) => ({
+                    pessoaId: request.target_pessoa_id,
+                    pessoaNome: request.target_pessoa_id,
+                    reason: request.reason,
+                    relationshipDescription: request.description ?? '',
+                    createdAt: request.created_at ?? new Date().toISOString(),
+                  }))
+          );
+        }
         setSelectedControlPerson(null);
         setControlRequestReason('deceased');
         setControlRequestDescription('');
         setControlRequestError(null);
         setControlRequestDialogOpen(false);
 
-        const dadosDraft = readMeusDadosDraft(getMeusDadosDraftKey(user.id, data.pessoa.id));
+        const dadosDraft = readMeusDadosDraft(getMeusDadosDraftKey(user.id, selectedLink.pessoa.id));
         if (mounted) setPendingAvatarDataUrl(dadosDraft?.pendingAvatarDataUrl ?? null);
 
         if (mounted && draft) {
           const normalizedDraftRelationships = normalizeRelationshipGroups(draft.relationships);
           setRelationships(normalizedDraftRelationships);
-          setMarriageDetails(normalizeSpouseActivity(draft.marriageDetails, normalizedDraftRelationships.conjuges, data.pessoa));
+          setMarriageDetails(normalizeSpouseActivity(draft.marriageDetails, normalizedDraftRelationships.conjuges, selectedLink.pessoa));
           setLocalRelationshipRoles(draft.localRelationshipRoles);
           setChildOtherParent(draft.childOtherParent);
           setSpouseExpanded(draft.spouseExpanded);
@@ -422,7 +454,7 @@ export function MeusVinculos() {
     return () => {
       mounted = false;
     };
-  }, [user]);
+  }, [selectedPessoaId, user]);
 
   useEffect(() => {
     if (!user?.id || !pessoa?.id || !draftHydratedRef.current || !draftDirtyRef.current) return;
@@ -828,7 +860,7 @@ export function MeusVinculos() {
     setControlRequestError(null);
   };
 
-  const submitProfileControlRequest = () => {
+  const submitProfileControlRequest = async () => {
     if (!selectedControlPerson) return;
 
     const trimmedDescription = controlRequestDescription.trim();
@@ -848,17 +880,29 @@ export function MeusVinculos() {
       return;
     }
 
-    const nextRequest: ProfileControlRequestDraft = {
-      pessoaId: selectedControlPerson.id,
-      pessoaNome: selectedControlPerson.nome_completo,
-      reason: controlRequestReason,
-      relationshipDescription: trimmedDescription,
-      createdAt: new Date().toISOString(),
-    };
+    try {
+      const result = await createProfileControlRequest({
+        targetPessoaId: selectedControlPerson.id,
+        reason: controlRequestReason,
+        description: trimmedDescription,
+      });
 
-    setProfileControlRequests((current) => [...current, nextRequest]);
-    closeControlRequestDialog();
-    toast.success('Solicitação de controle enviada para análise.');
+      if (result.error) throw new Error(result.error);
+
+      const nextRequest: ProfileControlRequestDraft = {
+        pessoaId: selectedControlPerson.id,
+        pessoaNome: selectedControlPerson.nome_completo,
+        reason: controlRequestReason,
+        relationshipDescription: trimmedDescription,
+        createdAt: result.data?.created_at ?? new Date().toISOString(),
+      };
+
+      setProfileControlRequests((current) => [...current, nextRequest]);
+      closeControlRequestDialog();
+      toast.success('Solicitação de controle enviada para análise.');
+    } catch (error) {
+      setControlRequestError(error instanceof Error ? error.message : 'Não foi possível enviar a solicitação.');
+    }
   };
 
   const updateMarriageDetail = (spouseId: string, details: MarriageDetailsForm) => {
@@ -1318,6 +1362,30 @@ export function MeusVinculos() {
 
       <main className="mx-auto max-w-7xl px-4 py-6 pb-[calc(7rem+env(safe-area-inset-bottom))] md:pb-6">
         {!isOnboarding && <ProfileEditMobileTabs />}
+
+        {linkedPeople.length > 1 && (
+          <section className="mb-6 rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
+            <Label htmlFor="relationship-profile-selector">Perfil em edição</Label>
+            <select
+              id="relationship-profile-selector"
+              value={selectedPessoaId}
+              onChange={(event) => {
+                draftHydratedRef.current = false;
+                draftDirtyRef.current = false;
+                setSelectedPessoaId(event.target.value);
+              }}
+              className="mt-2 flex h-10 w-full min-w-0 rounded-md border border-gray-300 bg-white px-3 py-2 text-sm"
+            >
+              {linkedPeople.map((item) => (
+                <option key={item.id} value={item.pessoa_id}>
+                  {item.pessoa?.nome_completo || item.pessoa_id}
+                  {item.principal ? ' · principal' : ''}
+                  {item.can_edit === false ? ' · somente leitura' : ''}
+                </option>
+              ))}
+            </select>
+          </section>
+        )}
         {hasPendingRelationshipRequest && (
           <div className="mb-6 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
             Sua solicitação está em aprovação. Você receberá um e-mail quando a análise for finalizada.

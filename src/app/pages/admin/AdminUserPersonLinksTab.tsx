@@ -8,6 +8,7 @@ import { Input } from '../../components/ui/input';
 import { adminListProfilesForLinking, adminCreateUserPersonLink, adminDeleteUserPersonLink, adminListAllUserPersonLinks, adminUpdateUserPersonLink, type AdminLinkableProfile, type UserPersonLinkRecord } from '../../services/memberProfileService';
 import { obterTodasPessoas } from '../../services/dataService';
 import { Pessoa, UserPersonPermissionRole } from '../../types';
+import { AdminManagedProfilesPanel } from './AdminManagedProfilesPanel';
 
 const ROLE_OPTIONS: Array<{ value: UserPersonPermissionRole; label: string; canEdit: boolean }> = [
   { value: 'owner', label: 'owner', canEdit: true },
@@ -165,6 +166,8 @@ export function AdminUserPersonLinksTab() {
 
   return (
     <div className="space-y-6">
+      <AdminManagedProfilesPanel />
+
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
