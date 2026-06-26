@@ -1,20 +1,16 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Heart, MessageSquareHeart, Send } from 'lucide-react';
+import { MessageSquareHeart, Send, Trash2 } from 'lucide-react';
 
 import { useAuth } from '../../contexts/AuthContext';
 import {
   createMemoryWallPost,
+  deleteMemoryWallPost,
   listMemoryWallPosts,
   type MemoryWallPost,
-  type MemoryWallVisibility,
 } from '../../services/memoryWallService';
 import { curiositySectionCardClassName } from './curiosidadesUtils';
 
-function getVisibilityLabel(value: MemoryWallVisibility) {
-  if (value === 'close_relatives') return 'Parentes próximos';
-  if (value === 'private') return 'Privado';
-  return 'Todos da família';
-}
+const MEMORY_MAX_LENGTH = 200;
 
 function formatMemoryDate(value: string) {
   const date = new Date(value);
@@ -50,6 +46,7 @@ export function CuriosidadesMemoryWall({ className = '' }: CuriosidadesMemoryWal
   const [items, setItems] = useState<MemoryWallPost[]>([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -82,6 +79,11 @@ export function CuriosidadesMemoryWall({ className = '' }: CuriosidadesMemoryWal
     const cleanMemory = memory.trim();
     if (!cleanMemory || submitting) return;
 
+    if (cleanMemory.length > MEMORY_MAX_LENGTH) {
+      setError(`A lembrança deve ter no máximo ${MEMORY_MAX_LENGTH} caracteres.`);
+      return;
+    }
+
     setSubmitting(true);
     setError(null);
 
@@ -101,6 +103,23 @@ export function CuriosidadesMemoryWall({ className = '' }: CuriosidadesMemoryWal
     }
   };
 
+  const deleteMemory = async (item: MemoryWallPost) => {
+    if (deletingId) return;
+    if (!window.confirm('Deseja apagar esta lembrança?')) return;
+
+    setDeletingId(item.id);
+    setError(null);
+
+    try {
+      await deleteMemoryWallPost(item.id);
+      setItems((current) => current.filter((currentItem) => currentItem.id !== item.id));
+    } catch (deleteError) {
+      setError(deleteError instanceof Error ? deleteError.message : 'Não foi possível apagar a lembrança.');
+    } finally {
+      setDeletingId(null);
+    }
+  };
+
   return (
     <section className={`${curiositySectionCardClassName} ${className}`}>
       <div className="flex items-center gap-3">
@@ -115,17 +134,21 @@ export function CuriosidadesMemoryWall({ className = '' }: CuriosidadesMemoryWal
       <div className="mt-4 space-y-3">
         <textarea
           value={memory}
-          onChange={(event) => setMemory(event.target.value)}
+          onChange={(event) => setMemory(event.target.value.slice(0, MEMORY_MAX_LENGTH))}
           placeholder="Escreva uma lembrança da família..."
           rows={4}
+          maxLength={MEMORY_MAX_LENGTH}
           className="w-full resize-none rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm outline-none focus:border-blue-300 focus:ring-2 focus:ring-blue-100"
         />
 
-        <div className="flex flex-col gap-3 sm:flex-row sm:justify-end">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <p className="text-xs font-medium text-gray-500">
+            {memory.length}/{MEMORY_MAX_LENGTH} caracteres
+          </p>
           <button
             type="button"
             onClick={submitMemory}
-            disabled={!memory.trim() || submitting}
+            disabled={!memory.trim() || submitting || memory.trim().length > MEMORY_MAX_LENGTH}
             className="inline-flex items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 py-2 text-sm font-bold text-white shadow-sm transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
           >
             <Send className="h-4 w-4" />
@@ -140,7 +163,7 @@ export function CuriosidadesMemoryWall({ className = '' }: CuriosidadesMemoryWal
         </div>
       )}
 
-      <div className="mt-5 space-y-3">
+      <div className="mt-5 max-h-[18rem] space-y-3 overflow-y-auto pr-1">
         {loading && (
           <div className="h-28 animate-pulse rounded-xl bg-gray-100" />
         )}
@@ -151,20 +174,36 @@ export function CuriosidadesMemoryWall({ className = '' }: CuriosidadesMemoryWal
           </div>
         )}
 
-        {!loading && items.map((item) => (
-          <article key={item.id} className="rounded-xl border border-gray-200 bg-gray-50 p-4">
-            <p className="break-words text-sm leading-6 text-gray-800">&quot;{item.body}&quot;</p>
-            <div className="mt-3 flex flex-wrap items-center gap-2 text-xs text-gray-500">
-              <span className="font-bold text-gray-700">- {item.author_name}</span>
-              <span>· {formatMemoryDate(item.created_at)}</span>
-              <span>· {getVisibilityLabel(item.visibility)}</span>
-              <span className="inline-flex items-center gap-1 rounded-full bg-white px-2 py-1 font-semibold text-gray-600">
-                <Heart className="h-3.5 w-3.5" />
-                lembrança
-              </span>
-            </div>
-          </article>
-        ))}
+        {!loading && items.map((item) => {
+          const canDelete = Boolean(user?.id && item.user_id === user.id);
+
+          return (
+            <article key={item.id} className="rounded-xl border border-gray-200 bg-gray-50 p-4">
+              <div className="flex min-w-0 items-start gap-3">
+                <div className="min-w-0 flex-1">
+                  <p className="break-words text-sm leading-6 text-gray-800">&quot;{item.body}&quot;</p>
+                  <div className="mt-3 flex flex-wrap items-center gap-2 text-xs text-gray-500">
+                    <span className="font-bold text-gray-700">- {item.author_name}</span>
+                    <span>· {formatMemoryDate(item.created_at)}</span>
+                  </div>
+                </div>
+
+                {canDelete && (
+                  <button
+                    type="button"
+                    onClick={() => deleteMemory(item)}
+                    disabled={deletingId === item.id}
+                    className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-400 transition hover:border-red-200 hover:bg-red-50 hover:text-red-600 disabled:cursor-not-allowed disabled:opacity-60"
+                    aria-label="Apagar lembrança"
+                    title="Apagar lembrança"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </button>
+                )}
+              </div>
+            </article>
+          );
+        })}
       </div>
     </section>
   );
