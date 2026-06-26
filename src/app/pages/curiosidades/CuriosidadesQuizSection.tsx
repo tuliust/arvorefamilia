@@ -3,14 +3,137 @@ import { BrainCircuit, CheckCircle2, XCircle } from 'lucide-react';
 import {
   buildCuriosityQuizQuestions,
   curiositySectionCardClassName,
-  getFirstTwoNames,
   getInitials,
   type CuriosidadesDataProps,
 } from './curiosidadesUtils';
+import type { Pessoa } from '../../types';
 
 type CuriosidadesQuizSectionProps = CuriosidadesDataProps & {
   className?: string;
 };
+
+type QuizQuestion = ReturnType<typeof buildCuriosityQuizQuestions>[number];
+type QuizOption = QuizQuestion['options'][number];
+
+function normalizeQuizText(value: unknown) {
+  return String(value ?? '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLocaleLowerCase('pt-BR')
+    .trim();
+}
+
+function isQuizPet(pessoa: Pessoa) {
+  return normalizeQuizText(pessoa.humano_ou_pet) === 'pet';
+}
+
+function sortQuizPeopleByName(people: Pessoa[]) {
+  return [...people].sort((a, b) =>
+    String(a.nome_completo ?? '').localeCompare(String(b.nome_completo ?? ''), 'pt-BR', { sensitivity: 'base' })
+  );
+}
+
+function rotateQuizPeople(people: Pessoa[], offset: number) {
+  if (people.length === 0) return people;
+
+  const safeOffset = ((offset % people.length) + people.length) % people.length;
+  return [...people.slice(safeOffset), ...people.slice(0, safeOffset)];
+}
+
+function toQuizOption(pessoa: Pessoa): QuizOption {
+  return {
+    id: pessoa.id,
+    label: String(pessoa.nome_completo || 'Pessoa sem nome').trim(),
+    imageUrl: pessoa.foto_principal_url,
+  };
+}
+
+function rebuildVariedOptions(
+  question: QuizQuestion,
+  pessoas: Pessoa[],
+  previousOptionIds: Set<string>,
+  offset: number,
+) {
+  const answer = pessoas.find((pessoa) => pessoa.id === question.answerId);
+  if (!answer) return question;
+
+  const eligibleDistractors = sortQuizPeopleByName(pessoas)
+    .filter((pessoa) => !isQuizPet(pessoa))
+    .filter((pessoa) => Boolean(pessoa.id && pessoa.nome_completo))
+    .filter((pessoa) => pessoa.id !== answer.id);
+  const rotatedDistractors = rotateQuizPeople(eligibleDistractors, offset);
+  const preferredDistractors = rotatedDistractors.filter((pessoa) => !previousOptionIds.has(pessoa.id));
+  const fallbackDistractors = rotatedDistractors.filter((pessoa) => previousOptionIds.has(pessoa.id));
+  const selected = [answer, ...preferredDistractors, ...fallbackDistractors]
+    .filter((pessoa, index, list) => list.findIndex((current) => current.id === pessoa.id) === index)
+    .slice(0, 6);
+
+  if (selected.length < 6) return question;
+
+  return {
+    ...question,
+    options: sortQuizPeopleByName(selected).map(toQuizOption),
+  };
+}
+
+function adjustQuizQuestions(questions: QuizQuestion[], pessoas: Pessoa[]) {
+  let previousOptionIds = new Set<string>();
+
+  return questions.map((question, index) => {
+    let adjustedQuestion = {
+      ...question,
+      prompt: question.id === 'oldest-living-person'
+        ? 'Quem é a pessoa com mais tempo de vida?'
+        : question.prompt,
+    };
+
+    if (question.id === 'profession-journalist') {
+      adjustedQuestion = rebuildVariedOptions(
+        adjustedQuestion,
+        pessoas,
+        previousOptionIds,
+        Math.max(1, Math.floor(pessoas.length / 3) + index),
+      );
+    }
+
+    if (question.id === 'more-children') {
+      adjustedQuestion = rebuildVariedOptions(
+        adjustedQuestion,
+        pessoas,
+        previousOptionIds,
+        Math.max(2, Math.floor((pessoas.length * 2) / 3) + index),
+      );
+    }
+
+    previousOptionIds = new Set(adjustedQuestion.options.map((option) => option.id));
+    return adjustedQuestion;
+  });
+}
+
+function getFirstTwoNames(value: unknown) {
+  const parts = String(value ?? '').trim().split(/\s+/).filter(Boolean);
+  return parts.slice(0, 2).join(' ') || String(value ?? '').trim();
+}
+
+function getFirstAndLastName(value: unknown) {
+  const parts = String(value ?? '').trim().split(/\s+/).filter(Boolean);
+  if (parts.length <= 2) return parts.join(' ');
+  return `${parts[0]} ${parts[parts.length - 1]}`;
+}
+
+function getUniqueOptionLabel(option: QuizOption, options: QuizOption[]) {
+  const shortLabel = getFirstTwoNames(option.label);
+  const shortCollisions = options.filter((current) => getFirstTwoNames(current.label) === shortLabel);
+
+  if (shortCollisions.length <= 1) return shortLabel;
+
+  const firstLastLabel = getFirstAndLastName(option.label);
+  const firstLastCollisions = options.filter((current) => getFirstAndLastName(current.label) === firstLastLabel);
+
+  if (firstLastCollisions.length <= 1) return firstLastLabel;
+
+  return option.label;
+}
 
 export function CuriosidadesQuizSection({
   pessoas,
@@ -20,7 +143,7 @@ export function CuriosidadesQuizSection({
   className = '',
 }: CuriosidadesQuizSectionProps) {
   const questions = useMemo(
-    () => buildCuriosityQuizQuestions(pessoas, relacionamentos),
+    () => adjustQuizQuestions(buildCuriosityQuizQuestions(pessoas, relacionamentos), pessoas),
     [pessoas, relacionamentos]
   );
   const [questionIndex, setQuestionIndex] = useState(0);
@@ -103,6 +226,7 @@ export function CuriosidadesQuizSection({
               const isSelected = selectedOptionId === option.id;
               const isCorrect = hasAnswered && option.id === currentQuestion.answerId;
               const isWrong = hasAnswered && isSelected && option.id !== currentQuestion.answerId;
+              const optionLabel = getUniqueOptionLabel(option, currentQuestion.options);
 
               return (
                 <button
@@ -121,10 +245,10 @@ export function CuriosidadesQuizSection({
                     <img src={option.imageUrl} alt="" className="h-9 w-9 shrink-0 rounded-full object-cover" />
                   ) : (
                     <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-blue-50 text-xs font-bold text-blue-700">
-                      {getInitials(option.label)}
+                      {getInitials(optionLabel)}
                     </span>
                   )}
-                  <span className="min-w-0 flex-1 truncate text-sm font-semibold">{getFirstTwoNames(option.label)}</span>
+                  <span className="min-w-0 flex-1 truncate text-sm font-semibold" title={option.label}>{optionLabel}</span>
                   {isCorrect && <CheckCircle2 className="h-5 w-5 shrink-0 text-green-700" />}
                   {isWrong && <XCircle className="h-5 w-5 shrink-0 text-red-700" />}
                 </button>
