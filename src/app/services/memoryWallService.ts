@@ -91,3 +91,24 @@ export async function createMemoryWallPost(payload: CreateMemoryWallPostPayload)
 
   return mapMemoryWallPost(data);
 }
+
+export async function deleteMemoryWallPost(postId: string): Promise<boolean> {
+  const userId = await getCurrentUserId();
+
+  if (!userId) {
+    throw new Error('Usuario autenticado nao encontrado para apagar a lembranca.');
+  }
+
+  const { error } = await supabase
+    .from('family_memory_wall_posts')
+    .delete()
+    .eq('id', postId)
+    .eq('user_id', userId);
+
+  if (error) {
+    console.error('[memoryWallService] Erro ao apagar lembranca:', error);
+    throw error;
+  }
+
+  return true;
+}
