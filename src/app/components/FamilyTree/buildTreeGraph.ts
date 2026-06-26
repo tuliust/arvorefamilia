@@ -1,6 +1,12 @@
 import { Edge, Node } from 'reactflow';
 import { Relacionamento } from '../../types';
 import {
+  getConjugalRelationshipStatus,
+  getConjugalRelationshipStatusDescription,
+  getConjugalRelationshipStatusLabel,
+  type ConjugalRelationshipStatus,
+} from '../../utils/conjugalRelationshipStatus';
+import {
   FamilyTreeBuildParams,
   TreeGraphBuildResult,
   DEFAULT_EDGE_FILTERS,
@@ -8,6 +14,78 @@ import {
   MarriageNodeDetails,
 } from './types';
 import { FAMILY_TREE_COLORS } from './visualTokens';
+
+type MarriageNodeDetailsWithStatus = MarriageNodeDetails & {
+  status: ConjugalRelationshipStatus;
+  statusLabel: string;
+  statusDescription: string;
+};
+
+function getConjugalStatusSymbol(status: ConjugalRelationshipStatus) {
+  const symbols: Record<ConjugalRelationshipStatus, string> = {
+    active: '♥',
+    widowed: '◌',
+    separated: '∕',
+    divorced: '×',
+    inactive: '…',
+    historical: '◇',
+  };
+
+  return symbols[status];
+}
+
+function getConjugalEdgeStyle(status: ConjugalRelationshipStatus): Edge['style'] {
+  const baseStyle = {
+    stroke: FAMILY_TREE_COLORS.EDGE_SPOUSE,
+    strokeLinecap: 'round',
+  } as Edge['style'];
+
+  switch (status) {
+    case 'separated':
+      return {
+        ...baseStyle,
+        strokeWidth: 2.75,
+        strokeDasharray: '8,6',
+        opacity: 0.82,
+      };
+    case 'divorced':
+      return {
+        ...baseStyle,
+        stroke: '#C2410C',
+        strokeWidth: 2.75,
+        strokeDasharray: '10,5',
+        opacity: 0.86,
+      };
+    case 'widowed':
+      return {
+        ...baseStyle,
+        strokeWidth: 2.5,
+        opacity: 0.56,
+      };
+    case 'historical':
+      return {
+        ...baseStyle,
+        stroke: '#A8A29E',
+        strokeWidth: 2.25,
+        opacity: 0.58,
+      };
+    case 'inactive':
+      return {
+        ...baseStyle,
+        stroke: '#94A3B8',
+        strokeWidth: 2.25,
+        strokeDasharray: '2,6',
+        opacity: 0.72,
+      };
+    case 'active':
+    default:
+      return {
+        ...baseStyle,
+        strokeWidth: 3,
+        opacity: 0.96,
+      };
+  }
+}
 
 export function buildTreeGraph({
   pessoas,
@@ -88,17 +166,23 @@ export function buildTreeGraph({
         (rel.pessoa_origem_id === parent2Id && rel.pessoa_destino_id === parent1Id)
     );
 
-  const createMarriageDetails = (parent1Id: string, parent2Id: string): MarriageNodeDetails => {
+  const createMarriageDetails = (parent1Id: string, parent2Id: string): MarriageNodeDetailsWithStatus => {
     const relationship = findConjugalRelationship(parent1Id, parent2Id);
+    const person1 = pessoaById.get(parent1Id);
+    const person2 = pessoaById.get(parent2Id);
+    const status = getConjugalRelationshipStatus(relationship, person1, person2);
 
     return {
       id: relationship?.id,
       marriageKey: `${parent1Id}::${parent2Id}`,
       person1Id: parent1Id,
       person2Id: parent2Id,
-      person1: pessoaById.get(parent1Id),
-      person2: pessoaById.get(parent2Id),
+      person1,
+      person2,
       relationship,
+      status,
+      statusLabel: getConjugalRelationshipStatusLabel(status),
+      statusDescription: getConjugalRelationshipStatusDescription(status),
     };
   };
 
@@ -130,8 +214,11 @@ export function buildTreeGraph({
         id: marriageNodeId,
         type: 'marriageNode',
         data: {
-          emoji: '💑',
+          emoji: getConjugalStatusSymbol(details.status),
           details,
+          status: details.status,
+          statusLabel: details.statusLabel,
+          statusDescription: details.statusDescription,
           onClickMarriage: onMarriageClick,
         },
         position: { x: 0, y: 0 },
@@ -178,6 +265,13 @@ export function buildTreeGraph({
         return;
       }
 
+      const details = createMarriageDetails(parent1Id, parent2Id);
+      const conjugalEdgeData = {
+        kind: 'conjugal',
+        status: details.status,
+        statusLabel: details.statusLabel,
+      };
+
       edges.push({
         id: `edge-conjugal-${edgeIdCounter++}`,
         source: parent1Id,
@@ -186,10 +280,8 @@ export function buildTreeGraph({
         targetHandle: 'left',
         type: 'spouseEdge',
         animated: false,
-        style: {
-          stroke: FAMILY_TREE_COLORS.EDGE_SPOUSE,
-          strokeWidth: 3,
-        },
+        data: conjugalEdgeData,
+        style: getConjugalEdgeStyle(details.status),
       });
 
       edges.push({
@@ -200,10 +292,8 @@ export function buildTreeGraph({
         targetHandle: 'spouse-left',
         type: 'spouseEdge',
         animated: false,
-        style: {
-          stroke: FAMILY_TREE_COLORS.EDGE_SPOUSE,
-          strokeWidth: 3,
-        },
+        data: conjugalEdgeData,
+        style: getConjugalEdgeStyle(details.status),
       });
     });
   }
@@ -393,6 +483,11 @@ export function buildTreeGraph({
 
       const marriageNodeId = `marriage-${marriageKey}`;
       const details = createMarriageDetails(parent1Id, parent2Id);
+      const conjugalEdgeData = {
+        kind: 'conjugal',
+        status: details.status,
+        statusLabel: details.statusLabel,
+      };
 
       marriageMap.set(marriageKey, marriageNodeId);
 
@@ -400,8 +495,11 @@ export function buildTreeGraph({
         id: marriageNodeId,
         type: 'marriageNode',
         data: {
-          emoji: '💑',
+          emoji: getConjugalStatusSymbol(details.status),
           details,
+          status: details.status,
+          statusLabel: details.statusLabel,
+          statusDescription: details.statusDescription,
           onClickMarriage: onMarriageClick,
         },
         position: { x: 0, y: 0 },
@@ -417,10 +515,8 @@ export function buildTreeGraph({
         targetHandle: 'left',
         type: 'spouseEdge',
         animated: false,
-        style: {
-          stroke: FAMILY_TREE_COLORS.EDGE_SPOUSE,
-          strokeWidth: 3,
-        },
+        data: conjugalEdgeData,
+        style: getConjugalEdgeStyle(details.status),
       });
 
       edges.push({
@@ -431,10 +527,8 @@ export function buildTreeGraph({
         targetHandle: 'spouse-left',
         type: 'spouseEdge',
         animated: false,
-        style: {
-          stroke: FAMILY_TREE_COLORS.EDGE_SPOUSE,
-          strokeWidth: 3,
-        },
+        data: conjugalEdgeData,
+        style: getConjugalEdgeStyle(details.status),
       });
     });
   }
