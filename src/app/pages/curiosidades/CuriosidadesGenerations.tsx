@@ -49,14 +49,29 @@ export function CuriosidadesGenerations({
   const generations = getPeopleBySocialGeneration(pessoas);
   const generationsWithPeople = generations.filter((generation) => generation.people.length > 0);
   const [expandedGenerationKey, setExpandedGenerationKey] = useState<string>('');
+  const [hasInitializedExpandedGeneration, setHasInitializedExpandedGeneration] = useState(false);
 
   useEffect(() => {
-    if (!expandedGenerationKey) return;
+    if (loading || error) return;
 
-    if (!generationsWithPeople.some((generation) => generation.key === expandedGenerationKey)) {
-      setExpandedGenerationKey('');
+    const firstGenerationKey = generationsWithPeople[0]?.key ?? '';
+
+    if (!firstGenerationKey) {
+      if (expandedGenerationKey) setExpandedGenerationKey('');
+      if (hasInitializedExpandedGeneration) setHasInitializedExpandedGeneration(false);
+      return;
     }
-  }, [expandedGenerationKey, generationsWithPeople]);
+
+    if (!hasInitializedExpandedGeneration) {
+      setExpandedGenerationKey(firstGenerationKey);
+      setHasInitializedExpandedGeneration(true);
+      return;
+    }
+
+    if (expandedGenerationKey && !generationsWithPeople.some((generation) => generation.key === expandedGenerationKey)) {
+      setExpandedGenerationKey(firstGenerationKey);
+    }
+  }, [error, expandedGenerationKey, generationsWithPeople, hasInitializedExpandedGeneration, loading]);
 
   return (
     <section className={`${curiositySectionCardClassName} ${className}`}>
