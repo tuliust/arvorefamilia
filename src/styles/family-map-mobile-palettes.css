@@ -14,13 +14,13 @@ html[data-tree-color-palette="white"] [data-mobile-family-horizontal-root="true"
 html[data-tree-color-palette="orange"] [data-mobile-family-tree-root="true"],
 html[data-tree-color-palette="orange"] [data-family-map-horizontal-mobile-root="true"],
 html[data-tree-color-palette="orange"] [data-mobile-family-horizontal-root="true"] {
-  --family-map-card-text: #111827;
-  --family-map-card-muted: #24313d;
-  --family-map-group-bg: rgb(255 255 255 / 82%);
-  --family-map-group-border: rgb(234 176 143 / 46%);
-  --family-map-label-bg: #7a5a47;
+  --family-map-card-text: #2f241d;
+  --family-map-card-muted: #7a4a2b;
+  --family-map-group-bg: rgb(255 248 239 / 88%);
+  --family-map-group-border: rgb(225 160 110 / 64%);
+  --family-map-label-bg: #7a4a2b;
   --family-map-label-text: #ffffff;
-  --family-map-connector: #ecc2a5;
+  --family-map-connector: #e1a06e;
 }
 
 html[data-tree-color-palette="brown"] [data-mobile-family-tree-root="true"],
@@ -66,11 +66,11 @@ html[data-tree-color-palette="white"] [data-mobile-family-horizontal-root="true"
 
 html[data-tree-color-palette="orange"] [data-family-map-horizontal-mobile-root="true"] button:not([data-family-map-color-key]),
 html[data-tree-color-palette="orange"] [data-mobile-family-horizontal-root="true"] button:not([data-family-map-color-key]) {
-  --family-map-card-bg: linear-gradient(135deg, #b9d783, #a9cb72);
-  --family-map-card-border: #a9cb72;
+  --family-map-card-bg: linear-gradient(135deg, #c4d983 0%, #a8c76b 100%);
+  --family-map-card-border: #a8c76b;
   background: var(--family-map-card-bg) !important;
   border-color: var(--family-map-card-border) !important;
-  color: #111827 !important;
+  color: #2f241d !important;
 }
 
 html[data-tree-color-palette="brown"] [data-family-map-horizontal-mobile-root="true"] button:not([data-family-map-color-key]),
@@ -80,6 +80,22 @@ html[data-tree-color-palette="brown"] [data-mobile-family-horizontal-root="true"
   background: var(--family-map-card-bg) !important;
   border-color: var(--family-map-card-border) !important;
   color: #ffffff !important;
+}
+
+html[data-tree-color-palette="orange"] [data-mobile-family-tree-root="true"] button[data-family-map-color-key="central"],
+html[data-tree-color-palette="orange"] [data-family-map-horizontal-mobile-root="true"] button[data-family-map-color-key="central"],
+html[data-tree-color-palette="orange"] [data-mobile-family-horizontal-root="true"] button[data-family-map-color-key="central"] {
+  --family-map-card-bg: linear-gradient(160deg, #e8783e 0%, #c95f35 100%) !important;
+  --family-map-card-border: #c95f35 !important;
+  background: linear-gradient(160deg, #e8783e 0%, #c95f35 100%) !important;
+  border-color: #c95f35 !important;
+  color: #ffffff !important;
+}
+
+html[data-tree-color-palette="orange"] [data-mobile-family-tree-root="true"] button[data-family-map-color-key="central"] *,
+html[data-tree-color-palette="orange"] [data-family-map-horizontal-mobile-root="true"] button[data-family-map-color-key="central"] *,
+html[data-tree-color-palette="orange"] [data-mobile-family-horizontal-root="true"] button[data-family-map-color-key="central"] * {
+  color: inherit !important;
 }
 
 html[data-tree-color-palette="white"] [data-mobile-family-tree-root="true"] button[data-family-map-mobile-card="true"][data-family-map-color-key] *,
