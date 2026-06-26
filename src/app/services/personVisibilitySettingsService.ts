@@ -1,6 +1,8 @@
 import { supabase } from '../lib/supabaseClient';
 import { PersonVisibilitySettings } from '../types';
 
+const VISIBILITY_TABLE = 'person_visibility_settings';
+
 const DEFAULT_SETTINGS = {
   perfil_visivel: true,
   arvore_visivel: true,
@@ -11,6 +13,27 @@ const DEFAULT_SETTINGS = {
   forum_visivel: true,
   dados_sensiveis_visiveis: false,
 } satisfies Omit<PersonVisibilitySettings, 'id' | 'pessoa_id' | 'created_at' | 'updated_at'>;
+
+function isMissingVisibilityTableError(error: unknown) {
+  const supabaseError = error as { code?: string; message?: string; details?: string; hint?: string } | null | undefined;
+  const message = [supabaseError?.message, supabaseError?.details, supabaseError?.hint].filter(Boolean).join(' ');
+
+  return (
+    supabaseError?.code === '42P01' ||
+    supabaseError?.code === 'PGRST205' ||
+    message.includes(VISIBILITY_TABLE) ||
+    message.includes('schema cache') ||
+    message.includes('Could not find the table')
+  );
+}
+
+function createDefaultSettings(pessoaId: string): PersonVisibilitySettings {
+  return {
+    id: `local-${pessoaId}`,
+    pessoa_id: pessoaId,
+    ...DEFAULT_SETTINGS,
+  };
+}
 
 function mapRow(row: Record<string, unknown>, pessoaId: string): PersonVisibilitySettings {
   return {
@@ -31,21 +54,22 @@ function mapRow(row: Record<string, unknown>, pessoaId: string): PersonVisibilit
 
 export async function getPersonVisibilitySettings(pessoaId: string): Promise<PersonVisibilitySettings> {
   const { data, error } = await supabase
-    .from('person_visibility_settings')
+    .from(VISIBILITY_TABLE)
     .select('*')
     .eq('pessoa_id', pessoaId)
     .maybeSingle();
 
   if (error) {
-    throw new Error(error.message || 'Nao foi possivel carregar configuracoes de visibilidade.');
+    if (isMissingVisibilityTableError(error)) {
+      console.warn('[Supabase] Tabela de visibilidade de pessoas ausente. Usando defaults locais.', error.message);
+      return createDefaultSettings(pessoaId);
+    }
+
+    throw new Error(error.message || 'Não foi possível carregar configurações de visibilidade.');
   }
 
   if (!data) {
-    return {
-      id: `local-${pessoaId}`,
-      pessoa_id: pessoaId,
-      ...DEFAULT_SETTINGS,
-    };
+    return createDefaultSettings(pessoaId);
   }
 
   return mapRow(data, pessoaId);
@@ -66,13 +90,18 @@ export async function upsertPersonVisibilitySettings(
   delete (nextPayload as Partial<PersonVisibilitySettings>).updated_at;
 
   const { data, error } = await supabase
-    .from('person_visibility_settings')
+    .from(VISIBILITY_TABLE)
     .upsert(nextPayload, { onConflict: 'pessoa_id' })
     .select('*')
     .single();
 
   if (error) {
-    throw new Error(error.message || 'Nao foi possivel salvar configuracoes de visibilidade.');
+    if (isMissingVisibilityTableError(error)) {
+      console.warn('[Supabase] Tabela de visibilidade de pessoas ausente. Retornando estado local.', error.message);
+      return mapRow(nextPayload, pessoaId);
+    }
+
+    throw new Error(error.message || 'Não foi possível salvar configurações de visibilidade.');
   }
 
   return mapRow(data, pessoaId);
@@ -80,12 +109,17 @@ export async function upsertPersonVisibilitySettings(
 
 export async function listPersonVisibilitySettings() {
   const { data, error } = await supabase
-    .from('person_visibility_settings')
+    .from(VISIBILITY_TABLE)
     .select('*')
     .order('updated_at', { ascending: false });
 
   if (error) {
-    throw new Error(error.message || 'Nao foi possivel listar configuracoes de visibilidade.');
+    if (isMissingVisibilityTableError(error)) {
+      console.warn('[Supabase] Tabela de visibilidade de pessoas ausente. Retornando lista vazia.', error.message);
+      return [];
+    }
+
+    throw new Error(error.message || 'Não foi possível listar configurações de visibilidade.');
   }
 
   return (data || []).map((row) => mapRow(row, String(row.pessoa_id ?? '')));
