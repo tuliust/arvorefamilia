@@ -75,6 +75,103 @@ function escapeHtml(value: string) {
     .replace(/'/g, '&#039;');
 }
 
+function openExportPreviewWindow(title: string) {
+  const previewWindow = window.open('', '_blank', 'noopener,noreferrer');
+
+  if (!previewWindow) return null;
+
+  previewWindow.document.write(`<!doctype html>
+<html>
+  <head>
+    <title>${escapeHtml(title)}</title>
+    <style>
+      html, body { margin: 0; min-height: 100%; background: #f8fafc; color: #0f172a; font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+      body { display: flex; align-items: center; justify-content: center; padding: 2rem; box-sizing: border-box; }
+      p { margin: 0; font-size: 14px; font-weight: 600; }
+    </style>
+  </head>
+  <body>
+    <p>Preparando exportação...</p>
+  </body>
+</html>`);
+  previewWindow.document.close();
+
+  return previewWindow;
+}
+
+function writeImagePreviewWindow(
+  previewWindow: Window,
+  imageUrl: string,
+  title: string,
+  filename: string
+) {
+  const safeTitle = escapeHtml(title);
+  const safeFilename = escapeHtml(filename);
+
+  previewWindow.document.open();
+  previewWindow.document.write(`<!doctype html>
+<html>
+  <head>
+    <title>${safeTitle}</title>
+    <style>
+      html, body { margin: 0; min-height: 100%; background: #f8fafc; color: #0f172a; font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+      body { min-height: 100vh; box-sizing: border-box; padding: 1.25rem; }
+      header { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.75rem; margin-bottom: 1rem; }
+      h1 { margin: 0; font-size: 1rem; line-height: 1.2; }
+      a { display: inline-flex; align-items: center; justify-content: center; min-height: 2.4rem; border-radius: 0.75rem; background: #1d4ed8; color: #fff; padding: 0 1rem; font-size: 0.875rem; font-weight: 700; text-decoration: none; }
+      figure { margin: 0; border: 1px solid #e2e8f0; border-radius: 1rem; background: #fff; box-shadow: 0 16px 42px rgb(15 23 42 / 0.12); overflow: auto; }
+      img { display: block; max-width: 100%; height: auto; margin: 0 auto; }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>${safeTitle}</h1>
+      <a href="${imageUrl}" download="${safeFilename}">Baixar imagem</a>
+    </header>
+    <figure>
+      <img src="${imageUrl}" alt="${safeTitle}" />
+    </figure>
+  </body>
+</html>`);
+  previewWindow.document.close();
+  previewWindow.focus();
+}
+
+function writePdfPreviewWindow(
+  previewWindow: Window,
+  pdfUrl: string,
+  title: string,
+  filename: string
+) {
+  const safeTitle = escapeHtml(title || 'PDF da árvore');
+  const safeFilename = escapeHtml(filename);
+
+  previewWindow.document.open();
+  previewWindow.document.write(`<!doctype html>
+<html>
+  <head>
+    <title>${safeTitle}</title>
+    <style>
+      html, body { margin: 0; width: 100%; height: 100%; background: #f8fafc; color: #0f172a; font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+      body { display: grid; grid-template-rows: auto 1fr; }
+      header { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.75rem; padding: 0.8rem 1rem; border-bottom: 1px solid #e2e8f0; background: #fff; }
+      h1 { margin: 0; font-size: 0.95rem; line-height: 1.2; }
+      a { display: inline-flex; align-items: center; justify-content: center; min-height: 2.25rem; border-radius: 0.75rem; background: #1d4ed8; color: #fff; padding: 0 0.9rem; font-size: 0.84rem; font-weight: 700; text-decoration: none; }
+      iframe { width: 100%; height: 100%; border: 0; background: #fff; }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>${safeTitle}</h1>
+      <a href="${pdfUrl}" download="${safeFilename}">Baixar PDF</a>
+    </header>
+    <iframe src="${pdfUrl}" title="${safeTitle}"></iframe>
+  </body>
+</html>`);
+  previewWindow.document.close();
+  previewWindow.focus();
+}
+
 function getElementCssSize(element: HTMLElement, captureVisibleAreaOnly = false) {
   const rect = element.getBoundingClientRect();
 
@@ -400,15 +497,25 @@ export function cropCanvas(sourceCanvas: HTMLCanvasElement, rect: ExportRect) {
   return outputCanvas;
 }
 
-export function downloadCanvasAsPng(canvas: HTMLCanvasElement, filename: string) {
-  const imageUrl = canvasToDataUrl(canvas);
+function fallbackDownload(url: string, filename: string) {
   const link = document.createElement('a');
-
-  link.href = imageUrl;
+  link.href = url;
   link.download = filename;
   document.body.appendChild(link);
   link.click();
   link.remove();
+}
+
+export function downloadCanvasAsPng(canvas: HTMLCanvasElement, filename: string) {
+  const imageUrl = canvasToDataUrl(canvas);
+  const previewWindow = openExportPreviewWindow('Imagem da árvore');
+
+  if (!previewWindow) {
+    fallbackDownload(imageUrl, filename);
+    return;
+  }
+
+  writeImagePreviewWindow(previewWindow, imageUrl, 'Imagem da árvore', filename);
 }
 
 export async function exportCanvasAsPdf(
@@ -444,7 +551,19 @@ export async function exportCanvasAsPdf(
   }
 
   pdf.addImage(imageUrl, 'PNG', imageX, imageY, imageWidth, imageHeight);
-  pdf.save(filename);
+
+  const pdfBlob = pdf.output('blob') as Blob;
+  const pdfUrl = URL.createObjectURL(pdfBlob);
+  const previewWindow = openExportPreviewWindow(title || 'PDF da árvore');
+
+  if (!previewWindow) {
+    fallbackDownload(pdfUrl, filename);
+    window.setTimeout(() => URL.revokeObjectURL(pdfUrl), 30000);
+    return;
+  }
+
+  writePdfPreviewWindow(previewWindow, pdfUrl, title || 'PDF da árvore', filename);
+  previewWindow.addEventListener('beforeunload', () => URL.revokeObjectURL(pdfUrl), { once: true });
 }
 
 export function openTreePrintWindow() {
