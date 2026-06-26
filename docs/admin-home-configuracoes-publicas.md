@@ -2,7 +2,7 @@
 
 ## Objetivo
 
-A área `/admin/home` centraliza a gestão visual e editorial das páginas públicas do projeto, incluindo `/entrar`, `/termos` e `/privacidade`.
+A área `/admin/home` centraliza a gestão visual e editorial das páginas públicas do projeto, incluindo `/entrar`, `/termos`, `/privacidade` e `/duvidas`.
 
 Esta frente cobre:
 
@@ -13,7 +13,8 @@ Esta frente cobre:
 - upload de logo, background e imagem de compartilhamento;
 - preview mobile/desktop;
 - rascunho, publicação manual e publicação agendada;
-- auditoria de alterações visuais.
+- auditoria de alterações visuais;
+- aplicação progressiva do tema público em páginas públicas.
 
 ## Arquivos principais
 
@@ -24,9 +25,20 @@ Esta frente cobre:
 | `src/app/services/siteVisualSettingsAuditService.ts` | Listagem e criação de registros de auditoria. |
 | `src/app/hooks/useSiteVisualSettings.ts` | Hook compartilhado para páginas públicas consumirem o tema. |
 | `src/app/components/public/PublicThemeFrame.tsx` | Frame visual público reutilizável. |
+| `src/app/pages/Entrar.tsx` | Tela pública de entrada e primeiro acesso. |
+| `src/app/pages/Duvidas.tsx` | Central pública de dúvidas usando o tema público. |
 | `src/app/pages/legal/PublicLegalDocumentPage.tsx` | Layout temático de `/termos` e `/privacidade`. |
 | `supabase/functions/publish-scheduled-site-settings/index.ts` | Edge Function chamada pelo scheduler. |
 | `.github/workflows/publish-scheduled-site-settings.yml` | Cron GitHub Actions para acionar a Edge Function. |
+
+## Páginas públicas tematizadas
+
+| Rota | Status |
+|---|---|
+| `/entrar` | Usa configurações públicas de identidade, texto, logo, fundo, links e SEO. |
+| `/termos` | Usa layout público temático e links públicos. |
+| `/privacidade` | Usa layout público temático e links públicos. |
+| `/duvidas` | Usa `PublicThemeFrame`, background configurável e rodapé público. |
 
 ## Banco de dados
 
@@ -119,7 +131,7 @@ Variáveis necessárias no Supabase:
 Deploy sugerido:
 
 ```bash
-supabase functions deploy publish-scheduled-site-settings
+supabase functions deploy publish-scheduled-site-settings --no-verify-jwt
 ```
 
 ## GitHub Actions cron
@@ -149,9 +161,11 @@ Secrets necessários no GitHub:
 6. Confirmar novo registro em `Histórico`.
 7. Testar workflow manual no GitHub Actions.
 8. Confirmar que chamada sem `x-cron-secret` falha quando o segredo está configurado.
+9. Conferir `/duvidas` com o mesmo background, rodapé público e links configurados em `/admin/home`.
 
 ## Limites conhecidos
 
 - O cron GitHub Actions não roda exatamente a cada 15 minutos; o GitHub pode atrasar execuções.
 - A publicação agendada depende da Edge Function estar deployada e dos secrets estarem configurados.
 - O comparativo atual é textual/campo a campo. Comparativo visual por screenshots é uma etapa futura.
+- A auditoria exibe resumo e contagem de campos alterados. A abertura detalhada campo a campo dentro de cada registro histórico fica como evolução futura.
