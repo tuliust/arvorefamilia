@@ -14,6 +14,10 @@ type CuriosidadesInterestsSectionProps = CuriosidadesDataProps & {
   embedded?: boolean;
 };
 
+function formatCommonPoints(count: number) {
+  return `${count} ${count === 1 ? 'ponto em comum' : 'pontos em comum'}`;
+}
+
 export function CuriosidadesInterestsSection({
   pessoas,
   profileBadgesByPersonId,
@@ -139,7 +143,7 @@ export function CuriosidadesInterestsSection({
                     <p className="text-sm font-bold text-blue-900">Afinidade estimada: {comparison.score}%</p>
                     <p className="mt-1 text-sm leading-6 text-blue-900">
                       {comparison.common.length > 0
-                        ? `${getPersonDisplayName(firstPerson)} e ${getPersonDisplayName(secondPerson)} têm ${comparison.common.length} ponto(s) em comum.`
+                        ? `${getPersonDisplayName(firstPerson)} e ${getPersonDisplayName(secondPerson)} têm ${formatCommonPoints(comparison.common.length)}.`
                         : 'Ainda não foram encontradas características em comum nos dados cadastrados.'}
                     </p>
                   </div>
