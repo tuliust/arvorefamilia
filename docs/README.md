@@ -1,6 +1,6 @@
 # Documentação do produto — arvorefamilia
 
-> Última revisão: 2026-06-25
+> Última revisão: 2026-06-26
 > Escopo: documentação canônica mantida em `docs/` após auditoria e limpeza final.
 > Status: canônico.
 
@@ -22,6 +22,7 @@ docs/
   REGRAS_DE_NAO_REGRESSAO.md
   GUIA_CORRECAO_ERROS.md
   PLANO_PROXIMOS_PASSOS.md
+  admin-home-configuracoes-publicas.md
 
   arquitetura/
     DECISOES_ARQUITETURAIS.md
@@ -63,6 +64,7 @@ Arquivos residuais fora desse índice não devem ser usados como contrato operac
 | Regras de não regressão | `REGRAS_DE_NAO_REGRESSAO.md` |
 | Correção de erros | `GUIA_CORRECAO_ERROS.md` |
 | Próximos passos | `PLANO_PROXIMOS_PASSOS.md` |
+| Configurações públicas e `/admin/home` | `admin-home-configuracoes-publicas.md` |
 | Arquitetura e decisões técnicas | `arquitetura/DECISOES_ARQUITETURAIS.md` |
 | Rotas e guards | `arquitetura/ROTAS_E_GUARDS.md` |
 | Deploy | `operacao/DEPLOY.md` |
@@ -95,7 +97,8 @@ Arquivos residuais fora desse índice não devem ser usados como contrato operac
 - `/preferencias`;
 - `/pessoa/:id` e `/pessoas/:id`;
 - `/calendario-familiar`;
-- área administrativa em `/admin` e subrotas.
+- `/entrar`, `/termos`, `/privacidade` e `/duvidas`;
+- área administrativa em `/admin` e subrotas, incluindo `/admin/home`.
 
 ## Regra de manutenção
 
