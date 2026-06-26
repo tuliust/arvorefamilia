@@ -196,7 +196,7 @@ function normalizeText(value: unknown, fallback: string) {
 function normalizeCssSize(value: unknown, fallback: string) {
   const normalized = String(value ?? '').trim();
   if (!normalized) return fallback;
-  if /^\d+(\.\d+)?(px|rem|em)$/i.test(normalized)) return normalized;
+  if (/^\d+(\.\d+)?(px|rem|em)$/i.test(normalized)) return normalized;
   return fallback;
 }
 
