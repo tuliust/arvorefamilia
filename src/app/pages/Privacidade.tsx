@@ -1,6 +1,6 @@
-import { LegalDocumentPage } from './legal/LegalDocumentPage';
+import { PublicLegalDocumentPage } from './legal/PublicLegalDocumentPage';
 import { privacyPolicyContent } from './legal/legalContent';
 
 export function Privacidade() {
-  return <LegalDocumentPage content={privacyPolicyContent} />;
+  return <PublicLegalDocumentPage content={privacyPolicyContent} />;
 }
