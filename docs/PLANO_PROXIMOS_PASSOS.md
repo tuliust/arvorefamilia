@@ -1,33 +1,37 @@
 # Plano de próximos passos
 
-> Última revisão: 2026-06-25
-> Escopo: pendências reais após auditoria documental da branch `main`.
+> Última revisão: 2026-06-26
+> Escopo: pendências reais após auditoria documental da branch `main` e rodadas recentes de implementação.
 > Status: canônico.
 
 ## Pendências operacionais pós-merge
 
 - Conferir deploy gerado a partir da `main`.
-- Validar manualmente `/mapa-familiar`, `/mapa-familiar-horizontal`, `/curiosidades`, `/forum`, `/meus-favoritos`, `/notificacoes` e `/pessoa/:id` no ambiente publicado.
+- Validar manualmente `/mapa-familiar`, `/mapa-familiar-horizontal`, `/curiosidades`, `/forum`, `/calendario-familiar`, `/meus-dados`, `/admin/duvidas`, `/admin/atividades` e `/admin/gestao-conteudo-pessoas` no ambiente publicado.
 - Confirmar que o ambiente remoto do Supabase recebeu as migrations necessárias.
-- Confirmar que `OPENAI_API_KEY` e demais variáveis de ambiente estão disponíveis quando exigidas.
+- Confirmar que variáveis de ambiente de IA e demais chaves operacionais estão disponíveis quando exigidas.
 
 ## Pendências de produto e QA visual
 
-- Validar em navegador real o overlay de exportação de imagem, PDF e impressão em `/mapa-familiar` e `/mapa-familiar-horizontal`, especialmente duração do feedback visual até o diálogo do sistema.
-- Avaliar evolução futura da exportação para abrir preview intermediário de PNG/PDF em nova aba antes do download, caso o overlay atual ainda gere percepção de travamento em navegadores específicos.
-- Validar visualmente `/curiosidades` após deploy, incluindo sticky da barra superior, textos acentuados da seção `Rota da família` e ilustração `mapa.png` em 575 x 327 px no desktop.
+- Validar em navegador real o overlay de exportação de imagem, PDF e impressão em `/mapa-familiar` e `/mapa-familiar-horizontal`, especialmente duração do feedback visual até o diálogo do sistema ou janela dedicada assumir o fluxo.
+- Validar visualmente `/curiosidades` após deploy, incluindo sticky da barra superior, menu do avatar acima da navegação sticky, mural, quiz, gerações, comparação de interesses e ilustração da rota no desktop.
 - Revisar eventual texto com caracteres corrompidos fora de `docs/`, especialmente em componentes de mapa/exportação, se for detectado em QA visual ou validação de código.
+- Implementar, quando aprovado, os ajustes de `/calendario-familiar` para nomes curtos dentro dos dias, texto curto de falecimento/casamento e card lateral `Datas de Casamento`.
+- Implementar, quando aprovado, a renomeação dos botões em `/meus-dados`: `Ajustar Meus Vínculos` para `Meus Vínculos` e `Ajustar Fatos e Arquivos Históricos` para `Fatos e Arquivos Históricos`.
+- Aplicar e validar a área nova de cadastro e edição de pets em `/meus-vinculos`; os arquivos foram preparados fora da `main`, mas ainda não foram commitados no repositório.
 
 ## Pendências de produto administrativo
 
+- Adicionar botão nativo no dashboard `/admin` para `/admin/gestao-conteudo-pessoas`.
+- Corrigir acentuação nativa dos textos em `/admin/gestao-conteudo-pessoas`, sem depender de fallback visual.
+- Criar/aplicar migration real de `person_visibility_settings` no Supabase remoto; o código atual apenas evita quebra da tela quando a tabela ainda não existe.
 - Planejar a reutilização administrativa dos fluxos `/meus-dados`, `/meus-vinculos` e `/arquivos-historicos` em `/admin/pessoas/:id/editar`, com abas e modo admin sem quebrar os fluxos de usuário.
 - Planejar aba de administração de vínculos de usuários em `/admin/relacionamentos`, separando permissões de edição/legado das relações familiares.
 - Planejar aba de grupos, preferências e destinatários em `/admin/notificacoes`, respeitando preferências individuais existentes.
-- Planejar nova página admin para geração, visibilidade de páginas, fatos do nascimento e astrologia, após definição do modelo de dados e políticas RLS.
 
 ## Pendências técnicas permanentes
 
-- Confirmar políticas RLS para pessoas, relacionamentos, vínculos, fatos históricos, notificações, favoritos e fórum.
+- Confirmar políticas RLS para pessoas, relacionamentos, vínculos, fatos históricos, notificações, favoritos, fórum e visibilidade por pessoa.
 - Criar documentação administrativa mais detalhada apenas quando as novas rotas/abas administrativas forem implementadas no código.
 
 ## Regra de manutenção
