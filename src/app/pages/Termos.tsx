@@ -1,6 +1,6 @@
-import { LegalDocumentPage } from './legal/LegalDocumentPage';
+import { PublicLegalDocumentPage } from './legal/PublicLegalDocumentPage';
 import { termsContent } from './legal/legalContent';
 
 export function Termos() {
-  return <LegalDocumentPage content={termsContent} />;
+  return <PublicLegalDocumentPage content={termsContent} />;
 }
