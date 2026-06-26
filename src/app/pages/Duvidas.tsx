@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
 import { HelpCircle, Loader2 } from 'lucide-react';
 import { MemberPageHeader, PAGE_CONTAINER_CLASS } from '../components/layout/MemberPageHeader';
+import { PublicFooterLinks, PublicThemeFrame } from '../components/public/PublicThemeFrame';
+import { useSiteVisualSettings } from '../hooks/useSiteVisualSettings';
 import { listPublishedQaContent } from '../services/qaService';
 import type { QaCategory, QaItem } from '../types/qa';
 import { includesNormalizedText } from '../utils/searchText';
@@ -33,6 +35,7 @@ export function Duvidas() {
   const [openItemIds, setOpenItemIds] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const { settings } = useSiteVisualSettings();
 
   useEffect(() => {
     let cancelled = false;
@@ -87,51 +90,55 @@ export function Duvidas() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <MemberPageHeader
-        title="Dúvidas"
-        subtitle="Consulte perguntas frequentes e orientações para usar a plataforma."
-        icon={HelpCircle}
-        hideFavoriteButton
-      />
+    <PublicThemeFrame settings={settings}>
+      <div className="relative z-10 min-h-screen bg-white/80 backdrop-blur-sm">
+        <MemberPageHeader
+          title="Dúvidas"
+          subtitle="Consulte perguntas frequentes e orientações para usar a plataforma."
+          icon={HelpCircle}
+          hideFavoriteButton
+        />
 
-      <main className={`${PAGE_CONTAINER_CLASS} py-6 pb-40 sm:py-8 lg:py-10 md:pb-6`}>
-        <QAHero searchTerm={searchTerm} onSearchChange={setSearchTerm} />
+        <main className={`${PAGE_CONTAINER_CLASS} py-6 pb-40 sm:py-8 lg:py-10 md:pb-6`}>
+          <QAHero searchTerm={searchTerm} onSearchChange={setSearchTerm} />
 
-        <div className="mt-6 lg:mt-8">
-          <QACategoryChips categories={categories} activeCategoryId={activeCategoryId} onSelectCategory={setActiveCategoryId} />
-        </div>
-
-        {loading ? (
-          <div className="mt-8 rounded-2xl border border-gray-200 bg-white p-10 text-center shadow-sm">
-            <Loader2 className="mx-auto h-8 w-8 animate-spin text-blue-600" />
-            <p className="mt-4 text-sm font-medium text-gray-600">Carregando dúvidas...</p>
+          <div className="mt-6 lg:mt-8">
+            <QACategoryChips categories={categories} activeCategoryId={activeCategoryId} onSelectCategory={setActiveCategoryId} />
           </div>
-        ) : error ? (
-          <div className="mt-8 rounded-2xl border border-red-200 bg-red-50 p-6 text-center text-sm text-red-700">{error}</div>
-        ) : (
-          <div className="mt-8 grid grid-cols-1 gap-8 lg:grid-cols-[300px_minmax(0,1fr)]">
-            <QACategorySidebar categories={categories} activeCategoryId={activeCategoryId} itemCounts={itemCounts} onSelectCategory={setActiveCategoryId} />
 
-            <div className="min-w-0 space-y-6">
-              {!searchTerm.trim() && activeCategoryId === 'all' ? <QAFeaturedQuestions items={featuredItems} onSelectItem={handleSelectFeaturedItem} /> : null}
-
-              <section className="space-y-4">
-                <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-                  <div>
-                    <p className="text-sm font-semibold uppercase tracking-wide text-blue-700">Perguntas e respostas</p>
-                    <h2 className="mt-1 text-2xl font-bold text-gray-950">{activeCategory?.title || 'Todas as dúvidas'}</h2>
-                    {activeCategory?.description ? <p className="mt-2 text-sm leading-6 text-gray-600">{activeCategory.description}</p> : null}
-                  </div>
-                  <QAResultCount count={filteredItems.length} searchTerm={searchTerm} />
-                </div>
-
-                {filteredItems.length ? <QAAccordion items={filteredItems} openItemIds={openItemIds} onToggleItem={handleToggleItem} /> : <QAEmptyState searchTerm={searchTerm} />}
-              </section>
+          {loading ? (
+            <div className="mt-8 rounded-2xl border border-gray-200 bg-white p-10 text-center shadow-sm">
+              <Loader2 className="mx-auto h-8 w-8 animate-spin text-blue-600" />
+              <p className="mt-4 text-sm font-medium text-gray-600">Carregando dúvidas...</p>
             </div>
-          </div>
-        )}
-      </main>
-    </div>
+          ) : error ? (
+            <div className="mt-8 rounded-2xl border border-red-200 bg-red-50 p-6 text-center text-sm text-red-700">{error}</div>
+          ) : (
+            <div className="mt-8 grid grid-cols-1 gap-8 lg:grid-cols-[300px_minmax(0,1fr)]">
+              <QACategorySidebar categories={categories} activeCategoryId={activeCategoryId} itemCounts={itemCounts} onSelectCategory={setActiveCategoryId} />
+
+              <div className="min-w-0 space-y-6">
+                {!searchTerm.trim() && activeCategoryId === 'all' ? <QAFeaturedQuestions items={featuredItems} onSelectItem={handleSelectFeaturedItem} /> : null}
+
+                <section className="space-y-4">
+                  <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+                    <div>
+                      <p className="text-sm font-semibold uppercase tracking-wide text-blue-700">Perguntas e respostas</p>
+                      <h2 className="mt-1 text-2xl font-bold text-gray-950">{activeCategory?.title || 'Todas as dúvidas'}</h2>
+                      {activeCategory?.description ? <p className="mt-2 text-sm leading-6 text-gray-600">{activeCategory.description}</p> : null}
+                    </div>
+                    <QAResultCount count={filteredItems.length} searchTerm={searchTerm} />
+                  </div>
+
+                  {filteredItems.length ? <QAAccordion items={filteredItems} openItemIds={openItemIds} onToggleItem={handleToggleItem} /> : <QAEmptyState searchTerm={searchTerm} />}
+                </section>
+              </div>
+            </div>
+          )}
+        </main>
+
+        <PublicFooterLinks settings={settings} />
+      </div>
+    </PublicThemeFrame>
   );
 }
