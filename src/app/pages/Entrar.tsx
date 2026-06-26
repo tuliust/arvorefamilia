@@ -1,14 +1,16 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Link, useNavigate } from 'react-router';
+import { useNavigate } from 'react-router';
 import { User } from '@supabase/supabase-js';
 import { ArrowRight, Eye, EyeOff, KeyRound, Lock, LogIn, Mail, UserPlus } from 'lucide-react';
 import { toast } from 'sonner';
+import { PublicFooterLinks, PublicInlineLink, PublicThemeFrame } from '../components/public/PublicThemeFrame';
 import { Button } from '../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Checkbox } from '../components/ui/checkbox';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
 import { useAuth } from '../contexts/AuthContext';
+import { useSiteVisualSettings } from '../hooks/useSiteVisualSettings';
 import { supabase } from '../lib/supabaseClient';
 import {
   ensureMemberProfile,
@@ -18,11 +20,6 @@ import {
   storePendingFirstAccess,
   validateFirstAccessCode,
 } from '../services/memberProfileService';
-import {
-  DEFAULT_SITE_VISUAL_SETTINGS,
-  getSiteVisualSettings,
-  SiteVisualSettings,
-} from '../services/siteVisualSettingsService';
 
 type AuthMode = 'login' | 'first-access';
 type FirstAccessStep = 'code' | 'account' | 'confirmation';
@@ -83,19 +80,10 @@ function shouldQueueMobileDesktopTip() {
   return window.matchMedia('(max-width: 767px)').matches;
 }
 
-function getPublicLinkTarget(url?: string | null) {
-  const cleanUrl = String(url ?? '').trim();
-  return cleanUrl || '#';
-}
-
-function isInternalPublicLink(url?: string | null) {
-  const cleanUrl = getPublicLinkTarget(url);
-  return cleanUrl.startsWith('/') && !cleanUrl.startsWith('//');
-}
-
 export function Entrar() {
   const navigate = useNavigate();
   const { user, loading } = useAuth();
+  const { settings: siteVisualSettings } = useSiteVisualSettings();
   const [mode, setMode] = useState<AuthMode>('login');
   const [firstAccessStep, setFirstAccessStep] = useState<FirstAccessStep>('code');
   const [accessCode, setAccessCode] = useState('');
@@ -114,24 +102,6 @@ export function Entrar() {
   const [resendCooldownSeconds, setResendCooldownSeconds] = useState(0);
   const [checkingSession, setCheckingSession] = useState(true);
   const [acceptedLegalTerms, setAcceptedLegalTerms] = useState(false);
-  const [siteVisualSettings, setSiteVisualSettings] = useState<SiteVisualSettings>(DEFAULT_SITE_VISUAL_SETTINGS);
-
-  useEffect(() => {
-    let mounted = true;
-
-    async function loadSiteVisualSettings() {
-      const settings = await getSiteVisualSettings();
-      if (mounted) {
-        setSiteVisualSettings(settings);
-      }
-    }
-
-    loadSiteVisualSettings();
-
-    return () => {
-      mounted = false;
-    };
-  }, []);
 
   useEffect(() => {
     document.title = siteVisualSettings.seo_title;
@@ -174,7 +144,7 @@ export function Entrar() {
       }
     }
 
-    redirectAuthenticatedUser();
+    void redirectAuthenticatedUser();
 
     return () => {
       mounted = false;
@@ -211,6 +181,11 @@ export function Entrar() {
 
     return siteVisualSettings.entrance_first_access_description;
   }, [firstAccessStep, mode, siteVisualSettings]);
+
+  const primaryButtonStyle = useMemo(() => ({
+    backgroundColor: siteVisualSettings.global_primary_color,
+    borderRadius: siteVisualSettings.global_button_radius,
+  }), [siteVisualSettings.global_button_radius, siteVisualSettings.global_primary_color]);
 
   const routeAfterAuth = async (authUser: User) => {
     const result = await resolveFirstAccessLinkForUser(authUser);
@@ -392,13 +367,11 @@ export function Entrar() {
       return;
     }
 
-    const redirectTo = getEmailRedirectTo();
-
     const { data, error } = await supabase.auth.signUp({
       email: normalizedEmail,
       password: signupPassword,
       options: {
-        emailRedirectTo: redirectTo,
+        emailRedirectTo: getEmailRedirectTo(),
         data: {
           nome_exibicao: preview.nome_completo,
           pessoa_id: preview.pessoa_id,
@@ -533,27 +506,9 @@ export function Entrar() {
   }
 
   const logoMediaUrl = siteVisualSettings.home_logo_media_url || '/favicon.svg';
-  const hasBackgroundMedia = Boolean(siteVisualSettings.home_background_media_url);
-  const primaryButtonStyle = {
-    backgroundColor: siteVisualSettings.global_primary_color,
-    borderRadius: siteVisualSettings.global_button_radius,
-  };
 
   return (
-    <div
-      className="relative flex min-h-screen flex-col overflow-hidden"
-      style={{ backgroundColor: siteVisualSettings.home_background_color, color: siteVisualSettings.global_text_color }}
-    >
-      {hasBackgroundMedia ? (
-        <div
-          className="absolute inset-0 bg-cover bg-center"
-          style={{
-            backgroundImage: `url("${siteVisualSettings.home_background_media_url}")`,
-            opacity: siteVisualSettings.home_background_media_opacity / 100,
-          }}
-          aria-hidden="true"
-        />
-      ) : null}
+    <PublicThemeFrame settings={siteVisualSettings} className="flex flex-col">
       <main className="relative z-10 mx-auto flex w-full max-w-6xl flex-1 items-center px-4 py-8">
         <div className="grid w-full grid-cols-1 gap-6 lg:grid-cols-[minmax(0,0.9fr)_minmax(380px,1fr)]">
           <section className="flex flex-col items-center justify-center text-center lg:items-start lg:text-left">
@@ -804,31 +759,8 @@ export function Entrar() {
           </Card>
         </div>
       </main>
-      <footer className="relative z-10 px-4 pb-6">
-        {siteVisualSettings.entrance_footer_note ? (
-          <p className="mx-auto mb-3 max-w-6xl text-center text-xs" style={{ color: siteVisualSettings.global_muted_text_color }}>
-            {siteVisualSettings.entrance_footer_note}
-          </p>
-        ) : null}
-        <nav className="mx-auto flex max-w-6xl flex-wrap items-center justify-center gap-3 text-xs" style={{ color: siteVisualSettings.global_muted_text_color }}>
-          <PublicFooterLink url={siteVisualSettings.public_terms_url} color={siteVisualSettings.global_primary_color}>
-            {siteVisualSettings.public_terms_label}
-          </PublicFooterLink>
-          <span aria-hidden="true">•</span>
-          <PublicFooterLink url={siteVisualSettings.public_privacy_url} color={siteVisualSettings.global_primary_color}>
-            {siteVisualSettings.public_privacy_label}
-          </PublicFooterLink>
-          {siteVisualSettings.public_support_label && siteVisualSettings.public_support_url ? (
-            <>
-              <span aria-hidden="true">•</span>
-              <PublicFooterLink url={siteVisualSettings.public_support_url} color={siteVisualSettings.global_primary_color}>
-                {siteVisualSettings.public_support_label}
-              </PublicFooterLink>
-            </>
-          ) : null}
-        </nav>
-      </footer>
-    </div>
+      <PublicFooterLinks settings={siteVisualSettings} />
+    </PublicThemeFrame>
   );
 }
 
@@ -864,41 +796,5 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
       <Label>{label}</Label>
       {children}
     </div>
-  );
-}
-
-function PublicInlineLink({ url, color, children }: { url: string; color: string; children: React.ReactNode }) {
-  const target = getPublicLinkTarget(url);
-
-  if (isInternalPublicLink(target)) {
-    return (
-      <Link to={target} target="_blank" rel="noreferrer" className="font-medium hover:underline" style={{ color }}>
-        {children}
-      </Link>
-    );
-  }
-
-  return (
-    <a href={target} target="_blank" rel="noreferrer" className="font-medium hover:underline" style={{ color }}>
-      {children}
-    </a>
-  );
-}
-
-function PublicFooterLink({ url, color, children }: { url: string; color: string; children: React.ReactNode }) {
-  const target = getPublicLinkTarget(url);
-
-  if (isInternalPublicLink(target)) {
-    return (
-      <Link to={target} className="font-medium hover:underline" style={{ color }}>
-        {children}
-      </Link>
-    );
-  }
-
-  return (
-    <a href={target} target="_blank" rel="noreferrer" className="font-medium hover:underline" style={{ color }}>
-      {children}
-    </a>
   );
 }
