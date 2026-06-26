@@ -29,6 +29,7 @@ const TIPOS_RELACIONAMENTO: Array<{ value: TipoRelacionamento; label: string }> 
 const SUBTIPOS_CONJUGAIS: Array<{ value: SubtipoRelacionamento; label: string }> = [
   { value: 'casamento', label: 'Casamento' },
   { value: 'uniao', label: 'União' },
+  { value: 'uniao_estavel' as SubtipoRelacionamento, label: 'União estável' },
   { value: 'separado', label: 'Separado' },
 ];
 
