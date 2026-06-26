@@ -64,9 +64,18 @@ const SETTINGS_COLUMNS = [
   'seo_title',
   'seo_description',
   'social_share_image_url',
+  'publication_status',
+  'draft_payload',
+  'scheduled_publish_at',
+  'last_published_at',
+  'last_published_by',
   'updated_at',
   'updated_by',
 ].join(',');
+
+export type SiteVisualPublicationStatus = 'draft' | 'scheduled' | 'published';
+
+export type SiteVisualSettingsDraftPayload = Record<string, unknown> | null;
 
 export type SiteVisualSettings = {
   home_logo_media_url: string | null;
@@ -107,11 +116,16 @@ export type SiteVisualSettings = {
   seo_title: string;
   seo_description: string;
   social_share_image_url: string | null;
+  publication_status: SiteVisualPublicationStatus;
+  draft_payload: SiteVisualSettingsDraftPayload;
+  scheduled_publish_at?: string | null;
+  last_published_at?: string | null;
+  last_published_by?: string | null;
   updated_at?: string | null;
   updated_by?: string | null;
 };
 
-export type SiteVisualSettingsPayload = Partial<Omit<SiteVisualSettings, 'updated_at' | 'updated_by'>>;
+export type SiteVisualSettingsPayload = Partial<Omit<SiteVisualSettings, 'updated_at' | 'updated_by' | 'last_published_at' | 'last_published_by'>>;
 
 export const DEFAULT_SITE_VISUAL_SETTINGS: SiteVisualSettings = {
   home_logo_media_url: null,
@@ -152,6 +166,11 @@ export const DEFAULT_SITE_VISUAL_SETTINGS: SiteVisualSettings = {
   seo_title: 'Árvore Genealógica da Família',
   seo_description: 'Plataforma familiar privada para preservar pessoas, memórias e vínculos.',
   social_share_image_url: null,
+  publication_status: 'published',
+  draft_payload: null,
+  scheduled_publish_at: null,
+  last_published_at: null,
+  last_published_by: null,
   updated_at: null,
   updated_by: null,
 };
@@ -177,7 +196,7 @@ function normalizeText(value: unknown, fallback: string) {
 function normalizeCssSize(value: unknown, fallback: string) {
   const normalized = String(value ?? '').trim();
   if (!normalized) return fallback;
-  if (/^\d+(\.\d+)?(px|rem|em)$/i.test(normalized)) return normalized;
+  if /^\d+(\.\d+)?(px|rem|em)$/i.test(normalized)) return normalized;
   return fallback;
 }
 
@@ -198,6 +217,16 @@ export function normalizeHomeBackgroundOpacity(value: unknown) {
   if (!Number.isFinite(numericValue)) return DEFAULT_SITE_VISUAL_SETTINGS.home_background_media_opacity;
 
   return Math.min(100, Math.max(0, Math.round(numericValue)));
+}
+
+function normalizePublicationStatus(value: unknown): SiteVisualPublicationStatus {
+  if (value === 'draft' || value === 'scheduled' || value === 'published') return value;
+  return 'published';
+}
+
+function normalizeDraftPayload(value: unknown): SiteVisualSettingsDraftPayload {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return null;
+  return value as Record<string, unknown>;
 }
 
 function normalizeSiteVisualSettings(row: Partial<SiteVisualSettings> | null | undefined): SiteVisualSettings {
@@ -240,6 +269,11 @@ function normalizeSiteVisualSettings(row: Partial<SiteVisualSettings> | null | u
     seo_title: normalizeText(row?.seo_title, DEFAULT_SITE_VISUAL_SETTINGS.seo_title),
     seo_description: normalizeText(row?.seo_description, DEFAULT_SITE_VISUAL_SETTINGS.seo_description),
     social_share_image_url: normalizeNullableText(row?.social_share_image_url),
+    publication_status: normalizePublicationStatus(row?.publication_status),
+    draft_payload: normalizeDraftPayload(row?.draft_payload),
+    scheduled_publish_at: row?.scheduled_publish_at ?? null,
+    last_published_at: row?.last_published_at ?? null,
+    last_published_by: row?.last_published_by ?? null,
     updated_at: row?.updated_at ?? null,
     updated_by: row?.updated_by ?? null,
   };
@@ -314,6 +348,11 @@ export async function saveSiteVisualSettings(payload: SiteVisualSettingsPayload)
   const { data: authData } = await supabase.auth.getUser();
   const normalizedPayload = {
     ...buildNormalizedPayload(payload),
+    publication_status: 'published' as SiteVisualPublicationStatus,
+    draft_payload: null,
+    scheduled_publish_at: null,
+    last_published_at: new Date().toISOString(),
+    last_published_by: authData.user?.id ?? null,
     updated_by: authData.user?.id ?? null,
   };
 
@@ -332,4 +371,51 @@ export async function saveSiteVisualSettings(payload: SiteVisualSettingsPayload)
   }
 
   return normalizeSiteVisualSettings(data);
+}
+
+export async function saveSiteVisualSettingsDraft(payload: SiteVisualSettingsPayload): Promise<SiteVisualSettings> {
+  const { data: authData } = await supabase.auth.getUser();
+  const { data, error } = await supabase
+    .from('site_visual_settings')
+    .upsert({
+      id: true,
+      publication_status: 'draft',
+      draft_payload: buildNormalizedPayload(payload),
+      scheduled_publish_at: null,
+      updated_by: authData.user?.id ?? null,
+    }, { onConflict: 'id' })
+    .select(SETTINGS_COLUMNS)
+    .single();
+
+  if (error) throw new Error(error.message);
+  return normalizeSiteVisualSettings(data);
+}
+
+export async function scheduleSiteVisualSettingsPublication(payload: SiteVisualSettingsPayload, scheduledPublishAt: string): Promise<SiteVisualSettings> {
+  const scheduledDate = new Date(scheduledPublishAt);
+  if (!Number.isFinite(scheduledDate.getTime())) {
+    throw new Error('Informe uma data e hora válidas para o agendamento.');
+  }
+
+  const { data: authData } = await supabase.auth.getUser();
+  const { data, error } = await supabase
+    .from('site_visual_settings')
+    .upsert({
+      id: true,
+      publication_status: 'scheduled',
+      draft_payload: buildNormalizedPayload(payload),
+      scheduled_publish_at: scheduledDate.toISOString(),
+      updated_by: authData.user?.id ?? null,
+    }, { onConflict: 'id' })
+    .select(SETTINGS_COLUMNS)
+    .single();
+
+  if (error) throw new Error(error.message);
+  return normalizeSiteVisualSettings(data);
+}
+
+export async function publishSiteVisualSettingsDraft(): Promise<SiteVisualSettings> {
+  const current = await getSiteVisualSettings();
+  if (!current.draft_payload) return current;
+  return saveSiteVisualSettings(current.draft_payload as SiteVisualSettingsPayload);
 }
