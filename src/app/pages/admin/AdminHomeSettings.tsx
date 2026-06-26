@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
-import { Globe2, ImageIcon, Link2, Palette, Save, Search, Settings, Sparkles, Trash2, Type, Upload } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
+import { Clock, Globe2, History, ImageIcon, Link2, Monitor, Palette, Save, Search, Settings, Smartphone, Sparkles, Trash2, Type, Upload } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '../../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
@@ -13,12 +13,21 @@ import {
   getSiteVisualSettings,
   GLOBAL_THEME_COLOR_OPTIONS,
   HOME_BACKGROUND_COLORS,
+  publishSiteVisualSettingsDraft,
   saveSiteVisualSettings,
+  saveSiteVisualSettingsDraft,
+  scheduleSiteVisualSettingsPublication,
   SiteVisualSettings,
 } from '../../services/siteVisualSettingsService';
+import {
+  createSiteVisualSettingsAudit,
+  listSiteVisualSettingsAudit,
+  SiteVisualSettingsAuditRecord,
+} from '../../services/siteVisualSettingsAuditService';
 import { uploadSiteMediaFile } from '../../services/storageService';
 
 type MediaField = 'home_logo_media_url' | 'home_background_media_url' | 'social_share_image_url';
+type PreviewMode = 'mobile' | 'desktop';
 
 type TextField = keyof Pick<
   SiteVisualSettings,
@@ -66,31 +75,43 @@ export function AdminHomeSettings() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [uploadingField, setUploadingField] = useState<MediaField | null>(null);
+  const [auditRecords, setAuditRecords] = useState<SiteVisualSettingsAuditRecord[]>([]);
+  const [auditLoading, setAuditLoading] = useState(false);
+  const [previewMode, setPreviewMode] = useState<PreviewMode>('desktop');
+  const [scheduledPublishAt, setScheduledPublishAt] = useState('');
+
+  const publicationLabel = useMemo(() => {
+    if (settings.publication_status === 'draft') return 'Rascunho salvo';
+    if (settings.publication_status === 'scheduled') return 'Publicação agendada';
+    return 'Publicado';
+  }, [settings.publication_status]);
+
+  const loadAudit = async () => {
+    setAuditLoading(true);
+    const result = await listSiteVisualSettingsAudit(30);
+    if (result.error) {
+      toast.warning(`Não foi possível carregar o histórico: ${result.error}`);
+    } else {
+      setAuditRecords(result.data);
+    }
+    setAuditLoading(false);
+  };
+
+  const loadSettings = async () => {
+    try {
+      setLoading(true);
+      const data = await getSiteVisualSettings();
+      setSettings(data);
+      await loadAudit();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Não foi possível carregar as configurações públicas.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    let mounted = true;
-
-    async function loadSettings() {
-      try {
-        setLoading(true);
-        const data = await getSiteVisualSettings();
-        if (mounted) {
-          setSettings(data);
-        }
-      } catch (error) {
-        toast.error(error instanceof Error ? error.message : 'Não foi possível carregar as configurações públicas.');
-      } finally {
-        if (mounted) {
-          setLoading(false);
-        }
-      }
-    }
-
-    loadSettings();
-
-    return () => {
-      mounted = false;
-    };
+    void loadSettings();
   }, []);
 
   const updateSettings = (patch: Partial<SiteVisualSettings>) => {
@@ -124,14 +145,89 @@ export function AdminHomeSettings() {
     }
   };
 
-  const handleSave = async () => {
+  const handlePublish = async () => {
+    const previousSettings = settings;
     setSaving(true);
     try {
       const savedSettings = await saveSiteVisualSettings(settings);
       setSettings(savedSettings);
-      toast.success('Configurações públicas salvas.');
+      await createSiteVisualSettingsAudit({
+        action: 'published',
+        previousPayload: previousSettings,
+        nextPayload: savedSettings,
+        note: 'Publicação manual via /admin/home.',
+      });
+      await loadAudit();
+      toast.success('Configurações públicas publicadas.');
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Não foi possível salvar as configurações públicas.');
+      toast.error(error instanceof Error ? error.message : 'Não foi possível publicar as configurações públicas.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleSaveDraft = async () => {
+    setSaving(true);
+    try {
+      const savedSettings = await saveSiteVisualSettingsDraft(settings);
+      setSettings(savedSettings);
+      await createSiteVisualSettingsAudit({
+        action: 'draft_saved',
+        nextPayload: settings,
+        note: 'Rascunho salvo via /admin/home.',
+      });
+      await loadAudit();
+      toast.success('Rascunho salvo. A versão pública ainda não foi alterada.');
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Não foi possível salvar o rascunho.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleSchedulePublication = async () => {
+    if (!scheduledPublishAt) {
+      toast.error('Informe data e hora para agendar a publicação.');
+      return;
+    }
+
+    setSaving(true);
+    try {
+      const savedSettings = await scheduleSiteVisualSettingsPublication(settings, scheduledPublishAt);
+      setSettings(savedSettings);
+      await createSiteVisualSettingsAudit({
+        action: 'scheduled',
+        nextPayload: settings,
+        note: `Publicação agendada para ${new Date(scheduledPublishAt).toLocaleString('pt-BR')}.`,
+      });
+      await loadAudit();
+      toast.success('Publicação agendada.');
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Não foi possível agendar a publicação.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handlePublishDraft = async () => {
+    if (!settings.draft_payload) {
+      toast.info('Não há rascunho salvo para publicar.');
+      return;
+    }
+
+    setSaving(true);
+    try {
+      const savedSettings = await publishSiteVisualSettingsDraft();
+      setSettings(savedSettings);
+      await createSiteVisualSettingsAudit({
+        action: 'published',
+        nextPayload: savedSettings,
+        note: 'Rascunho publicado via /admin/home.',
+      });
+      await loadAudit();
+      toast.success('Rascunho publicado.');
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Não foi possível publicar o rascunho.');
     } finally {
       setSaving(false);
     }
@@ -140,14 +236,14 @@ export function AdminHomeSettings() {
   const resetSettings = () => {
     if (!window.confirm('Restaurar os textos, cores e links padrão? As imagens enviadas serão removidas desta configuração.')) return;
     setSettings(DEFAULT_SITE_VISUAL_SETTINGS);
-    toast.info('Configuração restaurada localmente. Salve para publicar.');
+    toast.info('Configuração restaurada localmente. Publique para alterar a versão pública.');
   };
 
   return (
     <div className="min-h-screen bg-gray-50">
       <MemberPageHeader
         title="Configurações públicas"
-        subtitle="Gerencie a tela de entrada, identidade visual, links públicos, SEO e base de tema do site."
+        subtitle="Gerencie a tela de entrada, identidade visual, links públicos, SEO, rascunhos, publicação e histórico visual."
         icon={Palette}
         actions={[
           ...DEFAULT_MEMBER_HEADER_ACTIONS,
@@ -158,28 +254,42 @@ export function AdminHomeSettings() {
             <Button type="button" variant="outline" onClick={resetSettings} disabled={saving || loading} className="w-full rounded-xl sm:w-auto">
               Restaurar padrão
             </Button>
-            <Button onClick={handleSave} disabled={saving || loading} className="w-full rounded-xl shadow-sm sm:w-auto">
+            <Button type="button" variant="outline" onClick={handleSaveDraft} disabled={saving || loading} className="w-full rounded-xl sm:w-auto">
+              Salvar rascunho
+            </Button>
+            <Button onClick={handlePublish} disabled={saving || loading} className="w-full rounded-xl shadow-sm sm:w-auto">
               <Save className="mr-2 h-4 w-4" />
-              {saving ? 'Salvando...' : 'Salvar alterações'}
+              {saving ? 'Salvando...' : 'Publicar agora'}
             </Button>
           </div>
         )}
       />
 
       <main className="mx-auto max-w-6xl px-4 py-6 sm:px-6">
-        <Tabs defaultValue="entrar" className="space-y-6">
+        <StatusCard
+          publicationLabel={publicationLabel}
+          settings={settings}
+          scheduledPublishAt={scheduledPublishAt}
+          onScheduledPublishAtChange={setScheduledPublishAt}
+          onSchedule={handleSchedulePublication}
+          onPublishDraft={handlePublishDraft}
+          saving={saving || loading}
+        />
+
+        <Tabs defaultValue="entrar" className="mt-6 space-y-6">
           <div className="overflow-x-auto pb-1">
-            <TabsList className="grid min-w-[720px] grid-cols-5">
+            <TabsList className="grid min-w-[860px] grid-cols-6">
               <TabsTrigger value="entrar">/entrar</TabsTrigger>
               <TabsTrigger value="visual">Identidade visual</TabsTrigger>
               <TabsTrigger value="links">Links públicos</TabsTrigger>
               <TabsTrigger value="seo">SEO</TabsTrigger>
+              <TabsTrigger value="historico">Histórico</TabsTrigger>
               <TabsTrigger value="roadmap">Roadmap</TabsTrigger>
             </TabsList>
           </div>
 
           <TabsContent value="entrar" className="space-y-6">
-            <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_360px]">
+            <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_380px]">
               <div className="space-y-6">
                 <Card>
                   <CardHeader>
@@ -220,12 +330,12 @@ export function AdminHomeSettings() {
                 </Card>
               </div>
 
-              <PreviewCard settings={settings} />
+              <PreviewCard settings={settings} previewMode={previewMode} onPreviewModeChange={setPreviewMode} />
             </div>
           </TabsContent>
 
           <TabsContent value="visual" className="space-y-6">
-            <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_360px]">
+            <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_380px]">
               <div className="space-y-6">
                 <Card>
                   <CardHeader>
@@ -352,7 +462,7 @@ export function AdminHomeSettings() {
                 </Card>
               </div>
 
-              <PreviewCard settings={settings} />
+              <PreviewCard settings={settings} previewMode={previewMode} onPreviewModeChange={setPreviewMode} />
             </div>
           </TabsContent>
 
@@ -407,6 +517,10 @@ export function AdminHomeSettings() {
             </Card>
           </TabsContent>
 
+          <TabsContent value="historico" className="space-y-6">
+            <AuditPanel records={auditRecords} loading={auditLoading} onRefresh={loadAudit} />
+          </TabsContent>
+
           <TabsContent value="roadmap" className="space-y-6">
             <Card>
               <CardHeader>
@@ -420,27 +534,28 @@ export function AdminHomeSettings() {
               </CardHeader>
               <CardContent className="grid grid-cols-1 gap-4 md:grid-cols-3">
                 <RoadmapCard
-                  title="Curto prazo"
+                  title="Concluído nesta frente"
                   items={[
                     'Texto e identidade da tela /entrar',
-                    'Logo, background e cores globais',
-                    'Links de termos, privacidade e suporte',
+                    'Tema público aplicado a /termos e /privacidade',
+                    'Preview mobile/desktop no admin',
+                    'Histórico visual e auditoria',
                   ]}
                 />
                 <RoadmapCard
-                  title="Médio prazo"
+                  title="Base pronta"
                   items={[
-                    'Aplicar provider de tema em páginas públicas',
-                    'Gerenciar blocos editoriais da home pública',
-                    'Criar preview responsivo mobile/desktop',
+                    'Rascunho persistido no banco',
+                    'Agendamento persistido no banco',
+                    'Publicação manual de rascunho',
                   ]}
                 />
                 <RoadmapCard
                   title="Longo prazo"
                   items={[
+                    'Job automático para publicar agendamentos',
                     'Templates por família ou domínio',
-                    'Versionamento e agendamento de campanhas públicas',
-                    'Auditoria de alterações visuais e publicação em etapas',
+                    'Comparativo visual entre versão publicada e rascunho',
                   ]}
                 />
               </CardContent>
@@ -449,6 +564,60 @@ export function AdminHomeSettings() {
         </Tabs>
       </main>
     </div>
+  );
+}
+
+function StatusCard({
+  publicationLabel,
+  settings,
+  scheduledPublishAt,
+  onScheduledPublishAtChange,
+  onSchedule,
+  onPublishDraft,
+  saving,
+}: {
+  publicationLabel: string;
+  settings: SiteVisualSettings;
+  scheduledPublishAt: string;
+  onScheduledPublishAtChange: (value: string) => void;
+  onSchedule: () => void;
+  onPublishDraft: () => void;
+  saving: boolean;
+}) {
+  return (
+    <Card>
+      <CardContent className="grid grid-cols-1 gap-4 p-4 lg:grid-cols-[1fr_auto] lg:items-center">
+        <div className="space-y-1">
+          <p className="text-sm font-semibold text-gray-950">Status: {publicationLabel}</p>
+          <p className="text-sm text-gray-500">
+            {settings.publication_status === 'scheduled' && settings.scheduled_publish_at
+              ? `Agendada para ${new Date(settings.scheduled_publish_at).toLocaleString('pt-BR')}.`
+              : settings.draft_payload
+                ? 'Há um rascunho salvo que pode ser publicado manualmente.'
+                : 'A versão pública está sincronizada com a última publicação manual.'}
+          </p>
+          {settings.last_published_at ? (
+            <p className="text-xs text-gray-400">Última publicação: {new Date(settings.last_published_at).toLocaleString('pt-BR')}</p>
+          ) : null}
+        </div>
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+          <Input
+            type="datetime-local"
+            value={scheduledPublishAt}
+            onChange={(event) => onScheduledPublishAtChange(event.target.value)}
+            className="sm:w-56"
+            aria-label="Data e hora de publicação agendada"
+          />
+          <Button type="button" variant="outline" onClick={onSchedule} disabled={saving}>
+            <Clock className="mr-2 h-4 w-4" />
+            Agendar
+          </Button>
+          <Button type="button" variant="outline" onClick={onPublishDraft} disabled={saving || !settings.draft_payload}>
+            Publicar rascunho
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
   );
 }
 
@@ -560,52 +729,142 @@ function MediaUploadCard({
   );
 }
 
-function PreviewCard({ settings }: { settings: SiteVisualSettings }) {
+function PreviewCard({
+  settings,
+  previewMode,
+  onPreviewModeChange,
+}: {
+  settings: SiteVisualSettings;
+  previewMode: PreviewMode;
+  onPreviewModeChange: (mode: PreviewMode) => void;
+}) {
   return (
     <Card className="h-fit lg:sticky lg:top-6">
       <CardHeader>
-        <CardTitle className="text-lg">Prévia da entrada</CardTitle>
+        <div className="flex items-center justify-between gap-3">
+          <CardTitle className="text-lg">Prévia responsiva</CardTitle>
+          <div className="flex rounded-lg bg-gray-100 p-1">
+            <button
+              type="button"
+              onClick={() => onPreviewModeChange('mobile')}
+              className={[
+                'inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium',
+                previewMode === 'mobile' ? 'bg-white text-blue-700 shadow-sm' : 'text-gray-500',
+              ].join(' ')}
+            >
+              <Smartphone className="h-3.5 w-3.5" />
+              Mobile
+            </button>
+            <button
+              type="button"
+              onClick={() => onPreviewModeChange('desktop')}
+              className={[
+                'inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium',
+                previewMode === 'desktop' ? 'bg-white text-blue-700 shadow-sm' : 'text-gray-500',
+              ].join(' ')}
+            >
+              <Monitor className="h-3.5 w-3.5" />
+              Desktop
+            </button>
+          </div>
+        </div>
       </CardHeader>
       <CardContent>
-        <div
-          className="relative min-h-96 overflow-hidden rounded-lg border border-gray-200 p-5"
-          style={{ backgroundColor: settings.home_background_color, color: settings.global_text_color }}
-        >
-          {settings.home_background_media_url ? (
-            <div
-              className="absolute inset-0 bg-cover bg-center"
-              style={{
-                backgroundImage: `url("${settings.home_background_media_url}")`,
-                opacity: settings.home_background_media_opacity / 100,
-              }}
-              aria-hidden="true"
-            />
-          ) : null}
-          <div className="relative z-10">
-            <img
-              src={settings.home_logo_media_url || '/favicon.svg'}
-              alt={settings.home_logo_alt_text}
-              className="mb-5 h-auto w-24 object-contain"
-            />
-            <p className="text-sm font-semibold uppercase tracking-wide" style={{ color: settings.global_primary_color }}>
-              {settings.entrance_eyebrow}
-            </p>
-            <h2 className="mt-2 text-2xl font-bold" style={{ color: settings.global_text_color }}>
-              {settings.entrance_title}
-            </h2>
-            <p className="mt-3 text-sm leading-6" style={{ color: settings.global_muted_text_color }}>
-              {settings.entrance_description}
-            </p>
-            <div className="mt-6 rounded-xl border border-gray-200 p-4 shadow-sm" style={{ backgroundColor: settings.global_card_background_color, borderRadius: settings.global_card_radius }}>
-              <p className="text-lg font-semibold" style={{ color: settings.global_text_color }}>{settings.entrance_login_title}</p>
-              <p className="mt-1 text-xs" style={{ color: settings.global_muted_text_color }}>{settings.entrance_login_description}</p>
-              <div className="mt-4 h-10 rounded-lg" style={{ backgroundColor: settings.global_primary_color, borderRadius: settings.global_button_radius }} />
+        <div className={previewMode === 'mobile' ? 'mx-auto max-w-[390px]' : 'w-full'}>
+          <div
+            className="relative min-h-96 overflow-hidden rounded-lg border border-gray-200 p-5"
+            style={{ backgroundColor: settings.home_background_color, color: settings.global_text_color }}
+          >
+            {settings.home_background_media_url ? (
+              <div
+                className="absolute inset-0 bg-cover bg-center"
+                style={{
+                  backgroundImage: `url("${settings.home_background_media_url}")`,
+                  opacity: settings.home_background_media_opacity / 100,
+                }}
+                aria-hidden="true"
+              />
+            ) : null}
+            <div className="relative z-10">
+              <img
+                src={settings.home_logo_media_url || '/favicon.svg'}
+                alt={settings.home_logo_alt_text}
+                className="mb-5 h-auto w-24 object-contain"
+              />
+              <p className="text-sm font-semibold uppercase tracking-wide" style={{ color: settings.global_primary_color }}>
+                {settings.entrance_eyebrow}
+              </p>
+              <h2 className="mt-2 text-2xl font-bold" style={{ color: settings.global_text_color }}>
+                {settings.entrance_title}
+              </h2>
+              <p className="mt-3 text-sm leading-6" style={{ color: settings.global_muted_text_color }}>
+                {settings.entrance_description}
+              </p>
+              <div className="mt-6 rounded-xl border border-gray-200 p-4 shadow-sm" style={{ backgroundColor: settings.global_card_background_color, borderRadius: settings.global_card_radius }}>
+                <p className="text-lg font-semibold" style={{ color: settings.global_text_color }}>{settings.entrance_login_title}</p>
+                <p className="mt-1 text-xs" style={{ color: settings.global_muted_text_color }}>{settings.entrance_login_description}</p>
+                <div className="mt-4 h-10 rounded-lg" style={{ backgroundColor: settings.global_primary_color, borderRadius: settings.global_button_radius }} />
+              </div>
             </div>
           </div>
         </div>
       </CardContent>
     </Card>
   );
+}
+
+function AuditPanel({ records, loading, onRefresh }: { records: SiteVisualSettingsAuditRecord[]; loading: boolean; onRefresh: () => void }) {
+  return (
+    <Card>
+      <CardHeader>
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <CardTitle className="flex items-center gap-2 text-lg">
+              <History className="h-5 w-5 text-blue-700" />
+              Histórico visual
+            </CardTitle>
+            <p className="mt-1 text-sm text-gray-500">Registro das ações de publicação, rascunho e agendamento feitas no admin.</p>
+          </div>
+          <Button type="button" variant="outline" onClick={onRefresh} disabled={loading}>
+            Atualizar
+          </Button>
+        </div>
+      </CardHeader>
+      <CardContent>
+        {loading ? (
+          <p className="text-sm text-gray-500">Carregando histórico...</p>
+        ) : records.length === 0 ? (
+          <p className="text-sm text-gray-500">Nenhum registro de auditoria encontrado.</p>
+        ) : (
+          <div className="space-y-3">
+            {records.map((record) => (
+              <div key={record.id} className="rounded-xl border border-gray-200 bg-white p-4">
+                <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+                  <p className="text-sm font-semibold text-gray-900">{getAuditActionLabel(record.action)}</p>
+                  <p className="text-xs text-gray-500">{new Date(record.created_at).toLocaleString('pt-BR')}</p>
+                </div>
+                {record.note ? <p className="mt-2 text-sm text-gray-600">{record.note}</p> : null}
+                <p className="mt-2 text-xs text-gray-400">ID: {record.id}</p>
+              </div>
+            ))}
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
+function getAuditActionLabel(action: SiteVisualSettingsAuditRecord['action']) {
+  const labels: Record<SiteVisualSettingsAuditRecord['action'], string> = {
+    created: 'Configuração criada',
+    updated: 'Configuração atualizada',
+    published: 'Publicação realizada',
+    scheduled: 'Publicação agendada',
+    draft_saved: 'Rascunho salvo',
+    restored: 'Padrão restaurado',
+  };
+
+  return labels[action] ?? action;
 }
 
 function RoadmapCard({ title, items }: { title: string; items: string[] }) {
