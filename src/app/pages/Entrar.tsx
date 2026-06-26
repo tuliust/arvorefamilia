@@ -83,6 +83,16 @@ function shouldQueueMobileDesktopTip() {
   return window.matchMedia('(max-width: 767px)').matches;
 }
 
+function getPublicLinkTarget(url?: string | null) {
+  const cleanUrl = String(url ?? '').trim();
+  return cleanUrl || '#';
+}
+
+function isInternalPublicLink(url?: string | null) {
+  const cleanUrl = getPublicLinkTarget(url);
+  return cleanUrl.startsWith('/') && !cleanUrl.startsWith('//');
+}
+
 export function Entrar() {
   const navigate = useNavigate();
   const { user, loading } = useAuth();
@@ -122,6 +132,18 @@ export function Entrar() {
       mounted = false;
     };
   }, []);
+
+  useEffect(() => {
+    document.title = siteVisualSettings.seo_title;
+
+    let descriptionMeta = document.querySelector<HTMLMetaElement>('meta[name="description"]');
+    if (!descriptionMeta) {
+      descriptionMeta = document.createElement('meta');
+      descriptionMeta.name = 'description';
+      document.head.appendChild(descriptionMeta);
+    }
+    descriptionMeta.content = siteVisualSettings.seo_description;
+  }, [siteVisualSettings.seo_description, siteVisualSettings.seo_title]);
 
   useEffect(() => {
     let mounted = true;
@@ -174,11 +196,21 @@ export function Entrar() {
   }, []);
 
   const title = useMemo(() => {
-    if (firstAccessStep === 'confirmation') return 'Confirme seu e-mail';
-    if (mode === 'login') return 'Entrar na árvore';
-    if (firstAccessStep === 'code') return 'Primeiro acesso';
+    if (firstAccessStep === 'confirmation') return siteVisualSettings.entrance_confirmation_title;
+    if (mode === 'login') return siteVisualSettings.entrance_login_title;
+    if (firstAccessStep === 'code') return siteVisualSettings.entrance_first_access_title;
     return 'Criar conta';
-  }, [firstAccessStep, mode]);
+  }, [firstAccessStep, mode, siteVisualSettings]);
+
+  const cardDescription = useMemo(() => {
+    if (mode === 'login') {
+      return firstAccessStep === 'confirmation'
+        ? siteVisualSettings.entrance_confirmation_description
+        : siteVisualSettings.entrance_login_description;
+    }
+
+    return siteVisualSettings.entrance_first_access_description;
+  }, [firstAccessStep, mode, siteVisualSettings]);
 
   const routeAfterAuth = async (authUser: User) => {
     const result = await resolveFirstAccessLinkForUser(authUser);
@@ -502,11 +534,15 @@ export function Entrar() {
 
   const logoMediaUrl = siteVisualSettings.home_logo_media_url || '/favicon.svg';
   const hasBackgroundMedia = Boolean(siteVisualSettings.home_background_media_url);
+  const primaryButtonStyle = {
+    backgroundColor: siteVisualSettings.global_primary_color,
+    borderRadius: siteVisualSettings.global_button_radius,
+  };
 
   return (
     <div
       className="relative flex min-h-screen flex-col overflow-hidden"
-      style={{ backgroundColor: siteVisualSettings.home_background_color }}
+      style={{ backgroundColor: siteVisualSettings.home_background_color, color: siteVisualSettings.global_text_color }}
     >
       {hasBackgroundMedia ? (
         <div
@@ -523,39 +559,37 @@ export function Entrar() {
           <section className="flex flex-col items-center justify-center text-center lg:items-start lg:text-left">
             <img
               src={logoMediaUrl}
-              alt="Família Souza Barros"
+              alt={siteVisualSettings.home_logo_alt_text}
               className="mb-6 h-auto w-24 max-w-full object-contain sm:w-28 lg:w-32"
             />
-            <p className="text-sm font-semibold uppercase tracking-wide text-blue-700">Plataforma familiar privada</p>
-            <h1 className="mt-3 text-4xl font-bold tracking-tight text-gray-950">Família Souza Barros</h1>
-            <div className="mt-4 max-w-xl space-y-3 text-base leading-7 text-gray-600">
-              <p>
-                Família Souza Barros é uma plataforma familiar privada para organizar a árvore genealógica, perfis de familiares, fotos, documentos, memórias e datas importantes da família.
-              </p>
+            <p className="text-sm font-semibold uppercase tracking-wide" style={{ color: siteVisualSettings.global_primary_color }}>
+              {siteVisualSettings.entrance_eyebrow}
+            </p>
+            <h1 className="mt-3 text-4xl font-bold tracking-tight" style={{ color: siteVisualSettings.global_text_color }}>
+              {siteVisualSettings.entrance_title}
+            </h1>
+            <div className="mt-4 max-w-xl space-y-3 text-base leading-7" style={{ color: siteVisualSettings.global_muted_text_color }}>
+              <p>{siteVisualSettings.entrance_description}</p>
             </div>
           </section>
 
-          <Card className="border-gray-200 shadow-xl">
+          <Card className="border-gray-200 shadow-xl" style={{ backgroundColor: siteVisualSettings.global_card_background_color, borderRadius: siteVisualSettings.global_card_radius }}>
             <CardHeader className="space-y-4">
               <div className="grid grid-cols-2 gap-2 rounded-xl bg-gray-100 p-1">
-                <ModeButton active={mode === 'login'} onClick={showLogin}>
+                <ModeButton active={mode === 'login'} onClick={showLogin} activeColor={siteVisualSettings.global_primary_color}>
                   <LogIn className="h-4 w-4" />
                   Login
                 </ModeButton>
-                <ModeButton active={mode === 'first-access'} onClick={showFirstAccess}>
+                <ModeButton active={mode === 'first-access'} onClick={showFirstAccess} activeColor={siteVisualSettings.global_primary_color}>
                   <UserPlus className="h-4 w-4" />
                   Primeiro acesso
                 </ModeButton>
               </div>
 
               <div>
-                <CardTitle className="text-2xl">{title}</CardTitle>
-                <p className="mt-2 text-sm text-gray-500">
-                  {mode === 'login'
-                    ? firstAccessStep === 'confirmation'
-                      ? 'Finalize a confirmação no seu e-mail antes de entrar.'
-                      : 'Entre com seu e-mail e senha para acessar sua árvore.'
-                    : 'Informe o código recebido e crie suas credenciais.'}
+                <CardTitle className="text-2xl" style={{ color: siteVisualSettings.global_text_color }}>{title}</CardTitle>
+                <p className="mt-2 text-sm" style={{ color: siteVisualSettings.global_muted_text_color }}>
+                  {cardDescription}
                 </p>
               </div>
             </CardHeader>
@@ -586,6 +620,7 @@ export function Entrar() {
                     className="w-full"
                     disabled={resendSubmitting || resendCooldownSeconds > 0}
                     onClick={handleResendConfirmation}
+                    style={{ borderRadius: siteVisualSettings.global_button_radius }}
                   >
                     {resendSubmitting
                       ? 'Reenviando...'
@@ -597,6 +632,7 @@ export function Entrar() {
                   <Button
                     type="button"
                     className="w-full"
+                    style={primaryButtonStyle}
                     onClick={() => {
                       const normalizedEmail = confirmationEmail.trim().toLowerCase();
                       resetFirstAccessCodeStep();
@@ -640,23 +676,25 @@ export function Entrar() {
                     </div>
                   </Field>
 
-                  <Button type="submit" className="w-full" disabled={submitting} data-testid="login-submit">
-                    {submitting ? 'Entrando...' : 'Entrar'}
+                  <Button type="submit" className="w-full" disabled={submitting} data-testid="login-submit" style={primaryButtonStyle}>
+                    {submitting ? 'Entrando...' : siteVisualSettings.entrance_login_cta_label}
                   </Button>
 
                   <button
                     type="button"
                     onClick={handleResetPassword}
                     disabled={submitting}
-                    className="w-full text-center text-sm font-medium text-gray-600 hover:text-blue-700 hover:underline disabled:opacity-60"
+                    className="w-full text-center text-sm font-medium hover:underline disabled:opacity-60"
+                    style={{ color: siteVisualSettings.global_muted_text_color }}
                   >
-                    Esqueci minha senha
+                    {siteVisualSettings.entrance_forgot_password_label}
                   </button>
 
                   <button
                     type="button"
                     onClick={showFirstAccess}
-                    className="w-full text-center text-sm font-medium text-blue-700 hover:underline"
+                    className="w-full text-center text-sm font-medium hover:underline"
+                    style={{ color: siteVisualSettings.global_primary_color }}
                   >
                     Primeiro acesso
                   </button>
@@ -679,8 +717,8 @@ export function Entrar() {
                     </div>
                   </Field>
 
-                  <Button type="submit" className="w-full" disabled={submitting}>
-                    {submitting ? 'Validando...' : 'Validar código'}
+                  <Button type="submit" className="w-full" disabled={submitting} style={primaryButtonStyle}>
+                    {submitting ? 'Validando...' : siteVisualSettings.entrance_first_access_cta_label}
                     <ArrowRight className="ml-2 h-4 w-4" />
                   </Button>
                 </form>
@@ -746,29 +784,19 @@ export function Entrar() {
                     />
                     <span>
                       Li e aceito os{' '}
-                      <a
-                        href="/termos"
-                        target="_blank"
-                        rel="noreferrer"
-                        className="font-medium text-blue-700 hover:underline"
-                      >
-                        termos de uso
-                      </a>{' '}
+                      <PublicInlineLink url={siteVisualSettings.public_terms_url} color={siteVisualSettings.global_primary_color}>
+                        {siteVisualSettings.public_terms_label}
+                      </PublicInlineLink>{' '}
                       e a{' '}
-                      <a
-                        href="/privacidade"
-                        target="_blank"
-                        rel="noreferrer"
-                        className="font-medium text-blue-700 hover:underline"
-                      >
-                        política de privacidade
-                      </a>
+                      <PublicInlineLink url={siteVisualSettings.public_privacy_url} color={siteVisualSettings.global_primary_color}>
+                        {siteVisualSettings.public_privacy_label}
+                      </PublicInlineLink>
                       .
                     </span>
                   </label>
 
-                  <Button type="submit" className="w-full" disabled={submitting}>
-                    {submitting ? 'Criando conta...' : 'Criar conta e revisar dados'}
+                  <Button type="submit" className="w-full" disabled={submitting} style={primaryButtonStyle}>
+                    {submitting ? 'Criando conta...' : siteVisualSettings.entrance_create_account_cta_label}
                   </Button>
                 </form>
               )}
@@ -777,17 +805,29 @@ export function Entrar() {
         </div>
       </main>
       <footer className="relative z-10 px-4 pb-6">
-        <nav className="mx-auto flex max-w-6xl items-center justify-center gap-3 text-xs text-gray-500">
-          <Link to="/termos" className="font-medium hover:text-blue-700 hover:underline">
-            Termos de Uso
-          </Link>
+        {siteVisualSettings.entrance_footer_note ? (
+          <p className="mx-auto mb-3 max-w-6xl text-center text-xs" style={{ color: siteVisualSettings.global_muted_text_color }}>
+            {siteVisualSettings.entrance_footer_note}
+          </p>
+        ) : null}
+        <nav className="mx-auto flex max-w-6xl flex-wrap items-center justify-center gap-3 text-xs" style={{ color: siteVisualSettings.global_muted_text_color }}>
+          <PublicFooterLink url={siteVisualSettings.public_terms_url} color={siteVisualSettings.global_primary_color}>
+            {siteVisualSettings.public_terms_label}
+          </PublicFooterLink>
           <span aria-hidden="true">•</span>
-          <Link to="/privacidade" className="font-medium hover:text-blue-700 hover:underline">
-            Política de Privacidade
-          </Link>
+          <PublicFooterLink url={siteVisualSettings.public_privacy_url} color={siteVisualSettings.global_primary_color}>
+            {siteVisualSettings.public_privacy_label}
+          </PublicFooterLink>
+          {siteVisualSettings.public_support_label && siteVisualSettings.public_support_url ? (
+            <>
+              <span aria-hidden="true">•</span>
+              <PublicFooterLink url={siteVisualSettings.public_support_url} color={siteVisualSettings.global_primary_color}>
+                {siteVisualSettings.public_support_label}
+              </PublicFooterLink>
+            </>
+          ) : null}
         </nav>
       </footer>
-
     </div>
   );
 }
@@ -795,10 +835,12 @@ export function Entrar() {
 function ModeButton({
   active,
   onClick,
+  activeColor,
   children,
 }: {
   active: boolean;
   onClick: () => void;
+  activeColor: string;
   children: React.ReactNode;
 }) {
   return (
@@ -807,8 +849,9 @@ function ModeButton({
       onClick={onClick}
       className={[
         'inline-flex items-center justify-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition',
-        active ? 'bg-white text-blue-700 shadow-sm' : 'text-gray-600 hover:text-gray-900',
+        active ? 'bg-white shadow-sm' : 'text-gray-600 hover:text-gray-900',
       ].join(' ')}
+      style={active ? { color: activeColor } : undefined}
     >
       {children}
     </button>
@@ -821,5 +864,41 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
       <Label>{label}</Label>
       {children}
     </div>
+  );
+}
+
+function PublicInlineLink({ url, color, children }: { url: string; color: string; children: React.ReactNode }) {
+  const target = getPublicLinkTarget(url);
+
+  if (isInternalPublicLink(target)) {
+    return (
+      <Link to={target} target="_blank" rel="noreferrer" className="font-medium hover:underline" style={{ color }}>
+        {children}
+      </Link>
+    );
+  }
+
+  return (
+    <a href={target} target="_blank" rel="noreferrer" className="font-medium hover:underline" style={{ color }}>
+      {children}
+    </a>
+  );
+}
+
+function PublicFooterLink({ url, color, children }: { url: string; color: string; children: React.ReactNode }) {
+  const target = getPublicLinkTarget(url);
+
+  if (isInternalPublicLink(target)) {
+    return (
+      <Link to={target} className="font-medium hover:underline" style={{ color }}>
+        {children}
+      </Link>
+    );
+  }
+
+  return (
+    <a href={target} target="_blank" rel="noreferrer" className="font-medium hover:underline" style={{ color }}>
+      {children}
+    </a>
   );
 }
