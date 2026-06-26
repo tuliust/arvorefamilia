@@ -1,14 +1,71 @@
 import React from 'react';
 import { createPortal } from 'react-dom';
 import { Handle, Position, NodeProps, useReactFlow, Node } from 'reactflow';
-import { Blend } from 'lucide-react';
 import { MarriageNodeData, MarriageNodeDetails } from './types';
 import { ViewMarriageModal } from './modals/ViewMarriageModal';
+import type { ConjugalRelationshipStatus } from '../../utils/conjugalRelationshipStatus';
 
 const FALLBACK_MARRIAGE_NODE_SIZE = 60;
 const FALLBACK_PERSON_NODE_WIDTH = 400;
 const FALLBACK_PERSON_NODE_HEIGHT = 160;
 const CONNECTOR_COLOR = 'var(--tree-palette-group-border, #CBD5E1)';
+
+type MarriageNodeStatusData = MarriageNodeData & {
+  status?: ConjugalRelationshipStatus;
+  statusLabel?: string;
+  statusDescription?: string;
+};
+
+const STATUS_NODE_META: Record<ConjugalRelationshipStatus, {
+  symbol: string;
+  borderColor: string;
+  color: string;
+  backgroundClass: string;
+  ringClass: string;
+}> = {
+  active: {
+    symbol: '♥',
+    borderColor: 'var(--tree-palette-spouse, #A85F45)',
+    color: '#A85F45',
+    backgroundClass: 'bg-[#FBF8F1] hover:bg-[#F4EFE6]',
+    ringClass: 'focus-visible:ring-[#A85F45]/40',
+  },
+  widowed: {
+    symbol: '◌',
+    borderColor: '#94A3B8',
+    color: '#64748B',
+    backgroundClass: 'bg-slate-50 hover:bg-slate-100',
+    ringClass: 'focus-visible:ring-slate-400',
+  },
+  separated: {
+    symbol: '∕',
+    borderColor: '#D97706',
+    color: '#B45309',
+    backgroundClass: 'bg-amber-50 hover:bg-amber-100',
+    ringClass: 'focus-visible:ring-amber-400',
+  },
+  divorced: {
+    symbol: '×',
+    borderColor: '#C2410C',
+    color: '#9A3412',
+    backgroundClass: 'bg-orange-50 hover:bg-orange-100',
+    ringClass: 'focus-visible:ring-orange-400',
+  },
+  inactive: {
+    symbol: '…',
+    borderColor: '#94A3B8',
+    color: '#64748B',
+    backgroundClass: 'bg-gray-50 hover:bg-gray-100',
+    ringClass: 'focus-visible:ring-gray-400',
+  },
+  historical: {
+    symbol: '◇',
+    borderColor: '#A8A29E',
+    color: '#57534E',
+    backgroundClass: 'bg-stone-50 hover:bg-stone-100',
+    ringClass: 'focus-visible:ring-stone-400',
+  },
+};
 
 function getNodeSize(node: Node) {
   const width = Number(node.data?.layoutWidth ?? node.data?.width);
@@ -70,12 +127,18 @@ function inferMarriageDetailsFromNearestPeople(marriageNodeId: string, nodes: No
 
 export const MarriageNode = React.memo(({ id, data }: NodeProps<MarriageNodeData>) => {
   const { getNodes } = useReactFlow();
+  const statusData = data as MarriageNodeStatusData;
   const [localMarriageDetails, setLocalMarriageDetails] = React.useState<MarriageNodeDetails | null>(null);
   const isDirectFamilyVariant = data.visualVariant === 'direct-family';
   const isCompactParentMarriage =
     id === 'direct-parent-marriage-node' &&
     'layoutWidth' in data &&
     data.layoutWidth === 36;
+  const status = statusData.status ?? 'active';
+  const statusMeta = STATUS_NODE_META[status] ?? STATUS_NODE_META.active;
+  const title = statusData.statusLabel
+    ? `${statusData.statusLabel}. ${statusData.statusDescription ?? 'Ver vínculo do casal'}`
+    : 'Ver vínculo do casal';
   const hiddenHandle = {
     width: 1,
     height: 1,
@@ -109,19 +172,21 @@ export const MarriageNode = React.memo(({ id, data }: NodeProps<MarriageNodeData
         onClick={handleClick}
         onMouseDown={(event) => event.stopPropagation()}
         onPointerDown={(event) => event.stopPropagation()}
-        title="Ver vínculo do casal"
-        aria-label="Ver vínculo do casal"
+        title={title}
+        aria-label={title}
         className={[
-          'nodrag nopan relative z-40 flex cursor-pointer items-center justify-center overflow-visible rounded-full text-sm leading-none text-slate-500 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2',
+          'nodrag nopan relative z-40 flex cursor-pointer items-center justify-center overflow-visible rounded-full text-sm font-bold leading-none transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2',
+          statusMeta.backgroundClass,
+          statusMeta.ringClass,
           isCompactParentMarriage
-            ? 'h-9 w-9 border-2 bg-white shadow-[0_0_0_3px_rgba(241,245,249,0.95),0_4px_10px_rgba(71,85,105,0.18)] hover:bg-slate-50 hover:text-slate-700'
+            ? 'h-9 w-9 border-2 shadow-[0_0_0_3px_rgba(241,245,249,0.95),0_4px_10px_rgba(71,85,105,0.18)]'
             : isDirectFamilyVariant
-            ? 'h-11 w-11 border-[3px] bg-white shadow-[0_0_0_3px_rgba(241,245,249,0.95),0_4px_10px_rgba(71,85,105,0.18)] hover:bg-slate-50 hover:text-slate-700 hover:shadow-[0_0_0_4px_rgba(241,245,249,1),0_5px_12px_rgba(71,85,105,0.24)] md:h-[60px] md:w-[60px] md:shadow-[0_0_0_4px_rgba(241,245,249,0.95),0_5px_14px_rgba(71,85,105,0.22)]'
-            : 'h-[60px] w-[60px] border-2 bg-slate-50 shadow-[0_3px_10px_rgba(71,85,105,0.18)] hover:bg-slate-100 hover:text-slate-700 hover:shadow-[0_4px_12px_rgba(71,85,105,0.24)]',
+            ? 'h-11 w-11 border-[3px] shadow-[0_0_0_3px_rgba(241,245,249,0.95),0_4px_10px_rgba(71,85,105,0.18)] hover:shadow-[0_0_0_4px_rgba(241,245,249,1),0_5px_12px_rgba(71,85,105,0.24)] md:h-[60px] md:w-[60px] md:shadow-[0_0_0_4px_rgba(241,245,249,0.95),0_5px_14px_rgba(71,85,105,0.22)]'
+            : 'h-[60px] w-[60px] border-2 shadow-[0_3px_10px_rgba(71,85,105,0.18)] hover:shadow-[0_4px_12px_rgba(71,85,105,0.24)]',
         ].join(' ')}
         style={{
-          borderColor: CONNECTOR_COLOR,
-          color: CONNECTOR_COLOR,
+          borderColor: statusMeta.borderColor || CONNECTOR_COLOR,
+          color: statusMeta.color || CONNECTOR_COLOR,
         }}
       >
         <Handle type="target" position={Position.Top} id="top" style={{ ...hiddenHandle, top: 0, left: '50%' }} />
@@ -139,10 +204,9 @@ export const MarriageNode = React.memo(({ id, data }: NodeProps<MarriageNodeData
             transform: 'translate(-50%, -50%)',
           }}
         />
-        <Blend
-          className={isCompactParentMarriage ? 'h-5 w-5 stroke-[3]' : isDirectFamilyVariant ? 'h-6 w-6 stroke-[3] md:h-9 md:w-9' : 'h-8 w-8 stroke-[2.8]'}
-          aria-hidden="true"
-        />
+        <span aria-hidden="true" className={isCompactParentMarriage ? 'text-lg' : isDirectFamilyVariant ? 'text-xl md:text-3xl' : 'text-3xl'}>
+          {data.emoji || statusMeta.symbol}
+        </span>
       </button>
 
       {localMarriageDetails && typeof document !== 'undefined'
