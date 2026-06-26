@@ -1,0 +1,10 @@
+/* Remove a injeção global legada que acrescentava o parágrafo do Google Agenda no hero da Central de Ajuda. */
+main section h1 + p::after {
+  content: none !important;
+  display: none !important;
+}
+
+main section h1 + p {
+  font-size: inherit !important;
+  color: rgb(75 85 99) !important;
+}
