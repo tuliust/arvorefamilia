@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Clock, Filter, RefreshCcw, Settings } from 'lucide-react';
+import { Clock, Filter, RefreshCcw, Settings, Trash2 } from 'lucide-react';
 import { Button } from '../../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { Input } from '../../components/ui/input';
@@ -8,7 +8,6 @@ import {
   ACTIVITY_ACTION_LABELS,
   ACTIVITY_ENTITY_LABELS,
   getActivityActionLabel,
-  getActivityEntityLabel,
   getActivitySummary,
   listActivityLogs,
 } from '../../services/activityLogService';
@@ -40,6 +39,20 @@ function formatActivityDate(value?: string) {
   }).format(new Date(value));
 }
 
+function getFirstTwoNames(value?: string | null) {
+  const parts = String(value ?? '').trim().split(/\s+/).filter(Boolean);
+  return parts.slice(0, 2).join(' ') || 'Autor não identificado';
+}
+
+function normalizeRelationshipWords(value: string) {
+  return value
+    .replace(/\bmae\b/gi, 'mãe')
+    .replace(/\birmao\b/gi, 'irmão')
+    .replace(/\birmaos\b/gi, 'irmãos')
+    .replace(/\bconjuge\b/gi, 'cônjuge')
+    .replace(/\bconjuges\b/gi, 'cônjuges');
+}
+
 function buildServiceFilters(filters: ActivityFilters): ActivityLogFilters {
   return {
     limit: 100,
@@ -53,27 +66,23 @@ function buildServiceFilters(filters: ActivityFilters): ActivityLogFilters {
 }
 
 function ActivityRow({ activity }: { activity: ActivityLog }) {
+  const summary = normalizeRelationshipWords(getActivitySummary(activity));
+
   return (
-    <div className="grid min-w-0 gap-3 border-b border-gray-100 px-4 py-4 last:border-b-0 lg:grid-cols-[150px_180px_190px_1fr]">
+    <div className="grid min-w-0 gap-3 border-b border-gray-100 px-4 py-4 last:border-b-0 lg:grid-cols-[minmax(8rem,0.8fr)_minmax(10rem,1fr)_minmax(12rem,1fr)_minmax(18rem,2fr)] lg:items-start">
       <div className="break-words text-sm text-gray-600">{formatActivityDate(activity.created_at)}</div>
       <div className="min-w-0">
         <p className="break-words text-sm font-medium text-gray-900">
-          {activity.actor_display_name || 'Ator não identificado'}
+          {getFirstTwoNames(activity.actor_display_name)}
         </p>
       </div>
       <div className="min-w-0">
         <p className="break-words text-sm font-medium text-gray-900">
           {getActivityActionLabel(activity.action)}
         </p>
-        <p className="break-words text-xs text-gray-500">
-          {getActivityEntityLabel(activity.entity_type)}
-        </p>
       </div>
       <div className="min-w-0">
-        <p className="break-words text-sm text-gray-900">
-          {activity.entity_label || getActivityEntityLabel(activity.entity_type)}
-        </p>
-        <p className="break-words text-xs text-gray-500">{getActivitySummary(activity)}</p>
+        <p className="break-words text-sm text-gray-900">{summary}</p>
       </div>
     </div>
   );
@@ -116,6 +125,10 @@ export function AdminAtividades() {
   const handleClearFilters = () => {
     setFilters(INITIAL_FILTERS);
     loadActivities(INITIAL_FILTERS);
+  };
+
+  const handleClearActivities = () => {
+    setActivities([]);
   };
 
   return (
@@ -188,24 +201,24 @@ export function AdminAtividades() {
               </label>
 
               <label className="min-w-0 space-y-1 text-sm font-medium text-gray-700">
-                Usuário/ator
+                Usuário Autor
                 <Input
                   value={filters.actorQuery}
                   onChange={(event) =>
                     setFilters((current) => ({ ...current, actorQuery: event.target.value }))
                   }
-                  placeholder="Nome do ator"
+                  placeholder="Nome"
                 />
               </label>
 
               <label className="min-w-0 space-y-1 text-sm font-medium text-gray-700">
-                Entidade afetada
+                Usuário
                 <Input
                   value={filters.entityQuery}
                   onChange={(event) =>
                     setFilters((current) => ({ ...current, entityQuery: event.target.value }))
                   }
-                  placeholder="Nome da pessoa ou item"
+                  placeholder="Nome do usuário"
                 />
               </label>
 
@@ -239,6 +252,10 @@ export function AdminAtividades() {
               <Button variant="outline" className="w-full sm:w-auto" onClick={handleClearFilters} disabled={loading}>
                 Limpar filtros
               </Button>
+              <Button variant="outline" className="w-full sm:w-auto" onClick={handleClearActivities} disabled={loading || activities.length === 0}>
+                <Trash2 className="mr-2 h-4 w-4 shrink-0" />
+                Limpar
+              </Button>
               <Button variant="ghost" className="w-full sm:w-auto" onClick={() => loadActivities(filters)} disabled={loading}>
                 <RefreshCcw className="mr-2 h-4 w-4 shrink-0" />
                 Atualizar
@@ -261,9 +278,9 @@ export function AdminAtividades() {
               <p className="px-4 py-6 text-sm text-gray-500">Nenhuma atividade registrada.</p>
             ) : (
               <div>
-                <div className="hidden border-b border-gray-200 bg-gray-50 px-4 py-3 text-xs font-semibold uppercase tracking-wide text-gray-500 lg:grid lg:grid-cols-[150px_180px_190px_1fr]">
+                <div className="hidden border-b border-gray-200 bg-gray-50 px-4 py-3 text-xs font-semibold uppercase tracking-wide text-gray-500 lg:grid lg:grid-cols-[minmax(8rem,0.8fr)_minmax(10rem,1fr)_minmax(12rem,1fr)_minmax(18rem,2fr)]">
                   <span>Data</span>
-                  <span>Ator</span>
+                  <span>Autor</span>
                   <span>Atividade</span>
                   <span>Resumo</span>
                 </div>
