@@ -116,6 +116,24 @@ function formatarData(valor?: string) {
   }).format(data);
 }
 
+function isEdited(createdAt?: string, updatedAt?: string) {
+  if (!createdAt || !updatedAt) return false;
+
+  const created = new Date(createdAt).getTime();
+  const updated = new Date(updatedAt).getTime();
+
+  if (Number.isNaN(created) || Number.isNaN(updated)) return false;
+  return updated - created > 5000;
+}
+
+function EditedBadge() {
+  return (
+    <span className="inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-[11px] font-semibold text-gray-500">
+      Editado
+    </span>
+  );
+}
+
 function normalizeText(value?: string | null) {
   return (value || '')
     .normalize('NFD')
@@ -438,6 +456,7 @@ export function ForumTopico() {
   const currentUserAvatar = user?.user_metadata?.avatar_url || user?.user_metadata?.picture || null;
   const pessoasParaMencoes = pessoasRelacionadas.length > 0 ? pessoasRelacionadas : topico.pessoa_relacionada ? [topico.pessoa_relacionada] : [];
   const categoriaLabel = formatarCategoriaForum(topico.categoria?.nome);
+  const topicoEditado = isEdited(topico.created_at, topico.updated_at);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -462,7 +481,10 @@ export function ForumTopico() {
                     <span className="truncate font-semibold text-gray-900">{topicoAuthorName}</span>
                     {categoriaLabel && <TopicBadge>{categoriaLabel}</TopicBadge>}
                   </div>
-                  <p className="mt-0.5 text-xs text-gray-500">{formatarData(topico.created_at)}</p>
+                  <p className="mt-0.5 flex flex-wrap items-center gap-2 text-xs text-gray-500">
+                    <span>{formatarData(topico.created_at)}</span>
+                    {topicoEditado && <EditedBadge />}
+                  </p>
                 </div>
 
                 <div className="flex shrink-0 items-center gap-1">
@@ -505,6 +527,7 @@ export function ForumTopico() {
                   const podeAlterarResposta = Boolean(user && (resposta.autor_id === user.id || admin));
                   const respostaAuthorProfile = authorProfiles[resposta.autor_id];
                   const respostaAuthorName = nomeAutor(resposta.autor_id, user?.id, respostaAuthorProfile);
+                  const respostaEditadaBadge = isEdited(resposta.created_at, resposta.updated_at);
 
                   return (
                     <div key={resposta.id} className="flex min-w-0 items-start gap-3">
@@ -522,7 +545,10 @@ export function ForumTopico() {
                                   </span>
                                 )}
                               </p>
-                              <p className="text-xs text-gray-500">{formatarData(resposta.created_at)}</p>
+                              <p className="flex flex-wrap items-center gap-2 text-xs text-gray-500">
+                                <span>{formatarData(resposta.created_at)}</span>
+                                {respostaEditadaBadge && <EditedBadge />}
+                              </p>
                             </div>
 
                             {podeAlterarResposta && (
@@ -562,7 +588,7 @@ export function ForumTopico() {
               {topico.status === 'fechado' ? (
                 <p className="rounded-2xl bg-gray-50 p-4 text-sm text-gray-600">Este tópico está fechado e não aceita novas respostas.</p>
               ) : (
-                <div className="flex min-w-0 items-end gap-2">
+                <div className="flex min-w-0 items-center gap-2">
                   <AuthorAvatar name={currentUserName} src={currentUserAvatar} size="sm" />
                   <Textarea
                     value={respostaTexto}
