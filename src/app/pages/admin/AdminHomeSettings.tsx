@@ -27,6 +27,10 @@ import {
   listSiteVisualSettingsAudit,
   SiteVisualSettingsAuditRecord,
 } from '../../services/siteVisualSettingsAuditService';
+import {
+  listSiteVisualSettingsAuditChanges,
+  type SiteVisualSettingsAuditChange,
+} from '../../services/siteVisualSettingsAuditDiffService';
 import { uploadSiteMediaFile } from '../../services/storageService';
 
 type MediaField = 'home_logo_media_url' | 'home_background_media_url' | 'social_share_image_url';
@@ -888,6 +892,35 @@ function PreviewCard({
 }
 
 function AuditPanel({ records, loading, onRefresh }: { records: SiteVisualSettingsAuditRecord[]; loading: boolean; onRefresh: () => void }) {
+  const [openRecordId, setOpenRecordId] = useState<string | null>(null);
+  const [changesByRecord, setChangesByRecord] = useState<Record<string, SiteVisualSettingsAuditChange[]>>({});
+  const [loadingRecordId, setLoadingRecordId] = useState<string | null>(null);
+  const [errorByRecord, setErrorByRecord] = useState<Record<string, string>>({});
+
+  const handleToggleChanges = async (record: SiteVisualSettingsAuditRecord) => {
+    if (openRecordId === record.id) {
+      setOpenRecordId(null);
+      return;
+    }
+
+    setOpenRecordId(record.id);
+
+    if (changesByRecord[record.id] || loadingRecordId === record.id) return;
+
+    setLoadingRecordId(record.id);
+    setErrorByRecord((current) => ({ ...current, [record.id]: '' }));
+
+    const result = await listSiteVisualSettingsAuditChanges(record.id);
+
+    if (result.error) {
+      setErrorByRecord((current) => ({ ...current, [record.id]: result.error ?? 'Não foi possível carregar as alterações.' }));
+    } else {
+      setChangesByRecord((current) => ({ ...current, [record.id]: result.data }));
+    }
+
+    setLoadingRecordId(null);
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -913,6 +946,11 @@ function AuditPanel({ records, loading, onRefresh }: { records: SiteVisualSettin
           <div className="space-y-3">
             {records.map((record) => {
               const changeCount = countAuditChangedFields(record);
+              const isOpen = openRecordId === record.id;
+              const changes = changesByRecord[record.id] ?? [];
+              const isLoadingChanges = loadingRecordId === record.id;
+              const error = errorByRecord[record.id];
+
               return (
                 <div key={record.id} className="rounded-xl border border-gray-200 bg-white p-4">
                   <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
@@ -920,10 +958,31 @@ function AuditPanel({ records, loading, onRefresh }: { records: SiteVisualSettin
                     <p className="text-xs text-gray-500">{new Date(record.created_at).toLocaleString('pt-BR')}</p>
                   </div>
                   {record.note ? <p className="mt-2 text-sm text-gray-600">{record.note}</p> : null}
-                  <div className="mt-3 flex flex-wrap gap-2 text-xs">
+                  <div className="mt-3 flex flex-wrap items-center gap-2 text-xs">
                     <span className="rounded-full bg-gray-100 px-2 py-1 text-gray-600">Campos alterados: {changeCount}</span>
                     {record.created_by ? <span className="rounded-full bg-gray-100 px-2 py-1 text-gray-600">Usuário: {record.created_by}</span> : null}
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="h-7 rounded-full px-3 text-xs"
+                      onClick={() => handleToggleChanges(record)}
+                      disabled={changeCount === 0 || isLoadingChanges}
+                      aria-expanded={isOpen}
+                    >
+                      <Diff className="mr-1 h-3.5 w-3.5" />
+                      {isLoadingChanges ? 'Carregando...' : isOpen ? 'Ocultar alterações' : 'Ver alterações'}
+                    </Button>
                   </div>
+
+                  {isOpen ? (
+                    <AuditChangesPanel
+                      changes={changes}
+                      loading={isLoadingChanges}
+                      error={error}
+                    />
+                  ) : null}
+
                   <p className="mt-2 text-xs text-gray-400">ID: {record.id}</p>
                 </div>
               );
@@ -933,6 +992,68 @@ function AuditPanel({ records, loading, onRefresh }: { records: SiteVisualSettin
       </CardContent>
     </Card>
   );
+}
+
+function AuditChangesPanel({
+  changes,
+  loading,
+  error,
+}: {
+  changes: SiteVisualSettingsAuditChange[];
+  loading: boolean;
+  error?: string;
+}) {
+  if (loading) {
+    return (
+      <div className="mt-4 rounded-xl border border-blue-100 bg-blue-50 p-4 text-sm text-blue-900">
+        Carregando alterações detalhadas...
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="mt-4 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+        {error}
+      </div>
+    );
+  }
+
+  if (changes.length === 0) {
+    return (
+      <div className="mt-4 rounded-xl border border-gray-200 bg-gray-50 p-4 text-sm text-gray-500">
+        Nenhuma diferença detalhada retornada para este registro.
+      </div>
+    );
+  }
+
+  return (
+    <div className="mt-4 overflow-auto rounded-xl border border-blue-100 bg-white">
+      <table className="w-full min-w-[720px] text-left text-sm">
+        <thead className="border-b border-blue-100 bg-blue-50/60 text-xs uppercase tracking-wide text-blue-900">
+          <tr>
+            <th className="px-3 py-2">Campo</th>
+            <th className="px-3 py-2">Antes</th>
+            <th className="px-3 py-2">Depois</th>
+          </tr>
+        </thead>
+        <tbody className="divide-y divide-gray-100">
+          {changes.map((change) => (
+            <tr key={change.field_key}>
+              <td className="px-3 py-2 font-medium text-gray-900">{change.field_label}</td>
+              <td className="max-w-xs break-words px-3 py-2 text-gray-500">{formatAuditValue(change.previous_value)}</td>
+              <td className="max-w-xs break-words px-3 py-2 text-gray-700">{formatAuditValue(change.next_value)}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+function formatAuditValue(value?: string | null) {
+  const cleanValue = String(value ?? '').trim();
+  return cleanValue || '—';
 }
 
 function countAuditChangedFields(record: SiteVisualSettingsAuditRecord) {
