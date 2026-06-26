@@ -21,7 +21,7 @@ Esta frente cobre:
 
 | Arquivo | Função |
 |---|---|
-| `src/app/pages/admin/AdminHomeSettings.tsx` | Interface administrativa de configurações públicas. |
+| `src/app/pages/admin/AdminHomeSettings.tsx` | Interface administrativa de configurações públicas, histórico e visualização detalhada de alterações. |
 | `src/app/services/siteVisualSettingsService.ts` | Leitura, normalização, salvamento, rascunho, publicação e diff. |
 | `src/app/services/siteVisualSettingsAuditService.ts` | Listagem e criação de registros de auditoria. |
 | `src/app/services/siteVisualSettingsAuditDiffService.ts` | Cliente RPC para consultar diferenças campo a campo por registro de auditoria. |
@@ -88,11 +88,19 @@ Retorna, para um registro de auditoria específico:
 
 Ela compara `previous_payload` e `next_payload`, filtra apenas campos realmente alterados e só retorna dados para usuários administradores autenticados.
 
-Cliente frontend preparado:
+Cliente frontend:
 
 ```text
 src/app/services/siteVisualSettingsAuditDiffService.ts
 ```
+
+Uso na interface:
+
+```text
+/admin/home > Histórico > Ver alterações
+```
+
+A abertura mostra tabela campo a campo com coluna `Antes` e `Depois` para o registro selecionado.
 
 ## Publicação manual
 
@@ -188,10 +196,11 @@ Secrets necessários no GitHub:
 8. Confirmar que chamada sem `x-cron-secret` falha quando o segredo está configurado.
 9. Conferir `/duvidas` com o mesmo background, rodapé público e links configurados em `/admin/home`.
 10. Executar a RPC `get_site_visual_settings_audit_changes` para um registro de auditoria e confirmar retorno campo a campo.
+11. Em `/admin/home`, abrir `Histórico`, clicar em `Ver alterações` e validar a tabela `Antes`/`Depois`.
 
 ## Limites conhecidos
 
 - O cron GitHub Actions não roda exatamente a cada 15 minutos; o GitHub pode atrasar execuções.
 - A publicação agendada depende da Edge Function estar deployada e dos secrets estarem configurados.
 - O comparativo atual é textual/campo a campo. Comparativo visual por screenshots é uma etapa futura.
-- O backend da auditoria detalhada já expõe diff campo a campo por RPC. A abertura desses detalhes diretamente no painel `/admin/home` fica como próxima evolução de interface.
+- A auditoria detalhada mostra valores textuais retornados pela RPC. Campos JSON extensos, como `draft_payload`, podem aparecer serializados.
