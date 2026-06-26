@@ -13,7 +13,7 @@ import {
 import { Input } from '../../ui/input';
 import { Textarea } from '../../ui/textarea';
 import { ArquivosHistoricos } from '../../ArquivosHistoricos';
-import { ArquivoHistorico, HistoricalFileEventCategory, Pessoa, Relacionamento } from '../../../types';
+import { ArquivoHistorico, HistoricalFileEventCategory, Pessoa } from '../../../types';
 import { useAuth } from '../../../contexts/AuthContext';
 import {
   listarArquivosHistoricosDoRelacionamento,
@@ -23,6 +23,13 @@ import { getLinkedPersonWithPessoa } from '../../../services/memberProfileServic
 import { createPersonProfileSuggestion } from '../../../services/personProfileSuggestionService';
 import { canEditLinkedPersonRecord, isAdminUser } from '../../../services/permissionService';
 import { supabase } from '../../../lib/supabaseClient';
+import {
+  buildConjugalRelationshipHeadline,
+  buildConjugalRelationshipNarrative,
+  getConjugalRelationshipStatus,
+  getConjugalRelationshipStatusDescription,
+  getConjugalRelationshipStatusLabel,
+} from '../../../utils/conjugalRelationshipStatus';
 import { MarriageNodeDetails } from '../types';
 
 interface ViewMarriageModalProps {
@@ -31,11 +38,6 @@ interface ViewMarriageModalProps {
   isAdmin?: boolean;
   onClose: () => void;
 }
-
-type ParsedDate = {
-  date: Date;
-  formatted: string;
-};
 
 const MARRIAGE_HISTORICAL_FILE_CATEGORY_OPTIONS: Array<{ value: HistoricalFileEventCategory; label: string }> = [
   { value: 'certidao_casamento', label: 'Certidão de Casamento' },
@@ -103,83 +105,8 @@ function hasInfoValue(value?: string) {
   return Boolean(String(value ?? '').trim());
 }
 
-function parseDateValue(value?: string | number | null): ParsedDate | undefined {
-  if (value === null || value === undefined) return undefined;
-
-  const text = String(value).trim();
-  if (!text) return undefined;
-
-  const brDate = text.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
-  const isoDate = text.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
-  const day = brDate ? Number(brDate[1]) : isoDate ? Number(isoDate[3]) : undefined;
-  const month = brDate ? Number(brDate[2]) : isoDate ? Number(isoDate[2]) : undefined;
-  const year = brDate ? Number(brDate[3]) : isoDate ? Number(isoDate[1]) : undefined;
-
-  if (!day || !month || !year) return undefined;
-
-  const date = new Date(Date.UTC(year, month - 1, day));
-  if (
-    date.getUTCFullYear() !== year ||
-    date.getUTCMonth() !== month - 1 ||
-    date.getUTCDate() !== day
-  ) {
-    return undefined;
-  }
-
-  return {
-    date,
-    formatted: `${String(day).padStart(2, '0')}/${String(month).padStart(2, '0')}/${year}`,
-  };
-}
-
 function getSafePersonName(person: Pessoa | undefined, fallback: string) {
   return person?.nome_completo?.trim() || fallback;
-}
-
-function getFirstName(name: string) {
-  return name.trim().split(/\s+/)[0] || name.trim();
-}
-
-function isPersonDeceased(person?: Pessoa) {
-  return Boolean(person?.falecido || person?.data_falecimento || person?.local_falecimento);
-}
-
-function isRelationshipInactive(relationship?: Relacionamento) {
-  const relationshipRecord = (relationship || {}) as Record<string, unknown>;
-  const separationDate = getRelationshipField(relationshipRecord, [
-    'data_separacao',
-    'data_fim',
-  ]);
-  const activeValue = relationshipRecord.ativo;
-  const subtype = String(relationshipRecord.subtipo_relacionamento ?? '').trim().toLowerCase();
-
-  return Boolean(
-    separationDate ||
-    activeValue === false ||
-    subtype === 'separado'
-  );
-}
-
-function buildRelationshipHeadline(
-  person1Name?: string,
-  person2Name?: string,
-  relationship?: Relacionamento,
-  person1?: Pessoa,
-  person2?: Pessoa
-) {
-  const name1 = person1Name?.trim() ? getFirstName(person1Name) : undefined;
-  const name2 = person2Name?.trim() ? getFirstName(person2Name) : undefined;
-  const shouldUsePresent = Boolean(
-    !isRelationshipInactive(relationship) &&
-    !isPersonDeceased(person1) &&
-    !isPersonDeceased(person2)
-  );
-
-  if (name1 && name2) return `${name1} e ${name2} ${shouldUsePresent ? 'são' : 'foram'} casados.`;
-  if (name1) return `${name1} ${shouldUsePresent ? 'tem' : 'teve'} um casamento registrado.`;
-  if (name2) return `${name2} ${shouldUsePresent ? 'tem' : 'teve'} um casamento registrado.`;
-
-  return 'Casamento registrado na árvore familiar.';
 }
 
 function getInitials(name: string) {
@@ -193,58 +120,17 @@ function getInitials(name: string) {
   return `${first}${second}`.toLocaleUpperCase('pt-BR') || '??';
 }
 
-function normalizeLocationPart(value?: string) {
-  const text = String(value ?? '').trim();
-  const normalized = text.toLowerCase();
+function getStatusBadgeClass(status: ReturnType<typeof getConjugalRelationshipStatus>) {
+  const statusClasses: Record<ReturnType<typeof getConjugalRelationshipStatus>, string> = {
+    active: 'border-emerald-200 bg-emerald-50 text-emerald-700',
+    widowed: 'border-slate-200 bg-slate-50 text-slate-700',
+    separated: 'border-amber-200 bg-amber-50 text-amber-800',
+    divorced: 'border-orange-200 bg-orange-50 text-orange-800',
+    inactive: 'border-gray-200 bg-gray-50 text-gray-700',
+    historical: 'border-stone-200 bg-stone-50 text-stone-700',
+  };
 
-  if (!text || normalized === 'null' || normalized === 'undefined') return undefined;
-
-  return text;
-}
-
-function formatMarriagePlace(place?: string) {
-  const text = normalizeLocationPart(place);
-  if (!text) return undefined;
-
-  if (!text.includes('/')) return text;
-
-  const [city, uf] = text.split('/').map(normalizeLocationPart);
-  if (city && uf) return `${city}/${uf}`;
-
-  return city || uf;
-}
-
-function buildMarriageNarrative(relationship?: Relacionamento) {
-  const relationshipRecord = (relationship || {}) as Record<string, unknown>;
-  const marriageDate = parseDateValue(getRelationshipField(relationshipRecord, [
-    'data_casamento',
-    'data_relacionamento',
-    'data_inicio',
-  ]));
-  const separationDate = parseDateValue(getRelationshipField(relationshipRecord, [
-    'data_separacao',
-    'data_fim',
-  ]));
-  const marriagePlace = formatMarriagePlace(getRelationshipField(relationshipRecord, [
-    'local_casamento',
-    'local_relacionamento',
-    'local_inicio',
-  ]));
-  const lines: string[] = [];
-
-  if (marriageDate && separationDate) {
-    lines.push(`O matrimônio aconteceu entre ${marriageDate.formatted} e ${separationDate.formatted}.`);
-  } else if (marriageDate) {
-    lines.push(`O matrimônio aconteceu em ${marriageDate.formatted}.`);
-  } else if (separationDate) {
-    lines.push(`O matrimônio terminou em ${separationDate.formatted}.`);
-  }
-
-  if (marriagePlace) {
-    lines.push(`A cerimônia foi realizada em ${marriagePlace}.`);
-  }
-
-  return lines;
+  return statusClasses[status];
 }
 
 export function ViewMarriageModal({
@@ -384,14 +270,17 @@ export function ViewMarriageModal({
   ]);
   const person1Name = getSafePersonName(marriage.person1, marriage.person1Id || 'Pessoa 1');
   const person2Name = getSafePersonName(marriage.person2, marriage.person2Id || 'Pessoa 2');
-  const relationshipHeadline = buildRelationshipHeadline(
-    marriage.person1?.nome_completo,
-    marriage.person2?.nome_completo,
-    marriage.relationship,
-    marriage.person1,
-    marriage.person2
-  );
-  const narrativeLines = buildMarriageNarrative(marriage.relationship);
+  const relationshipStatus = getConjugalRelationshipStatus(marriage.relationship, marriage.person1, marriage.person2);
+  const relationshipStatusLabel = getConjugalRelationshipStatusLabel(relationshipStatus);
+  const relationshipStatusDescription = getConjugalRelationshipStatusDescription(relationshipStatus);
+  const relationshipHeadline = buildConjugalRelationshipHeadline({
+    person1Name: marriage.person1?.nome_completo,
+    person2Name: marriage.person2?.nome_completo,
+    relationship: marriage.relationship,
+    person1: marriage.person1,
+    person2: marriage.person2,
+  });
+  const narrativeLines = buildConjugalRelationshipNarrative(marriage.relationship);
   const targetPessoaId = marriage.person1?.id ?? marriage.person1Id ?? marriage.person2?.id ?? marriage.person2Id;
   const hasSuggestionContent = Object.values(suggestionForm).some((value) => value.trim());
 
@@ -436,6 +325,7 @@ export function ViewMarriageModal({
     try {
       const context = [
         `Relacionamento conjugal: ${person1Name} e ${person2Name}.`,
+        `Status conjugal: ${relationshipStatusLabel}.`,
         resolvedRelacionamentoId ? `ID do relacionamento: ${resolvedRelacionamentoId}.` : undefined,
         canInsertRelationshipInfo
           ? 'Solicitação enviada por pessoa autorizada para este contexto, sem fluxo direto disponível no modal.'
@@ -511,7 +401,16 @@ export function ViewMarriageModal({
             </div>
 
             <div className="mt-5 min-w-0 rounded-xl border border-white/80 bg-white/85 px-4 py-4 shadow-sm">
-              <p className="text-center text-base font-semibold text-slate-900 sm:text-lg">
+              <div className="flex flex-col items-center gap-2 text-center">
+                <span className={`inline-flex rounded-full border px-3 py-1 text-xs font-semibold ${getStatusBadgeClass(relationshipStatus)}`}>
+                  {relationshipStatusLabel}
+                </span>
+                <p className="text-xs leading-5 text-slate-500">
+                  {relationshipStatusDescription}
+                </p>
+              </div>
+
+              <p className="mt-3 text-center text-base font-semibold text-slate-900 sm:text-lg">
                 <span className="break-words">{relationshipHeadline}</span>
               </p>
 
@@ -534,7 +433,7 @@ export function ViewMarriageModal({
                   Informações do relacionamento
                 </h3>
                 <p className="mt-1 break-words text-sm text-gray-500">
-                  Sugira datas, locais, histórias ou correções sobre este matrimônio.
+                  Sugira datas, locais, histórias ou correções sobre este vínculo conjugal.
                 </p>
               </div>
               <Button
