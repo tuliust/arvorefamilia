@@ -57,28 +57,28 @@ export function CuriosidadesRouteSection({
 
       {!error && !loading && (
         <div className="mt-5 space-y-4">
-          <div className="overflow-hidden rounded-xl border border-blue-100 bg-blue-50 p-4 lg:relative lg:min-h-[9rem] lg:overflow-visible">
+          <div className="relative overflow-hidden rounded-xl border border-blue-100 bg-transparent p-4 lg:min-h-[9rem] lg:overflow-visible">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between lg:min-h-[9rem]">
-              <div className="relative z-10 min-w-0">
+              <div className="relative z-10 min-w-0 rounded-xl bg-blue-50/92 p-4 sm:p-0 sm:bg-transparent">
                 <p className="text-sm font-semibold text-blue-900">Trajeto de carro</p>
                 <p className="mt-2 text-2xl font-black tracking-tight text-gray-950 sm:text-3xl">
                   {formatRoadDistance(ROAD_ROUTE_TOTAL_KM)}
                 </p>
               </div>
 
-              <div className="flex w-full justify-center sm:w-auto sm:justify-end lg:pointer-events-none lg:absolute lg:right-[-10rem] lg:top-1/2 lg:h-[327px] lg:w-[575px] lg:-translate-y-1/2">
+              <div className="relative z-20 flex w-full justify-center bg-transparent sm:w-auto sm:justify-end lg:pointer-events-none lg:absolute lg:right-[-10rem] lg:top-1/2 lg:h-[327px] lg:w-[575px] lg:-translate-y-1/2">
                 <img
                   src={routeMapIllustrationUrl}
                   alt=""
                   aria-hidden="true"
                   loading="lazy"
-                  className="h-auto w-full max-w-[16rem] object-contain sm:max-w-[18rem] lg:h-[327px] lg:w-[575px] lg:max-w-none"
+                  className="h-auto w-full max-w-[16rem] object-contain sm:max-w-[18rem] lg:h-[327px] lg:w-[575px] lg:max-w-none lg:drop-shadow-xl"
                 />
               </div>
             </div>
           </div>
 
-          <div className="curiosidades-route-list relative space-y-3 overflow-visible">
+          <div className="curiosidades-route-list relative z-10 space-y-3 overflow-visible">
             <div className="pointer-events-none absolute bottom-10 right-[4.35rem] top-10 hidden border-r-2 border-dotted border-slate-400 sm:block" />
 
             {ROAD_ROUTE_STOPS.map((city, index) => {
