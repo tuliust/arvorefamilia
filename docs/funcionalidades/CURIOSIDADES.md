@@ -1,6 +1,6 @@
 # Curiosidades
 
-> Última revisão: 2026-06-25
+> Última revisão: 2026-06-26
 > Escopo: `/curiosidades`, exploração visual e textual dos dados familiares, rankings, IA, quiz, mural, fotos, relacionamentos, rota, gerações e abas de descoberta.
 > Status: canônico.
 
@@ -89,7 +89,10 @@ O quiz é gerado a partir dos dados familiares cadastrados.
 Regras:
 
 - cada pergunta deve exibir até seis opções quando houver dados suficientes;
-- opções de pessoas devem usar apenas primeiro e segundo nome;
+- opções de pessoas devem usar nome curto sempre que possível;
+- quando houver homônimos, a opção deve ser desambiguada com último sobrenome ou nome completo, evitando duas respostas visualmente idênticas;
+- perguntas de profissão, localidade, longevidade e quantidade de filhos devem variar candidatos quando houver base suficiente, evitando repetir sempre o mesmo bloco de alternativas;
+- a pergunta de longevidade usa o texto `Quem é a pessoa com mais tempo de vida?`;
 - o indicador da pergunta deve usar formato compacto, como `1/5`;
 - a etapa visual pode usar pílulas ou pontos, mas não deve exibir ícone de interrogação no cabeçalho da pergunta;
 - botões de resposta devem ser responsivos e podem usar duas colunas para reduzir altura;
@@ -105,8 +108,11 @@ Regras:
 - não exibir dropdown de visibilidade;
 - a pergunta deve aparecer como título destacado: `Qual sua lembrança favorita da família?`;
 - não exibir o prefixo `Responda:`;
-- a visibilidade da publicação deve ser sempre `Todos da família`;
+- a publicação deve ser familiar internamente, sem exibir chips como `Todos da família` ou `lembrança` nos cards;
 - o autor deve ser derivado do usuário logado;
+- o texto da lembrança deve ser limitado a 200 caracteres;
+- a lista deve exibir rolagem vertical quando houver mais lembranças do que a área visível comporta;
+- o botão de apagar deve aparecer apenas para o autor da lembrança;
 - estado vazio deve indicar que nenhuma lembrança foi publicada.
 
 ## Gráficos da família
@@ -125,11 +131,12 @@ A seção agrupa pessoas por geração social.
 
 Regras:
 
-- cards de geração devem iniciar recolhidos;
+- a primeira geração com pessoas cadastradas deve iniciar expandida;
+- ao expandir outra geração, a geração anterior deve ser recolhida;
+- apenas uma geração deve permanecer expandida por vez;
 - cards recolhidos não devem exibir usuários;
 - cada card recolhido deve exibir o número de pessoas da categoria;
 - ao expandir uma geração, os usuários aparecem apenas no card expandido;
-- apenas uma geração deve permanecer expandida por vez;
 - o botão de expansão deve ser claro e acessível.
 
 ## Relacionamentos
@@ -192,6 +199,17 @@ Regras:
 - o título interno da aba ativa deve alinhar à margem esquerda no mobile;
 - o ícone ao lado do título interno pode ser ocultado no mobile para preservar leitura.
 
+## Comparar interesses
+
+A comparação de interesses cruza dados objetivos do perfil e badges do questionário de `/meus-dados`.
+
+Regras:
+
+- considerar interesses e características selecionados no questionário de perfil, incluindo grupos como estilo, autodefinição e família/vínculos;
+- manter fallback quando as badges do questionário não estiverem disponíveis;
+- pluralizar corretamente o resultado: `1 ponto em comum`, `2 pontos em comum` etc.;
+- não criar afinidade com dado inexistente ou inferido fora do cadastro.
+
 ## Tipos de curiosidade
 
 A página pode apresentar rankings, agrupamentos por local, aniversários, estatísticas de longevidade, perfis com campos preenchidos, pets, vínculos, gerações sociais, bodas, rota familiar, mural, quiz e descobertas orientadas por pessoa e tópicos.
@@ -220,12 +238,14 @@ Validar:
 - seletor de conexão entre pessoas sem SelectItem vazio;
 - fallback da RPC de badges sem impedir a página;
 - descoberta sem erro quando nenhuma pessoa estiver selecionada;
-- gerações recolhidas inicialmente, com contador por categoria;
+- primeira geração expandida inicialmente e apenas uma geração aberta por vez;
 - regras de bodas listadas neste documento;
 - ranking de profissões sem corte visual nos círculos;
 - IA com placeholder e limite visual de sugestões no mobile;
-- mural publicando com usuário logado e visibilidade familiar;
+- quiz com homônimos desambiguados e alternativas variadas quando houver base suficiente;
+- mural publicando com usuário logado, limite de 200 caracteres, scroll vertical e exclusão restrita ao autor;
 - rota com textos acentuados em UTF-8 válido e ilustração `mapa.png` no tamanho desktop documentado;
+- comparação de interesses com pluralização correta de `ponto/pontos` e badges do questionário quando disponíveis;
 - consistência com favoritos, pessoa pública e arquivos históricos quando houver ligação.
 
 ## Regra de manutenção
