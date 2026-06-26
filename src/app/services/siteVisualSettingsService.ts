@@ -127,6 +127,59 @@ export type SiteVisualSettings = {
 
 export type SiteVisualSettingsPayload = Partial<Omit<SiteVisualSettings, 'updated_at' | 'updated_by' | 'last_published_at' | 'last_published_by'>>;
 
+export type SiteVisualSettingsDiff = {
+  field: string;
+  label: string;
+  publishedValue: string;
+  draftValue: string;
+};
+
+export type PublishDueSiteVisualSettingsResult = {
+  published: boolean;
+  message: string;
+  published_at: string | null;
+};
+
+export const SITE_VISUAL_SETTINGS_DIFF_FIELDS = [
+  { key: 'global_identity_name', label: 'Nome completo' },
+  { key: 'global_identity_short_name', label: 'Nome curto' },
+  { key: 'global_identity_tagline', label: 'Tagline' },
+  { key: 'home_logo_media_url', label: 'Logo' },
+  { key: 'home_background_media_url', label: 'Imagem de fundo' },
+  { key: 'home_background_color', label: 'Cor de fundo' },
+  { key: 'home_background_media_opacity', label: 'Opacidade do fundo' },
+  { key: 'global_primary_color', label: 'Cor primária' },
+  { key: 'global_accent_color', label: 'Cor de destaque' },
+  { key: 'global_text_color', label: 'Cor do texto' },
+  { key: 'global_muted_text_color', label: 'Cor do texto secundário' },
+  { key: 'global_card_background_color', label: 'Cor dos cards' },
+  { key: 'global_button_radius', label: 'Raio dos botões' },
+  { key: 'global_card_radius', label: 'Raio dos cards' },
+  { key: 'entrance_eyebrow', label: 'Chamada superior' },
+  { key: 'entrance_title', label: 'Título da entrada' },
+  { key: 'entrance_description', label: 'Descrição da entrada' },
+  { key: 'entrance_login_title', label: 'Título do login' },
+  { key: 'entrance_login_description', label: 'Descrição do login' },
+  { key: 'entrance_first_access_title', label: 'Título do primeiro acesso' },
+  { key: 'entrance_first_access_description', label: 'Descrição do primeiro acesso' },
+  { key: 'entrance_confirmation_title', label: 'Título de confirmação' },
+  { key: 'entrance_confirmation_description', label: 'Descrição de confirmação' },
+  { key: 'entrance_login_cta_label', label: 'CTA de login' },
+  { key: 'entrance_first_access_cta_label', label: 'CTA de validação' },
+  { key: 'entrance_create_account_cta_label', label: 'CTA de criação de conta' },
+  { key: 'entrance_forgot_password_label', label: 'Link de senha' },
+  { key: 'entrance_footer_note', label: 'Nota de rodapé' },
+  { key: 'public_terms_label', label: 'Label de termos' },
+  { key: 'public_terms_url', label: 'URL de termos' },
+  { key: 'public_privacy_label', label: 'Label de privacidade' },
+  { key: 'public_privacy_url', label: 'URL de privacidade' },
+  { key: 'public_support_label', label: 'Label de suporte' },
+  { key: 'public_support_url', label: 'URL de suporte' },
+  { key: 'seo_title', label: 'Título SEO' },
+  { key: 'seo_description', label: 'Descrição SEO' },
+  { key: 'social_share_image_url', label: 'Imagem de compartilhamento' },
+] as const;
+
 export const DEFAULT_SITE_VISUAL_SETTINGS: SiteVisualSettings = {
   home_logo_media_url: null,
   home_background_media_url: null,
@@ -325,6 +378,37 @@ function buildNormalizedPayload(payload: SiteVisualSettingsPayload) {
   };
 }
 
+function formatDiffValue(value: unknown) {
+  if (value === null || value === undefined || value === '') return '—';
+  if (typeof value === 'number') return String(value);
+  return String(value);
+}
+
+export function getSiteVisualSettingsDraftSettings(settings: SiteVisualSettings): SiteVisualSettings | null {
+  if (!settings.draft_payload) return null;
+  return normalizeSiteVisualSettings({ ...settings, ...settings.draft_payload });
+}
+
+export function getSiteVisualSettingsDiff(settings: SiteVisualSettings): SiteVisualSettingsDiff[] {
+  const draftSettings = getSiteVisualSettingsDraftSettings(settings);
+  if (!draftSettings) return [];
+
+  return SITE_VISUAL_SETTINGS_DIFF_FIELDS.flatMap((field) => {
+    const key = field.key as keyof SiteVisualSettings;
+    const publishedValue = settings[key];
+    const draftValue = draftSettings[key];
+
+    if (JSON.stringify(publishedValue ?? null) === JSON.stringify(draftValue ?? null)) return [];
+
+    return [{
+      field: field.key,
+      label: field.label,
+      publishedValue: formatDiffValue(publishedValue),
+      draftValue: formatDiffValue(draftValue),
+    }];
+  });
+}
+
 export async function getSiteVisualSettings(): Promise<SiteVisualSettings> {
   const { data, error } = await supabase
     .from('site_visual_settings')
@@ -418,4 +502,20 @@ export async function publishSiteVisualSettingsDraft(): Promise<SiteVisualSettin
   const current = await getSiteVisualSettings();
   if (!current.draft_payload) return current;
   return saveSiteVisualSettings(current.draft_payload as SiteVisualSettingsPayload);
+}
+
+export async function publishDueSiteVisualSettings(): Promise<PublishDueSiteVisualSettingsResult> {
+  const { data, error } = await supabase.rpc('publish_due_site_visual_settings');
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  const result = Array.isArray(data) ? data[0] : data;
+
+  return {
+    published: Boolean(result?.published),
+    message: String(result?.message ?? 'Nenhum retorno recebido.'),
+    published_at: result?.published_at ?? null,
+  };
 }
