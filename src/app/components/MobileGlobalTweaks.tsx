@@ -1,5 +1,11 @@
-import { useEffect } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useLocation } from 'react-router';
+
+import { buildMobileFamilyTreeModel } from './FamilyTree/mobileFamilyTreeModel';
+import { useAuth } from '../contexts/AuthContext';
+import { obterTodasPessoas, obterTodosRelacionamentos } from '../services/dataService';
+import { getPrimaryLinkedPersonWithPessoa } from '../services/memberProfileService';
+import type { Pessoa, Relacionamento } from '../types';
 
 const mobileGlobalTweaks = `
 @media (max-width: 767px) {
@@ -43,6 +49,28 @@ const mobileGlobalTweaks = `
     width: auto !important;
     max-width: none !important;
     max-height: min(28rem, calc(100dvh - 7rem)) !important;
+  }
+
+  [role="dialog"][aria-label="Painel de visualização"] {
+    z-index: 2147483200 !important;
+  }
+
+  [role="dialog"][aria-label="Painel de visualização"] section {
+    z-index: 2147483201 !important;
+  }
+
+  [role="dialog"][aria-label="Painel de visualização"] button span.truncate {
+    display: -webkit-box !important;
+    overflow: hidden !important;
+    white-space: normal !important;
+    text-overflow: clip !important;
+    -webkit-box-orient: vertical !important;
+    -webkit-line-clamp: 2 !important;
+  }
+
+  html[data-mobile-core-lower-content="false"] [data-mobile-family-tree-screen="core"] [data-mobile-tree-scroll] {
+    overflow-y: hidden !important;
+    overscroll-behavior-y: contain !important;
   }
 
   html.mobile-user-menu-open button[aria-label="Fechar menu"]:not(.fixed) {
@@ -107,6 +135,73 @@ const mobileGlobalTweaks = `
 }
 `;
 
+type MobileGroupKey =
+  | 'pais'
+  | 'conjuges'
+  | 'irmaos'
+  | 'filhos'
+  | 'pets'
+  | 'avos'
+  | 'bisavos'
+  | 'tataravos'
+  | 'tios'
+  | 'primos'
+  | 'sobrinhos';
+
+type MobileFamilyPanelPerson = {
+  id: string;
+  label: string;
+};
+
+type MobileFamilyPanelData = {
+  groups: Record<MobileGroupKey, {
+    count: number;
+    people: MobileFamilyPanelPerson[];
+  }>;
+  coreLowerCount: number;
+  paternalCousinsCount: number;
+  maternalCousinsCount: number;
+};
+
+type TouchGuardState = {
+  x: number;
+  y: number;
+  screen: string;
+};
+
+const MOBILE_GROUP_LABELS: Record<MobileGroupKey, string> = {
+  pais: 'Pais',
+  conjuges: 'Cônjuges',
+  irmaos: 'Irmãos',
+  filhos: 'Filhos',
+  pets: 'Pets',
+  avos: 'Avós',
+  bisavos: 'Bisavós',
+  tataravos: 'Tataravós',
+  tios: 'Tios',
+  primos: 'Primos',
+  sobrinhos: 'Sobrinhos',
+};
+
+const EMPTY_MOBILE_FAMILY_PANEL_DATA: MobileFamilyPanelData = {
+  groups: {
+    pais: { count: 0, people: [] },
+    conjuges: { count: 0, people: [] },
+    irmaos: { count: 0, people: [] },
+    filhos: { count: 0, people: [] },
+    pets: { count: 0, people: [] },
+    avos: { count: 0, people: [] },
+    bisavos: { count: 0, people: [] },
+    tataravos: { count: 0, people: [] },
+    tios: { count: 0, people: [] },
+    primos: { count: 0, people: [] },
+    sobrinhos: { count: 0, people: [] },
+  },
+  coreLowerCount: 0,
+  paternalCousinsCount: 0,
+  maternalCousinsCount: 0,
+};
+
 function normalizeText(value?: string | null) {
   return String(value ?? '')
     .toLowerCase()
@@ -121,8 +216,14 @@ function getMobileRoute(pathname: string) {
   if (pathname === '/meus-vinculos') return 'meus-vinculos';
   if (pathname === '/arquivos-historicos') return 'arquivos-historicos';
   if (pathname === '/curiosidades') return 'curiosidades';
+  if (pathname === '/mapa-familiar') return 'mapa-familiar';
+  if (pathname === '/linha-geracional') return 'linha-geracional';
   if (pathname.startsWith('/pessoa/') || pathname.startsWith('/pessoas/')) return 'person-profile';
   return '';
+}
+
+function isDirectMobileFamilyRoute(pathname: string) {
+  return pathname === '/mapa-familiar' || pathname === '/linha-geracional';
 }
 
 function isMobileViewport() {
@@ -138,6 +239,75 @@ function findExactTextElement(text: string) {
 function setStyleValue(element: HTMLElement, property: keyof CSSStyleDeclaration, value: string) {
   if (element.style[property] === value) return;
   element.style[property] = value as never;
+}
+
+function uniquePeople(people: Array<Pessoa | undefined | null>) {
+  const seen = new Set<string>();
+  return people.filter((person): person is Pessoa => {
+    if (!person?.id || seen.has(person.id)) return false;
+    seen.add(person.id);
+    return true;
+  });
+}
+
+function getFirstTwoNames(person: Pessoa) {
+  const parts = String(person.nome_completo ?? '').trim().split(/\s+/).filter(Boolean);
+  if (parts.length >= 2) return `${parts[0]} ${parts[1]}`;
+  return parts[0] || person.id;
+}
+
+function toMobilePanelPeople(people: Array<Pessoa | undefined | null>): MobileFamilyPanelPerson[] {
+  return uniquePeople(people)
+    .map((person) => ({ id: person.id, label: getFirstTwoNames(person) }))
+    .sort((a, b) => a.label.localeCompare(b.label, 'pt-BR', { sensitivity: 'base' }));
+}
+
+function createPanelGroup(people: Array<Pessoa | undefined | null>) {
+  const options = toMobilePanelPeople(people);
+  return { count: options.length, people: options };
+}
+
+function buildMobileFamilyPanelData(
+  pessoas: Pessoa[],
+  relacionamentos: Relacionamento[],
+  centralPersonId?: string,
+): MobileFamilyPanelData {
+  if (!centralPersonId) return EMPTY_MOBILE_FAMILY_PANEL_DATA;
+
+  const model = buildMobileFamilyTreeModel(pessoas, relacionamentos, centralPersonId);
+
+  const parents = uniquePeople([model.father, model.mother]);
+  const grandparents = uniquePeople([...model.paternal.grandparents, ...model.maternal.grandparents]);
+  const greatGrandparents = uniquePeople([...model.paternal.greatGrandparents, ...model.maternal.greatGrandparents]);
+  const greatGreatGrandparents = uniquePeople([...model.paternal.greatGreatGrandparents, ...model.maternal.greatGreatGrandparents]);
+  const uncles = uniquePeople([...model.paternal.uncles, ...model.maternal.uncles]);
+  const cousins = uniquePeople([...model.paternal.cousins, ...model.maternal.cousins]);
+
+  const groups: MobileFamilyPanelData['groups'] = {
+    pais: createPanelGroup(parents),
+    conjuges: createPanelGroup(model.spouses),
+    irmaos: createPanelGroup(model.siblings),
+    filhos: createPanelGroup(model.children),
+    pets: createPanelGroup(model.pets),
+    avos: createPanelGroup(grandparents),
+    bisavos: createPanelGroup(greatGrandparents),
+    tataravos: createPanelGroup(greatGreatGrandparents),
+    tios: createPanelGroup(uncles),
+    primos: createPanelGroup(cousins),
+    sobrinhos: createPanelGroup(model.nephews),
+  };
+
+  return {
+    groups,
+    coreLowerCount:
+      groups.conjuges.count
+      + groups.filhos.count
+      + groups.netos?.count
+      + groups.sobrinhos.count
+      + groups.pets.count,
+    paternalCousinsCount: model.paternal.cousins.length,
+    maternalCousinsCount: model.maternal.cousins.length,
+  };
 }
 
 function setInlineBadgeStyle(element: HTMLElement | null) {
@@ -396,7 +566,79 @@ function enhanceMobileRelationshipCards() {
   });
 }
 
-function applyMobileDomTweaks(pathname: string) {
+function getMobileFamilyPanelRow(panel: HTMLElement, key: MobileGroupKey) {
+  const normalizedLabel = normalizeText(MOBILE_GROUP_LABELS[key]);
+  const label = Array.from(panel.querySelectorAll<HTMLElement>('span'))
+    .find((element) => normalizeText(element.textContent) === normalizedLabel);
+  return label?.closest('div.border-b') as HTMLElement | null;
+}
+
+function navigateMobileFamilyAsPerson(personId: string) {
+  const params = new URLSearchParams(window.location.search);
+  params.set('pessoa', personId);
+  window.location.assign(`${window.location.pathname}?${params.toString()}`);
+}
+
+function updateMobileFamilyPanel(data: MobileFamilyPanelData | null) {
+  const panel = document.querySelector<HTMLElement>('[role="dialog"][aria-label="Painel de visualização"]');
+  if (!panel || !data) return;
+
+  (Object.keys(MOBILE_GROUP_LABELS) as MobileGroupKey[]).forEach((key) => {
+    const row = getMobileFamilyPanelRow(panel, key);
+    if (!row) return;
+
+    const group = data.groups[key];
+    const count = row.querySelector<HTMLElement>('strong');
+    const countText = String(group.count);
+    if (count && count.textContent !== countText) count.textContent = countText;
+
+    const header = row.firstElementChild;
+    if (!header) return;
+
+    Array.from(row.children).slice(1).forEach((child) => {
+      if (!(child instanceof HTMLElement)) return;
+      if (child.dataset.mobileFamilyGroupList === key) return;
+      child.remove();
+    });
+
+    const signature = group.people.map((person) => `${person.id}:${person.label}`).join('|');
+    let list = row.querySelector<HTMLElement>(`[data-mobile-family-group-list="${key}"]`);
+
+    if (group.people.length === 0) {
+      list?.remove();
+      return;
+    }
+
+    if (list?.dataset.mobileFamilyGroupSignature === signature) return;
+
+    list?.remove();
+    list = document.createElement('div');
+    list.dataset.mobileFamilyGroupList = key;
+    list.dataset.mobileFamilyGroupSignature = signature;
+    list.className = 'border-t border-slate-100 bg-slate-50/70 px-3 pb-3 pt-3';
+
+    const inner = document.createElement('div');
+    inner.className = 'flex w-full flex-col gap-2';
+
+    group.people.forEach((person) => {
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'flex w-full items-center justify-start rounded-xl border border-blue-100 bg-white px-3 py-2 text-left text-[13px] font-bold leading-tight text-blue-950 shadow-sm transition active:scale-[0.98]';
+      button.textContent = person.label;
+      button.addEventListener('click', () => navigateMobileFamilyAsPerson(person.id));
+      inner.appendChild(button);
+    });
+
+    list.appendChild(inner);
+    row.appendChild(list);
+  });
+}
+
+function applyMobileFamilyPanelDataset(data: MobileFamilyPanelData | null) {
+  document.documentElement.dataset.mobileCoreLowerContent = data && data.coreLowerCount > 0 ? 'true' : 'false';
+}
+
+function applyMobileDomTweaks(pathname: string, mobileFamilyPanelData: MobileFamilyPanelData | null) {
   const route = getMobileRoute(pathname);
   document.documentElement.dataset.mobileRoute = route;
 
@@ -407,6 +649,11 @@ function applyMobileDomTweaks(pathname: string) {
 
   rewriteMobileTreeHeaderTitle();
   expandMobileUserMenu();
+
+  if (isDirectMobileFamilyRoute(pathname)) {
+    applyMobileFamilyPanelDataset(mobileFamilyPanelData);
+    updateMobileFamilyPanel(mobileFamilyPanelData);
+  }
 
   if (route === 'meus-dados') {
     hideMeusDadosOtherAdjustments();
@@ -421,8 +668,111 @@ function applyMobileDomTweaks(pathname: string) {
   }
 }
 
+function shouldBlockMobileTreeSwipe(screen: string, direction: 'up' | 'down', data: MobileFamilyPanelData | null) {
+  if (!data || direction !== 'down') return false;
+  if (screen === 'core') return data.coreLowerCount <= 0;
+  if (screen === 'paternal-uncles') return data.paternalCousinsCount <= 0;
+  if (screen === 'maternal-uncles') return data.maternalCousinsCount <= 0;
+  return false;
+}
+
 export function MobileGlobalTweaks() {
   const location = useLocation();
+  const { user } = useAuth();
+  const [mobileFamilyPanelData, setMobileFamilyPanelData] = useState<MobileFamilyPanelData | null>(null);
+  const touchGuardRef = useRef<TouchGuardState | null>(null);
+
+  useEffect(() => {
+    if (!isDirectMobileFamilyRoute(location.pathname) || !isMobileViewport()) {
+      setMobileFamilyPanelData(null);
+      return;
+    }
+
+    let cancelled = false;
+
+    async function loadMobileFamilyPanelData() {
+      try {
+        const requestedPersonId = new URLSearchParams(location.search).get('pessoa') || '';
+        const [pessoas, relacionamentos, linkedPersonResult] = await Promise.all([
+          obterTodasPessoas(),
+          obterTodosRelacionamentos(),
+          requestedPersonId || !user?.id
+            ? Promise.resolve(null)
+            : getPrimaryLinkedPersonWithPessoa(user.id),
+        ]);
+
+        if (cancelled) return;
+
+        const centralPersonId = requestedPersonId
+          || linkedPersonResult?.data?.pessoa_id
+          || linkedPersonResult?.data?.pessoa?.id
+          || '';
+
+        setMobileFamilyPanelData(buildMobileFamilyPanelData(pessoas, relacionamentos, centralPersonId));
+      } catch (error) {
+        if (!cancelled) {
+          console.warn('[MobileGlobalTweaks] Não foi possível carregar vínculos do painel mobile:', error);
+          setMobileFamilyPanelData(EMPTY_MOBILE_FAMILY_PANEL_DATA);
+        }
+      }
+    }
+
+    void loadMobileFamilyPanelData();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [location.pathname, location.search, user?.id]);
+
+  useEffect(() => {
+    if (!isDirectMobileFamilyRoute(location.pathname)) return undefined;
+
+    const handleTouchStart = (event: TouchEvent) => {
+      if (!isMobileViewport()) return;
+      const touch = event.touches[0];
+      const target = event.target;
+      if (!touch || !(target instanceof HTMLElement)) return;
+
+      const screen = target.closest<HTMLElement>('[data-mobile-family-tree-screen]');
+      touchGuardRef.current = screen
+        ? { x: touch.clientX, y: touch.clientY, screen: screen.dataset.mobileFamilyTreeScreen || '' }
+        : null;
+    };
+
+    const stopBlockedSwipe = (event: TouchEvent) => {
+      const start = touchGuardRef.current;
+      const touch = event.changedTouches[0] || event.touches[0];
+      if (!start || !touch) return;
+
+      const deltaX = touch.clientX - start.x;
+      const deltaY = touch.clientY - start.y;
+      const absoluteX = Math.abs(deltaX);
+      const absoluteY = Math.abs(deltaY);
+      if (absoluteY < 12 || absoluteY <= absoluteX * 1.2) return;
+
+      const direction = deltaY < 0 ? 'down' : 'up';
+      if (!shouldBlockMobileTreeSwipe(start.screen, direction, mobileFamilyPanelData)) return;
+
+      event.preventDefault();
+      event.stopPropagation();
+      event.stopImmediatePropagation();
+    };
+
+    const handleTouchEnd = (event: TouchEvent) => {
+      stopBlockedSwipe(event);
+      touchGuardRef.current = null;
+    };
+
+    document.addEventListener('touchstart', handleTouchStart, { capture: true, passive: true });
+    document.addEventListener('touchmove', stopBlockedSwipe, { capture: true, passive: false });
+    document.addEventListener('touchend', handleTouchEnd, { capture: true, passive: false });
+
+    return () => {
+      document.removeEventListener('touchstart', handleTouchStart, { capture: true });
+      document.removeEventListener('touchmove', stopBlockedSwipe, { capture: true });
+      document.removeEventListener('touchend', handleTouchEnd, { capture: true });
+    };
+  }, [location.pathname, mobileFamilyPanelData]);
 
   useEffect(() => {
     let frameId: number | null = null;
@@ -431,7 +781,7 @@ export function MobileGlobalTweaks() {
       frameId = window.requestAnimationFrame(() => {
         frameId = null;
         try {
-          applyMobileDomTweaks(location.pathname);
+          applyMobileDomTweaks(location.pathname, mobileFamilyPanelData);
         } catch (error) {
           console.warn('[MobileGlobalTweaks] Ajustes mobile ignorados para evitar bloqueio da página:', error);
         }
@@ -455,7 +805,7 @@ export function MobileGlobalTweaks() {
       window.removeEventListener('resize', apply);
       timerIds.forEach((timerId) => window.clearTimeout(timerId));
     };
-  }, [location.pathname]);
+  }, [location.pathname, mobileFamilyPanelData]);
 
   return <style>{mobileGlobalTweaks}</style>;
 }
