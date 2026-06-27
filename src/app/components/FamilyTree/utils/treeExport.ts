@@ -76,7 +76,7 @@ function escapeHtml(value: string) {
 }
 
 function openExportPreviewWindow(title: string) {
-  const previewWindow = window.open('', '_blank', 'noopener,noreferrer');
+  const previewWindow = window.open('', '_blank');
 
   if (!previewWindow) return null;
 
