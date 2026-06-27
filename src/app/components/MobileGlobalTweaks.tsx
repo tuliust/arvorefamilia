@@ -3,6 +3,11 @@ import { useLocation } from 'react-router';
 
 const mobileGlobalTweaks = `
 @media (max-width: 767px) {
+  header {
+    z-index: 10900 !important;
+    overflow: visible !important;
+  }
+
   header [role="menu"][aria-label="Últimas notificações"] {
     position: fixed !important;
     left: 0.75rem !important;
@@ -24,10 +29,6 @@ const mobileGlobalTweaks = `
     width: auto !important;
     max-width: none !important;
     max-height: min(28rem, calc(100dvh - 7rem)) !important;
-  }
-
-  html.mobile-user-menu-open header {
-    z-index: 10900 !important;
   }
 
   html.mobile-user-menu-open button[aria-label="Fechar menu"]:not(.fixed) {
