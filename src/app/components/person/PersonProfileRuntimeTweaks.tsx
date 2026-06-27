@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useLocation } from 'react-router';
 import { useAuth } from '../../contexts/AuthContext';
 import { getLinkedPessoaIdForUser } from '../../services/permissionService';
+import { listProfileManagersForPerson } from '../../services/profileControlRequestService';
 
 const QUESTIONNAIRE_CATEGORY_LABELS = new Set([
   'personalidade',
@@ -45,8 +46,10 @@ function setElementVisible(element: HTMLElement | null, visible: boolean) {
   element.style.display = visible ? '' : 'none';
 }
 
-function hideOwnProfileOnlySections(isOwnProfile: boolean) {
-  setElementVisible(findSectionByExactHeading('Administração do perfil'), !isOwnProfile);
+function hideOwnProfileOnlySections(isOwnProfile: boolean, profileManagedOnlyByCurrentUser: boolean) {
+  const shouldHideProfileAdministration = isOwnProfile || profileManagedOnlyByCurrentUser;
+
+  setElementVisible(findSectionByExactHeading('Administração do perfil'), !shouldHideProfileAdministration);
   setElementVisible(findSectionByExactHeading('Seu parentesco com ele'), !isOwnProfile);
 }
 
@@ -74,6 +77,18 @@ function hideQuestionnaireBadgeGroups() {
   });
 }
 
+function hideRelatedDiscussionsTopAction() {
+  const discussionsSection = findSectionByExactHeading('Discussões relacionadas');
+  if (!discussionsSection) return;
+
+  Array.from(discussionsSection.querySelectorAll<HTMLElement>('a, button')).forEach((element) => {
+    if (normalizeText(element.textContent) !== 'criar discussao sobre esta pessoa') return;
+
+    const target = element.closest('a') as HTMLElement | null ?? element;
+    target.style.display = 'none';
+  });
+}
+
 function moveDiscussionsBelowTimeline() {
   const discussionsSection = findSectionByExactHeading('Discussões relacionadas');
   const timelineSection = findSectionByExactHeading('Linha do tempo');
@@ -88,10 +103,11 @@ function moveDiscussionsBelowTimeline() {
   parent.insertBefore(discussionsSection, timelineSection.nextSibling);
 }
 
-function applyPersonProfileTweaks(isOwnProfile: boolean) {
-  hideOwnProfileOnlySections(isOwnProfile);
+function applyPersonProfileTweaks(isOwnProfile: boolean, profileManagedOnlyByCurrentUser: boolean) {
+  hideOwnProfileOnlySections(isOwnProfile, profileManagedOnlyByCurrentUser);
   hideEmptySiblingCard();
   hideQuestionnaireBadgeGroups();
+  hideRelatedDiscussionsTopAction();
   moveDiscussionsBelowTimeline();
 }
 
@@ -100,6 +116,7 @@ export function PersonProfileRuntimeTweaks() {
   const location = useLocation();
   const profileId = useMemo(() => getCurrentProfileId(location.pathname), [location.pathname]);
   const [linkedPessoaId, setLinkedPessoaId] = useState<string | null>(null);
+  const [profileManagedOnlyByCurrentUser, setProfileManagedOnlyByCurrentUser] = useState(false);
 
   useEffect(() => {
     let mounted = true;
@@ -122,10 +139,37 @@ export function PersonProfileRuntimeTweaks() {
   }, [user?.id]);
 
   useEffect(() => {
+    let mounted = true;
+
+    async function loadProfileManagers() {
+      if (!user?.id || !profileId) {
+        setProfileManagedOnlyByCurrentUser(false);
+        return;
+      }
+
+      const result = await listProfileManagersForPerson(profileId);
+      if (!mounted) return;
+
+      if (result.error || result.data.length === 0) {
+        setProfileManagedOnlyByCurrentUser(false);
+        return;
+      }
+
+      setProfileManagedOnlyByCurrentUser(result.data.every((manager) => manager.user_id === user.id));
+    }
+
+    void loadProfileManagers();
+
+    return () => {
+      mounted = false;
+    };
+  }, [profileId, user?.id]);
+
+  useEffect(() => {
     if (!profileId) return undefined;
 
     const isOwnProfile = Boolean(linkedPessoaId && profileId === linkedPessoaId);
-    const apply = () => applyPersonProfileTweaks(isOwnProfile);
+    const apply = () => applyPersonProfileTweaks(isOwnProfile, profileManagedOnlyByCurrentUser);
 
     apply();
     const observer = new MutationObserver(apply);
@@ -141,7 +185,7 @@ export function PersonProfileRuntimeTweaks() {
       observer.disconnect();
       timerIds.forEach((timerId) => window.clearTimeout(timerId));
     };
-  }, [linkedPessoaId, profileId]);
+  }, [linkedPessoaId, profileId, profileManagedOnlyByCurrentUser]);
 
   return null;
 }
