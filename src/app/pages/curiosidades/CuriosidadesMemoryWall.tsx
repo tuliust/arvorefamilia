@@ -9,6 +9,11 @@ import {
   listMemoryWallPosts,
   type MemoryWallPost,
 } from '../../services/memoryWallService';
+import {
+  getResponsiblePerspective,
+  subscribeResponsiblePerspective,
+  type ResponsiblePerspective,
+} from '../../services/responsiblePerspectiveService';
 import { curiositySectionCardClassName } from './curiosidadesUtils';
 
 const MEMORY_MAX_LENGTH = 200;
@@ -42,7 +47,12 @@ type CuriosidadesMemoryWallProps = {
 
 export function CuriosidadesMemoryWall({ className = '' }: CuriosidadesMemoryWallProps) {
   const { user } = useAuth();
-  const authorName = useMemo(() => getLoggedUserDisplayName(user), [user]);
+  const [activePerspective, setActivePerspective] = useState<ResponsiblePerspective | null>(() => getResponsiblePerspective());
+  const authorName = useMemo(
+    () => activePerspective?.nomeCompleto || getLoggedUserDisplayName(user),
+    [activePerspective?.nomeCompleto, user]
+  );
+  const isMemorialPerspective = activePerspective?.falecido === true;
   const [memory, setMemory] = useState('');
   const [items, setItems] = useState<MemoryWallPost[]>([]);
   const [loading, setLoading] = useState(true);
@@ -50,6 +60,10 @@ export function CuriosidadesMemoryWall({ className = '' }: CuriosidadesMemoryWal
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [memoryToDelete, setMemoryToDelete] = useState<MemoryWallPost | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    return subscribeResponsiblePerspective(setActivePerspective);
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -80,6 +94,11 @@ export function CuriosidadesMemoryWall({ className = '' }: CuriosidadesMemoryWal
   const submitMemory = async () => {
     const cleanMemory = memory.trim();
     if (!cleanMemory || submitting) return;
+
+    if (isMemorialPerspective) {
+      setError('Perfis memoriais não podem publicar lembranças no mural.');
+      return;
+    }
 
     if (cleanMemory.length > MEMORY_MAX_LENGTH) {
       setError(`A lembrança deve ter no máximo ${MEMORY_MAX_LENGTH} caracteres.`);
@@ -139,6 +158,12 @@ export function CuriosidadesMemoryWall({ className = '' }: CuriosidadesMemoryWal
         Qual sua lembrança favorita da família?
       </h3>
 
+      {isMemorialPerspective ? (
+        <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+          Você está visualizando como {activePerspective?.nomeCompleto}. Perfis memoriais não podem publicar lembranças no mural.
+        </div>
+      ) : null}
+
       <div className="mt-4 space-y-3">
         <textarea
           value={memory}
@@ -146,7 +171,8 @@ export function CuriosidadesMemoryWall({ className = '' }: CuriosidadesMemoryWal
           placeholder="Escreva uma lembrança da família..."
           rows={4}
           maxLength={MEMORY_MAX_LENGTH}
-          className="w-full resize-none rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm outline-none focus:border-blue-300 focus:ring-2 focus:ring-blue-100"
+          disabled={isMemorialPerspective}
+          className="w-full resize-none rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm outline-none focus:border-blue-300 focus:ring-2 focus:ring-blue-100 disabled:cursor-not-allowed disabled:opacity-60"
         />
 
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -156,7 +182,7 @@ export function CuriosidadesMemoryWall({ className = '' }: CuriosidadesMemoryWal
           <button
             type="button"
             onClick={submitMemory}
-            disabled={!memory.trim() || submitting || memory.trim().length > MEMORY_MAX_LENGTH}
+            disabled={!memory.trim() || submitting || memory.trim().length > MEMORY_MAX_LENGTH || isMemorialPerspective}
             className="inline-flex items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 py-2 text-sm font-bold text-white shadow-sm transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
           >
             <Send className="h-4 w-4" />
