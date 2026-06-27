@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router';
+import { useLocation, useNavigate } from 'react-router';
 import { toast } from 'sonner';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { Input } from '../../components/ui/input';
@@ -14,14 +14,16 @@ import {
   DialogTitle,
 } from '../../components/ui/dialog';
 import { obterTodasPessoas, deletarPessoa, resetarPerfilPessoa } from '../../services/dataService';
+import { adminListAllUserPersonLinks } from '../../services/memberProfileService';
 import { Pessoa } from '../../types';
-import { 
-  Search, 
-  Plus, 
-  Edit, 
-  Trash2, 
+import {
+  Search,
+  Plus,
+  Edit,
+  Trash2,
   Dog,
   User,
+  UserCheck,
   Settings,
   SlidersHorizontal,
   Copy,
@@ -31,6 +33,8 @@ import { ConfirmDialog } from '../../components/ConfirmDialog';
 import { includesNormalizedText } from '../../utils/searchText';
 import { isPersonDeceased } from '../../utils/personFields';
 import { DEFAULT_MEMBER_HEADER_ACTIONS, MemberPageHeader } from '../../components/layout/MemberPageHeader';
+
+type PeopleFilter = 'todos' | 'cadastrados' | 'pet';
 
 type AdvancedFilters = {
   status: Array<'vivos' | 'falecidos'>;
@@ -42,6 +46,8 @@ type AdvancedFilters = {
 
 type AdvancedFilterKey = keyof AdvancedFilters;
 type AdvancedFilterValue<TKey extends AdvancedFilterKey> = AdvancedFilters[TKey][number];
+
+const CADASTRADOS_ROUTE = '/admin/pessoas/novas';
 
 const EMPTY_ADVANCED_FILTERS: AdvancedFilters = {
   status: [],
@@ -160,12 +166,15 @@ function matchesAdvancedFilters(pessoa: Pessoa, filters: AdvancedFilters) {
 
 export function AdminPessoas() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const isCadastradosRoute = location.pathname === CADASTRADOS_ROUTE;
   const [searchTerm, setSearchTerm] = useState('');
-  const [filter, setFilter] = useState<'todos' | 'humano' | 'pet'>('todos');
+  const [filter, setFilter] = useState<PeopleFilter>(isCadastradosRoute ? 'cadastrados' : 'todos');
   const [advancedFilters, setAdvancedFilters] = useState<AdvancedFilters>(EMPTY_ADVANCED_FILTERS);
   const [draftAdvancedFilters, setDraftAdvancedFilters] = useState<AdvancedFilters>(EMPTY_ADVANCED_FILTERS);
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [pessoas, setPessoas] = useState<Pessoa[]>([]);
+  const [pessoasComCadastroIds, setPessoasComCadastroIds] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -179,12 +188,36 @@ export function AdminPessoas() {
     loadPessoas();
   }, []);
 
+  useEffect(() => {
+    setFilter((current) => {
+      if (isCadastradosRoute) return 'cadastrados';
+      return current === 'cadastrados' ? 'todos' : current;
+    });
+  }, [isCadastradosRoute]);
+
   const loadPessoas = async () => {
     setLoading(true);
-    const data = await obterTodasPessoas();
-    // Garantir que sempre seja um array
-    setPessoas(Array.isArray(data) ? data : []);
-    setLoading(false);
+    try {
+      const [data, linksResult] = await Promise.all([
+        obterTodasPessoas(),
+        adminListAllUserPersonLinks(),
+      ]);
+      setPessoas(Array.isArray(data) ? data : []);
+      setPessoasComCadastroIds(new Set(
+        linksResult.error
+          ? []
+          : linksResult.data
+            .filter((link) => Boolean(link.user_id) && Boolean(link.pessoa_id))
+            .map((link) => link.pessoa_id)
+      ));
+    } catch (error) {
+      console.error('Erro ao carregar pessoas:', error);
+      setPessoas([]);
+      setPessoasComCadastroIds(new Set());
+      toast.error(error instanceof Error ? error.message : 'Erro ao carregar pessoas.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleDelete = async () => {
@@ -192,7 +225,7 @@ export function AdminPessoas() {
 
     setIsDeleting(true);
     const success = await deletarPessoa(deleteId);
-    
+
     if (success) {
       await loadPessoas();
       setDeleteId(null);
@@ -291,20 +324,26 @@ export function AdminPessoas() {
     setFiltersOpen(false);
   };
 
+  const selectFilter = (nextFilter: PeopleFilter) => {
+    setFilter(nextFilter);
+    navigate(nextFilter === 'cadastrados' ? CADASTRADOS_ROUTE : '/admin/pessoas');
+  };
+
+  const totalCadastrados = pessoasComCadastroIds.size;
+  const totalPets = pessoas.filter((p) => p.humano_ou_pet === 'Pet').length;
+
   const pessoasFiltradas = (Array.isArray(pessoas) ? pessoas : [])
     .filter(p => {
-      // Filtro de busca
       const matchSearch =
         includesNormalizedText(p.nome_completo, searchTerm) ||
         includesNormalizedText(p.local_nascimento, searchTerm) ||
         includesNormalizedText(p.local_atual, searchTerm) ||
         includesNormalizedText(p.local_falecimento, searchTerm);
-      
-      // Filtro de tipo
-      const matchType = filter === 'todos' || 
-        (filter === 'humano' && p.humano_ou_pet === 'Humano') ||
+
+      const matchType = filter === 'todos' ||
+        (filter === 'cadastrados' && pessoasComCadastroIds.has(p.id)) ||
         (filter === 'pet' && p.humano_ou_pet === 'Pet');
-      
+
       return matchSearch && matchType && matchesAdvancedFilters(p, advancedFilters);
     });
 
@@ -321,9 +360,7 @@ export function AdminPessoas() {
         ]}
       />
 
-      {/* Main Content */}
       <main className="mx-auto max-w-7xl px-4 py-6 sm:px-6 sm:py-8">
-        {/* Filters and Search */}
         <Card className="mb-6 min-w-0">
           <CardContent className="pt-6">
             <div className="flex min-w-0 flex-col gap-4 md:flex-row">
@@ -337,12 +374,12 @@ export function AdminPessoas() {
                   className="pl-10"
                 />
               </div>
-              
+
               <div className="grid grid-cols-4 gap-2 sm:flex sm:flex-row sm:flex-wrap">
                 <Button
                   variant={filter === 'todos' ? 'default' : 'outline'}
                   className="h-11 w-full px-1 text-xs sm:h-10 sm:w-auto sm:px-4 sm:text-sm"
-                  onClick={() => setFilter('todos')}
+                  onClick={() => selectFilter('todos')}
                   aria-label={`Todos: ${pessoas.length}`}
                   title={`Todos: ${pessoas.length}`}
                 >
@@ -350,24 +387,24 @@ export function AdminPessoas() {
                   <span className="hidden sm:inline">Todos ({pessoas.length})</span>
                 </Button>
                 <Button
-                  variant={filter === 'humano' ? 'default' : 'outline'}
+                  variant={filter === 'cadastrados' ? 'default' : 'outline'}
                   className="h-11 w-full px-1 text-xs sm:h-10 sm:w-auto sm:px-4 sm:text-sm"
-                  onClick={() => setFilter('humano')}
-                  aria-label={`Humanos: ${pessoas.filter(p => p.humano_ou_pet === 'Humano').length}`}
-                  title={`Humanos: ${pessoas.filter(p => p.humano_ou_pet === 'Humano').length}`}
+                  onClick={() => selectFilter('cadastrados')}
+                  aria-label={`Cadastrados: ${totalCadastrados}`}
+                  title={`Cadastrados: ${totalCadastrados}`}
                 >
-                  <User className="h-4 w-4 sm:mr-2" />
-                  <span className="hidden sm:inline">Humanos ({pessoas.filter(p => p.humano_ou_pet === 'Humano').length})</span>
+                  <UserCheck className="h-4 w-4 sm:mr-2" />
+                  <span className="hidden sm:inline">Cadastrados ({totalCadastrados})</span>
                 </Button>
                 <Button
                   variant={filter === 'pet' ? 'default' : 'outline'}
                   className="h-11 w-full px-1 text-xs sm:h-10 sm:w-auto sm:px-4 sm:text-sm"
-                  onClick={() => setFilter('pet')}
-                  aria-label={`Pets: ${pessoas.filter(p => p.humano_ou_pet === 'Pet').length}`}
-                  title={`Pets: ${pessoas.filter(p => p.humano_ou_pet === 'Pet').length}`}
+                  onClick={() => selectFilter('pet')}
+                  aria-label={`Pets: ${totalPets}`}
+                  title={`Pets: ${totalPets}`}
                 >
                   <Dog className="h-4 w-4 sm:mr-2" />
-                  <span className="hidden sm:inline">Pets ({pessoas.filter(p => p.humano_ou_pet === 'Pet').length})</span>
+                  <span className="hidden sm:inline">Pets ({totalPets})</span>
                 </Button>
                 <Button
                   variant="outline"
@@ -397,7 +434,6 @@ export function AdminPessoas() {
           </CardContent>
         </Card>
 
-        {/* People List */}
         <Card className="min-w-0">
           <CardHeader>
             <CardTitle className="break-words">
@@ -406,10 +442,10 @@ export function AdminPessoas() {
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
-              {pessoasFiltradas.length === 0 ? (
-                <p className="text-center text-gray-500 py-8">
-                  Nenhuma pessoa encontrada
-                </p>
+              {loading ? (
+                <p className="py-8 text-center text-gray-500">Carregando pessoas...</p>
+              ) : pessoasFiltradas.length === 0 ? (
+                <p className="py-8 text-center text-gray-500">Nenhuma pessoa encontrada</p>
               ) : (
                 pessoasFiltradas.map((pessoa) => (
                   <div
@@ -426,7 +462,7 @@ export function AdminPessoas() {
                           <User className="h-5 w-5 text-blue-700" />
                         )}
                       </div>
-                      
+
                       <div className="min-w-0 flex-1">
                         <h3 className="break-words font-medium text-gray-900">{pessoa.nome_completo}</h3>
                         <p className="break-words text-sm text-gray-500">
@@ -487,7 +523,6 @@ export function AdminPessoas() {
         </Card>
       </main>
 
-      {/* Confirmation Dialog */}
       <ConfirmDialog
         open={!!deleteId}
         onOpenChange={(open) => !open && setDeleteId(null)}
