@@ -1,6 +1,6 @@
 # Guia de componentes
 
-> Última revisão: 2026-06-26
+> Última revisão: 2026-06-27
 > Escopo: componentes relevantes para rotas e fluxos funcionais da branch `main`.
 > Status: canônico.
 
@@ -51,7 +51,11 @@
 | `RevisaoDados.tsx` | revisão final antes de concluir o fluxo. |
 | `PersonProfile.tsx` | perfil público/protegido da pessoa. |
 | `PersonRelationshipsView.tsx` | relacionamentos do perfil, incluindo agrupamento conjugal por status. |
+| `CalendarioFamiliar.tsx` | calendário familiar com categorias, eventos do mês, aniversariantes e casamentos. |
 | `Curiosidades.tsx` | página de exploração de dados familiares com navegação sticky, IA, fotos, quiz, mural, gráficos, gerações, relacionamentos, rota e abas de descoberta. |
+| `ForumHome.tsx` | listagem de tópicos, busca, categorias e ações principais do fórum. |
+| `ForumNovoTopico.tsx` | criação de tópico com categorias, conteúdo e suporte a menções. |
+| `ForumTopico.tsx` | tópico individual com card principal, respostas, campo de resposta e coluna de tópicos recentes no desktop. |
 
 ## Curiosidades
 
@@ -63,7 +67,7 @@
 | `CuriosidadesPhotoSlider.tsx` | slide de fotos principais de pessoas humanas; usa miniaturas no desktop e uma foto por vez no mobile. |
 | `CuriosidadesAiSection.tsx` | perguntas em linguagem natural com contexto estruturado da árvore e sugestões rápidas. |
 | `AiQuestionPanel.tsx` | painel reutilizado para campo de pergunta, envio, erro e resposta da IA. |
-| `CuriosidadesQuizSection.tsx` | quiz gerado a partir dos dados da árvore, com etapas compactas, alternativas variadas e desambiguação de homônimos. |
+| `CuriosidadesQuizSection.tsx` | quiz gerado a partir dos dados da árvore, com até cinco perguntas, alternativas ampliadas, feedback animado na área das opções e resultado final consolidado. |
 | `CuriosidadesMemoryWall.tsx` | mural de lembranças com autor derivado do usuário logado, limite de 200 caracteres e exclusão restrita ao autor. |
 | `CuriosidadesRankings.tsx` | rankings e curiosidades calculadas a partir dos dados familiares. |
 | `CuriosidadesCharts.tsx` | gráficos de aniversários por mês, profissões mais comuns e faixa etária. |
@@ -85,10 +89,11 @@
 - `ProtectedRoute`: protege rotas administrativas.
 - `MemberRoute`: protege rotas de membro autenticado.
 - `TreeAccessRoute`: protege a experiência de árvore.
-- `MemberPageHeader`: cabeçalho das páginas de membro, com atalhos de navegação, busca compartilhada e menu de notificações no desktop.
+- `MemberPageHeader`: cabeçalho das páginas de membro, com atalhos de navegação, busca compartilhada e menu de notificações no desktop; em `/admin/*`, usa navegação administrativa reduzida.
 - `HeaderGlobalSearch`: busca compartilhada do header, com sugestões de pessoas e páginas e fallback para `/busca?q=...`.
 - `HeaderNotificationsDropdown`: dropdown reutilizado por headers para listar notificações recentes, ações rápidas e atalhos para páginas de notificações e preferências.
-- `UserProfileMenu`: menu de avatar e ações do usuário.
+- `UserProfileMenu`: menu de avatar e ações do usuário, com primeiro e segundo nome, subtítulo de edição de perfil, atalhos de navegação, dúvidas e saída.
+- `memberUiRuntimeFixes.ts`: camada defensiva de runtime para ajustes visuais pontuais em calendário, fórum, menu e rótulos de `/meus-dados` enquanto as correções não forem absorvidas integralmente pelos componentes de origem.
 - Componentes de UI em `src/app/components/ui` devem permanecer genéricos e reutilizáveis.
 
 ## Componentes administrativos
@@ -98,6 +103,6 @@
 | `AdminRelacionamentoForm.tsx` | cadastro de vínculos com status conjugal inferido e validações de separação/inatividade. |
 | `AdminDuvidasRefined.tsx` | versão ativa de `/admin/duvidas`, com filtros em linha própria, listagem sem slugs visíveis e ações compactas por ícone. |
 | `AdminAtividades.tsx` | histórico administrativo de atividades, com filtros por autor/usuário, botão de limpeza local da lista e tabela alinhada por Data, Autor, Atividade e Resumo. |
-| `AdminPeopleContentSettings.tsx` | gestão de geração, visibilidade e conteúdos automáticos de pessoas, com fallback defensivo quando `person_visibility_settings` não existir no ambiente remoto. |
+| `AdminPeopleContentSettings.tsx` | gestão de geração, visibilidade, privacidade e conteúdos automáticos de pessoas, com fallback defensivo quando `person_visibility_settings` não existir no ambiente remoto. |
 
 A área administrativa está documentada em `INVENTARIO_TECNICO.md` e deve continuar protegida por `ProtectedRoute`.
