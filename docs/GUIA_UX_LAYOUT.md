@@ -1,6 +1,6 @@
 # Guia de UX e layout
 
-> Última revisão: 2026-06-24
+> Última revisão: 2026-06-27
 > Escopo: experiência visual das rotas principais da branch `main`.
 > Status: canônico.
 
@@ -55,6 +55,7 @@ Pessoa marcada como falecida em `/meus-dados` pula `/preferencias` e segue para 
 - O formulário coleta dados pessoais, preferências de privacidade, questionário e insumos para Mini Bio/Curiosidades.
 - O modo memorial depende de toggle explícito, não do tom textual.
 - Textos de IA devem caber em até 500 caracteres por campo.
+- A área `Outros ajustes` usa rótulos diretos: `Meus Vínculos` e `Fatos e Arquivos Históricos`.
 
 ## Meus vínculos
 
@@ -82,6 +83,9 @@ Pessoa marcada como falecida em `/meus-dados` pula `/preferencias` e segue para 
 - O topo combina `Hoje na família`, slide de fotos e `Pergunte à IA`. O slide exibe miniaturas no desktop e uma foto por vez no mobile.
 - `Pergunte à IA` deve usar contraste azul, sugestões rápidas legíveis e campo de pergunta com placeholder curto.
 - `Teste seus conhecimentos` e `Mural da família` devem ter composição equilibrada em desktop e leitura confortável no mobile.
+- No quiz, botões de resposta devem ocupar a área disponível, com conteúdo legível e sem truncamento desnecessário.
+- Ao selecionar resposta no quiz, o feedback deve aparecer na própria área das opções, com animação de entrada, antes de avançar para a próxima pergunta.
+- Ao concluir a rodada do quiz, a página deve exibir mensagem final consolidada de desempenho.
 - O mural deve priorizar a pergunta da lembrança e evitar campos redundantes de autoria e visibilidade.
 - `Gráficos da família` deve manter leitura simples: barras verticais para aniversários, círculos para profissões e barras horizontais para faixas etárias.
 - Círculos de profissões devem preservar proporção e não cortar título, número ou ícone.
@@ -98,7 +102,17 @@ Pessoa marcada como falecida em `/meus-dados` pula `/preferencias` e segue para 
 
 - `/forum` mantém busca e filtros visíveis no desktop.
 - No desktop, a busca do fórum deve iniciar alinhada a `Categorias` e a ação `Criar novo` deve permanecer alinhada à margem direita do container.
+- `/forum/topico/:id` deve usar largura compatível com `/forum`, com tópico principal e coluna lateral de `Tópicos recentes` no desktop.
+- Em `/forum/topico/:id`, reações aparecem apenas para o tópico principal, não para respostas.
+- `/forum/novo` deve preservar menções legíveis no campo de conteúdo; quando destacado visualmente, o nome mencionado deve aparecer em azul e negrito.
 - `/meus-favoritos` deve usar layout amplo para busca/filtros no desktop.
 - O botão de notificações nos headers de mapa e páginas de membro deve abrir o dropdown, sem redirecionar diretamente para `/notificacoes` no desktop.
 - Notificações devem ter dropdown responsivo e rodapé em duas colunas iguais, com ações curtas sem quebra de linha.
-- O menu do avatar mantém atalhos de dúvidas e saída.
+- O menu do avatar mantém primeiro e segundo nome no topo, subtítulo `Editar perfil`, atalhos de dúvidas e saída; o painel deve ficar acima de elementos sticky ou botões superiores.
+
+## Administração
+
+- Nas rotas `/admin/*`, o header global deve manter apenas navegação essencial: `Painel Administrativo`, `Principal` e menu do usuário.
+- O botão `Principal` não deve exibir seta; o retorno ao painel administrativo usa `Painel Administrativo`.
+- Ações administrativas secundárias, como membros, conteúdo e responsáveis, devem permanecer nas páginas correspondentes ou em cards internos, não no header global.
+- Páginas administrativas devem manter acentuação correta em títulos, labels, botões e mensagens.
