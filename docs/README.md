@@ -1,6 +1,6 @@
 # Documentação do produto — arvorefamilia
 
-> Última revisão: 2026-06-26
+> Última revisão: 2026-06-27
 > Escopo: documentação canônica mantida em `docs/` após auditoria e limpeza final.
 > Status: canônico.
 
@@ -101,6 +101,14 @@ Arquivos residuais fora desse índice não devem ser usados como contrato operac
 - `/calendario-familiar`;
 - `/entrar`, `/termos`, `/privacidade` e `/duvidas`;
 - área administrativa em `/admin` e subrotas, incluindo `/admin/home`.
+
+## Contratos transversais recentes
+
+- Diálogos nativos do navegador (`window.alert`, `alert`, `window.confirm`, `confirm`, `window.prompt` e `prompt`) não devem ser usados em fluxos da aplicação.
+- Feedback não bloqueante deve usar `toast` de `sonner`.
+- Confirmações devem usar `ConfirmDialog` ou modal controlado equivalente.
+- Coleta de texto deve usar modal controlado com campo de formulário, validação explícita e feedback por `toast`.
+- O arquivo `src/app/components/ui/alert.tsx` é componente visual e pode aparecer em varreduras textuais como falso positivo; ele não representa uso de API nativa do navegador.
 
 ## Regra de manutenção
 

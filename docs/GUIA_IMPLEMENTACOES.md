@@ -64,6 +64,18 @@
 - resposta JSON estrita para geração de textos de perfil;
 - limite de 500 caracteres por campo gerado.
 
+## Feedback e diálogos próprios
+
+- A branch `main` não deve exibir diálogos nativos do navegador em fluxos da aplicação.
+- `window.alert` e `alert` foram substituídos por `toast` de `sonner`.
+- `window.confirm` e `confirm` foram substituídos por `ConfirmDialog` ou modal controlado.
+- `window.prompt` e `prompt` foram substituídos por modal controlado com campo de texto.
+- Ações administrativas de limpeza, exclusão, remoção de vínculo, envio de teste, execução de rotina, aprovação/rejeição e restauração de configuração usam UI própria.
+- O fluxo sensível de remoção do último vínculo `Sou esta pessoa` mantém dupla confirmação, mas sem API nativa do navegador.
+- Solicitação de administração de perfil em `/pessoa/:id` coleta justificativa em modal próprio, com validação mínima quando preenchida.
+
+A varredura técnica esperada em `src/` deve retornar apenas o falso positivo visual `src/app/components/ui/alert.tsx`.
+
 ## Dados e Supabase
 
 - `dataService.ts` centraliza pessoas e relacionamentos.

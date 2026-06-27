@@ -28,6 +28,16 @@
 - Em `/mapa-familiar` desktop, os alinhamentos de grupos inferiores devem preservar pai e mãe como referências visuais.
 - A ordenação visual de cards deve evitar linhas extras quando houver espaço para singles e pares conjugais.
 
+## Feedback, confirmação e diálogos
+
+- Não usar `window.alert`, `alert`, `window.confirm`, `confirm`, `window.prompt` ou `prompt` em `src/`.
+- Feedbacks devem usar `toast` de `sonner`.
+- Confirmações devem usar `ConfirmDialog` ou modal controlado equivalente.
+- Coleta de texto deve usar modal controlado com campo de formulário e validação explícita.
+- Ações destrutivas ou sensíveis devem expor estado de carregamento durante a execução assíncrona.
+- Fluxos com dupla confirmação devem preservar os dois passos mesmo após trocar a UI.
+- A varredura por diálogos nativos deve retornar apenas `src/app/components/ui/alert.tsx`, que é falso positivo por ser componente visual.
+
 ## Dados
 
 - Pets devem permanecer distinguíveis de pessoas humanas.

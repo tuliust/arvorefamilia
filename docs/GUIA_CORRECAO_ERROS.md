@@ -1,6 +1,6 @@
 # Guia de correção de erros
 
-> Última revisão: 2026-06-23
+> Última revisão: 2026-06-27
 > Escopo: erros conhecidos de operação e manutenção documental/técnica.
 > Status: canônico.
 
@@ -73,6 +73,39 @@ A página usa fallback para badges de perfil quando a RPC `get_person_profile_se
 2. Validar `OPENAI_MODEL` se estiver definido.
 3. Reproduzir payload mínimo.
 4. Conferir se `selectedBadges`, `customTraits` ou `answers` foram enviados quando `purpose === "profile_text"`.
+
+## Diálogo nativo do navegador aparece
+
+### Sintoma
+
+A aplicação abre um `alert`, `confirm` ou `prompt` nativo do navegador em vez de toast, `ConfirmDialog` ou modal próprio.
+
+### Implementação atual
+
+A UI da branch `main` deve usar:
+
+- `toast` de `sonner` para feedback não bloqueante;
+- `ConfirmDialog` para confirmação de ações;
+- `Dialog` controlado para coleta de texto.
+
+O único resultado esperado na varredura textual é `src/app/components/ui/alert.tsx`, que é componente visual.
+
+### Ação
+
+1. Rodar a varredura:
+
+```powershell
+Select-String -Path (Get-ChildItem src -Recurse -File -Include *.ts,*.tsx) `
+  -Pattern "\b(?:window\.)?confirm\s*\(|\b(?:window\.)?alert\s*\(|\b(?:window\.)?prompt\s*\(" |
+  Select-Object Path, LineNumber, Line
+```
+
+2. Se aparecer arquivo diferente de `src/app/components/ui/alert.tsx`, substituir:
+   - `alert` por `toast`;
+   - `confirm` por `ConfirmDialog`;
+   - `prompt` por modal controlado.
+3. Rodar `npm run build` e `git diff --check`.
+4. Validar manualmente o fluxo alterado.
 
 ## Mojibake em documentação
 

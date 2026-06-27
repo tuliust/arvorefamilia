@@ -1,6 +1,6 @@
 # Inventário técnico
 
-> Última revisão: 2026-06-26
+> Última revisão: 2026-06-27
 > Escopo: rotas, módulos, documentos finais e referências técnicas preservadas após limpeza documental.
 > Status: canônico.
 
@@ -13,6 +13,14 @@
 - Dados via Supabase, com serviços em `src/app/services` e tipos em `src/app/types`.
 - IA por endpoint serverless `api/ai.ts`.
 - Validação esperada: `npm run typecheck` e `npm run build`.
+
+## Contratos transversais de UI
+
+- Feedbacks de sucesso, erro, aviso e informação devem usar `toast` de `sonner`, sem `alert` nativo.
+- Ações destrutivas, sensíveis ou que disparam efeitos reais devem usar `ConfirmDialog` ou modal controlado equivalente, sem `confirm` nativo.
+- Fluxos que coletam justificativa ou texto do usuário devem usar modal controlado com campo de formulário, sem `prompt` nativo.
+- `src/app/components/ConfirmDialog.tsx` é o componente padrão para confirmação reutilizável.
+- `src/app/components/ui/alert.tsx` é componente visual genérico e não deve ser confundido com `window.alert`.
 
 ## Áreas funcionais documentadas
 

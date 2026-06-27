@@ -25,6 +25,38 @@ npm run build
 
 Confirmar que as alterações documentais ficaram restritas aos documentos canônicos necessários.
 
+## QA transversal de diálogos próprios
+
+Executar a varredura abaixo antes de concluir frentes que alterem UI, admin, vínculos, notificações, calendário, curiosidades ou perfil:
+
+```powershell
+Select-String -Path (Get-ChildItem src -Recurse -File -Include *.ts,*.tsx) `
+  -Pattern "\b(?:window\.)?confirm\s*\(|\b(?:window\.)?alert\s*\(|\b(?:window\.)?prompt\s*\(" |
+  Select-Object Path, LineNumber, Line
+```
+
+Resultado esperado:
+
+```text
+src/app/components/ui/alert.tsx  function Alert({
+```
+
+Esse resultado é falso positivo conhecido, pois `Alert` é componente visual.
+
+Validar manualmente os fluxos sensíveis:
+
+- limpeza local de atividades administrativas;
+- exclusão de lembrança no mural de curiosidades;
+- desconexão do Google Agenda em calendário familiar;
+- exclusão de relacionamento e vínculo usuário-pessoa;
+- restauração de configurações públicas em `/admin/home`;
+- envio de teste de e-mail, teste de automação e execução manual de rotina em `/admin/notificacoes`;
+- aprovação e rejeição de solicitações de administração de perfil;
+- remoção do último vínculo `Sou esta pessoa`, preservando dois passos de confirmação;
+- solicitação de administração de perfil em `/pessoa/:id`, com modal de justificativa e validação de pelo menos 10 caracteres quando preenchida.
+
+Nenhum desses fluxos deve abrir `alert`, `confirm` ou `prompt` nativo do navegador.
+
 ## Rotas de árvore
 
 ### `/mapa-familiar`

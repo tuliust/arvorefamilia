@@ -84,6 +84,22 @@
 | `curiosidadesUtils.ts` | utilitários de datas, rankings, gráficos, quiz, gerações, bodas, eventos e badges. |
 | `profileQuestionnaireService.ts` | serviço de questionário de perfil, com RPC de badges e fallback quando a RPC não estiver disponível. |
 
+## Feedback, confirmação e modais
+
+| Componente / recurso | Papel |
+|---|---|
+| `ConfirmDialog.tsx` | modal padrão para confirmações de ações destrutivas, sensíveis ou irreversíveis, substituindo `window.confirm` e `confirm`. |
+| `toast` de `sonner` | feedback não bloqueante para sucesso, erro, aviso e informação, substituindo `window.alert` e `alert`. |
+| `Dialog` controlado | base para fluxos que precisam coletar texto ou justificativa do usuário, substituindo `window.prompt` e `prompt`. |
+| `src/app/components/ui/alert.tsx` | componente visual de UI; não é API nativa do navegador e pode aparecer como falso positivo em varreduras textuais. |
+
+Regras de uso:
+
+- Não introduzir `window.alert`, `alert`, `window.confirm`, `confirm`, `window.prompt` ou `prompt` em novos componentes.
+- Para exclusão, remoção de vínculo, limpeza local, envio real, desconexão, aprovação/rejeição ou restauração de configuração, usar confirmação própria.
+- Para textos livres, usar modal controlado com estado React, validação e ações explícitas de cancelar/confirmar.
+- A confirmação deve expor `loading` quando a ação assíncrona estiver em andamento.
+
 ## Layout e navegação
 
 - `ProtectedRoute`: protege rotas administrativas.
