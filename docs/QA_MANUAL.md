@@ -1,7 +1,7 @@
 # QA manual
 
-> Última revisão: 2026-06-27
-> Escopo: validação manual das rotas e contratos documentados.
+> Última revisão: 2026-06-27  
+> Escopo: validação manual das rotas e contratos documentados.  
 > Status: canônico.
 
 ## Pré-condições
@@ -24,6 +24,18 @@ npm run build
 ```
 
 Confirmar que as alterações documentais ficaram restritas aos documentos canônicos necessários.
+
+No PowerShell, quando `grep` não estiver disponível, usar alternativa equivalente:
+
+```powershell
+git status --short
+git diff --check
+Select-String -Path docs\*.md,docs\*\*.md -Pattern ([char]0xFFFD)
+npm run typecheck
+npm run build
+```
+
+Quando houver migration nova, confirmar se o arquivo existe localmente e se foi aplicado no Supabase remoto. Para vínculos de responsáveis pessoa-a-pessoa, confirmar a presença de `supabase/migrations/20260627143000_create_person_responsible_links.sql`.
 
 ## QA transversal de diálogos próprios
 
@@ -258,6 +270,25 @@ Validar desktop e mobile:
 - O formulário deve exibir status inferido antes de salvar.
 - Trocar de `Cônjuge` para outro tipo deve limpar campos conjugais.
 - Salvar relacionamento não conjugal deve preservar o comportamento anterior.
+
+### `/admin/responsaveis`
+
+- A página deve exibir `Solicitações de administração` acima de `Perfis legados e crianças`.
+- A página não deve exibir as seções antigas `Vínculos de usuários` e `Consulta`.
+- `Perfis legados e crianças` deve listar pessoas falecidas e crianças até 10 anos.
+- Pessoas falecidas devem usar ícone de cruz, não ícone de caveira.
+- Os cards de pessoas falecidas ou crianças não devem exibir a descrição longa `Pessoa falecida. Pode ser administrada por familiares responsáveis.` ou texto equivalente dentro do item.
+- A área azul do card deve exibir seletor de responsável e botão de vínculo.
+- O seletor de responsável deve listar todas as pessoas retornadas de `pessoas`, não apenas usuários autenticados em `auth.users`.
+- Ao vincular uma pessoa responsável por outra pessoa, o sistema deve gravar em `person_responsible_links`, não em `user_person_links`.
+- O vínculo pessoa-a-pessoa deve preencher `managed_pessoa_id` com a pessoa administrada e `responsible_pessoa_id` com a pessoa responsável.
+- O sistema deve impedir selecionar a própria pessoa como responsável por ela mesma.
+- Após salvar, o contador de responsáveis deve ser atualizado e o nome da pessoa responsável deve aparecer no card.
+- A tela não deve gerar erro de foreign key `user_person_links_user_id_fkey` ao selecionar responsável da tabela `pessoas`.
+- Solicitações pendentes devem continuar com ações de aprovar e rejeitar.
+- Aprovação de solicitação de administração com usuário autenticado deve continuar usando o fluxo existente de solicitação e vínculo com usuário.
+- Estado vazio de solicitações deve exibir `Nenhuma solicitação pendente.`.
+- A migration `20260627143000_create_person_responsible_links.sql` deve estar aplicada antes de validar criação real de responsáveis pessoa-a-pessoa.
 
 ### `/admin/duvidas`
 

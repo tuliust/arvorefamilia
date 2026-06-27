@@ -1,7 +1,7 @@
 # Regras de não regressão
 
-> Última revisão: 2026-06-27
-> Escopo: contratos que não devem ser quebrados em novas alterações.
+> Última revisão: 2026-06-27  
+> Escopo: contratos que não devem ser quebrados em novas alterações.  
 > Status: canônico.
 
 ## Escopo de alteração documental
@@ -44,6 +44,13 @@
 - Falecidos devem ser tratados por `falecido` ou por campos de falecimento conforme normalização.
 - Campos de privacidade não devem ser expostos indevidamente no perfil.
 - Alterações de vínculos que dependem de aprovação não devem ser documentadas como gravação direta.
+- `user_person_links.user_id` referencia `auth.users.id`; nunca gravar `pessoas.id` nesse campo.
+- Vínculos que concedem acesso ou edição a usuário autenticado devem continuar usando `user_person_links`.
+- Vínculos administrativos pessoa-a-pessoa para responsáveis por perfis legados ou crianças devem usar `person_responsible_links`.
+- `person_responsible_links.managed_pessoa_id` deve representar a pessoa administrada.
+- `person_responsible_links.responsible_pessoa_id` deve representar a pessoa responsável.
+- Uma pessoa não pode ser responsável por ela mesma em `person_responsible_links`.
+- O schema de `person_responsible_links` não deve substituir nem enfraquecer as regras de acesso autenticado de `user_person_links`.
 
 ## Status conjugal
 
@@ -90,6 +97,13 @@
 - `/admin/atividades` não deve apagar registros do banco ao acionar `Limpar`; a limpeza é visual/local.
 - `/admin/atividades` deve usar label `Autor` no filtro de ator.
 - `/admin/gestao-conteudo-pessoas` deve manter acentuação correta em UTF-8.
+- `/admin/responsaveis` deve manter `Solicitações de administração` acima de `Perfis legados e crianças`.
+- `/admin/responsaveis` não deve reintroduzir as seções antigas `Vínculos de usuários` e `Consulta` sem nova decisão explícita.
+- `/admin/responsaveis` deve usar seletor inline de pessoa responsável nos cards de perfis legados e crianças.
+- O seletor inline de responsável em `/admin/responsaveis` deve listar pessoas da tabela `pessoas`, não apenas perfis autenticados.
+- O vínculo criado pelo seletor inline de `/admin/responsaveis` deve gravar em `person_responsible_links`, não em `user_person_links`.
+- O ícone de pessoa falecida em `/admin/responsaveis` deve permanecer como cruz, não caveira.
+- Cards de perfis legados e crianças não devem exibir texto instrucional mandando usar formulário externo de vínculos.
 
 ## IA
 

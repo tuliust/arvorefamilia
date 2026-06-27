@@ -1,6 +1,6 @@
 # Decisões arquiteturais
 
-> Última revisão: 2026-06-23  
+> Última revisão: 2026-06-27  
 > Escopo: arquitetura final documentada após consolidação dos documentos técnicos anteriores.  
 > Status: canônico.
 
@@ -37,9 +37,20 @@ Detalhes operacionais ficam em `arquitetura/ROTAS_E_GUARDS.md`.
 
 ## Supabase e dados
 
-A aplicação usa Supabase para autenticação, pessoas, relacionamentos, solicitações de vínculo, arquivos históricos, favoritos, notificações, fórum, preferências e storage.
+A aplicação usa Supabase para autenticação, pessoas, relacionamentos, solicitações de vínculo, responsáveis por perfis, arquivos históricos, favoritos, notificações, fórum, preferências e storage.
 
 Regras de banco e migrations ficam em `operacao/MIGRATIONS_SUPABASE.md`. SQLs antigos foram consolidados em `historico/LEGADO_TECNICO.md` apenas para rastreabilidade.
+
+### Vínculos entre usuários, pessoas e responsáveis
+
+A arquitetura separa dois tipos de vínculo:
+
+- `user_person_links`: vínculo entre um usuário autenticado (`auth.users.id`) e uma pessoa da árvore (`pessoas.id`). Deve ser usado quando o vínculo concede acesso, edição, perfil principal ou permissões associadas a login.
+- `person_responsible_links`: vínculo pessoa-a-pessoa entre uma pessoa administrada (`managed_pessoa_id`) e uma pessoa responsável (`responsible_pessoa_id`). Deve ser usado para indicar responsáveis familiares por perfis legados ou crianças quando o responsável vem da tabela `pessoas`, mesmo que não tenha usuário autenticado.
+
+Essa separação evita gravar `pessoas.id` em campos que referenciam `auth.users.id` e preserva a integridade referencial de `user_person_links`.
+
+A página `/admin/responsaveis` usa `person_responsible_links` para o seletor inline de responsáveis em perfis legados e crianças. As solicitações de administração continuam sendo tratadas pelo fluxo próprio de solicitações e, quando aprovadas, podem gerar vínculo com usuário autenticado.
 
 ## IA
 
@@ -66,3 +77,5 @@ Documentos antigos de mobile, baseline e ajustes por rodada foram removidos porq
 ## Regra de atualização
 
 Sempre que uma decisão arquitetural mudar, atualizar este documento e, quando afetar rota, também atualizar `arquitetura/ROTAS_E_GUARDS.md` e `INVENTARIO_TECNICO.md`.
+
+Quando uma alteração criar ou alterar tabelas, vínculos, permissões, policies ou fluxos administrativos, atualizar também `QA_MANUAL.md` e `REGRAS_DE_NAO_REGRESSAO.md`.
