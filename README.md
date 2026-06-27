@@ -258,3 +258,242 @@ como fonte da verdade do schema.
 Não use SQLs soltos como schema principal em ambientes novos. Arquivos como `database-schema.sql`, `supabase_schema.sql`, `supabase_data.sql`, `diagnostico-*.sql`, `verificar-irmaos.sql`, `supabase/forum-schema.sql`, `supabase/google-calendar-schema.sql` ou similares devem ser tratados como histórico, diagnóstico ou backup local, não como fonte oficial.
 
 Referência preventiva:
+
+```txt
+docs/historico/SQLS_LEGADOS.md
+```
+
+Antes de aplicar migrations em staging/produção:
+
+1. revisar o SQL;
+2. fazer backup quando aplicável;
+3. validar em ambiente local/staging;
+4. rodar build e testes;
+5. aplicar apenas com autorização explícita.
+
+Documentação operacional:
+
+```txt
+docs/operacao/MIGRATIONS_SUPABASE.md
+```
+
+---
+
+## Modelagem principal
+
+Tabelas e objetos centrais:
+
+- `pessoas`: dados cadastrais, biográficos e campos complementares;
+- `relacionamentos`: arestas entre pessoas;
+- `arquivos_historicos`: arquivos vinculados por `pessoa_id` ou `relacionamento_id` quando aplicável;
+- `profiles`: perfis de usuários e roles;
+- `user_person_links`: vínculo entre usuário autenticado e pessoa da árvore;
+- `forum_*`: categorias, tópicos, respostas, comentários, reações e denúncias;
+- `notifications` e tabelas correlatas: notificações e preferências;
+- `user_favorites`: favoritos do usuário;
+- `google_calendar_*`: conexão e metadados de integração quando habilitada.
+
+Observações:
+
+- `arquivos_historicos` é tabela relacional, não coluna JSON de `pessoas` para novos registros;
+- relacionamentos de `conjuge` e `irmao` são simétricos;
+- relacionamentos `pai`/`mae` geram inverso `filho` quando o fluxo permite;
+- relacionamento `filho` só deve gerar inverso `pai` ou `mae` quando o fluxo informa o tipo correto;
+- não inferir gênero/tipo parental quando o dado não estiver claro.
+
+---
+
+## Ferramentas destrutivas
+
+A rota abaixo é sensível:
+
+```txt
+/admin/migrar-dados
+```
+
+Ela pode apagar pessoas e relacionamentos antes de importar seed.
+
+Em produção, deve permanecer bloqueada por padrão. Para liberar em ambiente controlado, use:
+
+```env
+VITE_ENABLE_DESTRUCTIVE_ADMIN_TOOLS=true
+```
+
+A tela ainda exige confirmação textual:
+
+```txt
+MIGRAR DADOS
+```
+
+---
+
+## Checklist técnico antes de commit/deploy
+
+Execute antes de fechar alterações relevantes:
+
+```bash
+git status
+npm run build
+npm test
+npm run test:e2e
+git diff --check
+supabase migration list
+```
+
+Verifique também:
+
+- nenhuma migration criada para ajuste puramente visual;
+- nenhum secret ou dump versionado;
+- nenhum `dist/`, `test-results/`, `.bak`, log temporário ou arquivo gerado entrou no commit;
+- documentação atualizada quando houver mudança de rota, banco, permissão, UX ou comportamento consolidado.
+
+---
+
+## Deploy
+
+Fluxo padrão:
+
+```bash
+npm install
+npm run build
+```
+
+O artefato final fica em:
+
+```txt
+dist/
+```
+
+Para deploy estático, configure as variáveis de ambiente no provedor e publique `dist/`.
+
+Se o provedor exigir, configure fallback SPA para:
+
+```txt
+index.html
+```
+
+Documentação de deploy:
+
+```txt
+docs/operacao/DEPLOYMENT.md
+```
+
+---
+
+## Documentação
+
+Ponto de entrada canônico:
+
+```txt
+docs/README.md
+```
+
+Documentos principais:
+
+- `docs/BASELINE_PRODUTO_ATUAL.md`: estado funcional vigente;
+- `docs/QA_MANUAL.md`: QA manual centralizado;
+- `docs/REGRAS_DE_NAO_REGRESSAO.md`: contratos que não podem regredir;
+- `docs/GUIA_IMPLEMENTACOES.md`: estado consolidado do que já foi implementado;
+- `docs/GUIA_COMPONENTES.md`: componentes, props, responsabilidades e cuidados contra regressão;
+- `docs/GUIA_UX_LAYOUT.md`: decisões de UX, layout e responsividade;
+- `docs/GUIA_CORRECAO_ERROS.md`: troubleshooting por sintoma;
+- `docs/PLANO_PROXIMOS_PASSOS.md`: pendências, riscos e backlog;
+- `docs/arquitetura/ROTAS_E_GUARDS.md`: rotas, guards e navegação;
+- `docs/arquitetura/ESTRUTURA_USUARIOS_BANCO_DADOS.md`: usuários, pessoas, vínculos e modelo de dados;
+- `docs/operacao/MIGRATIONS_SUPABASE.md`: migrations, Supabase e segurança operacional;
+- `docs/operacao/DEPLOYMENT.md`: deploy, variáveis e operação;
+- `docs/funcionalidades/`: documentação específica por funcionalidade;
+- `docs/historico/ROTAS_REMOVIDAS.md`: histórico preventivo de rotas removidas;
+- `docs/historico/SQLS_LEGADOS.md`: histórico preventivo de SQLs soltos, dumps e documentos antigos de banco;
+- `docs/historico/`: diagnósticos, QA e registros históricos;
+- `docs/ATTRIBUTIONS.md`: atribuições e licenças de componentes/assets, se mantido dentro de `docs/`.
+
+Se houver divergência entre um documento antigo e os guias em `docs/`, prevalece a documentação canônica em `docs/`.
+
+---
+
+## Política para arquivos no root
+
+Devem permanecer no root apenas arquivos necessários para execução, build, deploy ou configuração do projeto.
+
+Exemplos:
+
+```txt
+README.md
+package.json
+package-lock.json
+vite.config.ts
+vercel.json
+index.html
+```
+
+Não manter no root:
+
+```txt
+dist/
+backups/
+test-results/
+playwright-report/
+coverage/
+*.bak
+*.patch
+.env
+.env.local
+.env*.save
+```
+
+---
+
+## Anti-regressão de rotas antigas
+
+Não reativar como views de produto:
+
+```txt
+/minha-arvore
+/genealogia
+/visao-completa
+```
+
+Permitido:
+
+- `/minha-arvore/editar` como rota vigente de edição do membro;
+- termos como “minha árvore”, “genealogia” e “visão completa” como keywords, rótulos históricos ou texto explicativo, desde que apontem para rotas vigentes;
+- ocorrências em `docs/historico/` claramente marcadas como legado.
+
+Regra:
+
+```txt
+Keyword antiga não reativa rota antiga.
+```
+
+---
+
+## Validação documental
+
+Antes de fechar mudanças de documentação:
+
+```bash
+git diff --check
+npm run build
+```
+
+Para auditoria de rotas antigas:
+
+```bash
+rg "/minha-arvore|/genealogia|/visao-completa" README.md docs src tests
+```
+
+Para auditoria de SQLs soltos:
+
+```bash
+rg "database-schema\.sql|supabase_schema\.sql|supabase_data\.sql|forum-schema\.sql|google-calendar-schema\.sql" README.md docs supabase scripts src
+```
+
+Interpretação:
+
+- `/minha-arvore/editar` é permitido;
+- `docs/historico/ROTAS_REMOVIDAS.md` é a referência preventiva;
+- `docs/historico/SQLS_LEGADOS.md` é a referência preventiva para SQLs soltos;
+- `docs/historico/` pode conter ocorrências legadas;
+- documentos canônicos não devem tratar as rotas removidas como views ativas;
+- documentos operacionais devem tratar `supabase/migrations/` como fonte da verdade do schema.
