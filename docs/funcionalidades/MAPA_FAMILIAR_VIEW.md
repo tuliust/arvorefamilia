@@ -1,14 +1,15 @@
 # Mapa familiar
 
-> Última revisão: 2026-06-26
-> Escopo: `/mapa-familiar`, `/mapa-familiar-horizontal`, `Home.tsx` e componentes `FamilyTree`.
+> Última revisão: 2026-06-27
+> Escopo: `/mapa-familiar`, `/mapa-familiar-horizontal`, `/linha-geracional`, `Home.tsx` e componentes `FamilyTree`.
 > Status: canônico.
 
 ## Rotas
 
 - `/mapa-familiar`: visualização principal por grupos familiares.
 - `/mapa-familiar-horizontal`: visualização geracional horizontal.
-- Ambas usam a mesma shell `Home`.
+- `/linha-geracional`: experiência mobile dedicada baseada na leitura horizontal geracional.
+- `/mapa-familiar` e `/mapa-familiar-horizontal` usam a mesma shell `Home`.
 - A rota raiz `/` redireciona para `/mapa-familiar`.
 
 ## Dados
@@ -17,7 +18,7 @@
 
 - pessoas por `obterTodasPessoas`;
 - relacionamentos por `obterTodosRelacionamentos`;
-- pessoa principal vinculada por `getPrimaryLinkedPerson`;
+- pessoa principal vinculada por `getPrimaryLinkedPerson`/serviço equivalente do perfil de membro;
 - perfil do membro por `getMemberProfile`;
 - contagem de pessoas cadastradas por `getLinkedPersonIds`.
 
@@ -31,15 +32,16 @@ A pessoa de referência é resolvida a partir de:
 4. pessoa selecionada;
 5. primeira pessoa disponível.
 
-Ao navegar para perfil, o retorno é preservado em `?voltar=`.
+Ao navegar para perfil, o retorno é preservado em `?voltar=` quando o fluxo de origem fornece essa informação.
 
 ## Visualizações
 
 - `treeViewMode.ts` converte rota em modo.
 - A troca entre visualizações preserva a query string.
 - O painel desktop permite selecionar outra pessoa para visualizar a árvore.
+- No mobile, o header das telas de mapa deve usar o título curto `Árvore Familiar`.
 - O título `Visualização` e labels como `Família de X` devem permanecer em UTF-8 válido.
-- Ajustes defensivos de runtime devem permanecer isolados e não substituir a correção dos textos de origem.
+- Ajustes defensivos de runtime devem permanecer isolados por rota/breakpoint e não substituir a correção dos textos de origem.
 
 ## Layout desktop por grupos
 
@@ -49,6 +51,28 @@ Ao navegar para perfil, o retorno é preservado em `?voltar=`.
 - `Cônjuge` e `Pets` devem alinhar a borda direita com `Mãe`.
 - `Filhos` e `Netos` podem ocupar faixa mais à direita para preservar leitura e evitar sobreposição.
 - `FamilyTreeVisualCards.tsx` pode reordenar visualmente singles e pares conjugais para evitar terceira linha desnecessária.
+
+## Layout mobile de `/mapa-familiar`
+
+- A visualização mobile usa telas/grupos navegáveis por gesto, sem herdar o painel fixo desktop.
+- O painel aberto pelo botão `+` deve aparecer na camada mais alta da página, acima de header, toolbar, notificações, busca e conteúdo da árvore.
+- O painel de visualização deve reconhecer corretamente os familiares da pessoa ativa: pais, cônjuges, irmãos, filhos, pets, avós, bisavós, tataravós, tios, primos e sobrinhos.
+- Os itens expandidos do painel devem exibir primeiro e segundo nome completos, evitando truncamentos como duas letras ou reticências prematuras.
+- Ao tocar em um familiar listado no painel, a visualização deve mudar para aquela pessoa preservando a query `pessoa`.
+- Quando a tela central não tiver conteúdo abaixo, o mobile não deve permitir arrasto vertical para baixo.
+- Quando a tela de tios não tiver primos abaixo, o mobile não deve permitir arrasto para baixo a partir de tios paternos ou maternos.
+- Linhas verticais abaixo de tios devem aparecer apenas quando houver primos reais naquele lado.
+- Avós paternos e maternos devem permanecer nos lados corretos para a pessoa de referência.
+
+## `/linha-geracional` mobile
+
+- A rota `/linha-geracional` deve manter o header `Árvore Familiar` no mobile.
+- A experiência mobile deve reaproveitar a lógica visual horizontal sempre que possível: colunas por geração, conectores de cônjuges, conectores entre casais e filhos e cores por geração.
+- Cabeçalhos `Geração 1`, `Geração 2`, etc. devem ter espaçamento superior suficiente em relação à toolbar e ao topo da área rolável.
+- Cabeçalhos de geração no mobile devem usar peso e tamanho moderados para não competir com o header principal.
+- Gerações sem pessoas não devem ser exibidas como tela vazia inicial quando houver geração seguinte com conteúdo.
+- Cards de cônjuges devem ficar um acima do outro quando o layout mobile exigir empilhamento.
+- Linhas laterais devem conectar apenas os pares ou relações que justificam conexão visual; não devem conectar todos os cards indiscriminadamente.
 
 ## Filtros
 
@@ -92,9 +116,15 @@ Comportamento atual:
 - `Área` continua usando o fluxo de seleção visível da árvore e seus estados próprios de loading;
 - a geração da imagem/PDF continua baseada no canvas capturado do elemento exportável.
 
-## Busca no header
+## Busca e notificações no header
 
 As páginas de mapa usam busca no header com sugestões de pessoas e páginas. As páginas internas que usam `MemberPageHeader` devem manter comportamento equivalente por meio do componente compartilhado `HeaderGlobalSearch`.
+
+No mobile:
+
+- sugestões de busca devem aparecer na camada mais alta da interface, acima da toolbar e dos painéis da árvore;
+- o dropdown de notificações deve aparecer acima da toolbar, do canvas e de qualquer painel flutuante;
+- fechar busca ou notificações não deve deixar overlay preso na página.
 
 ## Contratos de UX
 
