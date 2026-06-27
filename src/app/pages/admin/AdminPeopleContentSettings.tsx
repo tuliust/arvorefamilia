@@ -28,6 +28,27 @@ function createEmptyDraft(): InsightDraftState {
   };
 }
 
+function hasCompleteBirthDate(value: Pessoa['data_nascimento']) {
+  const birthDate = String(value ?? '').trim();
+
+  return (
+    /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/.test(birthDate) ||
+    /^(\d{4})-(\d{1,2})-(\d{1,2})$/.test(birthDate)
+  );
+}
+
+function createDraftFromInsights(insights: PersonGeneratedInsight[], person: Pessoa | null): InsightDraftState {
+  const astrologyInsight = getInsightByType(insights, 'astrology');
+  const historicalInsight = getInsightByType(insights, 'historical_events');
+
+  return {
+    astrologyBody: String(astrologyInsight?.conteudo?.body ?? ''),
+    astrologySign: String(astrologyInsight?.conteudo?.sign ?? getZodiacSignFromBirthDate(person?.data_nascimento) ?? ''),
+    historicalTitle: String(historicalInsight?.conteudo?.title ?? ''),
+    historicalMainEvent: String(historicalInsight?.conteudo?.main_event ?? ''),
+  };
+}
+
 export function AdminPeopleContentSettings() {
   const [people, setPeople] = useState<Pessoa[]>([]);
   const [filter, setFilter] = useState('');
@@ -92,16 +113,7 @@ export function AdminPeopleContentSettings() {
 
         setVisibility(visibilitySettings);
         setInsights(generatedInsights);
-
-        const nextAstrology = getInsightByType(generatedInsights, 'astrology');
-        const nextHistorical = getInsightByType(generatedInsights, 'historical_events');
-
-        setInsightDraft({
-          astrologyBody: String(nextAstrology?.conteudo?.body ?? ''),
-          astrologySign: String(nextAstrology?.conteudo?.sign ?? getZodiacSignFromBirthDate(selectedPessoa?.data_nascimento) ?? ''),
-          historicalTitle: String(nextHistorical?.conteudo?.title ?? ''),
-          historicalMainEvent: String(nextHistorical?.conteudo?.main_event ?? ''),
-        });
+        setInsightDraft(createDraftFromInsights(generatedInsights, selectedPessoa));
       } catch (error) {
         toast.error(error instanceof Error ? error.message : 'Não foi possível carregar configurações da pessoa.');
       } finally {
@@ -110,7 +122,7 @@ export function AdminPeopleContentSettings() {
     }
 
     void loadDetails();
-  }, [selectedPessoa?.data_nascimento, selectedPessoaId]);
+  }, [selectedPessoa, selectedPessoaId]);
 
   const handleSaveGeneration = async () => {
     if (!selectedPessoa) return;
@@ -148,9 +160,15 @@ export function AdminPeopleContentSettings() {
 
     try {
       setSaving(true);
+
+      if (!hasCompleteBirthDate(selectedPessoa.data_nascimento)) {
+        throw new Error('Informe uma data de nascimento completa em DD/MM/AAAA ou AAAA-MM-DD antes de gerar conteúdos automáticos.');
+      }
+
       await gerarInsightsPessoa(selectedPessoa.id, force);
       const refreshed = await obterInsightsGeradosPessoa(selectedPessoa.id);
       setInsights(refreshed);
+      setInsightDraft(createDraftFromInsights(refreshed, selectedPessoa));
       toast.success(force ? 'Conteúdos regenerados.' : 'Conteúdos gerados.');
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Não foi possível gerar conteúdos.');
@@ -165,7 +183,9 @@ export function AdminPeopleContentSettings() {
     try {
       setSaving(true);
       const birthDate = String(selectedPessoa.data_nascimento ?? '').trim();
-      if (!birthDate) throw new Error('A pessoa precisa de data de nascimento para persistir os conteúdos.');
+      if (!hasCompleteBirthDate(selectedPessoa.data_nascimento)) {
+        throw new Error('Informe uma data de nascimento completa em DD/MM/AAAA ou AAAA-MM-DD para persistir os conteúdos.');
+      }
 
       await Promise.all([
         upsertPersonGeneratedInsight({
