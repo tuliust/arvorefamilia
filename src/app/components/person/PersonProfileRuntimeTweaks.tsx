@@ -35,21 +35,9 @@ function findTextElement(text: string) {
     .find((element) => normalizeText(element.textContent) === normalizedTarget) ?? null;
 }
 
-function findElementContainingText(text: string) {
-  const normalizedTarget = normalizeText(text);
-
-  return Array.from(document.querySelectorAll<HTMLElement>('h1, h2, h3, h4, p, span, div'))
-    .find((element) => normalizeText(element.textContent).includes(normalizedTarget)) ?? null;
-}
-
 function findSectionByExactHeading(text: string) {
   const heading = findTextElement(text);
   return heading?.closest('section, article, [data-person-profile-section], .rounded-2xl, .rounded-xl, .border') as HTMLElement | null;
-}
-
-function findSectionByContainedText(text: string) {
-  const element = findElementContainingText(text);
-  return element?.closest('section, article, [data-person-profile-section], .rounded-2xl, .rounded-xl, .border') as HTMLElement | null;
 }
 
 function setElementVisible(element: HTMLElement | null, visible: boolean) {
