@@ -1,6 +1,6 @@
 # Regras de não regressão
 
-> Última revisão: 2026-06-23
+> Última revisão: 2026-06-26
 > Escopo: contratos que não devem ser quebrados em novas alterações.
 > Status: canônico.
 
@@ -34,6 +34,17 @@
 - Falecidos devem ser tratados por `falecido` ou por campos de falecimento conforme normalização.
 - Campos de privacidade não devem ser expostos indevidamente no perfil.
 - Alterações de vínculos que dependem de aprovação não devem ser documentadas como gravação direta.
+
+## Status conjugal
+
+- Não duplicar lógica de status conjugal fora de `src/app/utils/conjugalRelationshipStatus.ts`.
+- Árvore, modal, perfil e admin devem consumir o helper compartilhado.
+- Separação registrada deve prevalecer sobre união ativa.
+- Viuvez e união histórica devem depender dos dados de falecimento das pessoas.
+- Não criar coluna persistida de status conjugal sem decisão explícita de schema.
+- A legenda da árvore deve diferenciar status por símbolo e padrão de linha, não apenas por cor.
+- O perfil deve manter vínculos conjugais agrupados em relacionamento atual, relacionamentos anteriores e uniões históricas.
+- O admin deve bloquear combinações contraditórias entre relacionamento ativo e dados de separação.
 
 ## Curiosidades
 
