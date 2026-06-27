@@ -25,6 +25,17 @@
 - A renderização de cards em grupos usa `FamilyTreeVisualCards`; a ordenação visual deve evitar linhas desnecessárias quando houver pares conjugais no grupo.
 - O subtipo legado `sangue` não deve ser reintroduzido nos formulários de relacionamento.
 
+## Status conjugal
+
+- `src/app/utils/conjugalRelationshipStatus.ts` centraliza a inferência de status conjugal.
+- O modelo usa `subtipo_relacionamento`, `data_separacao`, `ativo` e falecimento das pessoas.
+- A árvore usa o status para símbolo, tooltip, descrição e padrão visual de linha.
+- A legenda da árvore diferencia status conjugais por símbolo e padrão de linha, não apenas por cor.
+- O modal conjugal usa status para badge, tooltip, headline, narrativa e contexto de sugestão.
+- O perfil agrupa vínculos em relacionamento atual, relacionamentos anteriores e uniões históricas.
+- O admin exibe status inferido e bloqueia combinações contraditórias entre relacionamento ativo e dados de separação.
+- Não há migration de `status_conjugal`; o status permanece inferido pelos campos existentes.
+
 ## Alternância de visualização
 
 - `/mapa-familiar` e `/mapa-familiar-horizontal` compartilham `Home`.
@@ -114,6 +125,7 @@
 
 - A administração usa `ProtectedRoute`.
 - Rotas administrativas atuais estão listadas em `INVENTARIO_TECNICO.md`.
+- `/admin/relacionamentos/novo` exibe status conjugal inferido, força inatividade quando há separação e bloqueia combinações contraditórias.
 - `/admin/duvidas` usa `AdminDuvidasRefined`, com listagem sem slugs visíveis, filtros abaixo do título da seção e ações compactas por ícone.
 - `/admin/atividades` usa tabela com colunas `Data`, `Autor`, `Atividade` e `Resumo`; o botão `Limpar` zera apenas a lista local exibida, sem apagar banco.
 - Documentação de admin deve citar apenas rotas existentes em `src/app/routes.tsx`.
