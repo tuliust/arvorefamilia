@@ -5,6 +5,38 @@ const FAVORITES_BULLETS = [
   'Acesse páginas, arquivos e dados marcados como importantes.',
   'Use o botão de estrela nas páginas do site para guardar o conteúdo que desejar.',
 ];
+const LINHA_GERACIONAL_MOBILE_STYLE_ID = 'linha-geracional-mobile-runtime-style';
+const LINHA_GERACIONAL_MOBILE_CSS = `
+@media (max-width: 767px) {
+  [data-linha-geracional-mobile-root="true"] section[aria-label] {
+    padding-top: 1.35rem !important;
+  }
+
+  [data-linha-geracional-mobile-root="true"] section[aria-label] h1 {
+    margin-top: 1rem !important;
+    font-size: 0.875rem !important;
+    font-weight: 600 !important;
+    letter-spacing: 0 !important;
+  }
+
+  [data-linha-geracional-mobile-root="true"] section[aria-label] div.relative.px-8 {
+    margin-bottom: 0.35rem !important;
+  }
+
+  [data-linha-geracional-mobile-root="true"] section[aria-label] div.relative.px-8 > span:first-child,
+  [data-linha-geracional-mobile-root="true"] section[aria-label] div.relative.flex.flex-1.flex-col > span:first-child {
+    display: none !important;
+  }
+
+  [data-linha-geracional-mobile-root="true"] section[aria-label="Núcleo"] div.relative.flex.flex-1.flex-col {
+    gap: 0.85rem !important;
+  }
+
+  [data-linha-geracional-mobile-root="true"] section[aria-label="Núcleo"] div.relative.px-8:first-of-type > span:nth-child(2) {
+    display: none !important;
+  }
+}
+`;
 
 function normalizeText(value?: string | null) {
   return String(value ?? '')
@@ -17,6 +49,15 @@ function normalizeText(value?: string | null) {
 
 function isMobileViewport() {
   return window.matchMedia('(max-width: 767px)').matches;
+}
+
+function ensureLinhaGeracionalMobileStyle() {
+  if (document.getElementById(LINHA_GERACIONAL_MOBILE_STYLE_ID)) return;
+
+  const style = document.createElement('style');
+  style.id = LINHA_GERACIONAL_MOBILE_STYLE_ID;
+  style.textContent = LINHA_GERACIONAL_MOBILE_CSS;
+  document.head.appendChild(style);
 }
 
 function getTutorialRoot() {
@@ -133,8 +174,7 @@ function rewriteLinhaGeracionalHeaderTitle() {
   document.querySelectorAll<HTMLElement>('header h1').forEach((title) => {
     const normalized = normalizeText(title.textContent);
     if (normalized.startsWith('familia de ') || normalized === 'linha geracional') {
-      title.textContent = 'Árvore Familiar';
-      title.dataset.mobileLinhaGeracionalTitleNormalized = 'true';
+      if (title.textContent !== 'Árvore Familiar') title.textContent = 'Árvore Familiar';
     }
   });
 }
@@ -213,6 +253,8 @@ function shouldBlockSwipeToMissingCousins(deltaY: number) {
 }
 
 function applyTutorialTweaks() {
+  ensureLinhaGeracionalMobileStyle();
+
   const root = getTutorialRoot();
   if (root) {
     removeControlsBullet(root);
@@ -228,8 +270,15 @@ function applyTutorialTweaks() {
 
 export function FirstLoginTutorialRuntimeTweaks() {
   useEffect(() => {
+    let frameId: number | null = null;
     let touchStartY: number | null = null;
-    const apply = () => window.requestAnimationFrame(applyTutorialTweaks);
+    const apply = () => {
+      if (frameId !== null) return;
+      frameId = window.requestAnimationFrame(() => {
+        frameId = null;
+        applyTutorialTweaks();
+      });
+    };
 
     const handleTouchStart = (event: TouchEvent) => {
       touchStartY = event.touches[0]?.clientY ?? null;
@@ -262,7 +311,7 @@ export function FirstLoginTutorialRuntimeTweaks() {
 
     apply();
     const observer = new MutationObserver(apply);
-    observer.observe(document.body, { childList: true, subtree: true, characterData: true, attributes: true });
+    observer.observe(document.body, { childList: true, subtree: true, characterData: true });
     window.addEventListener('resize', apply);
     window.addEventListener('scroll', apply, true);
     document.addEventListener('touchstart', handleTouchStart, { capture: true, passive: true });
@@ -277,6 +326,7 @@ export function FirstLoginTutorialRuntimeTweaks() {
 
     return () => {
       observer.disconnect();
+      if (frameId !== null) window.cancelAnimationFrame(frameId);
       window.removeEventListener('resize', apply);
       window.removeEventListener('scroll', apply, true);
       document.removeEventListener('touchstart', handleTouchStart, true);
