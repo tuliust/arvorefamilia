@@ -13,10 +13,11 @@ import {
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { toast } from 'sonner';
+import { AppLink as Link } from '../../components/AppLink';
 import { Button } from '../../components/ui/button';
 import { Card, CardContent } from '../../components/ui/card';
 import { Textarea } from '../../components/ui/textarea';
-import { HEADER_ACTION_ICONS, MemberPageHeader } from '../../components/layout/MemberPageHeader';
+import { HEADER_ACTION_ICONS, MemberPageHeader, PAGE_CONTAINER_CLASS } from '../../components/layout/MemberPageHeader';
 import { ForumTopicFavoriteButton } from '../../components/favorites/ForumTopicFavoriteButton';
 import { useAuth } from '../../contexts/AuthContext';
 import { supabase } from '../../lib/supabaseClient';
@@ -29,6 +30,7 @@ import {
   listarComentariosDaResposta,
   listarPessoasDoTopico,
   listarRespostasDoTopico,
+  listarTopicosForum,
   obterMinhaReacaoForum,
   obterResumoReacoes,
   obterTopicoForumPorId,
@@ -257,11 +259,59 @@ function ReactionBar({
   );
 }
 
+function RecentTopicsSidebar({ topicos, currentTopicId }: { topicos: ForumTopicoType[]; currentTopicId: string }) {
+  const topicosRecentes = topicos.filter((item) => item.id !== currentTopicId).slice(0, 5);
+
+  return (
+    <aside className="min-w-0 space-y-3 lg:sticky lg:top-24 lg:self-start" aria-label="Tópicos recentes">
+      <h2 className="break-words text-lg font-semibold text-gray-900">Tópicos recentes</h2>
+      <Card className="overflow-hidden rounded-2xl bg-white shadow-sm">
+        <CardContent className="p-0">
+          {topicosRecentes.length === 0 ? (
+            <p className="p-4 text-sm leading-6 text-gray-500">Nenhum outro tópico recente disponível.</p>
+          ) : (
+            <div className="divide-y divide-gray-100">
+              {topicosRecentes.map((topicoRecente) => {
+                const categoriaRecente = formatarCategoriaForum(topicoRecente.categoria?.nome);
+
+                return (
+                  <Link
+                    key={topicoRecente.id}
+                    to={`/forum/topico/${topicoRecente.id}`}
+                    className="block min-w-0 p-4 transition hover:bg-blue-50/60"
+                  >
+                    <div className="flex min-w-0 items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        {categoriaRecente && <TopicBadge>{categoriaRecente}</TopicBadge>}
+                        <h3 className="mt-2 line-clamp-2 break-words text-sm font-bold leading-snug text-gray-950">
+                          {topicoRecente.titulo}
+                        </h3>
+                      </div>
+                      <MessageCircle className="mt-0.5 h-4 w-4 shrink-0 text-gray-400" />
+                    </div>
+                    {topicoRecente.conteudo && (
+                      <p className="mt-2 line-clamp-2 break-words text-xs leading-5 text-gray-600">
+                        {topicoRecente.conteudo}
+                      </p>
+                    )}
+                    <p className="mt-3 text-xs text-gray-500">{formatarData(topicoRecente.created_at)}</p>
+                  </Link>
+                );
+              })}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </aside>
+  );
+}
+
 export function ForumTopico() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
   const [topico, setTopico] = useState<ForumTopicoType | null>(null);
+  const [topicosRecentes, setTopicosRecentes] = useState<ForumTopicoType[]>([]);
   const [respostas, setRespostas] = useState<ForumResposta[]>([]);
   const [comentarios, setComentarios] = useState<Record<string, ForumComentario[]>>({});
   const [pessoasRelacionadas, setPessoasRelacionadas] = useState<Pessoa[]>([]);
@@ -310,6 +360,7 @@ export function ForumTopico() {
     const topicoData = await obterTopicoForumPorId(id);
     if (!topicoData) {
       setTopico(null);
+      setTopicosRecentes([]);
       setRespostas([]);
       setPessoasRelacionadas([]);
       setMinhaReacaoTopico(null);
@@ -318,7 +369,10 @@ export function ForumTopico() {
       setLoading(false);
       return;
     }
-    const respostasData = await listarRespostasDoTopico(id);
+    const [respostasData, topicosRecentesData] = await Promise.all([
+      listarRespostasDoTopico(id),
+      listarTopicosForum({ limite: 8 }),
+    ]);
     const [comentariosData, resumoTopicoData, resumosData, pessoasDoTopico, minhaReacaoTopicoData, minhasReacoesData] = await Promise.all([
       Promise.all(respostasData.map(async (resposta) => [resposta.id, await listarComentariosDaResposta(resposta.id)] as const)),
       obterResumoReacoes('topico', id),
@@ -330,6 +384,7 @@ export function ForumTopico() {
     const comentariosMap = Object.fromEntries(comentariosData);
 
     setTopico(topicoData);
+    setTopicosRecentes(topicosRecentesData.filter((item) => item.id !== id).slice(0, 5));
     setRespostas(respostasData);
     setComentarios(comentariosMap);
     setPessoasRelacionadas(pessoasDoTopico);
@@ -470,140 +525,146 @@ export function ForumTopico() {
         ]}
       />
 
-      <main className="mx-auto max-w-3xl px-4 py-4 sm:py-6">
-        <Card className="min-w-0 overflow-hidden rounded-2xl bg-white shadow-sm">
-          <CardContent className="p-0">
-            <article className="border-b border-gray-100">
-              <header className="flex items-start gap-3 px-4 py-3 sm:px-5">
-                <AuthorAvatar name={topicoAuthorName} src={topicoAuthorProfile?.avatar_url} />
-                <div className="min-w-0 flex-1">
-                  <div className="flex min-w-0 flex-wrap items-center gap-x-1.5 gap-y-1 text-sm">
-                    <span className="truncate font-semibold text-gray-900">{topicoAuthorName}</span>
-                    {categoriaLabel && <TopicBadge>{categoriaLabel}</TopicBadge>}
-                  </div>
-                  <p className="mt-0.5 flex flex-wrap items-center gap-2 text-xs text-gray-500">
-                    <span>{formatarData(topico.created_at)}</span>
-                    {topicoEditado && <EditedBadge />}
-                  </p>
-                </div>
-
-                <div className="flex shrink-0 items-center gap-1">
-                  <ForumTopicFavoriteButton topico={topico} className="h-9 w-9 border-gray-200" />
-                  {podeEditarTopico && (
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="icon"
-                      className="h-9 w-9 border-gray-200 text-gray-500 hover:border-red-200 hover:bg-red-50 hover:text-red-600"
-                      onClick={removerTopico}
-                      disabled={excluindoTopico}
-                      aria-label={excluindoTopico ? 'Excluindo tópico' : 'Excluir tópico'}
-                      title={excluindoTopico ? 'Excluindo...' : 'Excluir'}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  )}
-                </div>
-              </header>
-
-              <div className="space-y-3 px-4 pb-4 sm:px-5">
-                <h1 className="break-words text-2xl font-bold leading-tight text-gray-900 sm:text-3xl">{topico.titulo}</h1>
-                <p className="whitespace-pre-wrap break-words text-base leading-relaxed text-gray-800">
-                  <MentionedContent content={topico.conteudo} pessoas={pessoasParaMencoes} />
-                </p>
-              </div>
-
-              <div className="flex items-center justify-between border-t border-gray-100 px-4 py-2 sm:px-5">
-                <ReactionBar alvoTipo="topico" alvoId={topico.id} resumo={resumoTopico} selectedReaction={minhaReacaoTopico} onChange={setResumoTopico} onSelectedChange={setMinhaReacaoTopico} compact />
-                <span className="shrink-0 text-xs text-gray-500">{formatarContadorRespostas(respostas.length)}</span>
-              </div>
-            </article>
-
-            <section className="space-y-4 bg-gray-50/60 px-4 py-4 sm:px-5" aria-label="Respostas do tópico">
-              {respostas.length === 0 ? (
-                <div className="rounded-2xl bg-white p-4 text-sm text-gray-500 ring-1 ring-gray-100">Nenhuma resposta publicada ainda.</div>
-              ) : (
-                respostas.map((resposta) => {
-                  const podeAlterarResposta = Boolean(user && (resposta.autor_id === user.id || admin));
-                  const respostaAuthorProfile = authorProfiles[resposta.autor_id];
-                  const respostaAuthorName = nomeAutor(resposta.autor_id, user?.id, respostaAuthorProfile);
-                  const respostaEditadaBadge = isEdited(resposta.created_at, resposta.updated_at);
-
-                  return (
-                    <div key={resposta.id} className="flex min-w-0 items-start gap-3">
-                      <AuthorAvatar name={respostaAuthorName} src={respostaAuthorProfile?.avatar_url} size="sm" />
-                      <div className="min-w-0 flex-1 space-y-2">
-                        <div className={`rounded-2xl bg-white p-3 shadow-sm ring-1 ring-gray-100 ${resposta.aceita_como_solucao ? 'ring-emerald-200' : ''}`}>
-                          <div className="mb-1 flex min-w-0 items-start justify-between gap-2">
-                            <div className="min-w-0">
-                              <p className="break-words text-sm font-semibold text-gray-900">
-                                {respostaAuthorName}
-                                {resposta.aceita_como_solucao && (
-                                  <span className="ml-2 inline-flex items-center gap-1 text-xs text-emerald-700">
-                                    <CheckCircle2 className="h-3.5 w-3.5" />
-                                    Solução
-                                  </span>
-                                )}
-                              </p>
-                              <p className="flex flex-wrap items-center gap-2 text-xs text-gray-500">
-                                <span>{formatarData(resposta.created_at)}</span>
-                                {respostaEditadaBadge && <EditedBadge />}
-                              </p>
-                            </div>
-
-                            {podeAlterarResposta && (
-                              <div className="flex shrink-0 gap-1">
-                                <button type="button" onClick={() => iniciarEdicaoResposta(resposta)} className="text-gray-400 hover:text-blue-600" aria-label="Editar resposta">
-                                  <Edit className="h-4 w-4" />
-                                </button>
-                                <button type="button" onClick={() => removerResposta(resposta.id)} className="text-gray-400 hover:text-red-600" aria-label="Excluir resposta">
-                                  <Trash2 className="h-4 w-4" />
-                                </button>
-                              </div>
-                            )}
-                          </div>
-
-                          {editandoRespostaId === resposta.id ? (
-                            <div className="space-y-2">
-                              <Textarea value={respostaEditada} onChange={(event) => setRespostaEditada(event.target.value)} className="min-h-28" />
-                              <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
-                                <Button type="button" size="sm" className="w-full sm:w-auto" onClick={() => salvarRespostaEditada(resposta.id)}>Salvar resposta</Button>
-                                <Button type="button" variant="outline" size="sm" className="w-full sm:w-auto" onClick={() => setEditandoRespostaId(null)}>Cancelar</Button>
-                              </div>
-                            </div>
-                          ) : (
-                            <p className="whitespace-pre-wrap break-words text-sm leading-relaxed text-gray-800">{resposta.conteudo}</p>
-                          )}
-                        </div>
-
-                        <ReactionBar alvoTipo="resposta" alvoId={resposta.id} resumo={resumosRespostas[resposta.id] ?? RESUMO_VAZIO} selectedReaction={minhasReacoesRespostas[resposta.id] ?? null} onChange={(resumo) => setResumosRespostas((prev) => ({ ...prev, [resposta.id]: resumo }))} onSelectedChange={(tipo) => setMinhasReacoesRespostas((prev) => ({ ...prev, [resposta.id]: tipo }))} compact />
+      <main className={`${PAGE_CONTAINER_CLASS} py-4 sm:py-6`}>
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(280px,320px)]">
+          <div className="min-w-0">
+            <Card className="min-w-0 overflow-hidden rounded-2xl bg-white shadow-sm">
+              <CardContent className="p-0">
+                <article className="border-b border-gray-100">
+                  <header className="flex items-start gap-3 px-4 py-3 sm:px-5">
+                    <AuthorAvatar name={topicoAuthorName} src={topicoAuthorProfile?.avatar_url} />
+                    <div className="min-w-0 flex-1">
+                      <div className="flex min-w-0 flex-wrap items-center gap-x-1.5 gap-y-1 text-sm">
+                        <span className="truncate font-semibold text-gray-900">{topicoAuthorName}</span>
+                        {categoriaLabel && <TopicBadge>{categoriaLabel}</TopicBadge>}
                       </div>
+                      <p className="mt-0.5 flex flex-wrap items-center gap-2 text-xs text-gray-500">
+                        <span>{formatarData(topico.created_at)}</span>
+                        {topicoEditado && <EditedBadge />}
+                      </p>
                     </div>
-                  );
-                })
-              )}
-            </section>
 
-            <form onSubmit={responder} className="border-t border-gray-100 bg-white px-4 py-3 sm:px-5">
-              {topico.status === 'fechado' ? (
-                <p className="rounded-2xl bg-gray-50 p-4 text-sm text-gray-600">Este tópico está fechado e não aceita novas respostas.</p>
-              ) : (
-                <div className="flex min-w-0 items-center gap-2">
-                  <AuthorAvatar name={currentUserName} src={currentUserAvatar} size="sm" />
-                  <Textarea
-                    value={respostaTexto}
-                    onChange={(event) => setRespostaTexto(event.target.value)}
-                    placeholder={`Responder como ${currentUserShortName}`}
-                    className="min-h-11 flex-1 rounded-2xl bg-gray-50 text-sm"
-                  />
-                  <Button type="submit" disabled={enviandoResposta} size="icon" className="h-10 w-10 shrink-0 rounded-full" aria-label="Publicar resposta">
-                    <Send className="h-4 w-4" />
-                  </Button>
-                </div>
-              )}
-            </form>
-          </CardContent>
-        </Card>
+                    <div className="flex shrink-0 items-center gap-1">
+                      <ForumTopicFavoriteButton topico={topico} className="h-9 w-9 border-gray-200" />
+                      {podeEditarTopico && (
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="icon"
+                          className="h-9 w-9 border-gray-200 text-gray-500 hover:border-red-200 hover:bg-red-50 hover:text-red-600"
+                          onClick={removerTopico}
+                          disabled={excluindoTopico}
+                          aria-label={excluindoTopico ? 'Excluindo tópico' : 'Excluir tópico'}
+                          title={excluindoTopico ? 'Excluindo...' : 'Excluir'}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      )}
+                    </div>
+                  </header>
+
+                  <div className="space-y-3 px-4 pb-4 sm:px-5">
+                    <h1 className="break-words text-2xl font-bold leading-tight text-gray-900 sm:text-3xl">{topico.titulo}</h1>
+                    <p className="whitespace-pre-wrap break-words text-base leading-relaxed text-gray-800">
+                      <MentionedContent content={topico.conteudo} pessoas={pessoasParaMencoes} />
+                    </p>
+                  </div>
+
+                  <div className="flex items-center justify-between border-t border-gray-100 px-4 py-2 sm:px-5">
+                    <ReactionBar alvoTipo="topico" alvoId={topico.id} resumo={resumoTopico} selectedReaction={minhaReacaoTopico} onChange={setResumoTopico} onSelectedChange={setMinhaReacaoTopico} compact />
+                    <span className="shrink-0 text-xs text-gray-500">{formatarContadorRespostas(respostas.length)}</span>
+                  </div>
+                </article>
+
+                <section className="space-y-4 bg-gray-50/60 px-4 py-4 sm:px-5" aria-label="Respostas do tópico">
+                  {respostas.length === 0 ? (
+                    <div className="rounded-2xl bg-white p-4 text-sm text-gray-500 ring-1 ring-gray-100">Nenhuma resposta publicada ainda.</div>
+                  ) : (
+                    respostas.map((resposta) => {
+                      const podeAlterarResposta = Boolean(user && (resposta.autor_id === user.id || admin));
+                      const respostaAuthorProfile = authorProfiles[resposta.autor_id];
+                      const respostaAuthorName = nomeAutor(resposta.autor_id, user?.id, respostaAuthorProfile);
+                      const respostaEditadaBadge = isEdited(resposta.created_at, resposta.updated_at);
+
+                      return (
+                        <div key={resposta.id} className="flex min-w-0 items-start gap-3">
+                          <AuthorAvatar name={respostaAuthorName} src={respostaAuthorProfile?.avatar_url} size="sm" />
+                          <div className="min-w-0 flex-1 space-y-2">
+                            <div className={`rounded-2xl bg-white p-3 shadow-sm ring-1 ring-gray-100 ${resposta.aceita_como_solucao ? 'ring-emerald-200' : ''}`}>
+                              <div className="mb-1 flex min-w-0 items-start justify-between gap-2">
+                                <div className="min-w-0">
+                                  <p className="break-words text-sm font-semibold text-gray-900">
+                                    {respostaAuthorName}
+                                    {resposta.aceita_como_solucao && (
+                                      <span className="ml-2 inline-flex items-center gap-1 text-xs text-emerald-700">
+                                        <CheckCircle2 className="h-3.5 w-3.5" />
+                                        Solução
+                                      </span>
+                                    )}
+                                  </p>
+                                  <p className="flex flex-wrap items-center gap-2 text-xs text-gray-500">
+                                    <span>{formatarData(resposta.created_at)}</span>
+                                    {respostaEditadaBadge && <EditedBadge />}
+                                  </p>
+                                </div>
+
+                                {podeAlterarResposta && (
+                                  <div className="flex shrink-0 gap-1">
+                                    <button type="button" onClick={() => iniciarEdicaoResposta(resposta)} className="text-gray-400 hover:text-blue-600" aria-label="Editar resposta">
+                                      <Edit className="h-4 w-4" />
+                                    </button>
+                                    <button type="button" onClick={() => removerResposta(resposta.id)} className="text-gray-400 hover:text-red-600" aria-label="Excluir resposta">
+                                      <Trash2 className="h-4 w-4" />
+                                    </button>
+                                  </div>
+                                )}
+                              </div>
+
+                              {editandoRespostaId === resposta.id ? (
+                                <div className="space-y-2">
+                                  <Textarea value={respostaEditada} onChange={(event) => setRespostaEditada(event.target.value)} className="min-h-28" />
+                                  <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
+                                    <Button type="button" size="sm" className="w-full sm:w-auto" onClick={() => salvarRespostaEditada(resposta.id)}>Salvar resposta</Button>
+                                    <Button type="button" variant="outline" size="sm" className="w-full sm:w-auto" onClick={() => setEditandoRespostaId(null)}>Cancelar</Button>
+                                  </div>
+                                </div>
+                              ) : (
+                                <p className="whitespace-pre-wrap break-words text-sm leading-relaxed text-gray-800">{resposta.conteudo}</p>
+                              )}
+                            </div>
+
+                            <ReactionBar alvoTipo="resposta" alvoId={resposta.id} resumo={resumosRespostas[resposta.id] ?? RESUMO_VAZIO} selectedReaction={minhasReacoesRespostas[resposta.id] ?? null} onChange={(resumo) => setResumosRespostas((prev) => ({ ...prev, [resposta.id]: resumo }))} onSelectedChange={(tipo) => setMinhasReacoesRespostas((prev) => ({ ...prev, [resposta.id]: tipo }))} compact />
+                          </div>
+                        </div>
+                      );
+                    })
+                  )}
+                </section>
+
+                <form onSubmit={responder} className="border-t border-gray-100 bg-white px-4 py-3 sm:px-5">
+                  {topico.status === 'fechado' ? (
+                    <p className="rounded-2xl bg-gray-50 p-4 text-sm text-gray-600">Este tópico está fechado e não aceita novas respostas.</p>
+                  ) : (
+                    <div className="flex min-w-0 items-center gap-2">
+                      <AuthorAvatar name={currentUserName} src={currentUserAvatar} size="sm" />
+                      <Textarea
+                        value={respostaTexto}
+                        onChange={(event) => setRespostaTexto(event.target.value)}
+                        placeholder={`Responder como ${currentUserShortName}`}
+                        className="min-h-11 flex-1 rounded-2xl bg-gray-50 text-sm"
+                      />
+                      <Button type="submit" disabled={enviandoResposta} size="icon" className="h-10 w-10 shrink-0 rounded-full" aria-label="Publicar resposta">
+                        <Send className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  )}
+                </form>
+              </CardContent>
+            </Card>
+          </div>
+
+          <RecentTopicsSidebar topicos={topicosRecentes} currentTopicId={topico.id} />
+        </div>
       </main>
     </div>
   );
