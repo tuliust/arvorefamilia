@@ -36,52 +36,6 @@ const mobileGlobalTweaks = `
     z-index: 11120 !important;
   }
 
-  main form section:has(div[style*="width:"]) .border-t {
-    flex-direction: row !important;
-    align-items: center !important;
-    justify-content: space-between !important;
-  }
-
-  main form section:has(div[style*="width:"]) .border-t button:has(svg) {
-    width: 3rem !important;
-    min-width: 3rem !important;
-    max-width: 3rem !important;
-    height: 3rem !important;
-    min-height: 3rem !important;
-    padding: 0 !important;
-    flex: 0 0 3rem !important;
-    overflow: hidden !important;
-    border-radius: 9999px !important;
-    color: transparent !important;
-  }
-
-  main form section:has(div[style*="width:"]) .border-t button:not(:has(svg)) {
-    width: auto !important;
-    min-width: 0 !important;
-    max-width: none !important;
-    height: 3rem !important;
-    min-height: 3rem !important;
-    padding-left: 1rem !important;
-    padding-right: 1rem !important;
-    flex: 0 1 auto !important;
-    color: inherit !important;
-    border-radius: 0.75rem !important;
-  }
-
-  main form section:has(div[style*="width:"]) .border-t button svg {
-    width: 1.25rem !important;
-    height: 1.25rem !important;
-    margin: 0 !important;
-    color: rgb(37, 99, 235) !important;
-    stroke: rgb(37, 99, 235) !important;
-  }
-
-  main form section:has(div[style*="width:"]) .border-t button[class*="bg-blue"] svg,
-  main form section:has(div[style*="width:"]) .border-t button[class*="bg-blue-600"] svg {
-    color: rgb(255, 255, 255) !important;
-    stroke: rgb(255, 255, 255) !important;
-  }
-
   html[data-mobile-route="curiosidades"] .curiosidades-top-sticky-nav,
   html[data-mobile-route="curiosidades"] .curiosidades-top-sticky-nav nav,
   html[data-mobile-route="curiosidades"] .curiosidades-top-sticky-nav .flex {
@@ -151,6 +105,7 @@ function normalizeText(value?: string | null) {
 function getMobileRoute(pathname: string) {
   if (pathname === '/meus-dados') return 'meus-dados';
   if (pathname === '/meus-vinculos') return 'meus-vinculos';
+  if (pathname === '/arquivos-historicos') return 'arquivos-historicos';
   if (pathname === '/curiosidades') return 'curiosidades';
   if (pathname.startsWith('/pessoa/') || pathname.startsWith('/pessoas/')) return 'person-profile';
   return '';
@@ -166,33 +121,34 @@ function findExactTextElement(text: string) {
     .find((element) => normalizeText(element.textContent) === normalizedTarget) ?? null;
 }
 
+function setStyleValue(element: HTMLElement, property: keyof CSSStyleDeclaration, value: string) {
+  if (element.style[property] === value) return;
+  element.style[property] = value as never;
+}
+
 function setInlineBadgeStyle(element: HTMLElement | null) {
   if (!element) return;
-  element.style.display = 'inline-flex';
-  element.style.alignItems = 'center';
-  element.style.borderRadius = '9999px';
-  element.style.border = '1px solid rgb(229, 231, 235)';
-  element.style.background = 'rgb(255, 255, 255)';
-  element.style.padding = '0.25rem 0.625rem';
-  element.style.fontSize = '0.75rem';
-  element.style.fontWeight = '600';
-  element.style.lineHeight = '1rem';
-  element.style.color = 'rgb(55, 65, 81)';
+  setStyleValue(element, 'display', 'inline-flex');
+  setStyleValue(element, 'alignItems', 'center');
+  setStyleValue(element, 'borderRadius', '9999px');
+  setStyleValue(element, 'border', '1px solid rgb(229, 231, 235)');
+  setStyleValue(element, 'background', 'rgb(255, 255, 255)');
+  setStyleValue(element, 'padding', '0.25rem 0.625rem');
+  setStyleValue(element, 'fontSize', '0.75rem');
+  setStyleValue(element, 'fontWeight', '600');
+  setStyleValue(element, 'lineHeight', '1rem');
+  setStyleValue(element, 'color', 'rgb(55, 65, 81)');
 }
 
 function hideMeusDadosOtherAdjustments() {
-  if (!isMobileViewport()) return;
   const heading = findExactTextElement('Outros ajustes');
   const card = heading?.closest('section, aside, article, .rounded-2xl, .rounded-xl') as HTMLElement | null;
   if (!card) return;
 
-  card.style.display = 'none';
-  card.dataset.mobileHiddenOtherAdjustments = 'true';
+  setStyleValue(card, 'display', 'none');
 }
 
 function rewriteMeusDadosPhotoButton() {
-  if (!isMobileViewport()) return;
-
   Array.from(document.querySelectorAll<HTMLButtonElement>('button')).forEach((button) => {
     if (normalizeText(button.textContent) !== 'cadastrar') return;
 
@@ -200,20 +156,19 @@ function rewriteMeusDadosPhotoButton() {
       .find((span) => normalizeText(span.textContent) === 'cadastrar');
 
     if (visibleLabel) {
-      visibleLabel.textContent = 'Adicionar foto';
-    } else {
-      button.childNodes.forEach((node) => {
-        if (node.nodeType === Node.TEXT_NODE && normalizeText(node.textContent) === 'cadastrar') {
-          node.textContent = 'Adicionar foto';
-        }
-      });
+      if (visibleLabel.textContent !== 'Adicionar foto') visibleLabel.textContent = 'Adicionar foto';
+      return;
     }
+
+    button.childNodes.forEach((node) => {
+      if (node.nodeType === Node.TEXT_NODE && normalizeText(node.textContent) === 'cadastrar') {
+        node.textContent = 'Adicionar foto';
+      }
+    });
   });
 }
 
 function compactDeathStatusToggle() {
-  if (!isMobileViewport()) return;
-
   const heading = findExactTextElement('Status da pessoa');
   const wrapper = heading?.closest('div')?.parentElement as HTMLElement | null;
   if (!wrapper) return;
@@ -223,20 +178,18 @@ function compactDeathStatusToggle() {
 
   if (!toggle) return;
 
-  toggle.style.width = 'fit-content';
-  toggle.style.maxWidth = '100%';
-  toggle.style.alignSelf = 'flex-start';
+  setStyleValue(toggle, 'width', 'fit-content');
+  setStyleValue(toggle, 'maxWidth', '100%');
+  setStyleValue(toggle, 'alignSelf', 'flex-start');
 
   toggle.querySelectorAll<HTMLButtonElement>('button').forEach((button) => {
-    button.style.minWidth = '4.35rem';
-    button.style.paddingLeft = '0.75rem';
-    button.style.paddingRight = '0.75rem';
+    setStyleValue(button, 'minWidth', '4.35rem');
+    setStyleValue(button, 'paddingLeft', '0.75rem');
+    setStyleValue(button, 'paddingRight', '0.75rem');
   });
 }
 
 function fixQuestionnaireNavigationIcons() {
-  if (!isMobileViewport()) return;
-
   const section = Array.from(document.querySelectorAll<HTMLElement>('section')).find((candidate) => {
     const text = normalizeText(candidate.textContent);
     return text.includes('sobre mim') && text.includes('etapa') && text.includes('voltar');
@@ -250,7 +203,7 @@ function fixQuestionnaireNavigationIcons() {
     if (!svg) return;
 
     if (text.includes('voltar')) {
-      button.style.opacity = '1';
+      setStyleValue(button, 'opacity', '1');
       svg.style.opacity = '1';
       svg.style.color = 'rgb(37, 99, 235)';
       svg.style.stroke = 'rgb(37, 99, 235)';
@@ -267,32 +220,26 @@ function fixQuestionnaireNavigationIcons() {
 }
 
 function rewriteMobileTreeHeaderTitle() {
-  if (!isMobileViewport()) return;
-
   document.querySelectorAll<HTMLElement>('header h1').forEach((title) => {
     if (normalizeText(title.textContent).startsWith('familia de ')) {
-      title.textContent = 'Árvore Familiar';
-      title.dataset.mobileTreeTitleNormalized = 'true';
+      if (title.textContent !== 'Árvore Familiar') title.textContent = 'Árvore Familiar';
     }
   });
 }
 
 function expandMobileUserMenu() {
-  if (!isMobileViewport()) return;
   if (!document.documentElement.classList.contains('mobile-user-menu-open')) return;
 
   const closeButton = document.querySelector<HTMLButtonElement>('button[aria-label="Fechar menu"]:not(.fixed)');
   const panel = closeButton?.closest('div.fixed') as HTMLElement | null;
   if (!panel) return;
 
-  panel.style.top = 'calc(env(safe-area-inset-top, 0px) + 1rem)';
-  panel.style.maxHeight = 'calc(100dvh - 2rem - env(safe-area-inset-top, 0px))';
-  panel.style.zIndex = '11110';
+  setStyleValue(panel, 'top', 'calc(env(safe-area-inset-top, 0px) + 1rem)');
+  setStyleValue(panel, 'maxHeight', 'calc(100dvh - 2rem - env(safe-area-inset-top, 0px))');
+  setStyleValue(panel, 'zIndex', '11110');
 }
 
 function preventMobileSpouseDialogAutoKeyboard() {
-  if (!isMobileViewport()) return;
-
   const title = findExactTextElement('Adicionar cônjuge');
   const dialog = title?.closest('[data-slot="dialog-content"]') as HTMLElement | null;
   if (!dialog || dialog.dataset.mobileSpouseAutoblurred === 'true') return;
@@ -315,7 +262,7 @@ function preventMobileSpouseDialogAutoKeyboard() {
 function restoreRelationshipCardsForDesktop() {
   document.querySelectorAll<HTMLElement>('[data-mobile-review-badge="true"]').forEach((badge) => badge.remove());
   document.querySelectorAll<HTMLElement>('[data-mobile-original-review-badge="true"]').forEach((badge) => {
-    badge.style.display = '';
+    setStyleValue(badge, 'display', '');
     delete badge.dataset.mobileOriginalReviewBadge;
   });
   document.querySelectorAll<HTMLElement>('[data-mobile-life-badge="true"]').forEach((badge) => {
@@ -325,11 +272,6 @@ function restoreRelationshipCardsForDesktop() {
 }
 
 function enhanceMobileRelationshipCards() {
-  if (!isMobileViewport()) {
-    restoreRelationshipCardsForDesktop();
-    return;
-  }
-
   document.querySelectorAll<HTMLElement>('article[data-relationship-group]').forEach((card) => {
     const actionButton = card.querySelector<HTMLButtonElement>('button[aria-label="Solicitar remoção"], button[aria-label="Cancelar adição"], button[aria-label="Desfazer solicitação de remoção"]');
     const actionContainer = actionButton?.closest('div') as HTMLElement | null;
@@ -344,8 +286,10 @@ function enhanceMobileRelationshipCards() {
     const badgesRow = lifeBadge.closest('div') as HTMLElement | null;
     if (!badgesRow) return;
 
-    originalBadge.dataset.mobileOriginalReviewBadge = 'true';
-    originalBadge.style.display = 'none';
+    if (originalBadge.style.display !== 'none') {
+      originalBadge.dataset.mobileOriginalReviewBadge = 'true';
+      setStyleValue(originalBadge, 'display', 'none');
+    }
 
     let mobileBadge = badgesRow.querySelector<HTMLElement>('[data-mobile-review-badge="true"]');
     if (!mobileBadge) {
@@ -354,22 +298,24 @@ function enhanceMobileRelationshipCards() {
       badgesRow.insertBefore(mobileBadge, badgesRow.firstChild);
     }
 
-    mobileBadge.textContent = originalBadge.textContent ?? '';
+    if (mobileBadge.textContent !== originalBadge.textContent) {
+      mobileBadge.textContent = originalBadge.textContent ?? '';
+    }
+
     setInlineBadgeStyle(mobileBadge);
     setInlineBadgeStyle(lifeBadge);
     lifeBadge.dataset.mobileLifeBadge = 'true';
 
-    badgesRow.style.display = 'flex';
-    badgesRow.style.flexDirection = 'row';
-    badgesRow.style.alignItems = 'center';
-    badgesRow.style.gap = '0.5rem';
-    badgesRow.style.flexWrap = 'wrap';
+    setStyleValue(badgesRow, 'display', 'flex');
+    setStyleValue(badgesRow, 'flexDirection', 'row');
+    setStyleValue(badgesRow, 'alignItems', 'center');
+    setStyleValue(badgesRow, 'gap', '0.5rem');
+    setStyleValue(badgesRow, 'flexWrap', 'wrap');
   });
 }
 
 function applyMobileDomTweaks(pathname: string) {
   const route = getMobileRoute(pathname);
-
   document.documentElement.dataset.mobileRoute = route;
 
   if (!isMobileViewport()) {
@@ -397,11 +343,22 @@ export function MobileGlobalTweaks() {
   const location = useLocation();
 
   useEffect(() => {
-    const apply = () => applyMobileDomTweaks(location.pathname);
+    let frameId: number | null = null;
+    const apply = () => {
+      if (frameId !== null) return;
+      frameId = window.requestAnimationFrame(() => {
+        frameId = null;
+        try {
+          applyMobileDomTweaks(location.pathname);
+        } catch (error) {
+          console.warn('[MobileGlobalTweaks] Ajustes mobile ignorados para evitar bloqueio da página:', error);
+        }
+      });
+    };
 
     apply();
     const observer = new MutationObserver(apply);
-    observer.observe(document.body, { childList: true, subtree: true, characterData: true, attributes: true });
+    observer.observe(document.body, { childList: true, subtree: true, characterData: true });
     window.addEventListener('resize', apply);
 
     const timerIds = [
@@ -412,6 +369,7 @@ export function MobileGlobalTweaks() {
 
     return () => {
       observer.disconnect();
+      if (frameId !== null) window.cancelAnimationFrame(frameId);
       window.removeEventListener('resize', apply);
       timerIds.forEach((timerId) => window.clearTimeout(timerId));
     };
