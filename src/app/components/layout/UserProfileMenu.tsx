@@ -12,6 +12,7 @@ import {
   Pencil,
   Sparkles,
   Star,
+  UserCheck,
   UserCircle2,
   X,
 } from 'lucide-react';
@@ -19,8 +20,20 @@ import {
 import { useAuth } from '../../contexts/AuthContext';
 import { isAdminUser } from '../../services/permissionService';
 import { getMemberProfile, getPrimaryLinkedPersonWithPessoa, MemberProfile } from '../../services/memberProfileService';
+import {
+  listManagedPeopleForResponsiblePerson,
+  type PersonResponsibleLinkRecord,
+} from '../../services/personResponsibleLinksService';
+import {
+  clearResponsiblePerspective,
+  getResponsiblePerspective,
+  setResponsiblePerspective,
+  subscribeResponsiblePerspective,
+  type ResponsiblePerspective,
+} from '../../services/responsiblePerspectiveService';
 import { clearTreeDataCache } from '../../services/treeDataCache';
 import type { Pessoa } from '../../types';
+import { isPersonDeceased } from '../../utils/personFields';
 import {
   TREE_COLOR_PALETTE_CSS_VARIABLES,
   TREE_COLOR_PALETTE_STORAGE_KEY,
@@ -103,6 +116,8 @@ export function UserProfileMenu({ variant = 'avatar' }: UserProfileMenuProps) {
   const [open, setOpen] = useState(false);
   const [profile, setProfile] = useState<MemberProfile | null>(null);
   const [linkedPerson, setLinkedPerson] = useState<Pessoa | null>(null);
+  const [managedPeopleLinks, setManagedPeopleLinks] = useState<PersonResponsibleLinkRecord[]>([]);
+  const [activePerspective, setActivePerspective] = useState<ResponsiblePerspective | null>(() => getResponsiblePerspective());
   const [isAdmin, setIsAdmin] = useState(false);
   const [treeColorPalette, setTreeColorPalette] = useState<TreeColorPalette>(getStoredPalette);
 
@@ -113,6 +128,7 @@ export function UserProfileMenu({ variant = 'avatar' }: UserProfileMenuProps) {
       if (!user?.id) {
         setProfile(null);
         setLinkedPerson(null);
+        setManagedPeopleLinks([]);
         setIsAdmin(false);
         return;
       }
@@ -125,9 +141,29 @@ export function UserProfileMenu({ variant = 'avatar' }: UserProfileMenuProps) {
 
       if (cancelled) return;
 
+      const primaryPerson = linkedPersonResult.data?.pessoa ?? null;
       setProfile(profileResult.data ?? null);
-      setLinkedPerson(linkedPersonResult.data?.pessoa ?? null);
+      setLinkedPerson(primaryPerson);
       setIsAdmin(adminResult.isAdmin);
+
+      if (!primaryPerson?.id) {
+        setManagedPeopleLinks([]);
+        return;
+      }
+
+      const managedResult = await listManagedPeopleForResponsiblePerson(primaryPerson.id);
+      if (cancelled) return;
+
+      setManagedPeopleLinks(managedResult.data);
+
+      const storedPerspective = getResponsiblePerspective();
+      if (
+        storedPerspective &&
+        !managedResult.data.some((link) => link.managed_pessoa_id === storedPerspective.pessoaId)
+      ) {
+        clearResponsiblePerspective();
+        setActivePerspective(null);
+      }
     }
 
     loadUserProfileMenuData();
@@ -136,6 +172,10 @@ export function UserProfileMenu({ variant = 'avatar' }: UserProfileMenuProps) {
       cancelled = true;
     };
   }, [user]);
+
+  useEffect(() => {
+    return subscribeResponsiblePerspective(setActivePerspective);
+  }, []);
 
   useEffect(() => {
     applyTreePalette(treeColorPalette);
@@ -154,6 +194,7 @@ export function UserProfileMenu({ variant = 'avatar' }: UserProfileMenuProps) {
   }, [open]);
 
   const displayName = String(
+    activePerspective?.nomeCompleto ||
     linkedPerson?.nome_completo ||
     profile?.nome_exibicao ||
     user?.user_metadata?.nome_exibicao ||
@@ -196,8 +237,52 @@ export function UserProfileMenu({ variant = 'avatar' }: UserProfileMenuProps) {
     navigate(path, { replace: false, flushSync: true });
   };
 
+  const navigateToPerspectiveTree = (pessoaId?: string) => {
+    const treePath = location.pathname === '/mapa-familiar-horizontal' ? '/mapa-familiar-horizontal' : '/mapa-familiar';
+    const params = new URLSearchParams(location.search);
+
+    if (pessoaId) {
+      params.set('pessoa', pessoaId);
+    } else {
+      params.delete('pessoa');
+    }
+
+    const query = params.toString();
+    navigate(`${treePath}${query ? `?${query}` : ''}`, { replace: false, flushSync: true });
+  };
+
+  const handlePerspectiveChange = (pessoaId: string) => {
+    if (!pessoaId) {
+      clearResponsiblePerspective();
+      setActivePerspective(null);
+      clearTreeDataCache();
+      setOpen(false);
+      navigateToPerspectiveTree();
+      return;
+    }
+
+    const selectedLink = managedPeopleLinks.find((link) => link.managed_pessoa_id === pessoaId);
+    const selectedPerson = selectedLink?.managed_pessoa;
+
+    if (!selectedPerson) return;
+
+    const nextPerspective: ResponsiblePerspective = {
+      pessoaId: selectedPerson.id,
+      nomeCompleto: selectedPerson.nome_completo,
+      falecido: isPersonDeceased(selectedPerson),
+      role: selectedLink.responsibility_role ?? null,
+    };
+
+    setResponsiblePerspective(nextPerspective);
+    setActivePerspective(nextPerspective);
+    clearTreeDataCache();
+    setOpen(false);
+    navigateToPerspectiveTree(selectedPerson.id);
+  };
+
   const handleSignOut = async () => {
     setOpen(false);
+    clearResponsiblePerspective();
     clearTreeDataCache();
     await signOut();
     navigate('/', { replace: true });
@@ -401,6 +486,38 @@ export function UserProfileMenu({ variant = 'avatar' }: UserProfileMenuProps) {
                     Painel Admin
                   </button>
                 )}
+
+                {managedPeopleLinks.length > 0 ? (
+                  <div className="mt-2 rounded-2xl border border-gray-200 bg-gray-50 p-3">
+                    <div className="mb-2 flex items-center gap-2 text-sm font-bold text-gray-900">
+                      <UserCheck className="h-4 w-4 text-blue-700" />
+                      Seus responsáveis
+                    </div>
+                    <select
+                      value={activePerspective?.pessoaId ?? ''}
+                      onChange={(event) => handlePerspectiveChange(event.target.value)}
+                      className="w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm font-semibold text-gray-800 outline-none focus:border-blue-300 focus:ring-2 focus:ring-blue-100"
+                    >
+                      <option value="">Minha visualização</option>
+                      {managedPeopleLinks.map((link) => {
+                        const managedPerson = link.managed_pessoa;
+                        if (!managedPerson) return null;
+                        const deceased = isPersonDeceased(managedPerson);
+
+                        return (
+                          <option key={link.id} value={managedPerson.id}>
+                            {managedPerson.nome_completo}{deceased ? ' — memorial' : ''}
+                          </option>
+                        );
+                      })}
+                    </select>
+                    {activePerspective?.falecido ? (
+                      <p className="mt-2 text-xs leading-5 text-gray-600">
+                        Perfil memorial: criação de conteúdo será bloqueada. Edição de dados e arquivos permanece permitida conforme permissões.
+                      </p>
+                    ) : null}
+                  </div>
+                ) : null}
 
                 <div className="my-2 border-t border-gray-100" />
 
