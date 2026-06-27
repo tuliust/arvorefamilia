@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { PawPrint, Pencil, Plus, RefreshCcw } from 'lucide-react';
+import { ImagePlus, PawPrint, Pencil, Plus, RefreshCcw } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
@@ -27,6 +27,7 @@ type PetFormState = {
   localNascimento: string;
   falecido: boolean;
   dataFalecimento: string;
+  fotoPrincipalUrl: string;
   outroTutorId: string;
 };
 
@@ -45,6 +46,7 @@ const emptyPetForm: PetFormState = {
   localNascimento: '',
   falecido: false,
   dataFalecimento: '',
+  fotoPrincipalUrl: '',
   outroTutorId: '',
 };
 
@@ -77,7 +79,6 @@ function usePetEditorPortalHost() {
     };
 
     sync();
-
     const observer = new MutationObserver(sync);
     observer.observe(document.body, { childList: true, subtree: true });
 
@@ -109,6 +110,15 @@ function normalizeDateInput(value: string) {
   }
 
   return trimmed;
+}
+
+function readImageAsDataUrl(file: File) {
+  return new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result ?? ''));
+    reader.onerror = () => reject(new Error('Não foi possível ler a imagem.'));
+    reader.readAsDataURL(file);
+  });
 }
 
 function getTutorRelationshipType(tutor?: Pessoa | null): TipoRelacionamento {
@@ -150,6 +160,7 @@ function petToForm(pet: Pessoa): PetFormState {
     localNascimento: normalizeText(pet.local_nascimento),
     falecido: pet.falecido === true || Boolean(normalizeText(pet.data_falecimento)),
     dataFalecimento: normalizeText(pet.data_falecimento),
+    fotoPrincipalUrl: normalizeText(pet.foto_principal_url),
     outroTutorId: '',
   };
 }
@@ -163,6 +174,7 @@ function buildPetPayload(form: PetFormState, previousPet?: Pessoa | null): Omit<
     falecido: form.falecido,
     humano_ou_pet: 'Pet',
     genero: 'pet',
+    foto_principal_url: normalizeText(form.fotoPrincipalUrl) || undefined,
     curiosidades: mergeBreedIntoCuriosities(previousPet?.curiosidades, form.raca),
   };
 }
@@ -252,6 +264,23 @@ function MeusVinculosPetEditorSection() {
     setForm(emptyPetForm);
   }
 
+  async function handlePhotoChange(event: React.ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      toast.error('Selecione um arquivo de imagem.');
+      return;
+    }
+
+    try {
+      const dataUrl = await readImageAsDataUrl(file);
+      updateForm('fotoPrincipalUrl', dataUrl);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Não foi possível carregar a foto.');
+    }
+  }
+
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
@@ -333,7 +362,7 @@ function MeusVinculosPetEditorSection() {
           <div className="min-w-0">
             <h2 className="break-words text-lg font-semibold text-gray-950">Cadastro e edição de pets</h2>
             <p className="mt-1 max-w-3xl break-words text-sm text-gray-600">
-              Cadastre pets com nome, raça, nascimento e tutor. Se houver cônjuge cadastrado, ele também pode ser indicado como tutor.
+              Cadastre pets com nome, nascimento, raça, local, falecimento e foto.
             </p>
           </div>
         </div>
@@ -362,15 +391,24 @@ function MeusVinculosPetEditorSection() {
               />
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="meus-vinculos-pet-raca">Raça</Label>
-              <Input
-                id="meus-vinculos-pet-raca"
-                value={form.raca}
-                onChange={(event) => updateForm('raca', event.target.value)}
-                placeholder="Ex: SRD, Poodle, Siamês"
-                disabled={!canEdit || saving}
-              />
+            <div className="space-y-2 sm:col-span-2">
+              <Label htmlFor="meus-vinculos-pet-foto">Foto do pet</Label>
+              <div className="flex min-w-0 flex-col gap-3 rounded-xl border border-gray-200 bg-white p-3 sm:flex-row sm:items-center">
+                <span className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-blue-50 text-blue-700 ring-1 ring-blue-100">
+                  {form.fotoPrincipalUrl ? (
+                    <img src={form.fotoPrincipalUrl} alt={form.nome || 'Foto do pet'} className="h-full w-full object-cover" />
+                  ) : (
+                    <ImagePlus className="h-6 w-6" />
+                  )}
+                </span>
+                <Input
+                  id="meus-vinculos-pet-foto"
+                  type="file"
+                  accept="image/*"
+                  onChange={handlePhotoChange}
+                  disabled={!canEdit || saving}
+                />
+              </div>
             </div>
 
             <div className="space-y-2">
@@ -380,6 +418,17 @@ function MeusVinculosPetEditorSection() {
                 value={form.dataNascimento}
                 onChange={(event) => updateForm('dataNascimento', event.target.value)}
                 placeholder="DD/MM/AAAA ou AAAA"
+                disabled={!canEdit || saving}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="meus-vinculos-pet-raca">Raça</Label>
+              <Input
+                id="meus-vinculos-pet-raca"
+                value={form.raca}
+                onChange={(event) => updateForm('raca', event.target.value)}
+                placeholder="Ex: SRD, Poodle, Siamês"
                 disabled={!canEdit || saving}
               />
             </div>
@@ -418,27 +467,6 @@ function MeusVinculosPetEditorSection() {
               </div>
             )}
 
-            <div className="space-y-2 sm:col-span-2">
-              <Label htmlFor="meus-vinculos-pet-outro-tutor">Outro tutor</Label>
-              <select
-                id="meus-vinculos-pet-outro-tutor"
-                value={form.outroTutorId}
-                onChange={(event) => updateForm('outroTutorId', event.target.value)}
-                className="flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 ring-offset-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60"
-                disabled={!canEdit || saving || Boolean(form.id)}
-              >
-                <option value="">Apenas o usuário</option>
-                {spouses.map((spouse) => (
-                  <option key={spouse.id} value={spouse.id}>{spouse.nome_completo}</option>
-                ))}
-              </select>
-              {form.id ? (
-                <p className="text-xs text-gray-500">A troca de tutor deve ser feita pelo painel de vínculos existente.</p>
-              ) : spouses.length === 0 ? (
-                <p className="text-xs text-gray-500">Cadastre um cônjuge para habilitar outro tutor.</p>
-              ) : null}
-            </div>
-
             <div className="flex flex-col gap-2 sm:col-span-2 sm:flex-row">
               <Button type="submit" disabled={!canEdit || saving} className="w-full sm:w-auto">
                 {form.id ? <Pencil className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
@@ -471,8 +499,12 @@ function MeusVinculosPetEditorSection() {
                     className="flex w-full min-w-0 items-start gap-3 rounded-xl border border-gray-200 bg-white p-3 text-left transition hover:border-blue-200 hover:bg-blue-50/40"
                     disabled={saving}
                   >
-                    <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-blue-50 text-blue-700 ring-1 ring-blue-100">
-                      <PawPrint className="h-4 w-4" />
+                    <span className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full bg-blue-50 text-blue-700 ring-1 ring-blue-100">
+                      {pet.foto_principal_url ? (
+                        <img src={pet.foto_principal_url} alt={pet.nome_completo} className="h-full w-full object-cover" />
+                      ) : (
+                        <PawPrint className="h-4 w-4" />
+                      )}
                     </span>
                     <span className="min-w-0">
                       <span className="block break-words text-sm font-semibold text-gray-950">{pet.nome_completo}</span>
