@@ -11,6 +11,7 @@ export interface PersonResponsibleLinkRecord {
   created_at?: string | null;
   updated_at?: string | null;
   responsible_pessoa?: Pessoa | null;
+  managed_pessoa?: Pessoa | null;
 }
 
 function isMissingTableError(error: { code?: string; message?: string } | null | undefined) {
@@ -27,6 +28,11 @@ function isMissingTableError(error: { code?: string; message?: string } | null |
 const RESPONSIBLE_LINK_SELECT = `
   *,
   responsible_pessoa:pessoas!person_responsible_links_responsible_pessoa_id_fkey(*)
+`;
+
+const MANAGED_LINK_SELECT = `
+  *,
+  managed_pessoa:pessoas!person_responsible_links_managed_pessoa_id_fkey(*)
 `;
 
 export async function adminListPersonResponsibleLinks() {
@@ -50,6 +56,38 @@ export async function adminListPersonResponsibleLinks() {
       ...link,
       responsible_pessoa: (link as any).responsible_pessoa ?? null,
     })),
+  };
+}
+
+export async function listManagedPeopleForResponsiblePerson(responsiblePessoaId: string) {
+  const { data, error } = await supabase
+    .from('person_responsible_links')
+    .select(MANAGED_LINK_SELECT)
+    .eq('responsible_pessoa_id', responsiblePessoaId)
+    .order('created_at', { ascending: true });
+
+  if (error) {
+    if (isMissingTableError(error)) {
+      return { error: undefined, data: [] as PersonResponsibleLinkRecord[] };
+    }
+
+    return { error: error.message, data: [] as PersonResponsibleLinkRecord[] };
+  }
+
+  const links = ((data || []) as PersonResponsibleLinkRecord[])
+    .map((link) => ({
+      ...link,
+      managed_pessoa: (link as any).managed_pessoa ?? null,
+    }))
+    .filter((link) => Boolean(link.managed_pessoa));
+
+  return {
+    error: undefined,
+    data: links.sort((left, right) => {
+      const leftName = left.managed_pessoa?.nome_completo ?? '';
+      const rightName = right.managed_pessoa?.nome_completo ?? '';
+      return leftName.localeCompare(rightName, 'pt-BR');
+    }),
   };
 }
 
