@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Clock, Diff, Globe2, History, ImageIcon, Link2, Monitor, Palette, Save, Search, Settings, Smartphone, Sparkles, Trash2, Type, Upload } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '../../components/ui/button';
+import { ConfirmDialog } from '../../components/ConfirmDialog';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { DEFAULT_MEMBER_HEADER_ACTIONS, MemberPageHeader } from '../../components/layout/MemberPageHeader';
 import { Input } from '../../components/ui/input';
@@ -86,6 +87,7 @@ export function AdminHomeSettings() {
   const [auditLoading, setAuditLoading] = useState(false);
   const [previewMode, setPreviewMode] = useState<PreviewMode>('desktop');
   const [scheduledPublishAt, setScheduledPublishAt] = useState('');
+  const [resetDialogOpen, setResetDialogOpen] = useState(false);
 
   const draftDiff = useMemo(() => getSiteVisualSettingsDiff(settings), [settings]);
 
@@ -260,9 +262,14 @@ export function AdminHomeSettings() {
   };
 
   const resetSettings = () => {
-    if (!window.confirm('Restaurar os textos, cores e links padrão? As imagens enviadas serão removidas desta configuração.')) return;
+    if (saving || loading) return;
+    setResetDialogOpen(true);
+  };
+
+  const confirmResetSettings = () => {
     setSettings(DEFAULT_SITE_VISUAL_SETTINGS);
-    toast.info('Configuração restaurada localmente. Publique para alterar a versão pública.');
+    setResetDialogOpen(false);
+    toast.info('Configura??o restaurada localmente. Publique para alterar a vers?o p?blica.');
   };
 
   return (
@@ -592,6 +599,19 @@ export function AdminHomeSettings() {
           </TabsContent>
         </Tabs>
       </main>
+
+      <ConfirmDialog
+        open={resetDialogOpen}
+        onOpenChange={(open) => {
+          if (!saving && !loading) setResetDialogOpen(open);
+        }}
+        title="Restaurar padr?o"
+        description="Restaurar os textos, cores e links padr?o? As imagens enviadas ser?o removidas desta configura??o."
+        confirmText="Restaurar"
+        cancelText="Cancelar"
+        onConfirm={confirmResetSettings}
+        variant="warning"
+      />
     </div>
   );
 }

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Pessoa, Relacionamento, TipoRelacionamento, SubtipoRelacionamento } from '../types';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
+import { ConfirmDialog } from './ConfirmDialog';
 import { Input } from './ui/input';
 import { toast } from 'sonner';
 import {
@@ -76,6 +77,7 @@ export function RelacionamentoManager({
   const [conjugalForm, setConjugalForm] = useState<MarriageDetailsForm>(() => createEmptyMarriageDetails());
   const [marriageDetailsByRelationshipId, setMarriageDetailsByRelationshipId] = useState<Record<string, MarriageDetailsForm>>({});
   const [savingMarriageId, setSavingMarriageId] = useState<string | null>(null);
+  const [relacionamentoParaRemover, setRelacionamentoParaRemover] = useState<RelacionamentoComPessoa | null>(null);
 
   useEffect(() => {
     loadPessoas();
@@ -246,9 +248,15 @@ export function RelacionamentoManager({
     }
   };
 
-  const handleRemoverRelacionamento = async (rel: RelacionamentoComPessoa) => {
-    if (!confirm(`Remover ${getTipoLabel(rel.tipo)} "${rel.pessoa.nome_completo}"?`)) return;
+  const handleRemoverRelacionamento = (rel: RelacionamentoComPessoa) => {
+    if (loading) return;
+    setRelacionamentoParaRemover(rel);
+  };
 
+  const confirmRemoverRelacionamento = async () => {
+    if (!relacionamentoParaRemover || loading) return;
+
+    const rel = relacionamentoParaRemover;
     setLoading(true);
     try {
       if (rel.relacionamentoId) {
@@ -263,6 +271,7 @@ export function RelacionamentoManager({
       }
 
       setRelacionamentos(prev => prev.filter(r => !(r.tipo === rel.tipo && r.pessoa.id === rel.pessoa.id)));
+      setRelacionamentoParaRemover(null);
       onChange?.();
     } catch (error) {
       console.error('Erro ao remover relacionamento:', error);
@@ -561,6 +570,24 @@ export function RelacionamentoManager({
           </div>
         )}
       </CardContent>
+
+      <ConfirmDialog
+        open={Boolean(relacionamentoParaRemover)}
+        onOpenChange={(open) => {
+          if (!open && !loading) setRelacionamentoParaRemover(null);
+        }}
+        title="Remover relacionamento"
+        description={
+          relacionamentoParaRemover
+            ? `Remover ${getTipoLabel(relacionamentoParaRemover.tipo)} "${relacionamentoParaRemover.pessoa.nome_completo}"? Esta acao nao pode ser desfeita.`
+            : 'Remover este relacionamento? Esta acao nao pode ser desfeita.'
+        }
+        confirmText="Remover"
+        cancelText="Cancelar"
+        onConfirm={confirmRemoverRelacionamento}
+        variant="danger"
+        loading={loading}
+      />
     </Card>
   );
 }
