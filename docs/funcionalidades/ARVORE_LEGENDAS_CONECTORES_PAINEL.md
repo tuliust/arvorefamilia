@@ -1,6 +1,6 @@
 # Árvore, legendas, conectores e painel
 
-> Última revisão: 2026-06-23
+> Última revisão: 2026-06-26
 > Escopo: painéis do mapa familiar, conectores, legendas e seletor de visualização.
 > Status: canônico.
 
@@ -45,7 +45,8 @@ As legendas devem explicar visualmente:
 - familiares diretos;
 - vínculos por casamento ou relação;
 - pets quando presentes;
-- estados visuais de destaque, seleção ou foco.
+- estados visuais de destaque, seleção ou foco;
+- status conjugais conforme `funcionalidades/STATUS_CONJUGAL.md`, usando símbolos e padrões de linha para união ativa, viuvez, separação, divórcio, união inativa e união histórica.
 
 ## Conectores
 
@@ -56,6 +57,7 @@ Regras gerais:
 - pais conectam à pessoa central;
 - filhos e descendentes devem ficar agrupados de forma legível;
 - cônjuges e vínculos relacionais devem usar distinção visual sem competir com laços sanguíneos;
+- conectores conjugais devem refletir o status inferido do vínculo sem alterar a leitura geracional principal;
 - conectores mobile não devem depender de documentos antigos de rodada.
 
 ## Edição de dados do usuário
@@ -82,7 +84,8 @@ Antes de alterar árvore, painel ou conectores, validar:
 - `/meus-dados`;
 - redirect legado de `/minha-arvore/editar` para `/meus-dados`;
 - visualização desktop e mobile;
-- dados com pessoa central, pais, cônjuge, filhos, irmãos e pets.
+- dados com pessoa central, pais, cônjuge, filhos, irmãos e pets;
+- legenda e conectores de status conjugais.
 
 ## Regra de manutenção
 
