@@ -6,7 +6,6 @@ import { Button } from '../../components/ui/button';
 import { ConfirmDialog } from '../../components/ConfirmDialog';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import {
-  adminCreateUserPersonLink,
   adminListAllUserPersonLinks,
   adminListProfilesForLinking,
   type AdminLinkableProfile,
@@ -17,6 +16,11 @@ import {
   adminListProfileControlRequests,
   adminReviewProfileControlRequest,
 } from '../../services/profileControlRequestService';
+import {
+  adminCreatePersonResponsibleLink,
+  adminListPersonResponsibleLinks,
+  type PersonResponsibleLinkRecord,
+} from '../../services/personResponsibleLinksService';
 import { obterTodasPessoas } from '../../services/dataService';
 import { Pessoa, UserPersonPermissionRole } from '../../types';
 import {
@@ -39,6 +43,7 @@ type ManageableProfileCandidate = {
   reasonLabel: string;
   managerCount: number;
   managers: LinkRecordWithPessoa[];
+  responsiblePeople: PersonResponsibleLinkRecord[];
   pendingRequestCount: number;
 };
 
@@ -80,10 +85,24 @@ function buildProfileLabel(profile?: AdminLinkableProfile, fallback?: string) {
   return profile?.nome_exibicao || profile?.email || fallback || 'Usuário responsável';
 }
 
+function buildResponsibleLabels(candidate: ManageableProfileCandidate, profilesById: Map<string, AdminLinkableProfile>) {
+  const userManagerLabels = candidate.managers.map((manager) => buildProfileLabel(
+    profilesById.get(manager.user_id),
+    manager.user_id,
+  ));
+
+  const responsiblePersonLabels = candidate.responsiblePeople.map((link) => (
+    link.responsible_pessoa?.nome_completo ?? link.responsible_pessoa_id
+  ));
+
+  return [...userManagerLabels, ...responsiblePersonLabels];
+}
+
 export function AdminManagedProfilesPanel() {
   const [people, setPeople] = useState<Pessoa[]>([]);
   const [profiles, setProfiles] = useState<AdminLinkableProfile[]>([]);
   const [links, setLinks] = useState<LinkRecordWithPessoa[]>([]);
+  const [responsibleLinks, setResponsibleLinks] = useState<PersonResponsibleLinkRecord[]>([]);
   const [requests, setRequests] = useState<AdminProfileControlRequestRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [reviewingRequestId, setReviewingRequestId] = useState<string | null>(null);
@@ -94,11 +113,6 @@ export function AdminManagedProfilesPanel() {
   const profilesById = useMemo(
     () => new Map(profiles.map((profile) => [profile.id, profile])),
     [profiles]
-  );
-
-  const peopleById = useMemo(
-    () => new Map(people.map((person) => [person.id, person])),
-    [people]
   );
 
   const pendingRequests = useMemo(
@@ -115,6 +129,15 @@ export function AdminManagedProfilesPanel() {
     }, new Map());
   }, [links]);
 
+  const responsibleLinksByPessoaId = useMemo(() => {
+    return responsibleLinks.reduce<Map<string, PersonResponsibleLinkRecord[]>>((map, link) => {
+      const current = map.get(link.managed_pessoa_id) ?? [];
+      current.push(link);
+      map.set(link.managed_pessoa_id, current);
+      return map;
+    }, new Map());
+  }, [responsibleLinks]);
+
   const pendingRequestCountByPessoaId = useMemo(() => {
     return pendingRequests.reduce<Map<string, number>>((map, request) => {
       map.set(request.target_pessoa_id, (map.get(request.target_pessoa_id) ?? 0) + 1);
@@ -129,13 +152,15 @@ export function AdminManagedProfilesPanel() {
         if (!eligibility.eligible || !eligibility.reason) return null;
 
         const managers = (linksByPessoaId.get(person.id) ?? []).filter((link) => link.can_edit !== false);
+        const responsiblePeople = responsibleLinksByPessoaId.get(person.id) ?? [];
 
         return {
           person,
           reason: eligibility.reason,
           reasonLabel: getProfileEligibilityReasonLabel(eligibility.reason),
-          managerCount: managers.length,
+          managerCount: managers.length + responsiblePeople.length,
           managers,
+          responsiblePeople,
           pendingRequestCount: pendingRequestCountByPessoaId.get(person.id) ?? 0,
         };
       })
@@ -148,32 +173,36 @@ export function AdminManagedProfilesPanel() {
         if (a.pendingRequestCount !== b.pendingRequestCount) return b.pendingRequestCount - a.pendingRequestCount;
         return a.person.nome_completo.localeCompare(b.person.nome_completo, 'pt-BR');
       }) as ManageableProfileCandidate[];
-  }, [linksByPessoaId, pendingRequestCountByPessoaId, people]);
+  }, [linksByPessoaId, pendingRequestCountByPessoaId, people, responsibleLinksByPessoaId]);
 
   const loadData = async () => {
     try {
       setLoading(true);
-      const [peopleResult, profilesResult, linksResult, requestsResult] = await Promise.all([
+      const [peopleResult, profilesResult, linksResult, requestsResult, responsibleLinksResult] = await Promise.all([
         obterTodasPessoas(),
         adminListProfilesForLinking(),
         adminListAllUserPersonLinks(),
         adminListProfileControlRequests(),
+        adminListPersonResponsibleLinks(),
       ]);
 
       if (profilesResult.error) throw new Error(profilesResult.error);
       if (linksResult.error) throw new Error(linksResult.error);
       if (requestsResult.error) throw new Error(requestsResult.error);
+      if (responsibleLinksResult.error) throw new Error(responsibleLinksResult.error);
 
       setPeople(peopleResult);
       setProfiles(profilesResult.data);
       setLinks(linksResult.data);
       setRequests(requestsResult.data);
+      setResponsibleLinks(responsibleLinksResult.data);
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Não foi possível carregar perfis gerenciáveis.');
       setPeople([]);
       setProfiles([]);
       setLinks([]);
       setRequests([]);
+      setResponsibleLinks([]);
     } finally {
       setLoading(false);
     }
@@ -207,13 +236,10 @@ export function AdminManagedProfilesPanel() {
 
     try {
       setLinkingPessoaId(candidate.person.id);
-      const result = await adminCreateUserPersonLink({
-        userId: responsiblePessoaId,
-        pessoaId: candidate.person.id,
-        relacaoComPerfil: getRoleLabel(role),
-        principal: false,
-        canEdit: true,
-        permissionRole: role,
+      const result = await adminCreatePersonResponsibleLink({
+        managedPessoaId: candidate.person.id,
+        responsiblePessoaId,
+        responsibilityRole: getRoleLabel(role),
       });
 
       if (result.error) throw new Error(result.error);
@@ -375,6 +401,7 @@ export function AdminManagedProfilesPanel() {
                 const Icon = candidate.reason === 'deceased' ? Cross : Baby;
                 const selectedResponsibleId = selectedResponsibleByPessoaId[candidate.person.id] ?? '';
                 const linking = linkingPessoaId === candidate.person.id;
+                const responsibleLabels = buildResponsibleLabels(candidate, profilesById);
 
                 return (
                   <div key={candidate.person.id} className="rounded-lg border border-gray-200 bg-white p-4">
@@ -399,12 +426,9 @@ export function AdminManagedProfilesPanel() {
                           ) : null}
                         </div>
 
-                        {candidate.managers.length > 0 ? (
+                        {responsibleLabels.length > 0 ? (
                           <p className="break-words text-xs text-gray-500">
-                            Responsáveis: {candidate.managers.map((manager) => buildProfileLabel(
-                              profilesById.get(manager.user_id),
-                              peopleById.get(manager.user_id)?.nome_completo ?? manager.user_id,
-                            )).join(', ')}
+                            Responsáveis: {responsibleLabels.join(', ')}
                           </p>
                         ) : null}
                       </div>
