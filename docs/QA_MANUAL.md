@@ -44,6 +44,14 @@ Confirmar que as alterações documentais ficaram restritas aos documentos canô
 - Quando o fluxo abrir janela/aba dedicada para salvar ou imprimir, a página principal deve permanecer aberta e preservada.
 - O overlay de exportação não deve aparecer no arquivo exportado.
 - Mobile não deve abrir painéis persistentes por padrão.
+- Vínculos conjugais devem exibir diferenciação por status usando símbolo e padrão de linha, não apenas cor.
+- Vínculo ativo deve aparecer com símbolo `♥` e linha sólida.
+- Vínculo separado deve aparecer com símbolo `∕` e linha tracejada.
+- Vínculo divorciado deve aparecer com símbolo `×` e linha tracejada.
+- Vínculo inativo deve aparecer com símbolo `…` e linha pontilhada.
+- Vínculo com viuvez deve aparecer com símbolo `◌` e linha discreta.
+- União histórica deve aparecer com símbolo `◇` e linha discreta.
+- A legenda deve conter seção de status conjugais com os mesmos símbolos e padrões de linha.
 
 ### `/mapa-familiar-horizontal`
 
@@ -171,12 +179,26 @@ Validar desktop e mobile:
 - Exibe perfil da pessoa.
 - Respeita query `voltar` quando fornecida.
 - Não deve expor dados bloqueados por privacidade.
+- Relacionamento atual deve agrupar vínculos conjugais com status `active`.
+- Relacionamentos anteriores devem agrupar vínculos `separated`, `divorced` e `inactive`.
+- Uniões históricas devem agrupar vínculos `widowed` e `historical`.
+- Pais, filhos, pets e irmãos devem preservar o comportamento anterior.
 
 ## Área administrativa
 
 - `/admin/login` deve permanecer público.
 - Demais rotas `/admin/*` devem exigir `ProtectedRoute`.
 - Validar dashboard, pessoas, relacionamentos, importação, diagnóstico, integridade, atividades, notificações, dúvidas e solicitações de vínculos.
+
+### `/admin/relacionamentos/novo`
+
+- Tipo `Cônjuge` com subtipo `Casamento`, `União` ou `União estável`, sem separação e com relacionamento ativo, deve inferir `União ativa`.
+- Subtipo `Separado` deve desmarcar e desabilitar `Relacionamento ativo`.
+- Data de separação preenchida deve desmarcar e desabilitar `Relacionamento ativo`.
+- Local de separação sem data e sem subtipo `Separado` deve bloquear envio.
+- O formulário deve exibir status inferido antes de salvar.
+- Trocar de `Cônjuge` para outro tipo deve limpar campos conjugais.
+- Salvar relacionamento não conjugal deve preservar o comportamento anterior.
 
 ### `/admin/duvidas`
 
