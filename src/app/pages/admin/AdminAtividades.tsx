@@ -4,7 +4,6 @@ import { Button } from '../../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { Input } from '../../components/ui/input';
 import { DEFAULT_MEMBER_HEADER_ACTIONS, MemberPageHeader } from '../../components/layout/MemberPageHeader';
-import { supabase } from '../../lib/supabaseClient';
 import {
   ACTIVITY_ACTION_LABELS,
   ACTIVITY_ENTITY_LABELS,
@@ -32,6 +31,13 @@ const INITIAL_FILTERS: ActivityFilters = {
   createdTo: '',
 };
 
+const ACTIVITY_CLEAR_CUTOFF_KEY = 'arvorefamilia:admin-activity-clear-cutoff';
+
+function getStoredActivityClearCutoff() {
+  if (typeof window === 'undefined') return '';
+  return window.localStorage.getItem(ACTIVITY_CLEAR_CUTOFF_KEY) || '';
+}
+
 function formatActivityDate(value?: string) {
   if (!value) return 'Data não informada';
   return new Intl.DateTimeFormat('pt-BR', {
@@ -54,26 +60,28 @@ function normalizeRelationshipWords(value: string) {
     .replace(/\bconjuges\b/gi, 'cônjuges');
 }
 
-function buildServiceFilters(filters: ActivityFilters): ActivityLogFilters {
+function getEffectiveCreatedFrom(filters: ActivityFilters, clearCutoff: string): string | undefined {
+  const filterFrom = filters.createdFrom ? new Date(`${filters.createdFrom}T00:00:00`).toISOString() : undefined;
+  if (!clearCutoff) return filterFrom;
+
+  const clearTime = new Date(clearCutoff).getTime();
+  if (Number.isNaN(clearTime)) return filterFrom;
+  if (!filterFrom) return clearCutoff;
+
+  const filterTime = new Date(filterFrom).getTime();
+  return filterTime > clearTime ? filterFrom : clearCutoff;
+}
+
+function buildServiceFilters(filters: ActivityFilters, clearCutoff = ''): ActivityLogFilters {
   return {
     limit: 100,
     action: filters.action === 'all' ? undefined : filters.action,
     entity_type: filters.entityType === 'all' ? undefined : filters.entityType,
     actor_query: filters.actorQuery.trim() || undefined,
     entity_query: filters.entityQuery.trim() || undefined,
-    created_from: filters.createdFrom ? new Date(`${filters.createdFrom}T00:00:00`).toISOString() : undefined,
+    created_from: getEffectiveCreatedFrom(filters, clearCutoff),
     created_to: filters.createdTo ? new Date(`${filters.createdTo}T23:59:59`).toISOString() : undefined,
   };
-}
-
-function applyDeleteFilters(query: any, filters: ActivityFilters) {
-  if (filters.action !== 'all') query = query.eq('action', filters.action);
-  if (filters.entityType !== 'all') query = query.eq('entity_type', filters.entityType);
-  if (filters.actorQuery.trim()) query = query.ilike('actor_display_name', `%${filters.actorQuery.trim()}%`);
-  if (filters.entityQuery.trim()) query = query.ilike('entity_label', `%${filters.entityQuery.trim()}%`);
-  if (filters.createdFrom) query = query.gte('created_at', new Date(`${filters.createdFrom}T00:00:00`).toISOString());
-  if (filters.createdTo) query = query.lte('created_at', new Date(`${filters.createdTo}T23:59:59`).toISOString());
-  return query;
 }
 
 function ActivityRow({ activity }: { activity: ActivityLog }) {
@@ -102,6 +110,7 @@ function ActivityRow({ activity }: { activity: ActivityLog }) {
 export function AdminAtividades() {
   const [activities, setActivities] = useState<ActivityLog[]>([]);
   const [filters, setFilters] = useState<ActivityFilters>(INITIAL_FILTERS);
+  const [activityClearCutoff, setActivityClearCutoff] = useState(getStoredActivityClearCutoff);
   const [loading, setLoading] = useState(true);
 
   const activeFiltersCount = useMemo(() => {
@@ -115,10 +124,10 @@ export function AdminAtividades() {
     ].filter(Boolean).length;
   }, [filters]);
 
-  const loadActivities = async (nextFilters = filters) => {
+  const loadActivities = async (nextFilters = filters, nextClearCutoff = activityClearCutoff) => {
     try {
       setLoading(true);
-      const data = await listActivityLogs(buildServiceFilters(nextFilters));
+      const data = await listActivityLogs(buildServiceFilters(nextFilters, nextClearCutoff));
       setActivities(data);
     } finally {
       setLoading(false);
@@ -126,7 +135,7 @@ export function AdminAtividades() {
   };
 
   useEffect(() => {
-    loadActivities(INITIAL_FILTERS);
+    loadActivities(INITIAL_FILTERS, activityClearCutoff);
   }, []);
 
   const handleApplyFilters = () => {
@@ -140,34 +149,15 @@ export function AdminAtividades() {
 
   const handleClearActivities = async () => {
     const confirmed = window.confirm(
-      activeFiltersCount > 0
-        ? 'Limpar permanentemente as atividades filtradas? Esta ação não pode ser desfeita.'
-        : 'Limpar permanentemente todo o histórico de atividades? Esta ação não pode ser desfeita.'
+      'Limpar a lista de atividades exibida? Os registros serão mantidos no banco de dados, e apenas novas atividades aparecerão a partir deste momento.'
     );
 
     if (!confirmed) return;
 
-    try {
-      setLoading(true);
-      const deleteQuery = applyDeleteFilters(
-        supabase
-          .from('activity_logs')
-          .delete({ count: 'exact' })
-          .not('id', 'is', null),
-        filters
-      );
-      const { error } = await deleteQuery;
-
-      if (error) throw error;
-
-      const data = await listActivityLogs(buildServiceFilters(filters));
-      setActivities(data);
-    } catch (error) {
-      console.error('Erro ao limpar histórico de atividades:', error);
-      window.alert('Não foi possível limpar o histórico de atividades.');
-    } finally {
-      setLoading(false);
-    }
+    const nextClearCutoff = new Date().toISOString();
+    window.localStorage.setItem(ACTIVITY_CLEAR_CUTOFF_KEY, nextClearCutoff);
+    setActivityClearCutoff(nextClearCutoff);
+    setActivities([]);
   };
 
   return (
@@ -240,7 +230,7 @@ export function AdminAtividades() {
               </label>
 
               <label className="min-w-0 space-y-1 text-sm font-medium text-gray-700">
-                Usuário Autor
+                Autor
                 <Input
                   value={filters.actorQuery}
                   onChange={(event) =>
