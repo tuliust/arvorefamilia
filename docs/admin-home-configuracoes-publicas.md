@@ -1,5 +1,9 @@
 # /admin/home — configurações visuais e páginas públicas
 
+> Última revisão: 2026-06-27  
+> Escopo: `/admin/home`, configurações públicas, publicação, rascunho, agendamento, auditoria e salvamento por abas.  
+> Status: canônico.
+
 ## Objetivo
 
 A área `/admin/home` centraliza a gestão visual e editorial das páginas públicas do projeto, incluindo `/entrar`, `/termos`, `/privacidade` e `/duvidas`.
@@ -15,13 +19,15 @@ Esta frente cobre:
 - rascunho, publicação manual e publicação agendada;
 - auditoria de alterações visuais;
 - diff detalhado campo a campo para registros de auditoria;
-- aplicação progressiva do tema público em páginas públicas.
+- aplicação progressiva do tema público em páginas públicas;
+- salvamento controlado das abas após carregamento das configurações.
 
 ## Arquivos principais
 
 | Arquivo | Função |
 |---|---|
 | `src/app/pages/admin/AdminHomeSettings.tsx` | Interface administrativa de configurações públicas, histórico e visualização detalhada de alterações. |
+| `src/app/pages/admin/AdminHomeSettingsWithSaveBar.tsx` | Wrapper/composição atual com barra ou ação de salvar quando aplicável. |
 | `src/app/services/siteVisualSettingsService.ts` | Leitura, normalização, salvamento, rascunho, publicação e diff. |
 | `src/app/services/siteVisualSettingsAuditService.ts` | Listagem e criação de registros de auditoria. |
 | `src/app/services/siteVisualSettingsAuditDiffService.ts` | Cliente RPC para consultar diferenças campo a campo por registro de auditoria. |
@@ -101,6 +107,18 @@ Uso na interface:
 ```
 
 A abertura mostra tabela campo a campo com coluna `Antes` e `Depois` para o registro selecionado.
+
+## Salvamento de alterações
+
+A página deve permitir salvar alterações depois que as configurações terminarem de carregar.
+
+Regras:
+
+- o botão ou barra de salvar deve estar disponível nas abas quando houver alteração aplicável;
+- o toast `Aguarde o carregamento das configurações antes de salvar.` só pode bloquear ações enquanto o carregamento realmente estiver pendente;
+- depois do carregamento, o salvamento deve chamar o serviço correto e persistir os campos alterados;
+- salvar não deve quebrar rascunho, publicação manual ou agendamento;
+- estados de carregamento devem evitar clique duplo e feedback deve ser exibido por `toast`.
 
 ## Publicação manual
 
@@ -186,17 +204,20 @@ Secrets necessários no GitHub:
 
 ## QA mínimo
 
-1. Salvar rascunho e confirmar comparativo.
-2. Publicar rascunho manualmente.
-3. Agendar publicação para horário vencido.
-4. Clicar em `Executar vencidas` no admin.
-5. Confirmar que a publicação foi aplicada.
-6. Confirmar novo registro em `Histórico`.
-7. Testar workflow manual no GitHub Actions.
-8. Confirmar que chamada sem `x-cron-secret` falha quando o segredo está configurado.
-9. Conferir `/duvidas` com o mesmo background, rodapé público e links configurados em `/admin/home`.
-10. Executar a RPC `get_site_visual_settings_audit_changes` para um registro de auditoria e confirmar retorno campo a campo.
-11. Em `/admin/home`, abrir `Histórico`, clicar em `Ver alterações` e validar a tabela `Antes`/`Depois`.
+1. Salvar alteração simples em uma aba e recarregar para confirmar persistência.
+2. Confirmar que o botão/barra de salvar aparece quando há alteração aplicável.
+3. Confirmar que o toast de carregamento não bloqueia salvamento após dados carregados.
+4. Salvar rascunho e confirmar comparativo.
+5. Publicar rascunho manualmente.
+6. Agendar publicação para horário vencido.
+7. Clicar em `Executar vencidas` no admin.
+8. Confirmar que a publicação foi aplicada.
+9. Confirmar novo registro em `Histórico`.
+10. Testar workflow manual no GitHub Actions.
+11. Confirmar que chamada sem `x-cron-secret` falha quando o segredo está configurado.
+12. Conferir `/duvidas` com o mesmo background, rodapé público e links configurados em `/admin/home`.
+13. Executar a RPC `get_site_visual_settings_audit_changes` para um registro de auditoria e confirmar retorno campo a campo.
+14. Em `/admin/home`, abrir `Histórico`, clicar em `Ver alterações` e validar a tabela `Antes`/`Depois`.
 
 ## Limites conhecidos
 
