@@ -1,4 +1,4 @@
-import React, { FormEvent, useEffect, useMemo, useState } from 'react';
+﻿import React, { FormEvent, useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router';
 import {
   CheckCircle2,
@@ -14,6 +14,7 @@ import {
 import type { LucideIcon } from 'lucide-react';
 import { toast } from 'sonner';
 import { AppLink as Link } from '../../components/AppLink';
+import { ConfirmDialog } from '../../components/ConfirmDialog';
 import { Button } from '../../components/ui/button';
 import { Card, CardContent } from '../../components/ui/card';
 import { Textarea } from '../../components/ui/textarea';
@@ -328,6 +329,9 @@ export function ForumTopico() {
   const [erro, setErro] = useState('');
   const [admin, setAdmin] = useState(false);
   const [excluindoTopico, setExcluindoTopico] = useState(false);
+  const [confirmarExclusaoTopicoOpen, setConfirmarExclusaoTopicoOpen] = useState(false);
+  const [respostaParaExcluirId, setRespostaParaExcluirId] = useState<string | null>(null);
+  const [excluindoRespostaId, setExcluindoRespostaId] = useState<string | null>(null);
   const podeEditarTopico = useMemo(() => Boolean(user && topico && (topico.autor_id === user.id || admin)), [user, topico, admin]);
 
   async function carregarAutores(topicoData: ForumTopicoType, respostasData: ForumResposta[], comentariosData: Record<string, ForumComentario[]>) {
@@ -450,34 +454,58 @@ export function ForumTopico() {
     await carregar();
   }
 
-  async function removerTopico() {
+  function solicitarRemocaoTopico() {
     if (!topico || excluindoTopico) return;
     if (!user || (topico.autor_id !== user.id && !admin)) {
       toast.error('Você não tem permissão para excluir este tópico.');
       return;
     }
-    if (!window.confirm('Deseja excluir este tópico? Esta ação não pode ser desfeita.')) return;
 
-    setExcluindoTopico(true);
-    const ok = await deletarTopicoForum(topico.id);
-    setExcluindoTopico(false);
-    if (!ok) {
-      toast.error('Não foi possível excluir o tópico.');
-      return;
-    }
-    toast.success('Tópico excluído.');
-    navigate('/forum');
+    setConfirmarExclusaoTopicoOpen(true);
   }
 
-  async function removerResposta(respostaId: string) {
-    if (!window.confirm('Deseja excluir esta resposta?')) return;
-    const ok = await deletarRespostaForum(respostaId);
-    if (!ok) {
-      toast.error('Não foi possível excluir a resposta.');
-      return;
+  async function confirmarRemocaoTopico() {
+    if (!topico || excluindoTopico) return;
+
+    setExcluindoTopico(true);
+    try {
+      const ok = await deletarTopicoForum(topico.id);
+      if (!ok) {
+        toast.error('Não foi possível excluir o tópico.');
+        return;
+      }
+
+      setConfirmarExclusaoTopicoOpen(false);
+      toast.success('Tópico excluído.');
+      navigate('/forum');
+    } finally {
+      setExcluindoTopico(false);
     }
-    toast.success('Resposta excluída.');
-    await carregar();
+  }
+
+  function solicitarRemocaoResposta(respostaId: string) {
+    if (excluindoRespostaId) return;
+    setRespostaParaExcluirId(respostaId);
+  }
+
+  async function confirmarRemocaoResposta() {
+    if (!respostaParaExcluirId || excluindoRespostaId) return;
+
+    const respostaId = respostaParaExcluirId;
+    setExcluindoRespostaId(respostaId);
+    try {
+      const ok = await deletarRespostaForum(respostaId);
+      if (!ok) {
+        toast.error('Não foi possível excluir a resposta.');
+        return;
+      }
+
+      setRespostaParaExcluirId(null);
+      toast.success('Resposta excluída.');
+      await carregar();
+    } finally {
+      setExcluindoRespostaId(null);
+    }
   }
 
   function iniciarEdicaoResposta(resposta: ForumResposta) {
@@ -510,7 +538,6 @@ export function ForumTopico() {
   const currentUserShortName = formatarNomeCurto(currentUserName);
   const currentUserAvatar = user?.user_metadata?.avatar_url || user?.user_metadata?.picture || null;
   const pessoasParaMencoes = pessoasRelacionadas.length > 0 ? pessoasRelacionadas : topico.pessoa_relacionada ? [topico.pessoa_relacionada] : [];
-  const categoriaLabel = formatarCategoriaForum(topico.categoria?.nome);
   const topicoEditado = isEdited(topico.created_at, topico.updated_at);
 
   return (
@@ -536,7 +563,6 @@ export function ForumTopico() {
                     <div className="min-w-0 flex-1">
                       <div className="flex min-w-0 flex-wrap items-center gap-x-1.5 gap-y-1 text-sm">
                         <span className="truncate font-semibold text-gray-900">{topicoAuthorName}</span>
-                        {categoriaLabel && <TopicBadge>{categoriaLabel}</TopicBadge>}
                       </div>
                       <p className="mt-0.5 flex flex-wrap items-center gap-2 text-xs text-gray-500">
                         <span>{formatarData(topico.created_at)}</span>
@@ -552,7 +578,7 @@ export function ForumTopico() {
                           variant="outline"
                           size="icon"
                           className="h-9 w-9 border-gray-200 text-gray-500 hover:border-red-200 hover:bg-red-50 hover:text-red-600"
-                          onClick={removerTopico}
+                          onClick={solicitarRemocaoTopico}
                           disabled={excluindoTopico}
                           aria-label={excluindoTopico ? 'Excluindo tópico' : 'Excluir tópico'}
                           title={excluindoTopico ? 'Excluindo...' : 'Excluir'}
@@ -613,7 +639,13 @@ export function ForumTopico() {
                                     <button type="button" onClick={() => iniciarEdicaoResposta(resposta)} className="text-gray-400 hover:text-blue-600" aria-label="Editar resposta">
                                       <Edit className="h-4 w-4" />
                                     </button>
-                                    <button type="button" onClick={() => removerResposta(resposta.id)} className="text-gray-400 hover:text-red-600" aria-label="Excluir resposta">
+                                    <button
+                                      type="button"
+                                      onClick={() => solicitarRemocaoResposta(resposta.id)}
+                                      disabled={excluindoRespostaId === resposta.id}
+                                      className="text-gray-400 hover:text-red-600 disabled:cursor-not-allowed disabled:opacity-50"
+                                      aria-label={excluindoRespostaId === resposta.id ? 'Excluindo resposta' : 'Excluir resposta'}
+                                    >
                                       <Trash2 className="h-4 w-4" />
                                     </button>
                                   </div>
@@ -666,6 +698,35 @@ export function ForumTopico() {
           <RecentTopicsSidebar topicos={topicosRecentes} currentTopicId={topico.id} />
         </div>
       </main>
+
+      <ConfirmDialog
+        open={confirmarExclusaoTopicoOpen}
+        onOpenChange={(open) => {
+          if (!excluindoTopico) setConfirmarExclusaoTopicoOpen(open);
+        }}
+        title="Excluir t?pico"
+        description="Deseja excluir este tópico? Esta ação não pode ser desfeita."
+        confirmText="Excluir"
+        cancelText="Cancelar"
+        onConfirm={confirmarRemocaoTopico}
+        variant="danger"
+        loading={excluindoTopico}
+      />
+
+      <ConfirmDialog
+        open={Boolean(respostaParaExcluirId)}
+        onOpenChange={(open) => {
+          if (!open && !excluindoRespostaId) setRespostaParaExcluirId(null);
+        }}
+        title="Excluir resposta"
+        description="Deseja excluir esta resposta? Esta ação não pode ser desfeita."
+        confirmText="Excluir"
+        cancelText="Cancelar"
+        onConfirm={confirmarRemocaoResposta}
+        variant="danger"
+        loading={Boolean(excluindoRespostaId)}
+      />
     </div>
   );
 }
+
