@@ -1,4 +1,4 @@
-﻿import React, { FormEvent, useEffect, useMemo, useState } from 'react';
+import React, { FormEvent, useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router';
 import {
   CheckCircle2,
@@ -704,7 +704,7 @@ export function ForumTopico() {
         onOpenChange={(open) => {
           if (!excluindoTopico) setConfirmarExclusaoTopicoOpen(open);
         }}
-        title="Excluir t?pico"
+        title="Excluir tópico"
         description="Deseja excluir este tópico? Esta ação não pode ser desfeita."
         confirmText="Excluir"
         cancelText="Cancelar"
@@ -729,4 +729,3 @@ export function ForumTopico() {
     </div>
   );
 }
-
