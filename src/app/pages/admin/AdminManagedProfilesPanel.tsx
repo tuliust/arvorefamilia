@@ -3,6 +3,7 @@ import { Baby, CheckCircle2, Clock, ShieldCheck, Skull, XCircle } from 'lucide-r
 import { toast } from 'sonner';
 import { Badge } from '../../components/ui/badge';
 import { Button } from '../../components/ui/button';
+import { ConfirmDialog } from '../../components/ConfirmDialog';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import {
   adminListAllUserPersonLinks,
@@ -23,6 +24,12 @@ import {
 } from '../../utils/manageableProfiles';
 
 type LinkRecordWithPessoa = UserPersonLinkRecord & { pessoa?: Pessoa | null };
+
+type PendingReviewAction = {
+  request: AdminProfileControlRequestRecord;
+  status: 'approved' | 'rejected';
+  defaultRole: UserPersonPermissionRole;
+};
 
 type ManageableProfileCandidate = {
   person: Pessoa;
@@ -72,6 +79,7 @@ export function AdminManagedProfilesPanel() {
   const [requests, setRequests] = useState<AdminProfileControlRequestRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [reviewingRequestId, setReviewingRequestId] = useState<string | null>(null);
+  const [pendingReviewAction, setPendingReviewAction] = useState<PendingReviewAction | null>(null);
 
   const profilesById = useMemo(
     () => new Map(profiles.map((profile) => [profile.id, profile])),
@@ -160,16 +168,19 @@ export function AdminManagedProfilesPanel() {
     void loadData();
   }, []);
 
-  const handleReviewRequest = async (
+  const handleReviewRequest = (
     request: AdminProfileControlRequestRecord,
     status: 'approved' | 'rejected'
   ) => {
+    if (reviewingRequestId) return;
     const defaultRole = getDefaultRoleForRequest(request);
-    const confirmed = status === 'approved'
-      ? window.confirm(`Aprovar solicitação e vincular ${request.requester_label} como ${getRoleLabel(defaultRole)} de ${request.target_label}?`)
-      : window.confirm(`Rejeitar solicitação de ${request.requester_label} para administrar ${request.target_label}?`);
+    setPendingReviewAction({ request, status, defaultRole });
+  };
 
-    if (!confirmed) return;
+  const confirmReviewRequest = async () => {
+    if (!pendingReviewAction || reviewingRequestId) return;
+
+    const { request, status, defaultRole } = pendingReviewAction;
 
     try {
       setReviewingRequestId(request.id);
@@ -180,14 +191,32 @@ export function AdminManagedProfilesPanel() {
       });
 
       if (result.error) throw new Error(result.error);
-      toast.success(status === 'approved' ? 'Solicitação aprovada e vínculo criado.' : 'Solicitação rejeitada.');
+      setPendingReviewAction(null);
+      toast.success(status === 'approved' ? 'Solicita??o aprovada e v?nculo criado.' : 'Solicita??o rejeitada.');
       await loadData();
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Não foi possível revisar a solicitação.');
+      toast.error(error instanceof Error ? error.message : 'N?o foi poss?vel revisar a solicita??o.');
     } finally {
       setReviewingRequestId(null);
     }
   };
+
+
+  const reviewDialogContent = pendingReviewAction
+    ? pendingReviewAction.status === 'approved'
+      ? {
+          title: 'Aprovar solicita??o',
+          description: `Aprovar solicita??o e vincular ${pendingReviewAction.request.requester_label} como ${getRoleLabel(pendingReviewAction.defaultRole)} de ${pendingReviewAction.request.target_label}?`,
+          confirmText: 'Aprovar',
+          variant: 'default' as const,
+        }
+      : {
+          title: 'Rejeitar solicita??o',
+          description: `Rejeitar solicita??o de ${pendingReviewAction.request.requester_label} para administrar ${pendingReviewAction.request.target_label}?`,
+          confirmText: 'Rejeitar',
+          variant: 'danger' as const,
+        }
+    : null;
 
   return (
     <div className="space-y-6">
@@ -325,6 +354,20 @@ export function AdminManagedProfilesPanel() {
           )}
         </CardContent>
       </Card>
+
+      <ConfirmDialog
+        open={Boolean(pendingReviewAction)}
+        onOpenChange={(open) => {
+          if (!open && !reviewingRequestId) setPendingReviewAction(null);
+        }}
+        title={reviewDialogContent?.title || 'Revisar solicita??o'}
+        description={reviewDialogContent?.description || 'Deseja continuar?'}
+        confirmText={reviewDialogContent?.confirmText || 'Confirmar'}
+        cancelText="Cancelar"
+        onConfirm={confirmReviewRequest}
+        variant={reviewDialogContent?.variant}
+        loading={Boolean(reviewingRequestId)}
+      />
     </div>
   );
 }
