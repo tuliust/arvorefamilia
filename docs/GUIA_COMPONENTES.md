@@ -9,13 +9,14 @@
 | Componente | Papel |
 |---|---|
 | `Home.tsx` | orquestra carregamento de pessoas/relacionamentos, pessoa vinculada, filtros, busca, IA, curiosidades, navegação para perfil e recolhimento do painel desktop. |
-| `HomeHeader.tsx` | cabeçalho da experiência de mapa. |
-| `HomeMobileNav.tsx` | navegação e ações mobile da home. |
+| `HomeHeader.tsx` | cabeçalho da experiência de mapa. No mobile deve exibir `Árvore Familiar`. |
+| `HomeMobileNav.tsx` | navegação e ações mobile da home, incluindo botão `+`, painel de visualização, filtros e ações de mapa. |
 | `HomeTreeSection.tsx` | área de renderização da árvore. |
 | `DesktopTreeVisualizationPanel.tsx` | painel desktop de visualização, temas, grupos, filtros, exportação e ação interna de recolher. |
 | `SidebarPanelTabs.tsx` | abas auxiliares do painel lateral. |
 | `HomeCuriositiesDialog.tsx` | diálogo de curiosidades e perguntas assistidas na home. |
 | `FirstLoginTutorial.tsx` | tutorial de primeiro acesso. |
+| `FirstLoginTutorialRuntimeTweaks.tsx` | ajustes defensivos do tutorial, posicionamento de spotlight e compatibilidade mobile de árvore/linha quando aplicável. |
 | `desktopTreeVisualizationPanelTextFix.ts` | camada defensiva para normalizar textos do painel quando houver mojibake remanescente no DOM. |
 | `familyMapDesktopRuntimeFixes.ts` | ajustes defensivos de runtime para textos, exportação e comportamento visual dos mapas familiares desktop. |
 
@@ -26,11 +27,12 @@
 | `FamilyTree.tsx` | componente principal de árvore com ações expostas por ref. |
 | `DesktopFamilyMapView.tsx` | mapa familiar desktop por grupos, com layout posicional dos blocos de parentesco. |
 | `FamilyTreeVisualCards.tsx` | cards visuais dos grupos, incluindo ordenação de pares conjugais para evitar quebra de linha desnecessária. |
-| `MobileFamilyTreeView.tsx` | mapa familiar mobile. |
+| `MobileFamilyTreeView.tsx` | mapa familiar mobile por telas/grupos. |
 | `DesktopFamilyHorizontalMapView.tsx` | linha geracional desktop. |
 | `DesktopFamilyHorizontalMapFilteredView.tsx` | linha geracional desktop filtrada. |
-| `MobileFamilyHorizontalMapView.tsx` | linha geracional mobile. |
+| `MobileFamilyHorizontalMapView.tsx` | linha geracional mobile/horizontal, com cabeçalhos por geração, conectores e exportação. |
 | `MobileFamilyHorizontalMapFilteredView.tsx` | linha geracional mobile filtrada. |
+| `mobileFamilyTreeModel.ts` | modelo de parentesco mobile usado para reconhecer grupos familiares e navegação por telas. |
 | `buildTreeGraph.ts` | montagem do grafo a partir de pessoas e relacionamentos, incluindo status visual de vínculos conjugais. |
 | `MarriageNode.tsx` | nó conjugal com símbolo, status, tooltip e acessibilidade do vínculo. |
 | `TreeConjugalStatusLegend.tsx` | legenda de status conjugais por símbolo e padrão de linha. |
@@ -40,14 +42,33 @@
 | `modals/AddConnectionModal.tsx` | modal de nova conexão. |
 | `modals/ViewMarriageModal.tsx` | modal de detalhes de casamento, com badge, narrativa e tooltip baseados no status conjugal inferido. |
 
+## Runtimes defensivos
+
+| Componente / módulo | Papel |
+|---|---|
+| `MobileGlobalTweaks.tsx` | ajustes mobile transversais de header, overlays, `/meus-dados`, `/meus-vinculos` e painel de mapa quando aplicável. |
+| `PersonProfileRuntimeTweaks.tsx` | ocultações e reposicionamentos defensivos em `/pessoa/:id`. |
+| `AdminDashboardRuntimeTweaks.tsx` | ajustes defensivos do dashboard administrativo. |
+| `MeusVinculosEnhancements.tsx` | ajustes progressivos de `/meus-vinculos`, incluindo ordem de seções, seletor de cônjuge/filhos e modal de pet. |
+
+Regras:
+
+- runtimes devem ser isolados por rota e breakpoint;
+- evitar observar atributos quando o runtime altera `style`, `dataset` ou classes;
+- usar `requestAnimationFrame` e `try/catch` para evitar travamento;
+- migrar regra para componente de origem quando o comportamento estiver estabilizado.
+
 ## Páginas de membro
 
 | Página | Papel |
 |---|---|
-| `MeusDados.tsx` | dados pessoais, privacidade, redes sociais e insumos de perfil. |
-| `MeusVinculosWithProfileBio.tsx` | vínculos, familiares, pets e textos de perfil. |
+| `MeusDadosWithInlineProfileBio.tsx` | composição atual de `/meus-dados`, com dados pessoais, privacidade, redes sociais, questionário e tela final de Mini Bio/Curiosidades. |
+| `MeusDados.tsx` | base de dados pessoais, privacidade, redes sociais e insumos de perfil. |
+| `MeusVinculosMobileShortcutsPage.tsx` | composição atual de `/meus-vinculos`, com atalhos mobile de grupos. |
+| `MeusVinculos.tsx` | vínculos, familiares, pets e solicitações de alteração. |
 | `ArquivosHistoricosPage.tsx` | fatos e arquivos históricos. |
 | `PreferenciasPage.tsx` | preferências do membro. |
+| `RevisaoDadosFlowPage.tsx` | composição atual de revisão final antes de concluir o fluxo. |
 | `RevisaoDados.tsx` | revisão final antes de concluir o fluxo. |
 | `PersonProfile.tsx` | perfil público/protegido da pessoa. |
 | `PersonRelationshipsView.tsx` | relacionamentos do perfil, incluindo agrupamento conjugal por status. |
@@ -108,15 +129,19 @@ Regras de uso:
 - `MemberPageHeader`: cabeçalho das páginas de membro, com atalhos de navegação, busca compartilhada e menu de notificações no desktop; em `/admin/*`, usa navegação administrativa reduzida.
 - `HeaderGlobalSearch`: busca compartilhada do header, com sugestões de pessoas e páginas e fallback para `/busca?q=...`.
 - `HeaderNotificationsDropdown`: dropdown reutilizado por headers para listar notificações recentes, ações rápidas e atalhos para páginas de notificações e preferências.
-- `UserProfileMenu`: menu de avatar e ações do usuário, com primeiro e segundo nome, subtítulo de edição de perfil, atalhos de navegação, dúvidas e saída.
-- `memberUiRuntimeFixes.ts`: camada defensiva de runtime para ajustes visuais pontuais em calendário, fórum, menu e rótulos de `/meus-dados` enquanto as correções não forem absorvidas integralmente pelos componentes de origem.
+- `UserProfileMenu`: menu de avatar e ações do usuário, com primeiro e segundo nome, subtítulo de edição de perfil, responsáveis quando aplicável, atalhos de navegação, dúvidas e saída.
 - Componentes de UI em `src/app/components/ui` devem permanecer genéricos e reutilizáveis.
 
 ## Componentes administrativos
 
 | Componente / página | Papel |
 |---|---|
+| `AdminDashboardWithTweaks.tsx` | composição atual do dashboard administrativo com ajustes de cards, aprovações e ações rápidas. |
+| `AdminDashboardRuntimeTweaks.tsx` | runtime defensivo do dashboard. |
+| `AdminAprovacoes.tsx` | página de aprovações administrativas. |
+| `AdminHomeSettingsWithSaveBar.tsx` | composição atual de `/admin/home`, com salvamento das configurações. |
 | `AdminRelacionamentoForm.tsx` | cadastro de vínculos com status conjugal inferido e validações de separação/inatividade. |
+| `AdminResponsaveis.tsx` | gestão de responsáveis por perfis legados e crianças. |
 | `AdminDuvidasRefined.tsx` | versão ativa de `/admin/duvidas`, com filtros em linha própria, listagem sem slugs visíveis e ações compactas por ícone. |
 | `AdminAtividades.tsx` | histórico administrativo de atividades, com filtros por autor/usuário, botão de limpeza local da lista e tabela alinhada por Data, Autor, Atividade e Resumo. |
 | `AdminPeopleContentSettings.tsx` | gestão de geração, visibilidade, privacidade e conteúdos automáticos de pessoas, com fallback defensivo quando `person_visibility_settings` não existir no ambiente remoto. |
