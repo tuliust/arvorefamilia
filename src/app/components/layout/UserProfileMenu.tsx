@@ -53,6 +53,15 @@ function getFirstName(value?: string | null) {
   return beforeEmail.split(/\s+/)[0] || 'Conta';
 }
 
+function getFirstTwoNames(value?: string | null) {
+  const clean = value?.trim();
+  if (!clean) return 'Conta';
+
+  const beforeEmail = clean.includes('@') ? clean.split('@')[0] : clean;
+  const parts = beforeEmail.split(/\s+/).filter(Boolean);
+  return parts.slice(0, 2).join(' ') || 'Conta';
+}
+
 const TREE_VIEW_OPTIONS = [
   { label: 'Mapa Familiar', path: '/mapa-familiar' },
   { label: 'Mapa Familiar Horizontal', path: '/mapa-familiar-horizontal' },
@@ -155,6 +164,7 @@ export function UserProfileMenu({ variant = 'avatar' }: UserProfileMenuProps) {
   ).trim();
 
   const firstName = getFirstName(displayName);
+  const menuDisplayName = getFirstTwoNames(displayName);
   const avatarUrl = String(linkedPerson?.foto_principal_url || profile?.avatar_url || user?.user_metadata?.avatar_url || user?.user_metadata?.picture || '').trim();
   const initials = getInitials(displayName);
 
@@ -198,7 +208,7 @@ export function UserProfileMenu({ variant = 'avatar' }: UserProfileMenuProps) {
   const isHomeHeaderVariant = variant === 'home-header';
 
   return (
-    <div className="relative z-[520] shrink-0">
+    <div className="relative z-[10040] shrink-0">
       <button
         type="button"
         onClick={() => setOpen((value) => !value)}
@@ -248,21 +258,21 @@ export function UserProfileMenu({ variant = 'avatar' }: UserProfileMenuProps) {
         <>
           <button
             type="button"
-            className="fixed inset-0 z-[10000] bg-black/30 md:hidden"
+            className="fixed inset-0 z-[10030] bg-black/30 md:hidden"
             onClick={() => setOpen(false)}
             aria-label="Fechar menu do usuário"
           />
 
           <div
             ref={menuRef}
-            className="fixed left-4 right-4 top-20 z-[10020] max-h-[calc(100dvh-7rem)] overflow-y-auto rounded-3xl border border-gray-200 bg-white p-4 shadow-2xl md:absolute md:left-auto md:right-0 md:top-full md:mt-2 md:max-h-[80vh] md:w-72 md:rounded-2xl"
+            className="fixed left-4 right-4 top-20 z-[10050] max-h-[calc(100dvh-7rem)] overflow-y-auto rounded-3xl border border-gray-200 bg-white p-4 shadow-2xl md:absolute md:left-auto md:right-0 md:top-full md:mt-2 md:max-h-[80vh] md:w-72 md:rounded-2xl"
           >
             <div className="mb-3 flex items-start gap-2 border-b border-gray-100 pb-4">
               <button
                 type="button"
                 onClick={() => goTo(user ? '/meus-dados' : '/entrar')}
                 className="flex min-w-0 flex-1 items-center gap-3 rounded-2xl p-1 text-left transition hover:bg-gray-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
-                title={user ? 'Atualizar perfil' : 'Entrar'}
+                title={user ? 'Editar perfil' : 'Entrar'}
               >
                 <span className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-full bg-blue-600 text-lg font-bold text-white">
                   {user && avatarUrl ? (
@@ -275,8 +285,11 @@ export function UserProfileMenu({ variant = 'avatar' }: UserProfileMenuProps) {
                 </span>
 
                 <span className="min-w-0 flex-1">
-                  <span className="block truncate text-base font-bold text-gray-900">{user ? firstName : 'Visitante'}</span>
-                  <span className="block truncate text-xs text-gray-500">{user?.email || 'Entre para acessar sua conta'}</span>
+                  <span className="block truncate text-base font-bold text-gray-900">{user ? menuDisplayName : 'Visitante'}</span>
+                  <span className="mt-1 flex min-w-0 items-center gap-1.5 truncate text-xs font-medium text-gray-500">
+                    {user ? <Pencil className="h-3.5 w-3.5 shrink-0 text-blue-700" /> : <LogIn className="h-3.5 w-3.5 shrink-0 text-blue-700" />}
+                    <span className="truncate">{user ? 'Editar perfil' : 'Entre para acessar sua conta'}</span>
+                  </span>
                 </span>
               </button>
 
@@ -362,10 +375,6 @@ export function UserProfileMenu({ variant = 'avatar' }: UserProfileMenuProps) {
                   <Home className="h-5 w-5 text-blue-700" />
                   Home
                 </button>
-                <button type="button" className={itemClassName} onClick={() => goTo('/meus-dados')}>
-                  <Pencil className="h-5 w-5 text-blue-700" />
-                  Atualizar perfil
-                </button>
                 <button type="button" className={itemClassName} onClick={() => goTo('/forum')}>
                   <MessageCircle className="h-5 w-5 text-blue-700" />
                   Fórum
@@ -398,7 +407,7 @@ export function UserProfileMenu({ variant = 'avatar' }: UserProfileMenuProps) {
                 <div className="flex items-center justify-between gap-3 px-1 pt-1">
                   <button
                     type="button"
-                    className="rounded-xl px-3 py-2 text-sm font-semibold text-gray-800 transition hover:bg-blue-50 hover:text-blue-800"
+                    className="rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm font-semibold text-gray-800 shadow-sm transition hover:bg-blue-50 hover:text-blue-800"
                     onClick={() => goTo('/duvidas')}
                   >
                     Dúvidas?
