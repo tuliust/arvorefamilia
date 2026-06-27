@@ -13,6 +13,7 @@ import {
   DIRECT_FAMILY_LEGEND_BACKGROUNDS,
   DIRECT_FAMILY_STATUS_BORDER_COLORS,
 } from './directFamilyColors';
+import { TreeConjugalStatusLegend } from './TreeConjugalStatusLegend';
 
 type PersonLegendFilterKey = 'vivos' | 'falecidos' | 'pets';
 const NEUTRAL_LINE_SAMPLE_COLOR = '#94A3B8';
@@ -280,6 +281,10 @@ export function TreeLegend({
           </div>
         </LegendGroup>
 
+        <LegendGroup title="Status conjugais" compact>
+          <TreeConjugalStatusLegend compact />
+        </LegendGroup>
+
         <LegendGroup title="Destacar" compact>
           <div className="grid grid-cols-2 gap-[clamp(0.45rem,1.1vh,0.7rem)]">
             <LegendItem
@@ -377,6 +382,10 @@ export function TreeLegend({
             />
           ))}
         </div>
+      </LegendGroup>
+
+      <LegendGroup title="Status dos vínculos conjugais">
+        <TreeConjugalStatusLegend />
       </LegendGroup>
 
       <LegendGroup title="Destacar">
