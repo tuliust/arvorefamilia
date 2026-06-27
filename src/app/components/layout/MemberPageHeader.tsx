@@ -19,8 +19,6 @@ import {
   Settings,
   Sparkles,
   Star,
-  UserPlus,
-  Users,
 } from 'lucide-react';
 
 export type HeaderAction = {
@@ -265,10 +263,8 @@ export const DEFAULT_MEMBER_HEADER_ACTIONS: HeaderAction[] = [
 ];
 
 const ADMIN_HEADER_ACTIONS: HeaderAction[] = [
-  { label: 'Principal', to: '/mapa-familiar', icon: ArrowLeft, responsiveLabel: 'always' },
-  { label: 'Membros', to: '/admin/pessoas', icon: Users, responsiveLabel: 'always' },
-  { label: 'Conteudo', to: '/admin/gestao-conteudo-pessoas', icon: Sparkles, responsiveLabel: 'always' },
-  { label: 'Responsáveis', to: '/admin/responsaveis', icon: UserPlus, responsiveLabel: 'always' },
+  { label: 'Painel Administrativo', to: '/admin', icon: ArrowLeft, responsiveLabel: 'always' },
+  { label: 'Principal', to: '/mapa-familiar', responsiveLabel: 'always' },
 ];
 
 export function MemberPageHeader({
