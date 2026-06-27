@@ -5,6 +5,7 @@ import { HEADER_ACTION_ICONS, MemberPageHeader, PAGE_CONTAINER_CLASS } from '../
 import { ChevronLeft, ChevronRight, CalendarSync, LogOut } from 'lucide-react';
 import { toast } from 'sonner';
 import { Dialog, DialogContent, DialogTitle } from '../components/ui/dialog';
+import { ConfirmDialog } from '../components/ConfirmDialog';
 import { obterTodasPessoas, obterTodosRelacionamentos } from '../services/dataService';
 import { Pessoa, Relacionamento } from '../types';
 import {
@@ -190,6 +191,7 @@ export function CalendarioFamiliar() {
   const [googleLoading, setGoogleLoading] = useState(false);
   const [googleStatus, setGoogleStatus] = useState<GoogleCalendarStatus>({ conectado: false });
   const [showGoogleCalendarMobileCard, setShowGoogleCalendarMobileCard] = useState(false);
+  const [disconnectGoogleDialogOpen, setDisconnectGoogleDialogOpen] = useState(false);
   const [incluirAniversarios, setIncluirAniversarios] = useState(true);
   const [incluirMemorias, setIncluirMemorias] = useState(true);
   const [ultimoResultadoSync, setUltimoResultadoSync] = useState<{
@@ -299,9 +301,11 @@ export function CalendarioFamiliar() {
     toast.success(`Sincronização concluída: ${data?.totalCriados ?? 0} criado(s), ${data?.totalAtualizados ?? 0} atualizado(s).`);
   }
 
-  async function desconectarGoogle() {
-    if (!window.confirm('Deseja desconectar o Google Agenda deste usuário?')) return;
+  function requestDisconnectGoogle() {
+    setDisconnectGoogleDialogOpen(true);
+  }
 
+  async function confirmDisconnectGoogle() {
     setGoogleLoading(true);
     const { error } = await desconectarGoogleCalendar();
     setGoogleLoading(false);
@@ -311,6 +315,7 @@ export function CalendarioFamiliar() {
       return;
     }
 
+    setDisconnectGoogleDialogOpen(false);
     setGoogleStatus({ conectado: false });
     setUltimoResultadoSync(null);
     toast.success('Google Agenda desconectado.');
@@ -541,7 +546,7 @@ export function CalendarioFamiliar() {
 
                       <button
                         type="button"
-                        onClick={desconectarGoogle}
+                        onClick={requestDisconnectGoogle}
                         disabled={googleLoading}
                         className="inline-flex items-center justify-center gap-2 rounded-lg border border-red-200 bg-white px-4 py-2 text-sm font-medium text-red-700 hover:bg-red-50 disabled:pointer-events-none disabled:opacity-50"
                       >
@@ -760,6 +765,20 @@ export function CalendarioFamiliar() {
           </aside>
         </section>
       </main>
+
+      <ConfirmDialog
+        open={disconnectGoogleDialogOpen}
+        onOpenChange={(open) => {
+          if (!googleLoading) setDisconnectGoogleDialogOpen(open);
+        }}
+        title="Desconectar Google Agenda"
+        description="Deseja desconectar o Google Agenda deste usuario?"
+        confirmText="Desconectar"
+        cancelText="Cancelar"
+        onConfirm={confirmDisconnectGoogle}
+        variant="danger"
+        loading={googleLoading}
+      />
 
       <Dialog
         open={selectedDayEvents.length > 0}

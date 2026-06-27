@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Clock, Filter, RefreshCcw, Settings, Trash2 } from 'lucide-react';
 import { Button } from '../../components/ui/button';
+import { ConfirmDialog } from '../../components/ConfirmDialog';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { Input } from '../../components/ui/input';
 import { DEFAULT_MEMBER_HEADER_ACTIONS, MemberPageHeader } from '../../components/layout/MemberPageHeader';
@@ -112,6 +113,7 @@ export function AdminAtividades() {
   const [filters, setFilters] = useState<ActivityFilters>(INITIAL_FILTERS);
   const [activityClearCutoff, setActivityClearCutoff] = useState(getStoredActivityClearCutoff);
   const [loading, setLoading] = useState(true);
+  const [clearActivitiesDialogOpen, setClearActivitiesDialogOpen] = useState(false);
 
   const activeFiltersCount = useMemo(() => {
     return [
@@ -147,17 +149,16 @@ export function AdminAtividades() {
     loadActivities(INITIAL_FILTERS);
   };
 
-  const handleClearActivities = async () => {
-    const confirmed = window.confirm(
-      'Limpar a lista de atividades exibida? Os registros serão mantidos no banco de dados, e apenas novas atividades aparecerão a partir deste momento.'
-    );
+  const handleClearActivities = () => {
+    setClearActivitiesDialogOpen(true);
+  };
 
-    if (!confirmed) return;
-
+  const confirmClearActivities = () => {
     const nextClearCutoff = new Date().toISOString();
     window.localStorage.setItem(ACTIVITY_CLEAR_CUTOFF_KEY, nextClearCutoff);
     setActivityClearCutoff(nextClearCutoff);
     setActivities([]);
+    setClearActivitiesDialogOpen(false);
   };
 
   return (
@@ -321,6 +322,17 @@ export function AdminAtividades() {
           </CardContent>
         </Card>
       </main>
+
+      <ConfirmDialog
+        open={clearActivitiesDialogOpen}
+        onOpenChange={setClearActivitiesDialogOpen}
+        title="Limpar atividades"
+        description="Limpar a lista de atividades exibida? Os registros serao mantidos no banco de dados, e apenas novas atividades aparecerao a partir deste momento."
+        confirmText="Limpar"
+        cancelText="Cancelar"
+        onConfirm={confirmClearActivities}
+        variant="warning"
+      />
     </div>
   );
 }

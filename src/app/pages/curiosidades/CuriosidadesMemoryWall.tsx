@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { MessageSquareHeart, Send, Trash2 } from 'lucide-react';
+import { ConfirmDialog } from '../../components/ConfirmDialog';
 
 import { useAuth } from '../../contexts/AuthContext';
 import {
@@ -47,6 +48,7 @@ export function CuriosidadesMemoryWall({ className = '' }: CuriosidadesMemoryWal
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [memoryToDelete, setMemoryToDelete] = useState<MemoryWallPost | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -103,18 +105,24 @@ export function CuriosidadesMemoryWall({ className = '' }: CuriosidadesMemoryWal
     }
   };
 
-  const deleteMemory = async (item: MemoryWallPost) => {
+  const requestDeleteMemory = (item: MemoryWallPost) => {
     if (deletingId) return;
-    if (!window.confirm('Deseja apagar esta lembrança?')) return;
+    setMemoryToDelete(item);
+  };
 
+  const confirmDeleteMemory = async () => {
+    if (!memoryToDelete || deletingId) return;
+
+    const item = memoryToDelete;
     setDeletingId(item.id);
     setError(null);
 
     try {
       await deleteMemoryWallPost(item.id);
       setItems((current) => current.filter((currentItem) => currentItem.id !== item.id));
+      setMemoryToDelete(null);
     } catch (deleteError) {
-      setError(deleteError instanceof Error ? deleteError.message : 'Não foi possível apagar a lembrança.');
+      setError(deleteError instanceof Error ? deleteError.message : 'Nao foi possivel apagar a lembranca.');
     } finally {
       setDeletingId(null);
     }
@@ -191,7 +199,7 @@ export function CuriosidadesMemoryWall({ className = '' }: CuriosidadesMemoryWal
                 {canDelete && (
                   <button
                     type="button"
-                    onClick={() => deleteMemory(item)}
+                    onClick={() => requestDeleteMemory(item)}
                     disabled={deletingId === item.id}
                     className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-400 transition hover:border-red-200 hover:bg-red-50 hover:text-red-600 disabled:cursor-not-allowed disabled:opacity-60"
                     aria-label="Apagar lembrança"
@@ -205,6 +213,20 @@ export function CuriosidadesMemoryWall({ className = '' }: CuriosidadesMemoryWal
           );
         })}
       </div>
+
+      <ConfirmDialog
+        open={Boolean(memoryToDelete)}
+        onOpenChange={(open) => {
+          if (!open && !deletingId) setMemoryToDelete(null);
+        }}
+        title="Apagar lembranca"
+        description="Deseja apagar esta lembranca? Esta acao nao pode ser desfeita."
+        confirmText="Apagar"
+        cancelText="Cancelar"
+        onConfirm={confirmDeleteMemory}
+        variant="danger"
+        loading={Boolean(deletingId)}
+      />
     </section>
   );
 }
