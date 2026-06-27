@@ -32,13 +32,11 @@ export function getZodiacSignFromBirthDate(value: string | number | null | undef
     return '';
   }
 
-  const match = birthDate.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
-  if (!match) {
-    return '';
-  }
+  const brMatch = birthDate.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  const isoMatch = birthDate.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
 
-  const day = Number(match[1]);
-  const month = Number(match[2]);
+  const day = brMatch ? Number(brMatch[1]) : isoMatch ? Number(isoMatch[3]) : 0;
+  const month = brMatch ? Number(brMatch[2]) : isoMatch ? Number(isoMatch[2]) : 0;
 
   if (day < 1 || day > 31 || month < 1 || month > 12) {
     return '';
