@@ -72,7 +72,7 @@ Arquivos residuais fora desse índice não devem ser usados como contrato operac
 | Migrations Supabase | `operacao/MIGRATIONS_SUPABASE.md` |
 | OAuth Google | `operacao/OAUTH_GOOGLE.md` |
 | Storage | `operacao/STORAGE_MAINTENANCE.md` |
-| Mapa familiar | `funcionalidades/MAPA_FAMILIAR_VIEW.md` |
+| Mapa familiar e linha geracional | `funcionalidades/MAPA_FAMILIAR_VIEW.md` |
 | Árvore, conectores e painel | `funcionalidades/ARVORE_LEGENDAS_CONECTORES_PAINEL.md` |
 | Status conjugal | `funcionalidades/STATUS_CONJUGAL.md` |
 | Meus dados, IA, Mini Bio e Curiosidades | `funcionalidades/MINI_BIO_CURIOSIDADES_IA.md` |
@@ -100,7 +100,7 @@ Arquivos residuais fora desse índice não devem ser usados como contrato operac
 - `/pessoa/:id` e `/pessoas/:id`;
 - `/calendario-familiar`;
 - `/entrar`, `/termos`, `/privacidade` e `/duvidas`;
-- área administrativa em `/admin` e subrotas, incluindo `/admin/home`.
+- área administrativa em `/admin` e subrotas, incluindo `/admin/home`, `/admin/responsaveis`, `/admin/gestao-conteudo-pessoas`, `/aprovacoes` e `/admin/aprovacoes`.
 
 ## Contratos transversais recentes
 
@@ -109,6 +109,8 @@ Arquivos residuais fora desse índice não devem ser usados como contrato operac
 - Confirmações devem usar `ConfirmDialog` ou modal controlado equivalente.
 - Coleta de texto deve usar modal controlado com campo de formulário, validação explícita e feedback por `toast`.
 - O arquivo `src/app/components/ui/alert.tsx` é componente visual e pode aparecer em varreduras textuais como falso positivo; ele não representa uso de API nativa do navegador.
+- Ajustes mobile devem ser isolados por rota/breakpoint e não podem alterar layout ou comportamento desktop sem decisão explícita.
+- Overlays mobile de busca, notificações, avatar e painel da árvore devem permanecer acima de toolbars sticky e canvas.
 
 ## Regra de manutenção
 
