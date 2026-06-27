@@ -64,7 +64,7 @@ export function AdminPeopleContentSettings() {
           setSelectedPessoaId(loadedPeople[0].id);
         }
       } catch (error) {
-        toast.error(error instanceof Error ? error.message : 'Nao foi possivel carregar pessoas.');
+        toast.error(error instanceof Error ? error.message : 'Não foi possível carregar pessoas.');
       } finally {
         if (mounted) setLoading(false);
       }
@@ -101,7 +101,7 @@ export function AdminPeopleContentSettings() {
           historicalMainEvent: String(nextHistorical?.conteudo?.main_event ?? ''),
         });
       } catch (error) {
-        toast.error(error instanceof Error ? error.message : 'Nao foi possivel carregar configuracoes da pessoa.');
+        toast.error(error instanceof Error ? error.message : 'Não foi possível carregar configurações da pessoa.');
       } finally {
         setLoading(false);
       }
@@ -116,12 +116,12 @@ export function AdminPeopleContentSettings() {
       setSaving(true);
       const generation = Number(selectedPessoa.manual_generation ?? 0);
       if (!Number.isInteger(generation) || generation < 1 || generation > 7) {
-        throw new Error('Informe uma geracao manual entre 1 e 7.');
+        throw new Error('Informe uma geração manual entre 1 e 7.');
       }
       await atualizarGeracaoManualPessoa(selectedPessoa.id, generation);
-      toast.success('Geracao atualizada.');
+      toast.success('Geração atualizada.');
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Nao foi possivel salvar geracao.');
+      toast.error(error instanceof Error ? error.message : 'Não foi possível salvar geração.');
     } finally {
       setSaving(false);
     }
@@ -135,7 +135,7 @@ export function AdminPeopleContentSettings() {
       setVisibility(saved);
       toast.success('Visibilidade atualizada.');
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Nao foi possivel salvar visibilidade.');
+      toast.error(error instanceof Error ? error.message : 'Não foi possível salvar visibilidade.');
     } finally {
       setSaving(false);
     }
@@ -149,9 +149,9 @@ export function AdminPeopleContentSettings() {
       await gerarInsightsPessoa(selectedPessoa.id, force);
       const refreshed = await obterInsightsGeradosPessoa(selectedPessoa.id);
       setInsights(refreshed);
-      toast.success(force ? 'Conteudos regenerados.' : 'Conteudos gerados.');
+      toast.success(force ? 'Conteúdos regenerados.' : 'Conteúdos gerados.');
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Nao foi possivel gerar conteudos.');
+      toast.error(error instanceof Error ? error.message : 'Não foi possível gerar conteúdos.');
     } finally {
       setSaving(false);
     }
@@ -163,7 +163,7 @@ export function AdminPeopleContentSettings() {
     try {
       setSaving(true);
       const birthDate = String(selectedPessoa.data_nascimento ?? '').trim();
-      if (!birthDate) throw new Error('A pessoa precisa de data de nascimento para persistir os conteudos.');
+      if (!birthDate) throw new Error('A pessoa precisa de data de nascimento para persistir os conteúdos.');
 
       await Promise.all([
         upsertPersonGeneratedInsight({
@@ -187,16 +187,16 @@ export function AdminPeopleContentSettings() {
       ]);
 
       setInsights(await obterInsightsGeradosPessoa(selectedPessoa.id));
-      toast.success('Conteudos automáticos salvos.');
+      toast.success('Conteúdos automáticos salvos.');
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Nao foi possivel salvar conteudos.');
+      toast.error(error instanceof Error ? error.message : 'Não foi possível salvar conteúdos.');
     } finally {
       setSaving(false);
     }
   };
 
   const handleClearInsight = async (tipo: 'astrology' | 'historical_events') => {
-    if (!selectedPessoa || !window.confirm('Limpar o conteudo salvo deste bloco?')) return;
+    if (!selectedPessoa || !window.confirm('Limpar o conteúdo salvo deste bloco?')) return;
 
     try {
       setSaving(true);
@@ -207,9 +207,9 @@ export function AdminPeopleContentSettings() {
       } else {
         setInsightDraft((current) => ({ ...current, historicalTitle: '', historicalMainEvent: '' }));
       }
-      toast.success('Conteudo limpo.');
+      toast.success('Conteúdo limpo.');
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Nao foi possivel limpar conteudo.');
+      toast.error(error instanceof Error ? error.message : 'Não foi possível limpar conteúdo.');
     } finally {
       setSaving(false);
     }
@@ -218,8 +218,8 @@ export function AdminPeopleContentSettings() {
   return (
     <div className="min-h-screen bg-gray-50">
       <MemberPageHeader
-        title="Gestao de Conteudo de Pessoas"
-        subtitle="Geracao, visibilidade e conteudos automaticos por pessoa"
+        title="Gestão de Conteúdo de Pessoas"
+        subtitle="Geração, visibilidade e conteúdos automáticos por pessoa"
         icon={Settings2}
         actions={[
           { label: 'Admin', to: '/admin', icon: Settings2 },
@@ -257,19 +257,19 @@ export function AdminPeopleContentSettings() {
           {loading || !selectedPessoa ? (
             <Card>
               <CardContent className="pt-6">
-                <p className="text-sm text-gray-500">Selecione uma pessoa para carregar configuracoes.</p>
+                <p className="text-sm text-gray-500">Selecione uma pessoa para carregar configurações.</p>
               </CardContent>
             </Card>
           ) : (
             <>
               <Card>
                 <CardHeader>
-                  <CardTitle>Geracao</CardTitle>
+                  <CardTitle>Geração</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
                     <label className="space-y-1 text-sm">
-                      <span className="font-medium text-gray-700">Geracao manual</span>
+                      <span className="font-medium text-gray-700">Geração manual</span>
                       <input
                         className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2"
                         type="number"
@@ -284,7 +284,7 @@ export function AdminPeopleContentSettings() {
                       />
                     </label>
                     <div className="md:col-span-2 flex items-end">
-                      <Button type="button" onClick={handleSaveGeneration} disabled={saving}>Salvar geracao</Button>
+                      <Button type="button" onClick={handleSaveGeneration} disabled={saving}>Salvar geração</Button>
                     </div>
                   </div>
                 </CardContent>
@@ -292,18 +292,18 @@ export function AdminPeopleContentSettings() {
 
               <Card>
                 <CardHeader>
-                  <CardTitle>Visibilidade de paginas</CardTitle>
+                  <CardTitle>Visibilidade de páginas</CardTitle>
                 </CardHeader>
                 <CardContent className="grid grid-cols-1 gap-3 md:grid-cols-2">
                   {visibility ? ([
                     ['perfil_visivel', 'Perfil'],
-                    ['arvore_visivel', 'Arvore'],
+                    ['arvore_visivel', 'Árvore'],
                     ['mapa_familiar_visivel', 'Mapa familiar'],
                     ['curiosidades_visivel', 'Curiosidades'],
-                    ['arquivos_historicos_visivel', 'Arquivos historicos'],
-                    ['calendario_visivel', 'Calendario'],
-                    ['forum_visivel', 'Forum'],
-                    ['dados_sensiveis_visiveis', 'Dados sensiveis'],
+                    ['arquivos_historicos_visivel', 'Arquivos históricos'],
+                    ['calendario_visivel', 'Calendário'],
+                    ['forum_visivel', 'Fórum'],
+                    ['dados_sensiveis_visiveis', 'Dados sensíveis'],
                   ] as const).map(([key, label]) => (
                     <label key={key} className="flex items-center justify-between rounded-lg border border-gray-200 p-3 text-sm">
                       <span>{label}</span>
@@ -322,15 +322,15 @@ export function AdminPeopleContentSettings() {
 
               <Card>
                 <CardHeader>
-                  <CardTitle>Conteudos automaticos</CardTitle>
+                  <CardTitle>Conteúdos automáticos</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-6">
                   <div className="flex flex-col gap-2 sm:flex-row">
                     <Button type="button" variant="outline" onClick={() => void handleGenerateInsights(false)} disabled={saving}>
-                      Gerar conteudos ausentes
+                      Gerar conteúdos ausentes
                     </Button>
                     <Button type="button" variant="outline" onClick={() => void handleGenerateInsights(true)} disabled={saving}>
-                      Regenerar conteudos
+                      Regenerar conteúdos
                     </Button>
                   </div>
 
@@ -357,7 +357,7 @@ export function AdminPeopleContentSettings() {
                         Estado atual: {historicalInsight?.status || 'ausente'}.
                       </p>
                       <label className="space-y-1 text-sm">
-                        <span className="font-medium text-gray-700">Titulo</span>
+                        <span className="font-medium text-gray-700">Título</span>
                         <input className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2" value={insightDraft.historicalTitle} onChange={(event) => setInsightDraft((current) => ({ ...current, historicalTitle: event.target.value }))} />
                       </label>
                       <label className="space-y-1 text-sm">
@@ -369,19 +369,19 @@ export function AdminPeopleContentSettings() {
                   </div>
 
                   <div className="flex justify-end">
-                    <Button type="button" onClick={handleSaveInsights} disabled={saving}>Salvar conteudos automáticos</Button>
+                    <Button type="button" onClick={handleSaveInsights} disabled={saving}>Salvar conteúdos automáticos</Button>
                   </div>
                 </CardContent>
               </Card>
 
               <Card>
                 <CardHeader>
-                  <CardTitle>Privacidade basica</CardTitle>
+                  <CardTitle>Privacidade básica</CardTitle>
                 </CardHeader>
                 <CardContent className="grid grid-cols-1 gap-3 md:grid-cols-2">
                   {[
                     ['permitir_exibir_data_nascimento', 'Exibir data de nascimento'],
-                    ['permitir_exibir_endereco', 'Exibir endereco'],
+                    ['permitir_exibir_endereco', 'Exibir endereço'],
                     ['permitir_exibir_rede_social', 'Exibir rede social'],
                     ['permitir_exibir_telefone', 'Exibir telefone'],
                     ['permitir_mensagens_whatsapp', 'Permitir mensagens por WhatsApp'],
@@ -413,9 +413,9 @@ export function AdminPeopleContentSettings() {
                             permitir_exibir_telefone: selectedPessoa.permitir_exibir_telefone,
                             permitir_mensagens_whatsapp: selectedPessoa.permitir_mensagens_whatsapp,
                           });
-                          toast.success('Privacidade basica atualizada.');
+                          toast.success('Privacidade básica atualizada.');
                         } catch (error) {
-                          toast.error(error instanceof Error ? error.message : 'Nao foi possivel salvar privacidade.');
+                          toast.error(error instanceof Error ? error.message : 'Não foi possível salvar privacidade.');
                         } finally {
                           setSaving(false);
                         }
