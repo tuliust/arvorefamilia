@@ -42,7 +42,7 @@ const mobileGlobalTweaks = `
     justify-content: space-between !important;
   }
 
-  main form section:has(div[style*="width:"]) .border-t button {
+  main form section:has(div[style*="width:"]) .border-t button:has(svg) {
     width: 3rem !important;
     min-width: 3rem !important;
     max-width: 3rem !important;
@@ -53,6 +53,19 @@ const mobileGlobalTweaks = `
     overflow: hidden !important;
     border-radius: 9999px !important;
     color: transparent !important;
+  }
+
+  main form section:has(div[style*="width:"]) .border-t button:not(:has(svg)) {
+    width: auto !important;
+    min-width: 0 !important;
+    max-width: none !important;
+    height: 3rem !important;
+    min-height: 3rem !important;
+    padding-left: 1rem !important;
+    padding-right: 1rem !important;
+    flex: 0 1 auto !important;
+    color: inherit !important;
+    border-radius: 0.75rem !important;
   }
 
   main form section:has(div[style*="width:"]) .border-t button svg {
