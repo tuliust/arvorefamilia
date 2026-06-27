@@ -5,6 +5,8 @@ import { MemberRoute } from './components/MemberRoute';
 import { TreeAccessRoute } from './components/TreeAccessRoute';
 import { getTreeViewModeFromPath } from './components/FamilyTree/treeViewMode';
 import { MobileGlobalTweaks } from './components/MobileGlobalTweaks';
+import { FirstLoginTutorialRuntimeTweaks } from './components/FirstLoginTutorialRuntimeTweaks';
+import { PersonProfileRuntimeTweaks } from './components/person/PersonProfileRuntimeTweaks';
 
 const Home = React.lazy(() => import('./pages/Home').then((module) => ({ default: module.Home })));
 const BuscaResultados = React.lazy(() => import('./pages/BuscaResultados').then((module) => ({ default: module.BuscaResultados })));
@@ -103,6 +105,8 @@ function lazyRoute(element: React.ReactElement, options?: { disableMobileGlobalT
   return (
     <RouteErrorBoundary>
       <Suspense fallback={<RouteFallback />}>
+        <FirstLoginTutorialRuntimeTweaks />
+        <PersonProfileRuntimeTweaks />
         {options?.disableMobileGlobalTweaks ? null : <MobileGlobalTweaks />}
         {element}
       </Suspense>
