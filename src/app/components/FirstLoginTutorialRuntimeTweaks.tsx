@@ -6,15 +6,6 @@ const FAVORITES_BULLETS = [
   'Use o botão de estrela nas páginas do site para guardar o conteúdo que desejar.',
 ];
 
-function normalizeText(value?: string | null) {
-  return String(value ?? '')
-    .toLowerCase()
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .replace(/\s+/g, ' ')
-    .trim();
-}
-
 function getTutorialRoot() {
   return document.querySelector<HTMLElement>('[data-first-login-tutorial="true"]');
 }
