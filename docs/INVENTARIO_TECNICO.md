@@ -1,6 +1,6 @@
 # Inventário técnico
 
-> Última revisão: 2026-06-25
+> Última revisão: 2026-06-26
 > Escopo: rotas, módulos, documentos finais e referências técnicas preservadas após limpeza documental.
 > Status: canônico.
 
@@ -20,6 +20,7 @@
 |---|---|
 | Mapa familiar vertical, horizontal e linha geracional | `funcionalidades/MAPA_FAMILIAR_VIEW.md` |
 | Árvore, conectores, painel e edição | `funcionalidades/ARVORE_LEGENDAS_CONECTORES_PAINEL.md` |
+| Status conjugal | `funcionalidades/STATUS_CONJUGAL.md` |
 | Meus dados, IA, mini bio e textos de perfil | `funcionalidades/MINI_BIO_CURIOSIDADES_IA.md` |
 | Meus vínculos | `funcionalidades/MEUS_VINCULOS.md` |
 | Revisão de dados | `funcionalidades/REVISAO_DADOS.md` |
@@ -87,6 +88,12 @@ A área administrativa permanece documentada de forma consolidada nos guias can�
 - `GUIA_IMPLEMENTACOES.md`;
 - `funcionalidades/FUNCIONALIDADES_COMPLEMENTARES.md`;
 - `arquitetura/ROTAS_E_GUARDS.md`.
+
+## Modelo de status conjugal
+
+O status conjugal é inferido pelos campos já existentes de relacionamento e pelos dados de falecimento das pessoas envolvidas. Não há coluna persistida `status_conjugal` na documentação canônica atual.
+
+Contrato funcional: `funcionalidades/STATUS_CONJUGAL.md`.
 
 ## Arquivos removidos ou absorvidos
 
