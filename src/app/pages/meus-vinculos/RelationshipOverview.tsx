@@ -1,7 +1,6 @@
 import { Baby, Heart, PawPrint, UserRound, Users } from 'lucide-react';
-import { Pessoa } from '../../types';
-import { getInitials } from '../../utils/personFields';
-import { formatCount, getFirstName } from './meusVinculosUtils';
+import type { Pessoa } from '../../types';
+import { formatCount } from './meusVinculosUtils';
 import { RelationshipOverviewGroup } from './types';
 
 type RelationshipOverviewProps = {
@@ -9,22 +8,6 @@ type RelationshipOverviewProps = {
   avatarSrc?: string | null;
   groups: RelationshipOverviewGroup[];
 };
-
-function PersonAvatar({ person, avatarSrc }: { person: Pessoa; avatarSrc?: string | null }) {
-  const photo = String(avatarSrc || person.foto_principal_url || '').trim();
-
-  return (
-    <div className="flex h-16 w-16 shrink-0 overflow-hidden rounded-full bg-blue-50 text-blue-700 ring-1 ring-blue-100">
-      {photo ? (
-        <img src={photo} alt={person.nome_completo} className="h-full w-full object-cover" />
-      ) : (
-        <span className="inline-flex h-full w-full items-center justify-center text-base font-semibold">
-          {getInitials(person.nome_completo)}
-        </span>
-      )}
-    </div>
-  );
-}
 
 const GROUP_ICONS = {
   pais: UserRound,
@@ -34,23 +17,9 @@ const GROUP_ICONS = {
   irmaos: Users,
 };
 
-export function RelationshipOverview({ person, avatarSrc, groups }: RelationshipOverviewProps) {
-  const firstName = getFirstName(person.nome_completo);
-
+export function RelationshipOverview({ groups }: RelationshipOverviewProps) {
   return (
-    <section className="space-y-6">
-      <div className="flex min-w-0 flex-col gap-4 sm:flex-row sm:items-center">
-        <PersonAvatar person={person} avatarSrc={avatarSrc} />
-        <div className="min-w-0 flex-1">
-          <h2 className="min-w-0 break-words text-2xl font-bold leading-tight text-gray-950">
-            {firstName ? `Familiares de ${firstName}` : 'Familiares'}
-          </h2>
-          <p className="mt-2 max-w-3xl break-words text-base leading-relaxed text-gray-600">
-            Confira se os familiares abaixo estão corretos. Você pode adicionar vínculos, solicitar correções ou seguir se estiver tudo certo.
-          </p>
-        </div>
-      </div>
-
+    <section>
       <div className="grid grid-cols-4 gap-2 sm:grid-cols-2 sm:gap-3 xl:grid-cols-5">
         {groups.map((group) => {
           const Icon = GROUP_ICONS[group.key];
