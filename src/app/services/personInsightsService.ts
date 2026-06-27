@@ -33,6 +33,41 @@ export interface PersonGeneratedInsight {
   updated_at?: string;
 }
 
+type FunctionErrorWithContext = {
+  message?: string;
+  context?: Response;
+};
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null;
+}
+
+async function getFunctionErrorMessage(error: unknown) {
+  const fallback = error instanceof Error
+    ? error.message
+    : 'Erro ao gerar conteúdos automáticos.';
+
+  const context = (error as FunctionErrorWithContext | null | undefined)?.context;
+
+  if (!context) return fallback;
+
+  try {
+    const payload = await context.clone().json();
+    if (isRecord(payload) && typeof payload.error === 'string' && payload.error.trim()) {
+      return payload.error;
+    }
+  } catch {
+    try {
+      const text = await context.clone().text();
+      if (text.trim()) return text;
+    } catch {
+      // Mantem a mensagem original retornada pelo cliente de Functions.
+    }
+  }
+
+  return fallback;
+}
+
 export async function obterInsightsGeradosPessoa(pessoaId: string) {
   const { data, error } = await supabase
     .from('person_generated_insights')
@@ -57,8 +92,9 @@ export async function gerarInsightsPessoa(pessoaId: string, force = false) {
   });
 
   if (error) {
-    console.error('[Supabase Function] Erro ao gerar insights:', error);
-    throw new Error(error.message || 'Erro ao gerar conteúdos automáticos.');
+    const message = await getFunctionErrorMessage(error);
+    console.error('[Supabase Function] Erro ao gerar insights:', error, message);
+    throw new Error(message);
   }
 
   if (!data?.ok) {
