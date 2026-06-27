@@ -22,7 +22,7 @@ const MeusDados = React.lazy(() => import('./pages/MeusDadosWithInlineProfileBio
 const MeusVinculos = React.lazy(() => import('./pages/MeusVinculosMobileShortcutsPage').then((module) => ({ default: module.MeusVinculosMobileShortcutsPage })));
 const ArquivosHistoricosPage = React.lazy(() => import('./pages/ArquivosHistoricosPage').then((module) => ({ default: module.ArquivosHistoricosPage })));
 const PreferenciasPage = React.lazy(() => import('./pages/PreferenciasPage').then((module) => ({ default: module.PreferenciasPage })));
-const RevisaoDados = React.lazy(() => import('./pages/RevisaoDados').then((module) => ({ default: module.RevisaoDados })));
+const RevisaoDados = React.lazy(() => import('./pages/RevisaoDadosFlowPage').then((module) => ({ default: module.RevisaoDadosFlowPage })));
 const VincularPerfil = React.lazy(() => import('./pages/VincularPerfil').then((module) => ({ default: module.VincularPerfil })));
 const ForumHome = React.lazy(() => import('./pages/forum/ForumHome').then((module) => ({ default: module.ForumHome })));
 const ForumTopico = React.lazy(() => import('./pages/forum/ForumTopico').then((module) => ({ default: module.ForumTopico })));
