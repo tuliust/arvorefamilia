@@ -31,11 +31,14 @@
 | `DesktopFamilyHorizontalMapFilteredView.tsx` | linha geracional desktop filtrada. |
 | `MobileFamilyHorizontalMapView.tsx` | linha geracional mobile. |
 | `MobileFamilyHorizontalMapFilteredView.tsx` | linha geracional mobile filtrada. |
-| `buildTreeGraph.ts` | montagem do grafo a partir de pessoas e relacionamentos. |
+| `buildTreeGraph.ts` | montagem do grafo a partir de pessoas e relacionamentos, incluindo status visual de vínculos conjugais. |
+| `MarriageNode.tsx` | nó conjugal com símbolo, status, tooltip e acessibilidade do vínculo. |
+| `TreeConjugalStatusLegend.tsx` | legenda de status conjugais por símbolo e padrão de linha. |
+| `TreeLegend.tsx` | legenda consolidada da árvore, incluindo status conjugais. |
 | `treeViewMode.ts` | conversão entre rota e modo de visualização. |
 | `utils/treePreferences.ts` | leitura, persistência e migração de preferências visuais. |
 | `modals/AddConnectionModal.tsx` | modal de nova conexão. |
-| `modals/ViewMarriageModal.tsx` | modal de detalhes de casamento. |
+| `modals/ViewMarriageModal.tsx` | modal de detalhes de casamento, com badge, narrativa e tooltip baseados no status conjugal inferido. |
 
 ## Páginas de membro
 
@@ -47,6 +50,7 @@
 | `PreferenciasPage.tsx` | preferências do membro. |
 | `RevisaoDados.tsx` | revisão final antes de concluir o fluxo. |
 | `PersonProfile.tsx` | perfil público/protegido da pessoa. |
+| `PersonRelationshipsView.tsx` | relacionamentos do perfil, incluindo agrupamento conjugal por status. |
 | `Curiosidades.tsx` | página de exploração de dados familiares com navegação sticky, IA, fotos, quiz, mural, gráficos, gerações, relacionamentos, rota e abas de descoberta. |
 
 ## Curiosidades
@@ -91,6 +95,7 @@
 
 | Componente / página | Papel |
 |---|---|
+| `AdminRelacionamentoForm.tsx` | cadastro de vínculos com status conjugal inferido e validações de separação/inatividade. |
 | `AdminDuvidasRefined.tsx` | versão ativa de `/admin/duvidas`, com filtros em linha própria, listagem sem slugs visíveis e ações compactas por ícone. |
 | `AdminAtividades.tsx` | histórico administrativo de atividades, com filtros por autor/usuário, botão de limpeza local da lista e tabela alinhada por Data, Autor, Atividade e Resumo. |
 | `AdminPeopleContentSettings.tsx` | gestão de geração, visibilidade e conteúdos automáticos de pessoas, com fallback defensivo quando `person_visibility_settings` não existir no ambiente remoto. |
