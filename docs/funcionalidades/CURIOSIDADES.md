@@ -1,6 +1,6 @@
 # Curiosidades
 
-> Última revisão: 2026-06-26
+> Última revisão: 2026-06-27
 > Escopo: `/curiosidades`, exploração visual e textual dos dados familiares, rankings, IA, quiz, mural, fotos, relacionamentos, rota, gerações e abas de descoberta.
 > Status: canônico.
 
@@ -88,6 +88,7 @@ O quiz é gerado a partir dos dados familiares cadastrados.
 
 Regras:
 
+- cada rodada deve exibir até cinco perguntas;
 - cada pergunta deve exibir até seis opções quando houver dados suficientes;
 - opções de pessoas devem usar nome curto sempre que possível;
 - quando houver homônimos, a opção deve ser desambiguada com último sobrenome ou nome completo, evitando duas respostas visualmente idênticas;
@@ -95,8 +96,18 @@ Regras:
 - a pergunta de longevidade usa o texto `Quem é a pessoa com mais tempo de vida?`;
 - o indicador da pergunta deve usar formato compacto, como `1/5`;
 - a etapa visual pode usar pílulas ou pontos, mas não deve exibir ícone de interrogação no cabeçalho da pergunta;
-- botões de resposta devem ser responsivos e podem usar duas colunas para reduzir altura;
-- a resposta correta e a explicação devem aparecer somente após seleção.
+- botões de resposta devem ocupar a área disponível, com altura confortável, avatares ou iniciais legíveis e texto sem truncamento desnecessário;
+- a resposta correta e a explicação devem aparecer somente após seleção;
+- após seleção, o feedback deve substituir a área das alternativas e usar animação de entrada;
+- o avanço para a próxima pergunta ou resultado deve ocorrer por botão dentro do painel de feedback;
+- ao final, o quiz deve exibir resultado consolidado e opção de refazer.
+
+Mensagens finais canônicas:
+
+- `Parabéns! Você acertou todas as perguntas.`;
+- `Quase lá... Você acertou X/Y perguntas.`;
+- `Ah... Você acertou somente X/Y das perguntas.`;
+- `Que pena! Você não acertou nenhuma pergunta.`.
 
 ## Mural da família
 
@@ -242,7 +253,7 @@ Validar:
 - regras de bodas listadas neste documento;
 - ranking de profissões sem corte visual nos círculos;
 - IA com placeholder e limite visual de sugestões no mobile;
-- quiz com homônimos desambiguados e alternativas variadas quando houver base suficiente;
+- quiz com homônimos desambiguados, alternativas variadas, feedback animado na área das opções e resultado final consolidado;
 - mural publicando com usuário logado, limite de 200 caracteres, scroll vertical e exclusão restrita ao autor;
 - rota com textos acentuados em UTF-8 válido e ilustração `mapa.png` no tamanho desktop documentado;
 - comparação de interesses com pluralização correta de `ponto/pontos` e badges do questionário quando disponíveis;
