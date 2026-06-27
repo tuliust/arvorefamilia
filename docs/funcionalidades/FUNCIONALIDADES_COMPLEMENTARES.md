@@ -167,6 +167,8 @@ Função:
 
 A área administrativa de pessoas deve permitir manutenção controlada de cadastros, respeitando validações e evitando inconsistências nos vínculos.
 
+Validações de vínculo conjugal e status inferido estão documentadas em `funcionalidades/STATUS_CONJUGAL.md`.
+
 Regras:
 
 - não duplicar pessoas sem confirmação;
