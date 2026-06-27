@@ -30,7 +30,7 @@ const ForumNovoTopico = React.lazy(() => import('./pages/forum/ForumNovoTopico')
 const ForumEditarTopico = React.lazy(() => import('./pages/forum/ForumEditarTopico').then((module) => ({ default: module.ForumEditarTopico })));
 const AdminLogin = React.lazy(() => import('./pages/admin/AdminLogin').then((module) => ({ default: module.AdminLogin })));
 const AdminDashboard = React.lazy(() => import('./pages/admin/AdminDashboard').then((module) => ({ default: module.AdminDashboard })));
-const AdminHomeSettings = React.lazy(() => import('./pages/admin/AdminHomeSettings').then((module) => ({ default: module.AdminHomeSettings })));
+const AdminHomeSettings = React.lazy(() => import('./pages/admin/AdminHomeSettingsWithSaveBar').then((module) => ({ default: module.AdminHomeSettingsWithSaveBar })));
 const AdminPessoas = React.lazy(() => import('./pages/admin/AdminPessoas').then((module) => ({ default: module.AdminPessoas })));
 const AdminPessoaForm = React.lazy(() => import('./pages/admin/AdminPessoaForm').then((module) => ({ default: module.AdminPessoaForm })));
 const AdminPessoaEditWorkspace = React.lazy(() => import('./pages/admin/AdminPessoaEditWorkspace').then((module) => ({ default: module.AdminPessoaEditWorkspace })));
