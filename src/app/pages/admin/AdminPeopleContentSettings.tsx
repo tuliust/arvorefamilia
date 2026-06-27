@@ -3,6 +3,7 @@ import { Settings2, Sparkles } from 'lucide-react';
 import { toast } from 'sonner';
 import { MemberPageHeader } from '../../components/layout/MemberPageHeader';
 import { Button } from '../../components/ui/button';
+import { ConfirmDialog } from '../../components/ConfirmDialog';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { Input } from '../../components/ui/input';
 import { atualizarGeracaoManualPessoa, atualizarPessoa, obterTodasPessoas } from '../../services/dataService';
@@ -36,6 +37,7 @@ export function AdminPeopleContentSettings() {
   const [insightDraft, setInsightDraft] = useState<InsightDraftState>(() => createEmptyDraft());
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [insightToClear, setInsightToClear] = useState<'astrology' | 'historical_events' | null>(null);
 
   const filteredPeople = useMemo(() => {
     const normalized = filter.trim().toLowerCase();
@@ -195,9 +197,15 @@ export function AdminPeopleContentSettings() {
     }
   };
 
-  const handleClearInsight = async (tipo: 'astrology' | 'historical_events') => {
-    if (!selectedPessoa || !window.confirm('Limpar o conteúdo salvo deste bloco?')) return;
+  const handleClearInsight = (tipo: 'astrology' | 'historical_events') => {
+    if (!selectedPessoa || saving) return;
+    setInsightToClear(tipo);
+  };
 
+  const confirmClearInsight = async () => {
+    if (!selectedPessoa || !insightToClear || saving) return;
+
+    const tipo = insightToClear;
     try {
       setSaving(true);
       await deletePersonGeneratedInsight(selectedPessoa.id, tipo);
@@ -207,9 +215,10 @@ export function AdminPeopleContentSettings() {
       } else {
         setInsightDraft((current) => ({ ...current, historicalTitle: '', historicalMainEvent: '' }));
       }
-      toast.success('Conteúdo limpo.');
+      setInsightToClear(null);
+      toast.success('Conteudo limpo.');
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Não foi possível limpar conteúdo.');
+      toast.error(error instanceof Error ? error.message : 'Nao foi possivel limpar conteudo.');
     } finally {
       setSaving(false);
     }
@@ -431,6 +440,20 @@ export function AdminPeopleContentSettings() {
           )}
         </div>
       </main>
+
+      <ConfirmDialog
+        open={Boolean(insightToClear)}
+        onOpenChange={(open) => {
+          if (!open && !saving) setInsightToClear(null);
+        }}
+        title={insightToClear === 'astrology' ? 'Limpar astrologia' : 'Limpar fatos'}
+        description={insightToClear === 'astrology' ? 'Limpar o conteudo salvo de astrologia? Esta acao nao pode ser desfeita.' : 'Limpar o conteudo salvo de fatos do nascimento? Esta acao nao pode ser desfeita.'}
+        confirmText="Limpar"
+        cancelText="Cancelar"
+        onConfirm={confirmClearInsight}
+        variant="danger"
+        loading={saving}
+      />
     </div>
   );
 }

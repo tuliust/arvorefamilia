@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Bell, Users } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '../../components/ui/button';
+import { ConfirmDialog } from '../../components/ConfirmDialog';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { adminListProfilesForLinking, adminListAllUserPersonLinks, type AdminLinkableProfile } from '../../services/memberProfileService';
 import { listNotificationGroupsAdmin, upsertNotificationGroupAdmin, deleteNotificationGroupAdmin, listNotificationGroupMembersAdmin, replaceNotificationGroupMembersAdmin, listNotificationGroupRulesAdmin, replaceNotificationGroupRulesAdmin } from '../../services/notificationGroupsAdminService';
@@ -45,6 +46,7 @@ export function AdminNotificationGroupsTab() {
   const [selectedRuleTypes, setSelectedRuleTypes] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [deleteGroupDialogOpen, setDeleteGroupDialogOpen] = useState(false);
 
   const selectedPreferences = useMemo(
     () => preferences.find((item) => item.user_id === selectedUserId) ?? null,
@@ -133,13 +135,19 @@ export function AdminNotificationGroupsTab() {
     }
   };
 
-  const handleDeleteGroup = async () => {
-    if (!selectedGroupId || !window.confirm('Remover este grupo de notificacao?')) return;
+  const handleDeleteGroup = () => {
+    if (!selectedGroupId || saving) return;
+    setDeleteGroupDialogOpen(true);
+  };
+
+  const confirmDeleteGroup = async () => {
+    if (!selectedGroupId || saving) return;
 
     try {
       setSaving(true);
       await deleteNotificationGroupAdmin(selectedGroupId);
       toast.success('Grupo removido.');
+      setDeleteGroupDialogOpen(false);
       setSelectedGroupId('');
       setGroupName('');
       setGroupDescription('');
@@ -325,6 +333,20 @@ export function AdminNotificationGroupsTab() {
           </CardContent>
         </Card>
       </div>
+
+      <ConfirmDialog
+        open={deleteGroupDialogOpen}
+        onOpenChange={(open) => {
+          if (!saving) setDeleteGroupDialogOpen(open);
+        }}
+        title="Remover grupo de notificacao"
+        description="Remover este grupo de notificacao? Esta acao nao pode ser desfeita."
+        confirmText="Remover"
+        cancelText="Cancelar"
+        onConfirm={confirmDeleteGroup}
+        variant="danger"
+        loading={saving}
+      />
     </div>
   );
 }

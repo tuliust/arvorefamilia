@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
+import { ConfirmDialog } from '../../components/ConfirmDialog';
 import { Input } from '../../components/ui/input';
 import { Textarea } from '../../components/ui/textarea';
 import { toast } from 'sonner';
@@ -53,6 +54,8 @@ export function AdminRelacionamentos() {
   const [loading, setLoading] = useState(true);
   const [editingMarriageId, setEditingMarriageId] = useState<string | null>(null);
   const [savingMarriageId, setSavingMarriageId] = useState<string | null>(null);
+  const [relacionamentoParaExcluirId, setRelacionamentoParaExcluirId] = useState<string | null>(null);
+  const [deletingRelationshipId, setDeletingRelationshipId] = useState<string | null>(null);
   const [marriageForm, setMarriageForm] = useState<MarriageEditForm>({
     subtipo_relacionamento: 'casamento',
     ativo: true,
@@ -81,14 +84,27 @@ export function AdminRelacionamentos() {
     setLoading(false);
   };
 
-  const handleDelete = async (id: string) => {
-    if (window.confirm('Tem certeza que deseja excluir este relacionamento?')) {
+  const handleDelete = (id: string) => {
+    if (deletingRelationshipId) return;
+    setRelacionamentoParaExcluirId(id);
+  };
+
+  const confirmDeleteRelationship = async () => {
+    if (!relacionamentoParaExcluirId || deletingRelationshipId) return;
+
+    const id = relacionamentoParaExcluirId;
+    setDeletingRelationshipId(id);
+
+    try {
       const success = await excluirRelacionamentoComInverso(id);
       if (success) {
+        setRelacionamentoParaExcluirId(null);
         await loadData();
       } else {
         toast.error('Erro ao excluir relacionamento');
       }
+    } finally {
+      setDeletingRelationshipId(null);
     }
   };
 
@@ -437,6 +453,20 @@ export function AdminRelacionamentos() {
           </CardContent>
         </Card>
       </main>
+
+      <ConfirmDialog
+        open={Boolean(relacionamentoParaExcluirId)}
+        onOpenChange={(open) => {
+          if (!open && !deletingRelationshipId) setRelacionamentoParaExcluirId(null);
+        }}
+        title="Excluir relacionamento"
+        description="Tem certeza que deseja excluir este relacionamento? Esta acao nao pode ser desfeita."
+        confirmText="Excluir"
+        cancelText="Cancelar"
+        onConfirm={confirmDeleteRelationship}
+        variant="danger"
+        loading={Boolean(deletingRelationshipId)}
+      />
     </div>
   );
 }

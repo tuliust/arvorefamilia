@@ -3,6 +3,7 @@ import { Link2, Search, Trash2, UserCheck } from 'lucide-react';
 import { toast } from 'sonner';
 import { Badge } from '../../components/ui/badge';
 import { Button } from '../../components/ui/button';
+import { ConfirmDialog } from '../../components/ConfirmDialog';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { Input } from '../../components/ui/input';
 import { adminListProfilesForLinking, adminCreateUserPersonLink, adminDeleteUserPersonLink, adminListAllUserPersonLinks, adminUpdateUserPersonLink, type AdminLinkableProfile, type UserPersonLinkRecord } from '../../services/memberProfileService';
@@ -43,6 +44,8 @@ export function AdminUserPersonLinksTab() {
   const [selectedUserId, setSelectedUserId] = useState('');
   const [selectedPessoaId, setSelectedPessoaId] = useState('');
   const [selectedRole, setSelectedRole] = useState<UserPersonPermissionRole>('editor');
+  const [linkToDeleteId, setLinkToDeleteId] = useState<string | null>(null);
+  const [deletingLink, setDeletingLink] = useState(false);
 
   const profilesById = useMemo(
     () => new Map(profiles.map((profile) => [profile.id, profile])),
@@ -148,18 +151,27 @@ export function AdminUserPersonLinksTab() {
     }
   };
 
-  const handleDelete = async (linkId: string) => {
-    if (!window.confirm('Remover este vinculo de usuario com a pessoa?')) return;
+  const handleDelete = (linkId: string) => {
+    if (deletingLink) return;
+    setLinkToDeleteId(linkId);
+  };
 
+  const confirmDeleteLink = async () => {
+    if (!linkToDeleteId || deletingLink) return;
+
+    const linkId = linkToDeleteId;
     try {
+      setDeletingLink(true);
       setSaving(true);
       const result = await adminDeleteUserPersonLink(linkId);
       if (result.error) throw new Error(result.error);
       toast.success('Vinculo removido.');
+      setLinkToDeleteId(null);
       await loadData();
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Nao foi possivel remover vinculo.');
     } finally {
+      setDeletingLink(false);
       setSaving(false);
     }
   };
@@ -289,6 +301,20 @@ export function AdminUserPersonLinksTab() {
           )}
         </CardContent>
       </Card>
+
+      <ConfirmDialog
+        open={Boolean(linkToDeleteId)}
+        onOpenChange={(open) => {
+          if (!open && !deletingLink) setLinkToDeleteId(null);
+        }}
+        title="Remover vinculo"
+        description="Remover este vinculo de usuario com a pessoa? Esta acao nao pode ser desfeita."
+        confirmText="Remover"
+        cancelText="Cancelar"
+        onConfirm={confirmDeleteLink}
+        variant="danger"
+        loading={deletingLink}
+      />
     </div>
   );
 }
