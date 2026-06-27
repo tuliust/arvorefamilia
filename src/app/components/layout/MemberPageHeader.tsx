@@ -107,7 +107,9 @@ function getLabelClassName(mode: HeaderAction['responsiveLabel']) {
 
 function isStandardNavigationAction(action: HeaderAction) {
   if (!action.to) return false;
-  return STANDARD_MEMBER_NAV_PATHS.has(action.to) || action.to.startsWith('/forum');
+
+  const targetPath = action.to.split('?')[0].split('#')[0];
+  return STANDARD_MEMBER_NAV_PATHS.has(targetPath) || targetPath.startsWith('/forum');
 }
 
 function getCurrentHeaderSection(pathname: string) {
@@ -411,6 +413,7 @@ export function MemberPageHeader({
               {ADMIN_HEADER_ACTIONS.map((action) => (
                 <HeaderActionButton key={`${action.label}-${action.to ?? 'button'}`} action={action} />
               ))}
+              {customActions}
               <UserProfileMenu />
             </div>
           ) : (
