@@ -1,7 +1,6 @@
 import React from 'react';
 import { Plus } from 'lucide-react';
 import { Button } from '../../components/ui/button';
-import { formatCount } from './meusVinculosUtils';
 
 type RelationshipGroupPanelProps = {
   id?: string;
@@ -32,6 +31,10 @@ export function RelationshipGroupPanel({
   showEmptyAddButton = false,
   children,
 }: RelationshipGroupPanelProps) {
+  const contentClassName = id === 'vinculos-pais'
+    ? 'mt-4 grid min-w-0 gap-3 lg:grid-cols-2'
+    : 'mt-4 space-y-3';
+
   return (
     <section id={id} className="scroll-mt-24 min-w-0 rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
       <div className="flex min-w-0 flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
@@ -46,7 +49,6 @@ export function RelationshipGroupPanel({
             )}
           </div>
           <p className="mt-1 break-words text-sm text-gray-600">{description}</p>
-          <p className="mt-2 text-xs font-medium text-gray-500">{formatCount(count, 'vínculo', 'vínculos')}</p>
         </div>
         <Button type="button" variant="outline" className="w-full shrink-0 sm:w-auto" onClick={onAdd}>
           <Plus className="h-4 w-4" />
@@ -66,7 +68,7 @@ export function RelationshipGroupPanel({
           )}
         </div>
       ) : (
-        <div className="mt-4 space-y-3">{children}</div>
+        <div className={contentClassName}>{children}</div>
       )}
     </section>
   );
