@@ -27,6 +27,7 @@ import { MeusDados } from './MeusDados';
 
 const PROFILE_RESULT_HOST_ID = 'meus-dados-profile-bio-result-host';
 const PROFILE_ACTIONS_HOST_ID = 'meus-dados-profile-bio-actions-host';
+const PROFILE_ORIGINAL_CONTENT_ATTRIBUTE = 'data-meus-dados-questionnaire-original';
 const MAX_PROFILE_TEXT_LENGTH = 500;
 
 type ProfileTextState = {
@@ -225,7 +226,7 @@ function parseStepInfo(section: HTMLElement | null): StepInfo | null {
 
 function ensureInlineHosts() {
   const section = findSobreMimSection();
-  if (!section) return { resultHost: null, actionsHost: null, stepInfo: null };
+  if (!section) return { resultHost: null, actionsHost: null, stepInfo: null, questionnaireCard: null };
 
   const stepInfo = parseStepInfo(section);
   const questionnaireCard = section.querySelector<HTMLElement>('.space-y-5.rounded-xl.border') ?? section;
@@ -240,10 +241,8 @@ function ensureInlineHosts() {
     resultHost.className = 'hidden';
   }
 
-  if (actionBar && resultHost.parentElement !== questionnaireCard) {
-    questionnaireCard.insertBefore(resultHost, actionBar);
-  } else if (!resultHost.parentElement) {
-    questionnaireCard.appendChild(resultHost);
+  if (resultHost.parentElement !== questionnaireCard) {
+    questionnaireCard.insertBefore(resultHost, questionnaireCard.firstChild);
   }
 
   let actionsHost = document.getElementById(PROFILE_ACTIONS_HOST_ID);
@@ -257,7 +256,14 @@ function ensureInlineHosts() {
     actionBar.insertBefore(actionsHost, nextButton ?? null);
   }
 
-  return { resultHost, actionsHost, stepInfo };
+  Array.from(questionnaireCard.children).forEach((child) => {
+    if (child.id === PROFILE_RESULT_HOST_ID) return;
+    if (child instanceof HTMLElement && !child.hasAttribute(PROFILE_ORIGINAL_CONTENT_ATTRIBUTE)) {
+      child.setAttribute(PROFILE_ORIGINAL_CONTENT_ATTRIBUTE, 'true');
+    }
+  });
+
+  return { resultHost, actionsHost, stepInfo, questionnaireCard };
 }
 
 function getSelectedPessoaIdFromPage() {
@@ -268,6 +274,7 @@ function getSelectedPessoaIdFromPage() {
 function useMeusDadosInlineHosts() {
   const [resultHost, setResultHost] = useState<HTMLElement | null>(null);
   const [actionsHost, setActionsHost] = useState<HTMLElement | null>(null);
+  const [questionnaireCard, setQuestionnaireCard] = useState<HTMLElement | null>(null);
   const [stepInfo, setStepInfo] = useState<StepInfo | null>(null);
 
   useEffect(() => {
@@ -275,6 +282,7 @@ function useMeusDadosInlineHosts() {
       const next = ensureInlineHosts();
       setResultHost(next.resultHost as HTMLElement | null);
       setActionsHost(next.actionsHost as HTMLElement | null);
+      setQuestionnaireCard(next.questionnaireCard as HTMLElement | null);
       setStepInfo(next.stepInfo);
     };
 
@@ -286,12 +294,16 @@ function useMeusDadosInlineHosts() {
     return () => {
       observer.disconnect();
       window.removeEventListener('resize', syncHosts);
+      document.querySelectorAll<HTMLElement>(`[${PROFILE_ORIGINAL_CONTENT_ATTRIBUTE}]`).forEach((node) => {
+        node.style.display = '';
+        node.removeAttribute(PROFILE_ORIGINAL_CONTENT_ATTRIBUTE);
+      });
       document.getElementById(PROFILE_RESULT_HOST_ID)?.remove();
       document.getElementById(PROFILE_ACTIONS_HOST_ID)?.remove();
     };
   }, []);
 
-  return { resultHost, actionsHost, stepInfo };
+  return { resultHost, actionsHost, questionnaireCard, stepInfo };
 }
 
 function useHideConfirmUntilProfileResults(showResults: boolean) {
@@ -321,7 +333,7 @@ function useHideConfirmUntilProfileResults(showResults: boolean) {
   }, [showResults]);
 }
 
-function MeusDadosProfileBioResults({ onLoaded }: { onLoaded?: () => void }) {
+function MeusDadosProfileBioResults() {
   const { user } = useAuth();
   const [pessoa, setPessoa] = useState<Pessoa | null>(null);
   const [canEdit, setCanEdit] = useState(true);
@@ -514,7 +526,6 @@ function MeusDadosProfileBioResults({ onLoaded }: { onLoaded?: () => void }) {
       setQuestionnaire(loadedQuestionnaire);
       loadedRef.current = true;
       setLoading(false);
-      onLoaded?.();
     }
 
     void loadProfileText();
@@ -522,7 +533,7 @@ function MeusDadosProfileBioResults({ onLoaded }: { onLoaded?: () => void }) {
     return () => {
       mounted = false;
     };
-  }, [onLoaded, user]);
+  }, [user]);
 
   useEffect(() => {
     if (!loadedRef.current || !pessoa?.id || !questionnaire || !hasQuestionnaireSource(questionnaire)) return;
@@ -575,106 +586,118 @@ function MeusDadosProfileBioResults({ onLoaded }: { onLoaded?: () => void }) {
   const canGenerate = Boolean(questionnaire && hasQuestionnaireSource(questionnaire) && canEdit);
 
   return (
-    <section className="space-y-4 rounded-xl border border-blue-100 bg-blue-50/40 p-4">
-      <div className="flex min-w-0 items-start gap-3">
-        <span className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white text-blue-700 ring-1 ring-blue-100">
-          <UserCircle2 className="h-5 w-5" />
-        </span>
-        <div className="min-w-0">
-          <h3 className="break-words text-lg font-bold text-gray-950">Mini Bio e Resultados</h3>
-          <p className="mt-1 break-words text-sm leading-relaxed text-gray-600">
-            Revise os textos gerados pela IA. Você pode editar livremente antes de confirmar seus dados.
-          </p>
+    <section className="space-y-5">
+      <div className="space-y-2">
+        <div className="flex items-center justify-between gap-3 text-xs font-medium text-gray-600">
+          <span>Etapa 9 de 9</span>
+          <span className="break-words text-right">Seu Perfil</span>
+        </div>
+        <div className="h-2 overflow-hidden rounded-full bg-gray-100">
+          <div className="h-full rounded-full bg-blue-600 transition-all" style={{ width: '100%' }} />
         </div>
       </div>
 
-      {loading && (
-        <div className="flex items-center gap-2 rounded-xl border border-blue-100 bg-white px-3 py-3 text-sm text-blue-900">
-          <Loader2 className="h-4 w-4 animate-spin" />
-          Carregando questionário e preparando a geração...
-        </div>
-      )}
-
-      {generating && (
-        <div className="flex items-center gap-2 rounded-xl border border-blue-200 bg-blue-50 px-3 py-3 text-sm text-blue-900">
-          <Loader2 className="h-4 w-4 animate-spin" />
-          Gerando Mini Bio e Curiosidades com IA...
-        </div>
-      )}
-
-      {!loading && !questionnaire && (
-        <p className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
-          Não encontramos respostas salvas do questionário. Os campos podem ser preenchidos manualmente.
-        </p>
-      )}
-
-      {(error || generationError) && (
-        <p className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800">
-          {error || generationError}
-        </p>
-      )}
-
-      {hasOutdatedSuggestion && (
-        <p className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
-          O questionário foi alterado desde a última geração. Use “Atualizar com IA” apenas se quiser substituir a sugestão atual.
-        </p>
-      )}
-
-      <div className="grid gap-4 lg:grid-cols-2">
-        <div className="space-y-2">
-          <div className="flex items-center justify-between gap-3">
-            <Label htmlFor="meus-dados-minibio">Mini Bio</Label>
-            <span className="text-xs text-gray-500">{profileText.minibio.length}/{MAX_PROFILE_TEXT_LENGTH}</span>
+      <div className="space-y-4 rounded-xl border border-blue-100 bg-blue-50/40 p-4">
+        <div className="flex min-w-0 items-start gap-3">
+          <span className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white text-blue-700 ring-1 ring-blue-100">
+            <UserCircle2 className="h-5 w-5" />
+          </span>
+          <div className="min-w-0">
+            <h3 className="break-words text-lg font-bold text-gray-950">Seu Perfil</h3>
+            <p className="mt-1 break-words text-sm leading-relaxed text-gray-600">
+              Revise os textos gerados pela IA. Você pode editar livremente antes de confirmar seus dados.
+            </p>
           </div>
-          <Textarea
-            id="meus-dados-minibio"
-            value={profileText.minibio}
-            onChange={(event) => updateProfileText('minibio', event.target.value)}
-            placeholder="Escreva uma apresentação curta sobre você."
-            disabled={!canEdit || loading}
-            rows={5}
-          />
         </div>
 
-        <div className="space-y-2">
-          <div className="flex items-center justify-between gap-3">
-            <Label htmlFor="meus-dados-curiosidades">Curiosidades</Label>
-            <span className="text-xs text-gray-500">{profileText.curiosidades.length}/{MAX_PROFILE_TEXT_LENGTH}</span>
+        {loading && (
+          <div className="flex items-center gap-2 rounded-xl border border-blue-100 bg-white px-3 py-3 text-sm text-blue-900">
+            <Loader2 className="h-4 w-4 animate-spin" />
+            Carregando questionário e preparando a geração...
           </div>
-          <Textarea
-            id="meus-dados-curiosidades"
-            value={profileText.curiosidades}
-            onChange={(event) => updateProfileText('curiosidades', event.target.value)}
-            placeholder="Liste gostos, hábitos, memórias ou detalhes leves sobre você."
-            disabled={!canEdit || loading}
-            rows={5}
-          />
-        </div>
-      </div>
-
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-        <p className="text-xs text-gray-500">
-          {saving ? 'Salvando textos...' : 'Os textos são salvos automaticamente ao editar.'}
-        </p>
-        {canGenerate && (
-          <Button
-            type="button"
-            variant="outline"
-            className="w-full sm:w-auto"
-            onClick={() => questionnaire && generateProfileText(questionnaire, { manual: true })}
-            disabled={generating || loading || saving}
-          >
-            <Sparkles className="h-4 w-4" />
-            {generating ? 'Gerando...' : hasOutdatedSuggestion ? 'Atualizar com IA' : 'Regenerar com IA'}
-          </Button>
         )}
+
+        {generating && (
+          <div className="flex items-center gap-2 rounded-xl border border-blue-200 bg-blue-50 px-3 py-3 text-sm text-blue-900">
+            <Loader2 className="h-4 w-4 animate-spin" />
+            Gerando Mini Bio e Curiosidades com IA...
+          </div>
+        )}
+
+        {!loading && !questionnaire && (
+          <p className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
+            Não encontramos respostas salvas do questionário. Os campos podem ser preenchidos manualmente.
+          </p>
+        )}
+
+        {(error || generationError) && (
+          <p className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800">
+            {error || generationError}
+          </p>
+        )}
+
+        {hasOutdatedSuggestion && (
+          <p className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
+            O questionário foi alterado desde a última geração. Use “Atualizar com IA” apenas se quiser substituir a sugestão atual.
+          </p>
+        )}
+
+        <div className="grid gap-4 lg:grid-cols-2">
+          <div className="space-y-2">
+            <div className="flex items-center justify-between gap-3">
+              <Label htmlFor="meus-dados-minibio">Mini Bio</Label>
+              <span className="text-xs text-gray-500">{profileText.minibio.length}/{MAX_PROFILE_TEXT_LENGTH}</span>
+            </div>
+            <Textarea
+              id="meus-dados-minibio"
+              value={profileText.minibio}
+              onChange={(event) => updateProfileText('minibio', event.target.value)}
+              placeholder="Escreva uma apresentação curta sobre você."
+              disabled={!canEdit || loading}
+              rows={5}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <div className="flex items-center justify-between gap-3">
+              <Label htmlFor="meus-dados-curiosidades">Curiosidades</Label>
+              <span className="text-xs text-gray-500">{profileText.curiosidades.length}/{MAX_PROFILE_TEXT_LENGTH}</span>
+            </div>
+            <Textarea
+              id="meus-dados-curiosidades"
+              value={profileText.curiosidades}
+              onChange={(event) => updateProfileText('curiosidades', event.target.value)}
+              placeholder="Liste gostos, hábitos, memórias ou detalhes leves sobre você."
+              disabled={!canEdit || loading}
+              rows={5}
+            />
+          </div>
+        </div>
+
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+          <p className="text-xs text-gray-500">
+            {saving ? 'Salvando textos...' : 'Os textos são salvos automaticamente ao editar.'}
+          </p>
+          {canGenerate && (
+            <Button
+              type="button"
+              variant="outline"
+              className="w-full sm:w-auto"
+              onClick={() => questionnaire && generateProfileText(questionnaire, { manual: true })}
+              disabled={generating || loading || saving}
+            >
+              <Sparkles className="h-4 w-4" />
+              {generating ? 'Gerando...' : hasOutdatedSuggestion ? 'Atualizar com IA' : 'Regenerar com IA'}
+            </Button>
+          )}
+        </div>
       </div>
     </section>
   );
 }
 
 function MeusDadosInlineProfileBioController() {
-  const { resultHost, actionsHost, stepInfo } = useMeusDadosInlineHosts();
+  const { resultHost, actionsHost, questionnaireCard, stepInfo } = useMeusDadosInlineHosts();
   const [showResults, setShowResults] = useState(false);
   const finalStepReached = Boolean(stepInfo && stepInfo.current >= stepInfo.total);
 
@@ -684,6 +707,14 @@ function MeusDadosInlineProfileBioController() {
     if (!resultHost) return;
     resultHost.classList.toggle('hidden', !showResults);
   }, [resultHost, showResults]);
+
+  useEffect(() => {
+    if (!questionnaireCard) return;
+
+    questionnaireCard.querySelectorAll<HTMLElement>(`[${PROFILE_ORIGINAL_CONTENT_ATTRIBUTE}]`).forEach((node) => {
+      node.style.display = showResults ? 'none' : '';
+    });
+  }, [questionnaireCard, showResults, stepInfo]);
 
   const revealResults = () => {
     setShowResults(true);
