@@ -4,8 +4,9 @@ import { useLocation } from 'react-router';
 const mobileGlobalTweaks = `
 @media (max-width: 767px) {
   header {
-    z-index: 10900 !important;
+    z-index: 2147482000 !important;
     overflow: visible !important;
+    isolation: isolate !important;
   }
 
   header [role="menu"][aria-label="Últimas notificações"] {
@@ -17,7 +18,20 @@ const mobileGlobalTweaks = `
     max-width: none !important;
     max-height: min(34rem, calc(100dvh - 6rem)) !important;
     transform: none !important;
-    z-index: 11000 !important;
+    z-index: 2147483000 !important;
+  }
+
+  header div[class*="shadow-2xl"][class*="bg-white"][class*="overflow-y-auto"],
+  header div[class*="shadow-2xl"][class*="bg-white"][class*="overflow-hidden"] {
+    position: fixed !important;
+    left: 0.75rem !important;
+    right: 0.75rem !important;
+    top: calc(env(safe-area-inset-top, 0px) + 4.75rem) !important;
+    z-index: 2147483000 !important;
+    width: auto !important;
+    max-width: none !important;
+    max-height: min(34rem, calc(100dvh - 6rem)) !important;
+    transform: none !important;
   }
 
   header div[class*="max-h-96"][class*="shadow-2xl"] {
@@ -25,7 +39,7 @@ const mobileGlobalTweaks = `
     left: 0.75rem !important;
     right: 0.75rem !important;
     top: calc(env(safe-area-inset-top, 0px) + 4.75rem) !important;
-    z-index: 11010 !important;
+    z-index: 2147483000 !important;
     width: auto !important;
     max-width: none !important;
     max-height: min(28rem, calc(100dvh - 7rem)) !important;
