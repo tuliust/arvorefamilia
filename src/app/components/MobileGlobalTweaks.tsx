@@ -150,7 +150,9 @@ function hideMeusDadosOtherAdjustments() {
 
 function rewriteMeusDadosPhotoButton() {
   Array.from(document.querySelectorAll<HTMLButtonElement>('button')).forEach((button) => {
-    if (normalizeText(button.textContent) !== 'cadastrar') return;
+    const text = normalizeText(button.textContent);
+    if (!text.includes('cadastrar')) return;
+    if (!button.querySelector('svg') && !button.textContent?.includes('foto')) return;
 
     const visibleLabel = Array.from(button.querySelectorAll<HTMLElement>('span'))
       .find((span) => normalizeText(span.textContent) === 'cadastrar');
@@ -189,6 +191,42 @@ function compactDeathStatusToggle() {
   });
 }
 
+function clearButtonTextNodes(button: HTMLButtonElement) {
+  Array.from(button.childNodes).forEach((node) => {
+    if (node.nodeType === Node.TEXT_NODE && normalizeText(node.textContent)) {
+      node.textContent = '';
+    }
+  });
+
+  Array.from(button.children).forEach((child) => {
+    if (child.tagName.toLowerCase() === 'svg') return;
+    if (child instanceof HTMLElement && normalizeText(child.textContent)) {
+      setStyleValue(child, 'display', 'none');
+    }
+  });
+}
+
+function styleIconOnlyQuestionnaireButton(button: HTMLButtonElement, label: string, iconColor: string) {
+  button.setAttribute('aria-label', label);
+  button.title = label;
+  setStyleValue(button, 'width', '3.25rem');
+  setStyleValue(button, 'minWidth', '3.25rem');
+  setStyleValue(button, 'maxWidth', '3.25rem');
+  setStyleValue(button, 'height', '3rem');
+  setStyleValue(button, 'flex', '0 0 3.25rem');
+  setStyleValue(button, 'justifyContent', 'center');
+  setStyleValue(button, 'gap', '0');
+  clearButtonTextNodes(button);
+
+  const svg = button.querySelector<SVGElement>('svg');
+  if (!svg) return;
+
+  svg.style.opacity = '1';
+  svg.style.color = iconColor;
+  svg.style.stroke = iconColor;
+  svg.setAttribute('aria-hidden', 'true');
+}
+
 function fixQuestionnaireNavigationIcons() {
   const section = Array.from(document.querySelectorAll<HTMLElement>('section')).find((candidate) => {
     const text = normalizeText(candidate.textContent);
@@ -197,26 +235,54 @@ function fixQuestionnaireNavigationIcons() {
 
   if (!section) return;
 
-  Array.from(section.querySelectorAll<HTMLButtonElement>('button')).forEach((button) => {
+  const actionBar = Array.from(section.querySelectorAll<HTMLElement>('div'))
+    .reverse()
+    .find((node) => {
+      const text = normalizeText(node.textContent);
+      return text.includes('voltar') && (text.includes('pular tudo') || text.includes('avancar') || text.includes('avançar'));
+    }) ?? null;
+
+  if (!actionBar) return;
+
+  setStyleValue(actionBar, 'display', 'flex');
+  setStyleValue(actionBar, 'flexDirection', 'row');
+  setStyleValue(actionBar, 'alignItems', 'center');
+  setStyleValue(actionBar, 'gap', '0.5rem');
+  setStyleValue(actionBar, 'justifyContent', 'space-between');
+
+  const portalHost = actionBar.querySelector<HTMLElement>('#meus-dados-profile-bio-actions-host');
+  if (portalHost) {
+    setStyleValue(portalHost, 'display', 'contents');
+    const portalContainer = portalHost.firstElementChild;
+    if (portalContainer instanceof HTMLElement) setStyleValue(portalContainer, 'display', 'contents');
+  }
+
+  const buttons = Array.from(actionBar.querySelectorAll<HTMLButtonElement>('button'));
+  const backButton = buttons.find((button) => normalizeText(button.textContent).includes('voltar'));
+  const skipButton = buttons.find((button) => normalizeText(button.textContent).includes('pular tudo'));
+  const nextButton = buttons.find((button) => {
     const text = normalizeText(button.textContent);
-    const svg = button.querySelector<SVGElement>('svg');
-    if (!svg) return;
-
-    if (text.includes('voltar')) {
-      setStyleValue(button, 'opacity', '1');
-      svg.style.opacity = '1';
-      svg.style.color = 'rgb(37, 99, 235)';
-      svg.style.stroke = 'rgb(37, 99, 235)';
-      svg.setAttribute('aria-hidden', 'true');
-    }
-
-    if (text.includes('avancar') || text.includes('avançar')) {
-      svg.style.opacity = '1';
-      svg.style.color = 'rgb(255, 255, 255)';
-      svg.style.stroke = 'rgb(255, 255, 255)';
-      svg.setAttribute('aria-hidden', 'true');
-    }
+    return text.includes('avancar') || text.includes('avançar') || text.includes('salvando');
   });
+
+  if (backButton) {
+    styleIconOnlyQuestionnaireButton(backButton, 'Voltar', 'rgb(37, 99, 235)');
+    setStyleValue(backButton, 'order', '1');
+  }
+
+  if (skipButton) {
+    setStyleValue(skipButton, 'order', '2');
+    setStyleValue(skipButton, 'height', '3rem');
+    setStyleValue(skipButton, 'flex', '1 1 auto');
+    setStyleValue(skipButton, 'minWidth', '0');
+    setStyleValue(skipButton, 'width', 'auto');
+    setStyleValue(skipButton, 'justifyContent', 'center');
+  }
+
+  if (nextButton) {
+    styleIconOnlyQuestionnaireButton(nextButton, 'Avançar', 'rgb(255, 255, 255)');
+    setStyleValue(nextButton, 'order', '3');
+  }
 }
 
 function rewriteMobileTreeHeaderTitle() {
@@ -239,17 +305,19 @@ function expandMobileUserMenu() {
   setStyleValue(panel, 'zIndex', '11110');
 }
 
-function preventMobileSpouseDialogAutoKeyboard() {
-  const title = findExactTextElement('Adicionar cônjuge');
+function preventMobileAddRelativeDialogAutoKeyboard() {
+  const title = Array.from(document.querySelectorAll<HTMLElement>('h1, h2, h3, [data-slot="dialog-title"]'))
+    .find((element) => normalizeText(element.textContent).startsWith('adicionar '));
   const dialog = title?.closest('[data-slot="dialog-content"]') as HTMLElement | null;
-  if (!dialog || dialog.dataset.mobileSpouseAutoblurred === 'true') return;
+  if (!dialog || dialog.dataset.mobileAddRelativeAutoblurred === 'true') return;
 
-  dialog.dataset.mobileSpouseAutoblurred = 'true';
+  const input = dialog.querySelector<HTMLInputElement>('#relative-search-name');
+  if (!input) return;
+
+  dialog.dataset.mobileAddRelativeAutoblurred = 'true';
   dialog.setAttribute('tabindex', '-1');
 
   const blurInput = () => {
-    const input = dialog.querySelector<HTMLInputElement>('#relative-search-name');
-    if (!input) return;
     if (document.activeElement === input) input.blur();
     dialog.focus({ preventScroll: true });
   };
@@ -335,7 +403,7 @@ function applyMobileDomTweaks(pathname: string) {
 
   if (route === 'meus-vinculos') {
     enhanceMobileRelationshipCards();
-    preventMobileSpouseDialogAutoKeyboard();
+    preventMobileAddRelativeDialogAutoKeyboard();
   }
 }
 
