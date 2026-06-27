@@ -10,6 +10,7 @@
 - Usuário membro autenticado.
 - Usuário admin para rotas administrativas.
 - Dados mínimos de pessoas, relacionamentos, vínculos, fatos históricos, fotos, profissões e notificações.
+- Para QA mobile, validar preferencialmente em viewport real de iPhone/Safari ou device mode equivalente.
 
 ## Validação técnica local
 
@@ -35,7 +36,7 @@ npm run typecheck
 npm run build
 ```
 
-Quando houver migration nova, confirmar se o arquivo existe localmente e se foi aplicado no Supabase remoto. Para vínculos de responsáveis pessoa-a-pessoa, confirmar a presença de `supabase/migrations/20260627143000_create_person_responsible_links.sql`.
+Quando houver migration nova, confirmar se o arquivo existe localmente e se foi aplicado no Supabase remoto. Para vínculos de responsáveis pessoa-a-pessoa, confirmar a presença de `supabase/migrations/20260627143000_create_person_responsible_links.sql` quando esse fluxo estiver em validação.
 
 ## QA transversal de diálogos próprios
 
@@ -55,19 +56,18 @@ src/app/components/ui/alert.tsx  function Alert({
 
 Esse resultado é falso positivo conhecido, pois `Alert` é componente visual.
 
-Validar manualmente os fluxos sensíveis:
+Nenhum fluxo sensível deve abrir `alert`, `confirm` ou `prompt` nativo do navegador.
 
-- limpeza local de atividades administrativas;
-- exclusão de lembrança no mural de curiosidades;
-- desconexão do Google Agenda em calendário familiar;
-- exclusão de relacionamento e vínculo usuário-pessoa;
-- restauração de configurações públicas em `/admin/home`;
-- envio de teste de e-mail, teste de automação e execução manual de rotina em `/admin/notificacoes`;
-- aprovação e rejeição de solicitações de administração de perfil;
-- remoção do último vínculo `Sou esta pessoa`, preservando dois passos de confirmação;
-- solicitação de administração de perfil em `/pessoa/:id`, com modal de justificativa e validação de pelo menos 10 caracteres quando preenchida.
+## QA transversal mobile
 
-Nenhum desses fluxos deve abrir `alert`, `confirm` ou `prompt` nativo do navegador.
+Validar em todas as rotas mobile relevantes:
+
+- dropdown de notificações aparece acima de header, toolbar, cards e canvas;
+- sugestões de busca aparecem acima de header, toolbar, cards e canvas;
+- menu do avatar aparece acima de elementos sticky e não exige scroll vertical para ações essenciais;
+- modal do botão `+` em páginas de árvore aparece na camada superior;
+- navegação inferior não cobre conteúdo final sem respiro inferior;
+- ajustes mobile não alteram layout desktop.
 
 ## Rotas de árvore
 
@@ -76,34 +76,40 @@ Nenhum desses fluxos deve abrir `alert`, `confirm` ou `prompt` nativo do navegad
 - Abre a partir de `/`.
 - Carrega pessoas e relacionamentos.
 - Exibe pessoa de referência quando houver vínculo ou query `pessoa`.
-- O seletor de visualização não deve exibir mojibake em `Família de X` ou `Sua view padrão`.
-- O cabeçalho do painel desktop deve exibir ícone de olho sem borda e botão de recolher alinhado dentro do container na linha do título.
+- O header mobile deve exibir `Árvore Familiar`.
 - Permite alternar filtros de parentes diretos.
 - Permite alternar vivos, falecidos e pets.
-- Cards `Núcleo`, `Ascendentes` e `Colaterais` devem manter labels e contadores em uma linha, sem reticências.
-- A paleta laranja deve ser visualmente diferente da branca, com aparência quente/terracota e linhas quentes.
+- Cards `Núcleo`, `Ascendentes` e `Colaterais` devem manter labels e contadores legíveis.
 - Abre perfil em `/pessoa/:id`.
 - Mantém painel desktop sem cortar exportação.
 - Ao acionar `Imagem`, `PDF` ou `Imprimir`, deve exibir loading global de exportação e mantê-lo até o diálogo do sistema assumir o fluxo ou até fallback.
 - Quando o fluxo abrir janela/aba dedicada para salvar ou imprimir, a página principal deve permanecer aberta e preservada.
 - O overlay de exportação não deve aparecer no arquivo exportado.
 - Mobile não deve abrir painéis persistentes por padrão.
-- Vínculos conjugais devem exibir diferenciação por status usando símbolo e padrão de linha, não apenas cor.
-- Vínculo ativo deve aparecer com símbolo `♥` e linha sólida.
-- Vínculo separado deve aparecer com símbolo `∕` e linha tracejada.
-- Vínculo divorciado deve aparecer com símbolo `×` e linha tracejada.
-- Vínculo inativo deve aparecer com símbolo `…` e linha pontilhada.
-- Vínculo com viuvez deve aparecer com símbolo `◌` e linha discreta.
-- União histórica deve aparecer com símbolo `◇` e linha discreta.
-- A legenda deve conter seção de status conjugais com os mesmos símbolos e padrões de linha.
+- O painel aberto pelo botão `+` deve ficar acima de toolbar e canvas.
+- O painel mobile deve reconhecer familiares reais da pessoa ativa: pais, cônjuges, irmãos, filhos, pets, avós, bisavós, tataravós, tios, primos e sobrinhos.
+- Itens expandidos no painel mobile devem exibir primeiro e segundo nome completos.
+- Se não houver conteúdo abaixo da tela central, arrasto vertical para baixo deve ser bloqueado.
+- Se não houver primos abaixo de tios, arrasto para baixo a partir de tios deve ser bloqueado.
+- Linhas abaixo de tios não devem aparecer quando não houver primos.
 
 ### `/mapa-familiar-horizontal`
 
 - Preserva query `pessoa` ao alternar visualização.
 - Renderiza linha geracional horizontal.
 - Mantém filtros aplicáveis e contadores coerentes.
-- Replica no painel desktop os critérios visuais de seletor, cabeçalho, grupos, paleta laranja e exportação validados em `/mapa-familiar`.
+- Replica no painel desktop os critérios visuais de seletor, cabeçalho, grupos, paleta e exportação validados em `/mapa-familiar`.
 - Ao acionar `Imagem`, `PDF` ou `Imprimir`, deve exibir o mesmo feedback global de preparação da exportação.
+
+### `/linha-geracional`
+
+- Header mobile deve exibir `Árvore Familiar`.
+- A página deve carregar dados da pessoa ativa sem tela vazia indevida.
+- Cabeçalhos `Geração 1`, `Geração 2`, etc. devem ter espaçamento superior suficiente.
+- Cabeçalhos devem ter fonte e peso moderados no mobile.
+- Gerações vazias não devem aparecer como primeira tela quando houver geração seguinte com conteúdo.
+- Cards de cônjuges devem ficar empilhados quando o layout mobile exigir.
+- Linhas laterais devem conectar apenas relações reais, não todos os cards.
 
 ## Onboarding de membro
 
@@ -111,18 +117,33 @@ Nenhum desses fluxos deve abrir `alert`, `confirm` ou `prompt` nativo do navegad
 
 - Salva dados básicos.
 - Respeita preferências de privacidade.
-- Gera ou mantém insumos de Mini Bio/Curiosidades.
 - Modo memorial depende de toggle explícito.
 - Redes sociais devem permitir digitação de perfil completo antes de converter o item em badge/lista finalizada.
 - Salvar e recarregar deve preservar o perfil completo da rede social, não apenas a primeira letra.
-- A área `Outros ajustes` deve exibir `Meus Vínculos` e `Fatos e Arquivos Históricos`.
+- No mobile, a área `Outros ajustes` não deve aparecer.
+- No mobile, o botão da foto deve exibir `Adicionar foto`.
+- No mobile, o toggle `Vivo/Falecido` deve ficar compacto.
+- Questionário `Sobre Mim` deve exibir os ícones dos botões com contraste adequado.
+- No mobile, `Voltar`, `Pular Tudo` e `Avançar` devem ficar na mesma linha.
+- No mobile, `Voltar` e `Avançar` devem exibir apenas ícones.
+- Após concluir ou pular o questionário, deve aparecer tela final `Seu Perfil` com Mini Bio e Curiosidades editáveis.
+- Mini Bio e Curiosidades não devem aparecer em `/meus-vinculos`.
 
 ### `/meus-vinculos`
 
 - Diferencia pessoas humanas e pets.
 - Exibe badges de cadastrado/pré-cadastrado conforme vínculos reais.
 - Não grava vínculo definitivo quando a regra exigir solicitação.
-- Mantém textos de perfil fora do box de edição de vínculos.
+- Cônjuges devem aparecer antes de filhos.
+- Se a regra de filhos exigir cônjuge, exibir mensagem para cadastrar cônjuge inicialmente.
+- O rótulo do outro responsável por filho deve ser `Mãe do filho(a)` quando aplicável.
+- Pets devem aparecer apenas na área `Pets`; cadastro/edição deve abrir por modal.
+- Modal de pet deve ter campos próprios de pet: nome, nascimento, raça, local, falecimento e foto.
+- No mobile, botão de lixeira deve ficar no topo direito do card.
+- No mobile, badges de status devem ficar na mesma linha quando houver espaço.
+- Modais de adicionar parentes não devem abrir teclado automaticamente.
+- Selecionar filhos, cônjuges, irmãos ou pets não deve travar a página.
+- Alterações pendentes devem aparecer como `Em análise`.
 
 ### `/arquivos-historicos`
 
@@ -130,6 +151,7 @@ Nenhum desses fluxos deve abrir `alert`, `confirm` ou `prompt` nativo do navegad
 - Permite upload de imagem ou PDF.
 - Relaciona fato/arquivo à pessoa ou relacionamento conforme fluxo.
 - Registros devem aparecer na timeline do perfil quando implementado pelo serviço.
+- Página deve carregar normalmente no mobile.
 
 ### `/preferencias`
 
@@ -140,6 +162,9 @@ Nenhum desses fluxos deve abrir `alert`, `confirm` ou `prompt` nativo do navegad
 
 - Resume informações antes de concluir.
 - Não deve prometer alteração direta quando há solicitação pendente.
+- Parentes adicionados ou removidos devem aparecer como `Em análise`.
+- Ao finalizar, se houver perfis sob responsabilidade do usuário, deve aparecer modal perguntando se deseja editar agora ou depois.
+- Sem perfis sob responsabilidade, deve seguir para `/mapa-familiar` sem modal.
 
 ## Funcionalidades autônomas
 
@@ -148,7 +173,7 @@ Nenhum desses fluxos deve abrir `alert`, `confirm` ou `prompt` nativo do navegad
 Validar em desktop e mobile quando aplicável:
 
 - `/mapa-familiar` e `/mapa-familiar-horizontal` exibem sugestões de pessoas e páginas enquanto o usuário digita.
-- Páginas internas com `MemberPageHeader`, como `/curiosidades`, `/forum`, `/calendario-familiar`, `/meus-favoritos` e `/notificacoes`, exibem o mesmo comportamento de sugestões.
+- Páginas internas com `MemberPageHeader`, como `/curiosidades`, `/forum`, `/calendario-familiar`, `/meus-favoritos` e `/notificacoes`, exibem comportamento equivalente.
 - Clicar em uma pessoa sugerida navega para `/pessoa/:id`.
 - Clicar em uma página sugerida navega para a rota correspondente.
 - `Ver todos os resultados` navega para `/busca?q=...`.
@@ -160,45 +185,19 @@ Validar em desktop e mobile quando aplicável:
 - Abaixo do nome, deve aparecer subtítulo `Editar perfil` com ícone.
 - A lista não deve exibir botão duplicado `Atualizar perfil`.
 - O botão `Dúvidas?` deve ter borda cinza.
-- Em `/curiosidades`, o menu deve aparecer acima dos botões superiores e de elementos sticky.
+- A área `Seus responsáveis` deve aparecer quando houver perfis administráveis.
+- A troca de visualização por perfil responsável deve preservar navegação do ponto de vista selecionado.
 
 ### `/curiosidades`
 
-Validar desktop e mobile:
-
 - A rota carrega pessoas, relacionamentos e badges sem bloquear a página quando a RPC de badges não estiver disponível.
 - A barra superior de atalhos fica sticky quando alcança o topo da página.
-- A barra superior contém apenas atalhos existentes: Hoje, IA, Fotos, Quiz, Mural, Você Sabia, Gráficos, Gerações, Relacionamentos, Rotas e Conexões.
-- No mobile, os botões laterais da barra de atalhos aparecem ao lado da lista e permitem avançar/voltar sem sobrepor os cards.
-- Os cards numéricos antigos de Pessoas, Localização, In memoriam, Pets e Casais não aparecem na página.
-- `Hoje na família` renderiza eventos ou estado vazio sem badge de contador.
-- O slide de fotos usa fotos principais de pessoas humanas; no mobile mostra uma foto por vez, com setas circulares sobre a imagem e legenda abaixo.
+- No mobile, os botões superiores devem permanecer visíveis e roláveis lateralmente.
 - `Pergunte à IA` usa placeholder `Faça aqui sua pergunta…`.
-- No mobile, `Pergunte à IA` mostra visualmente até três sugestões rápidas, alinhadas à esquerda.
 - O envio de pergunta à IA só habilita com contexto carregado e pergunta preenchida.
-- `Teste seus conhecimentos` exibe etapa compacta no formato `1/5`, sem ícone de interrogação no cabeçalho.
-- O quiz exibe até cinco perguntas por rodada e até seis opções quando houver dados suficientes.
-- Botões do quiz devem ocupar a área disponível, com avatar/iniciais e texto legíveis.
-- Perguntas do quiz devem variar alternativas quando houver base suficiente e diferenciar homônimos visualmente.
-- Ao selecionar resposta, as opções devem ser substituídas por feedback animado na mesma área, com explicação e botão de avanço.
-- Ao final do quiz, deve aparecer resultado consolidado e opção de refazer teste.
-- `Mural da família` não exibe campo de nome nem dropdown de visibilidade.
-- `Mural da família` destaca a pergunta `Qual sua lembrança favorita da família?`, publica com usuário logado, limita texto a 200 caracteres e permite exclusão apenas pelo autor.
-- A lista do mural deve ter rolagem vertical quando houver mais lembranças do que a área visível comporta.
-- `Aniversários por mês` usa meses abreviados e mostra o número acima de cada barra.
-- `Profissões mais comuns` exibe círculos sem cortar ícone, número ou título; no mobile aparecem no máximo três profissões.
-- `Faixa Etária` não repete labels abaixo das barras e mostra contagens em círculos.
-- `Gerações da família` inicia com a primeira geração com pessoas expandida; ao abrir outra geração, a anterior recolhe.
-- `Relacionamentos` exibe três métricas: Uniões, Média e Faixa, com Uniões como primeiro card.
-- Bodas respeitam casais ativos, sem separação e sem falecidos.
-- `Rota da família` exibe título e subtítulo com acentuação correta, distância total, texto `Trajeto de carro`, pins, linha pontilhada, badges de distância e chegada.
-- No desktop, a ilustração de `Rota da família` usa `mapa.png` em 575 x 327 px e pode extrapolar visualmente o card sem alterar a estrutura da lista.
-- No mobile, a ilustração de `Rota da família` permanece contida e proporcional.
-- O card inferior alterna entre Descubra mais sobre, Qual a minha conexão, Comparar interesses e Astrologia da família.
-- No mobile, as abas inferiores ficam em uma linha, com ícone acima do título e título interno da aba alinhado à esquerda.
+- O quiz exibe até cinco perguntas por rodada e apresenta resultado final consolidado.
 - O seletor de conexão entre duas pessoas não deve gerar erro Radix por item com valor vazio.
-- A descoberta sem pessoa selecionada deve manter placeholder `Selecione` e não quebrar.
-- `Comparar interesses` deve pluralizar corretamente `1 ponto em comum` e `2 pontos em comum`, usando badges do questionário de perfil quando disponíveis.
+- `Comparar interesses` deve pluralizar corretamente `1 ponto em comum` e `2 pontos em comum`.
 
 ### `/calendario-familiar`
 
@@ -214,23 +213,8 @@ Validar desktop e mobile:
 - Lista tópicos.
 - Busca/filtros não devem quebrar layout desktop.
 - Criar, abrir e editar tópico deve respeitar rotas atuais.
-
-### `/forum/novo`
-
-- O card de criação não deve duplicar o título interno `Novo tópico` quando o header já contextualiza a página.
-- Categorias devem manter labels em duas linhas quando necessário para preservar leitura.
-- Ao digitar `@`, sugestões de pessoas devem aparecer próximas ao cursor, com lista compacta, scroll vertical e filtro pelas letras digitadas.
-- Menções digitadas devem poder aparecer em azul e negrito dentro da área do conteúdo sem comprometer o valor real do texto.
-
-### `/forum/topico/:id`
-
-- Tópicos editados exibem badge `Editado`.
-- Respostas editadas exibem badge `Editado`.
-- O layout desktop deve usar largura equivalente ao padrão de `/forum`.
-- A coluna de `Tópicos recentes` deve aparecer ao lado do tópico no desktop, sem incluir o tópico atual.
-- Reações devem aparecer apenas no tópico principal.
-- Respostas não devem exibir botões de reação.
-- O campo de resposta deve manter avatar e textarea lado a lado e alinhados.
+- Menções com `@` não devem quebrar digitação nem layout.
+- Reações devem aparecer apenas no tópico principal, não nas respostas.
 
 ### `/meus-favoritos`
 
@@ -241,6 +225,7 @@ Validar desktop e mobile:
 
 - Dropdown e página não devem cortar ações.
 - No desktop, o botão `Alertas` dos headers de páginas de membro deve abrir o dropdown em vez de redirecionar diretamente.
+- No mobile, o dropdown deve ficar acima da toolbar/canvas/conteúdo.
 - O rodapé do dropdown deve exibir `Ver todas` e `Preferências` com larguras equivalentes e sem quebra de linha.
 - Ajustes devem estar acessíveis por `/ajustar-notificacoes`.
 
@@ -252,14 +237,34 @@ Validar desktop e mobile:
 - Relacionamento atual deve agrupar vínculos conjugais com status `active`.
 - Relacionamentos anteriores devem agrupar vínculos `separated`, `divorced` e `inactive`.
 - Uniões históricas devem agrupar vínculos `widowed` e `historical`.
-- Pais, filhos, pets e irmãos devem preservar o comportamento anterior.
+- Card `Administração do perfil` deve ficar oculto para próprio usuário ou quando administrado somente pelo usuário atual.
+- Card `Irmãos` deve ficar oculto quando não houver irmãos.
+- `Discussões relacionadas` deve ficar abaixo da linha do tempo.
+- Botão superior `Criar discussão sobre esta pessoa` não deve aparecer quando houver CTA interno.
+- `Seu parentesco com ele` não deve aparecer para o próprio usuário.
+- No mobile, conteúdo inferior não deve ficar encoberto pela navegação inferior.
 
 ## Área administrativa
 
 - `/admin/login` deve permanecer público.
-- Demais rotas `/admin/*` devem exigir `ProtectedRoute`.
-- Validar dashboard, pessoas, relacionamentos, importação, diagnóstico, integridade, atividades, notificações, dúvidas e solicitações de vínculos.
+- Demais rotas `/admin/*` e `/aprovacoes` devem exigir `ProtectedRoute`.
+- Validar dashboard, aprovações, pessoas, relacionamentos, importação, diagnóstico, integridade, atividades, notificações, dúvidas e solicitações de vínculos.
 - O header das páginas `/admin/*` deve exibir `Painel Administrativo`, `Principal` sem seta e menu do usuário; não deve exibir `Membros`, `Conteúdo` nem `Responsáveis`.
+
+### `/admin`
+
+- Cards superiores devem exibir contagens principais.
+- Card `Relações` deve exibir a contagem de relacionamentos.
+- Subtítulos redundantes dos cards superiores não devem aparecer quando o contrato pedir apenas número principal.
+- Card `Solicitações de Aprovações` deve redirecionar para `/aprovacoes` ou `/admin/aprovacoes`.
+- Convite por WhatsApp não deve envolver o código final com asteriscos.
+- Ação rápida deve aparecer como `Textos automáticos`.
+
+### `/admin/home`
+
+- Botão de salvar deve existir nas abas quando houver alterações aplicáveis.
+- Toast `Aguarde o carregamento das configurações antes de salvar.` não deve bloquear salvamento depois do carregamento.
+- Alterações salvas devem persistir após recarregar.
 
 ### `/admin/relacionamentos/novo`
 
@@ -269,26 +274,22 @@ Validar desktop e mobile:
 - Local de separação sem data e sem subtipo `Separado` deve bloquear envio.
 - O formulário deve exibir status inferido antes de salvar.
 - Trocar de `Cônjuge` para outro tipo deve limpar campos conjugais.
-- Salvar relacionamento não conjugal deve preservar o comportamento anterior.
 
 ### `/admin/responsaveis`
 
 - A página deve exibir `Solicitações de administração` acima de `Perfis legados e crianças`.
+- A seção `Solicitações de administração` deve ficar oculta quando não houver pendências.
 - A página não deve exibir as seções antigas `Vínculos de usuários` e `Consulta`.
 - `Perfis legados e crianças` deve listar pessoas falecidas e crianças até 10 anos.
 - Pessoas falecidas devem usar ícone de cruz, não ícone de caveira.
-- Os cards de pessoas falecidas ou crianças não devem exibir a descrição longa `Pessoa falecida. Pode ser administrada por familiares responsáveis.` ou texto equivalente dentro do item.
-- A área azul do card deve exibir seletor de responsável e botão de vínculo.
-- O seletor de responsável deve listar todas as pessoas retornadas de `pessoas`, não apenas usuários autenticados em `auth.users`.
-- Ao vincular uma pessoa responsável por outra pessoa, o sistema deve gravar em `person_responsible_links`, não em `user_person_links`.
-- O vínculo pessoa-a-pessoa deve preencher `managed_pessoa_id` com a pessoa administrada e `responsible_pessoa_id` com a pessoa responsável.
+- Cards não devem exibir descrição longa de pessoa falecida.
+- A área do card deve exibir seletor de responsável e botão de vínculo.
+- O seletor de responsável deve listar todas as pessoas retornadas de `pessoas`, não apenas usuários autenticados.
+- Ao vincular pessoa responsável por outra pessoa, o sistema deve gravar em `person_responsible_links`, não em `user_person_links`.
+- O vínculo pessoa-a-pessoa deve preencher `managed_pessoa_id` e `responsible_pessoa_id` corretamente.
 - O sistema deve impedir selecionar a própria pessoa como responsável por ela mesma.
-- Após salvar, o contador de responsáveis deve ser atualizado e o nome da pessoa responsável deve aparecer no card.
+- Após salvar, o contador de responsáveis deve ser atualizado e pluralizado corretamente.
 - A tela não deve gerar erro de foreign key `user_person_links_user_id_fkey` ao selecionar responsável da tabela `pessoas`.
-- Solicitações pendentes devem continuar com ações de aprovar e rejeitar.
-- Aprovação de solicitação de administração com usuário autenticado deve continuar usando o fluxo existente de solicitação e vínculo com usuário.
-- Estado vazio de solicitações deve exibir `Nenhuma solicitação pendente.`.
-- A migration `20260627143000_create_person_responsible_links.sql` deve estar aplicada antes de validar criação real de responsáveis pessoa-a-pessoa.
 
 ### `/admin/duvidas`
 
@@ -297,7 +298,6 @@ Validar desktop e mobile:
 - `Perguntas e respostas` deve aparecer como título em linha própria.
 - Busca, categoria e status devem ficar abaixo do título.
 - Botões de editar, publicar/rascunho e arquivar devem ser apenas ícones, mantendo `title` e `aria-label`.
-- Pergunta e resposta devem ocupar a largura horizontal disponível do card.
 
 ### `/admin/atividades`
 
@@ -305,12 +305,7 @@ Validar desktop e mobile:
 - O placeholder do filtro de autor deve ser `Nome`.
 - O filtro de entidade afetada deve aparecer como `Usuário`.
 - O botão `Limpar` deve zerar apenas a lista local em tela, sem apagar registros do banco.
-- Após limpar, apenas novas atividades geradas depois daquele momento devem voltar a aparecer para o usuário local.
-- O cabeçalho da tabela deve usar `Autor`, não `Ator`.
-- Colunas de Data, Autor, Atividade e Resumo devem estar alinhadas com as linhas abaixo.
 - A coluna Autor deve exibir primeiro e segundo nome quando possível.
-- A coluna Atividade não deve repetir subtítulo de entidade abaixo do título da ação.
-- A coluna Resumo deve usar o resumo legível como texto principal e corrigir termos conhecidos sem acento, como `mae` para `mãe`.
 
 ### `/admin/gestao-conteudo-pessoas`
 
@@ -318,6 +313,7 @@ Validar desktop e mobile:
 - Quando a tabela estiver ausente, os defaults locais devem permitir carregamento da tela.
 - Salvar configurações de visibilidade depende da tabela existente no Supabase.
 - Títulos, labels, botões e mensagens devem manter acentuação correta em UTF-8.
+- Geração de conteúdos automáticos deve exibir erro legível quando Edge Function ou IA falhar.
 
 ## Critérios de aceite
 
