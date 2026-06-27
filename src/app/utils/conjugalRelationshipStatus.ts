@@ -19,7 +19,9 @@ const SUBTYPE_LABELS: Record<string, string> = {
   casamento: 'casamento',
   uniao: 'união',
   uniao_estavel: 'união estável',
-  separado: 'relacionamento anterior',
+  separado: 'vínculo conjugal anterior',
+  divorciado: 'vínculo conjugal anterior',
+  divorcio: 'vínculo conjugal anterior',
 };
 
 function normalizeText(value: unknown) {
@@ -54,6 +56,15 @@ function getRelationshipStringField(
   }
 
   return '';
+}
+
+function getFirstName(value?: string) {
+  return normalizeText(value).split(/\s+/).filter(Boolean)[0];
+}
+
+function getHeadlineVerb(status: ConjugalRelationshipStatus, hasTwoPeople: boolean) {
+  if (status === 'active') return hasTwoPeople ? 'mantêm' : 'mantém';
+  return hasTwoPeople ? 'tiveram' : 'teve';
 }
 
 export function parseConjugalDateValue(value?: string | number | null): ParsedConjugalDate | undefined {
@@ -161,24 +172,26 @@ export function buildConjugalRelationshipHeadline({
   person1?: Pessoa;
   person2?: Pessoa;
 }) {
-  const name1 = person1Name?.trim()?.split(/\s+/)[0];
-  const name2 = person2Name?.trim()?.split(/\s+/)[0];
+  const name1 = getFirstName(person1Name);
+  const name2 = getFirstName(person2Name);
   const subtypeLabel = getConjugalRelationshipSubtypeLabel(relationship);
   const status = getConjugalRelationshipStatus(relationship, person1, person2);
-  const shouldUsePresent = status === 'active';
+  const hasTwoPeople = Boolean(name1 && name2);
+  const verb = getHeadlineVerb(status, hasTwoPeople);
 
   if (name1 && name2) {
-    return `${name1} e ${name2} ${shouldUsePresent ? 'têm' : 'tiveram'} ${subtypeLabel} registrado na árvore familiar.`;
+    return `${name1} e ${name2} ${verb} ${subtypeLabel} registrado na árvore familiar.`;
   }
 
-  if (name1) return `${name1} ${shouldUsePresent ? 'tem' : 'teve'} ${subtypeLabel} registrado na árvore familiar.`;
-  if (name2) return `${name2} ${shouldUsePresent ? 'tem' : 'teve'} ${subtypeLabel} registrado na árvore familiar.`;
+  if (name1) return `${name1} ${verb} ${subtypeLabel} registrado na árvore familiar.`;
+  if (name2) return `${name2} ${verb} ${subtypeLabel} registrado na árvore familiar.`;
 
   return 'Vínculo conjugal registrado na árvore familiar.';
 }
 
 export function buildConjugalRelationshipNarrative(relationship?: Relacionamento) {
   const relationshipRecord = (relationship || {}) as RelationshipRecord;
+  const subtype = normalizeSubtype(relationshipRecord.subtipo_relacionamento);
   const marriageDate = parseConjugalDateValue(getRelationshipStringField(relationshipRecord, [
     'data_casamento',
     'data_relacionamento',
@@ -205,6 +218,12 @@ export function buildConjugalRelationshipNarrative(relationship?: Relacionamento
     lines.push(`O vínculo foi registrado em ${marriageDate.formatted}.`);
   } else if (separationDate) {
     lines.push(`O vínculo terminou em ${separationDate.formatted}.`);
+  } else if (subtype === 'separado') {
+    lines.push('Há separação registrada para este vínculo, ainda sem data informada.');
+  } else if (subtype === 'divorciado' || subtype === 'divorcio') {
+    lines.push('Há divórcio registrado para este vínculo, ainda sem data informada.');
+  } else if (relationshipRecord.ativo === false) {
+    lines.push('Este vínculo está marcado como inativo, ainda sem motivo detalhado.');
   }
 
   if (marriagePlace) {
@@ -224,7 +243,8 @@ export function buildConjugalRelationshipTooltip(
   person2?: Pessoa
 ) {
   const status = getConjugalRelationshipStatus(relationship, person1, person2);
-  return `${getConjugalRelationshipStatusLabel(status)} — ${getConjugalRelationshipStatusDescription(status)}`;
+  const subtypeLabel = getConjugalRelationshipSubtypeLabel(relationship);
+  return `${getConjugalRelationshipStatusLabel(status)} — ${getConjugalRelationshipStatusDescription(status)} Tipo: ${subtypeLabel}.`;
 }
 
 export function formatConjugalRelationshipPlace(place?: string) {
