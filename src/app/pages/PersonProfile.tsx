@@ -4,6 +4,13 @@ import { AppLink as Link } from '../components/AppLink';
 import { Card, CardContent } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '../components/ui/dialog';
+import {
   obterPessoaPorId,
   obterRelacionamentosDaPessoa,
   obterRelacionamentosDetalhadosDaPessoa,
@@ -113,6 +120,8 @@ export function PersonProfile() {
   const [profileManagers, setProfileManagers] = useState<ProfileManagerSummary[]>([]);
   const [pendingProfileControlTargetIds, setPendingProfileControlTargetIds] = useState<Set<string>>(() => new Set());
   const [profileControlSubmitting, setProfileControlSubmitting] = useState(false);
+  const [profileControlDialogOpen, setProfileControlDialogOpen] = useState(false);
+  const [profileControlDescription, setProfileControlDescription] = useState('');
   const [isAdmin, setIsAdmin] = useState(false);
   const [allPeople, setAllPeople] = useState<Pessoa[]>([]);
   const [allRelationships, setAllRelationships] = useState<Relacionamento[]>([]);
@@ -344,17 +353,17 @@ export function PersonProfile() {
     navigate(isAdmin ? `/admin/pessoas/${id}` : '/meus-dados');
   };
 
-  const handleRequestProfileAdministration = async () => {
+
+  const handleRequestProfileAdministration = () => {
+    if (!user || !pessoa?.id || !manageableProfileEligibility.eligible || profileControlSubmitting) return;
+    setProfileControlDescription('');
+    setProfileControlDialogOpen(true);
+  };
+
+  const confirmRequestProfileAdministration = async () => {
     if (!user || !pessoa?.id || !manageableProfileEligibility.eligible || profileControlSubmitting) return;
 
-    const description = window.prompt(
-      'Explique brevemente sua relação com este perfil e por que você deve administrá-lo.',
-      ''
-    );
-
-    if (description === null) return;
-
-    const trimmedDescription = description.trim();
+    const trimmedDescription = profileControlDescription.trim();
     if (trimmedDescription && trimmedDescription.length < 10) {
       toast.error('A justificativa deve ter pelo menos 10 caracteres.');
       return;
@@ -375,15 +384,15 @@ export function PersonProfile() {
       if (result.error) throw new Error(result.error);
 
       setPendingProfileControlTargetIds((current) => new Set([...current, pessoa.id]));
-      toast.success('Solicitação enviada para análise administrativa.');
+      setProfileControlDialogOpen(false);
+      setProfileControlDescription('');
+      toast.success('Solicita??o enviada para an?lise administrativa.');
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Não foi possível enviar a solicitação.');
+      toast.error(error instanceof Error ? error.message : 'N?o foi poss?vel enviar a solicita??o.');
     } finally {
       setProfileControlSubmitting(false);
     }
   };
-
-
   useEffect(() => {
     let mounted = true;
 
@@ -668,6 +677,57 @@ export function PersonProfile() {
         )}
       </main>
 
+      <Dialog
+        open={profileControlDialogOpen}
+        onOpenChange={(open) => {
+          if (!open && !profileControlSubmitting) {
+            setProfileControlDialogOpen(false);
+          }
+        }}
+      >
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Solicitar administra??o do perfil</DialogTitle>
+          </DialogHeader>
+
+          <div className="space-y-3">
+            <p className="text-sm text-gray-600">
+              Explique brevemente sua rela??o com este perfil e por que voc? deve administr?-lo.
+            </p>
+            <textarea
+              value={profileControlDescription}
+              onChange={(event) => setProfileControlDescription(event.target.value)}
+              disabled={profileControlSubmitting}
+              rows={5}
+              className="min-h-32 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm"
+              placeholder="Ex.: sou familiar pr?ximo e gostaria de manter os dados atualizados."
+            />
+            <p className="text-xs text-gray-500">
+              A justificativa ? opcional. Se preenchida, deve ter pelo menos 10 caracteres.
+            </p>
+          </div>
+
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setProfileControlDialogOpen(false)}
+              disabled={profileControlSubmitting}
+              className="w-full sm:w-auto"
+            >
+              Cancelar
+            </Button>
+            <Button
+              type="button"
+              onClick={confirmRequestProfileAdministration}
+              disabled={profileControlSubmitting}
+              className="w-full sm:w-auto"
+            >
+              {profileControlSubmitting ? 'Enviando...' : 'Enviar solicita??o'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
