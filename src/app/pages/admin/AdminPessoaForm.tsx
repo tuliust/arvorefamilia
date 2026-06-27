@@ -861,16 +861,16 @@ export function AdminPessoaForm({ variant = 'standalone' }: AdminPessoaFormProps
   );
 
   const deleteUserLinkDialogTitle = pendingDeleteUserLinkIsLastSelf && deleteUserLinkConfirmStep === 1
-    ? 'Remover ?ltimo v?nculo principal?'
+    ? 'Remover ?ltimo vínculo principal?'
     : pendingDeleteUserLinkIsLastSelf
       ? 'Confirmar remo??o definitiva'
-      : 'Remover v?nculo';
+      : 'Remover vínculo';
 
   const deleteUserLinkDialogDescription = pendingDeleteUserLinkIsLastSelf && deleteUserLinkConfirmStep === 1
-    ? 'Este ? o ?ltimo v?nculo "Sou esta pessoa" desta pessoa. Remover esse v?nculo pode impedir o acesso direto ao pr?prio perfil. Deseja continuar?'
+    ? 'Este ? o ?ltimo vínculo "Sou esta pessoa" desta pessoa. Remover esse vínculo pode impedir o acesso direto ao pr?prio perfil. Deseja continuar?'
     : pendingDeleteUserLinkIsLastSelf
-      ? 'Confirme novamente para remover o ?ltimo v?nculo principal de identidade desta pessoa.'
-      : 'Remover este v?nculo de usu?rio com a pessoa?';
+      ? 'Confirme novamente para remover o ?ltimo vínculo principal de identidade desta pessoa.'
+      : 'Remover este vínculo de usuário com a pessoa?';
 
   const confirmDeleteUserPersonLink = async () => {
     if (!pendingDeleteUserLink || linkActionLoading) return;
@@ -891,7 +891,7 @@ export function AdminPessoaForm({ variant = 'standalone' }: AdminPessoaFormProps
 
       setPendingDeleteUserLink(null);
       setDeleteUserLinkConfirmStep(1);
-      toast.success('V?nculo removido.');
+      toast.success('Vínculo removido.');
       await loadPersonUserLinks();
     } finally {
       setLinkActionLoading(false);
@@ -1423,7 +1423,7 @@ export function AdminPessoaForm({ variant = 'standalone' }: AdminPessoaFormProps
         onConfirm={confirmDeleteUserPersonLink}
         title={deleteUserLinkDialogTitle}
         description={deleteUserLinkDialogDescription}
-        confirmText={pendingDeleteUserLinkIsLastSelf && deleteUserLinkConfirmStep === 1 ? 'Continuar' : 'Remover v?nculo'}
+        confirmText={pendingDeleteUserLinkIsLastSelf && deleteUserLinkConfirmStep === 1 ? 'Continuar' : 'Remover vínculo'}
         cancelText="Cancelar"
         variant="danger"
         loading={linkActionLoading}

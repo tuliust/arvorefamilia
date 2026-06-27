@@ -460,7 +460,7 @@ export function AdminRelacionamentos() {
           if (!open && !deletingRelationshipId) setRelacionamentoParaExcluirId(null);
         }}
         title="Excluir relacionamento"
-        description="Tem certeza que deseja excluir este relacionamento? Esta acao nao pode ser desfeita."
+        description="Tem certeza que deseja excluir este relacionamento? Esta ação não pode ser desfeita."
         confirmText="Excluir"
         cancelText="Cancelar"
         onConfirm={confirmDeleteRelationship}

@@ -772,7 +772,7 @@ export function CalendarioFamiliar() {
           if (!googleLoading) setDisconnectGoogleDialogOpen(open);
         }}
         title="Desconectar Google Agenda"
-        description="Deseja desconectar o Google Agenda deste usuario?"
+        description="Deseja desconectar o Google Agenda deste usuário?"
         confirmText="Desconectar"
         cancelText="Cancelar"
         onConfirm={confirmDisconnectGoogle}

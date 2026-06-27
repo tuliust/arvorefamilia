@@ -35,15 +35,15 @@ type TreeExportAction = Extract<SidebarTreeAction, 'save-image' | 'save-pdf' | '
 const TREE_EXPORT_LOADING_CONTENT: Record<TreeExportAction, { title: string; message: string }> = {
   'save-image': {
     title: 'Preparando imagem',
-    message: 'Gerando a imagem da ?rvore. A janela de salvar ser? aberta em instantes.',
+    message: 'Gerando a imagem da Árvore. A janela de salvar ser? aberta em instantes.',
   },
   'save-pdf': {
     title: 'Preparando PDF',
-    message: 'Gerando o PDF da ?rvore. A janela de salvar ser? aberta em instantes.',
+    message: 'Gerando o PDF da Árvore. A janela de salvar ser? aberta em instantes.',
   },
   print: {
-    title: 'Preparando impress?o',
-    message: 'Gerando a visualiza??o de impress?o da ?rvore.',
+    title: 'Preparando impressão',
+    message: 'Gerando a visualização de impressão da Árvore.',
   },
 };
 
@@ -192,8 +192,8 @@ export function HomeTreeSection({
       window.addEventListener('blur', handleLikelyDialogOpen, { once: true });
       document.addEventListener('visibilitychange', handleVisibilityChange);
 
-      // Fallback: alguns navegadores/downloads n?o disparam blur.
-      // Nestes casos, manter o modal durante o per?odo cr?tico evita a sensa??o de travamento.
+      // Fallback: alguns navegadores/downloads não disparam blur.
+      // Nestes casos, manter o modal durante o período cr?tico evita a sensação de travamento.
       const fallbackMs = action === 'print' ? 45000 : 60000;
       fallbackTimer = window.setTimeout(finish, fallbackMs);
     });
@@ -471,4 +471,3 @@ function TreeGlobalExportLoadingOverlay({
     </div>
   );
 }
-

@@ -269,7 +269,7 @@ export function AdminHomeSettings() {
   const confirmResetSettings = () => {
     setSettings(DEFAULT_SITE_VISUAL_SETTINGS);
     setResetDialogOpen(false);
-    toast.info('Configura??o restaurada localmente. Publique para alterar a vers?o p?blica.');
+    toast.info('Configuração restaurada localmente. Publique para alterar a vers?o p?blica.');
   };
 
   return (
@@ -605,8 +605,8 @@ export function AdminHomeSettings() {
         onOpenChange={(open) => {
           if (!saving && !loading) setResetDialogOpen(open);
         }}
-        title="Restaurar padr?o"
-        description="Restaurar os textos, cores e links padr?o? As imagens enviadas ser?o removidas desta configura??o."
+        title="Restaurar padrão"
+        description="Restaurar os textos, cores e links padrão? As imagens enviadas ser?o removidas desta configuração."
         confirmText="Restaurar"
         cancelText="Cancelar"
         onConfirm={confirmResetSettings}

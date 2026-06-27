@@ -122,7 +122,7 @@ export function CuriosidadesMemoryWall({ className = '' }: CuriosidadesMemoryWal
       setItems((current) => current.filter((currentItem) => currentItem.id !== item.id));
       setMemoryToDelete(null);
     } catch (deleteError) {
-      setError(deleteError instanceof Error ? deleteError.message : 'Nao foi possivel apagar a lembranca.');
+      setError(deleteError instanceof Error ? deleteError.message : 'Não foi possível apagar a lembrança.');
     } finally {
       setDeletingId(null);
     }
@@ -219,8 +219,8 @@ export function CuriosidadesMemoryWall({ className = '' }: CuriosidadesMemoryWal
         onOpenChange={(open) => {
           if (!open && !deletingId) setMemoryToDelete(null);
         }}
-        title="Apagar lembranca"
-        description="Deseja apagar esta lembranca? Esta acao nao pode ser desfeita."
+        title="Apagar lembrança"
+        description="Deseja apagar esta lembrança? Esta ação não pode ser desfeita."
         confirmText="Apagar"
         cancelText="Cancelar"
         onConfirm={confirmDeleteMemory}

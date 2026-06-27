@@ -79,7 +79,7 @@ export function AdminNotificationGroupsTab() {
       setVisibilitySettings(visibilityResult);
       setLinksByUserId(new Map(linksResult.data.map((link) => [link.user_id, link.pessoa_id])));
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Nao foi possivel carregar grupos e preferencias.');
+      toast.error(error instanceof Error ? error.message : 'Não foi possível carregar grupos e preferências.');
     } finally {
       setLoading(false);
     }
@@ -101,7 +101,7 @@ export function AdminNotificationGroupsTab() {
         setSelectedMemberIds(members.map((member) => member.user_id));
         setSelectedRuleTypes(rules.filter((rule) => rule.enabled).map((rule) => rule.notification_type));
       } catch (error) {
-        toast.error(error instanceof Error ? error.message : 'Nao foi possivel carregar detalhes do grupo.');
+        toast.error(error instanceof Error ? error.message : 'Não foi possível carregar detalhes do grupo.');
       }
     }
 
@@ -129,7 +129,7 @@ export function AdminNotificationGroupsTab() {
       setSelectedGroupId(group.id);
       await loadData();
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Nao foi possivel salvar grupo.');
+      toast.error(error instanceof Error ? error.message : 'Não foi possível salvar grupo.');
     } finally {
       setSaving(false);
     }
@@ -155,7 +155,7 @@ export function AdminNotificationGroupsTab() {
       setSelectedRuleTypes([]);
       await loadData();
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Nao foi possivel remover grupo.');
+      toast.error(error instanceof Error ? error.message : 'Não foi possível remover grupo.');
     } finally {
       setSaving(false);
     }
@@ -174,7 +174,7 @@ export function AdminNotificationGroupsTab() {
       });
       toast.success('Preferencia atualizada.');
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Nao foi possivel salvar preferencia.');
+      toast.error(error instanceof Error ? error.message : 'Não foi possível salvar preferência.');
     } finally {
       setSaving(false);
     }
@@ -224,7 +224,7 @@ export function AdminNotificationGroupsTab() {
 
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               <div className="space-y-2">
-                <p className="text-sm font-medium text-gray-700">Usuarios do grupo</p>
+                <p className="text-sm font-medium text-gray-700">Usuários do grupo</p>
                 <div className="max-h-64 space-y-2 overflow-y-auto rounded-lg border border-gray-200 p-3">
                   {profiles.map((profile) => (
                     <label key={profile.id} className="flex items-center gap-2 text-sm">
@@ -281,12 +281,12 @@ export function AdminNotificationGroupsTab() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Users className="h-5 w-5 text-slate-700" />
-              Preferencias por usuario
+              Preferências por usuário
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <label className="space-y-1 text-sm">
-              <span className="font-medium text-gray-700">Usuario</span>
+              <span className="font-medium text-gray-700">Usuário</span>
               <select className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2" value={selectedUserId} onChange={(event) => setSelectedUserId(event.target.value)}>
                 <option value="">Selecione</option>
                 {profiles.map((profile) => (
@@ -321,13 +321,13 @@ export function AdminNotificationGroupsTab() {
                       <li>Dados sensiveis: {selectedVisibility.dados_sensiveis_visiveis ? 'visivel' : 'oculto'}</li>
                     </ul>
                   ) : (
-                    <p className="mt-2 text-xs text-gray-500">Nao ha configuracao extra de visibilidade para a pessoa principal vinculada.</p>
+                    <p className="mt-2 text-xs text-gray-500">Não há configuração extra de visibilidade para a pessoa principal vinculada.</p>
                   )}
                 </div>
               </div>
             ) : (
               <p className="rounded-lg border border-dashed border-gray-300 p-4 text-sm text-gray-500">
-                Selecione um usuario para consultar preferencias e visibilidade.
+                Selecione um usuário para consultar preferências e visibilidade.
               </p>
             )}
           </CardContent>
@@ -340,7 +340,7 @@ export function AdminNotificationGroupsTab() {
           if (!saving) setDeleteGroupDialogOpen(open);
         }}
         title="Remover grupo de notificacao"
-        description="Remover este grupo de notificacao? Esta acao nao pode ser desfeita."
+        description="Remover este grupo de notificacao? Esta ação não pode ser desfeita."
         confirmText="Remover"
         cancelText="Cancelar"
         onConfirm={confirmDeleteGroup}

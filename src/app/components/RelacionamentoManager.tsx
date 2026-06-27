@@ -579,8 +579,8 @@ export function RelacionamentoManager({
         title="Remover relacionamento"
         description={
           relacionamentoParaRemover
-            ? `Remover ${getTipoLabel(relacionamentoParaRemover.tipo)} "${relacionamentoParaRemover.pessoa.nome_completo}"? Esta acao nao pode ser desfeita.`
-            : 'Remover este relacionamento? Esta acao nao pode ser desfeita.'
+            ? `Remover ${getTipoLabel(relacionamentoParaRemover.tipo)} "${relacionamentoParaRemover.pessoa.nome_completo}"? Esta ação não pode ser desfeita.`
+            : 'Remover este relacionamento? Esta ação não pode ser desfeita.'
         }
         confirmText="Remover"
         cancelText="Cancelar"

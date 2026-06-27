@@ -651,7 +651,7 @@ function GenerationScreen({ generation, onPersonClick }: { generation: LinhaGera
                 color: 'var(--tree-palette-text-muted)',
               }}
             >
-              Mostrando os primeiros {MAX_CARDS_PER_SCREEN} registros desta gera??o.
+              Mostrando os primeiros {MAX_CARDS_PER_SCREEN} registros desta geração.
             </p>
           )}
         </div>
@@ -969,13 +969,13 @@ export function LinhaGeracional() {
                       borderColor: 'var(--tree-palette-group-border)',
                       color: 'var(--tree-palette-edge-sibling)',
                     }}
-                    aria-label="Gera??o anterior"
+                    aria-label="Geração anterior"
                   >
                     <ChevronLeft className="h-5 w-5" />
                   </button>
 
                   <div className="flex min-w-0 flex-1 flex-col items-center gap-2">
-                    <div className="flex items-center gap-1.5" aria-label={`Gera??o ${activeIndex + 1} de ${generationScreens.length}`}>
+                    <div className="flex items-center gap-1.5" aria-label={`Geração ${activeIndex + 1} de ${generationScreens.length}`}>
                       {generationScreens.map((generation, index) => (
                         <button
                           key={generation.id}
@@ -999,7 +999,7 @@ export function LinhaGeracional() {
                       className="truncate text-center text-[11px] font-bold"
                       style={{ color: 'var(--tree-palette-text-muted)' }}
                     >
-                      Deslize para navegar entre gera??es
+                      Deslize para navegar entre gerações
                     </p>
                   </div>
 
@@ -1012,7 +1012,7 @@ export function LinhaGeracional() {
                       borderColor: 'var(--tree-palette-group-border)',
                       color: 'var(--tree-palette-edge-sibling)',
                     }}
-                    aria-label="Pr?xima gera??o"
+                    aria-label="Próxima geração"
                   >
                     <ChevronRight className="h-5 w-5" />
                   </button>
@@ -1020,7 +1020,7 @@ export function LinhaGeracional() {
 
                 <div className="mt-1 flex items-center justify-between gap-3">
                   <h1 className="truncate text-lg font-black tracking-[-0.035em]" style={{ color: 'var(--tree-palette-text-primary)' }}>
-                    {`Gera??o ${activeIndex + 1}`}
+                    {`Geração ${activeIndex + 1}`}
                   </h1>
                 </div>
               </div>

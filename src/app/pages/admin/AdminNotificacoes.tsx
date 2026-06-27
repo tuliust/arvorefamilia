@@ -326,7 +326,7 @@ export function AdminNotificacoes() {
       const results = await dispatchNotification({
         userId: user.id,
         type: 'notificacao',
-        titulo: 'Teste de e-mail de notifica??o',
+        titulo: 'Teste de e-mail de notificação',
         mensagem: 'E-mail de teste enviado pelo painel admin para validar provider, prefer?ncias e logs.',
         link: '/notificacoes',
         metadata: { source: 'admin-email-test', test: true },
@@ -338,7 +338,7 @@ export function AdminNotificacoes() {
       toast.success('Teste de e-mail executado.');
       await loadDiagnostics();
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'N?o foi poss?vel enviar o teste de e-mail.');
+      toast.error(error instanceof Error ? error.message : 'Não foi possível enviar o teste de e-mail.');
     } finally {
       setSendingEmailTest(false);
     }
@@ -360,7 +360,7 @@ export function AdminNotificacoes() {
       toast.success('Rotina manual executada.');
       await loadDiagnostics();
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'N?o foi poss?vel executar a rotina manual de notifica??es.';
+      const message = error instanceof Error ? error.message : 'Não foi possível executar a rotina manual de notificações.';
       setManualRoutineError(message);
       toast.error(message);
     } finally {
@@ -387,7 +387,7 @@ export function AdminNotificacoes() {
       await dispatchNotification({
         userId: user.id,
         type: 'notificacao',
-        titulo: `Teste de automa??o: ${automation.title}`,
+        titulo: `Teste de automação: ${automation.title}`,
         mensagem: automation.description,
         link: '/admin/notificacoes',
         metadata: { source: 'admin-automation-test', automation_id: automation.id, test: true },
@@ -395,10 +395,10 @@ export function AdminNotificacoes() {
         respectPreferences: true,
       });
       setPendingConfirmAction(null);
-      toast.success('Teste de automa??o enviado para o admin logado.');
+      toast.success('Teste de automação enviado para o admin logado.');
       await loadDiagnostics();
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'N?o foi poss?vel enviar o teste da automa??o.');
+      toast.error(error instanceof Error ? error.message : 'Não foi possível enviar o teste da automação.');
     } finally {
       setSendingAutomationTest(false);
     }
@@ -613,7 +613,7 @@ export function AdminNotificacoes() {
     if (pendingConfirmAction.type === 'email_test') {
       return {
         title: 'Enviar e-mail de teste',
-        description: 'Enviar um e-mail real de teste apenas para o seu usu?rio admin? A notifica??o interna tamb?m ser? criada.',
+        description: 'Enviar um e-mail real de teste apenas para o seu usuário admin? A notificação interna tamb?m ser? criada.',
         confirmText: 'Enviar teste',
         loading: sendingEmailTest,
       };
@@ -622,15 +622,15 @@ export function AdminNotificacoes() {
     if (pendingConfirmAction.type === 'manual_routine') {
       return {
         title: 'Executar rotina manual',
-        description: 'Executar a rotina manual de anivers?rios e mem?rias agora? Ela pode criar notifica??es internas reais para os destinat?rios eleg?veis.',
+        description: 'Executar a rotina manual de aniversários e memórias agora? Ela pode criar notificações internas reais para os destinat?rios eleg?veis.',
         confirmText: 'Executar rotina',
         loading: runningManualRoutine,
       };
     }
 
     return {
-      title: 'Enviar teste de automa??o',
-      description: `Enviar um teste controlado da automa??o "${pendingConfirmAction.automationTitle}" apenas para o admin logado?`,
+      title: 'Enviar teste de automação',
+      description: `Enviar um teste controlado da automação "${pendingConfirmAction.automationTitle}" apenas para o admin logado?`,
       confirmText: 'Enviar teste',
       loading: sendingAutomationTest,
     };
@@ -800,7 +800,7 @@ export function AdminNotificacoes() {
         onOpenChange={(open) => {
           if (!open && !confirmDialogContent?.loading) setPendingConfirmAction(null);
         }}
-        title={confirmDialogContent?.title || 'Confirmar a??o'}
+        title={confirmDialogContent?.title || 'Confirmar ação'}
         description={confirmDialogContent?.description || 'Deseja continuar?'}
         confirmText={confirmDialogContent?.confirmText || 'Confirmar'}
         cancelText="Cancelar"

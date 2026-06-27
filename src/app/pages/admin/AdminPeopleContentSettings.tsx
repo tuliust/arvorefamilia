@@ -239,9 +239,9 @@ export function AdminPeopleContentSettings() {
         setInsightDraft((current) => ({ ...current, historicalTitle: '', historicalMainEvent: '' }));
       }
       setInsightToClear(null);
-      toast.success('Conteudo limpo.');
+      toast.success('Conteúdo limpo.');
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Nao foi possivel limpar conteudo.');
+      toast.error(error instanceof Error ? error.message : 'Não foi possível limpar conteúdo.');
     } finally {
       setSaving(false);
     }
@@ -470,7 +470,7 @@ export function AdminPeopleContentSettings() {
           if (!open && !saving) setInsightToClear(null);
         }}
         title={insightToClear === 'astrology' ? 'Limpar astrologia' : 'Limpar fatos'}
-        description={insightToClear === 'astrology' ? 'Limpar o conteudo salvo de astrologia? Esta acao nao pode ser desfeita.' : 'Limpar o conteudo salvo de fatos do nascimento? Esta acao nao pode ser desfeita.'}
+        description={insightToClear === 'astrology' ? 'Limpar o conteúdo salvo de astrologia? Esta ação não pode ser desfeita.' : 'Limpar o conteúdo salvo de fatos do nascimento? Esta ação não pode ser desfeita.'}
         confirmText="Limpar"
         cancelText="Cancelar"
         onConfirm={confirmClearInsight}

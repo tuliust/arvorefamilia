@@ -386,9 +386,9 @@ export function PersonProfile() {
       setPendingProfileControlTargetIds((current) => new Set([...current, pessoa.id]));
       setProfileControlDialogOpen(false);
       setProfileControlDescription('');
-      toast.success('Solicita??o enviada para an?lise administrativa.');
+      toast.success('Solicitação enviada para análise administrativa.');
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'N?o foi poss?vel enviar a solicita??o.');
+      toast.error(error instanceof Error ? error.message : 'Não foi possível enviar a solicitação.');
     } finally {
       setProfileControlSubmitting(false);
     }
@@ -687,12 +687,12 @@ export function PersonProfile() {
       >
         <DialogContent className="sm:max-w-lg">
           <DialogHeader>
-            <DialogTitle>Solicitar administra??o do perfil</DialogTitle>
+            <DialogTitle>Solicitar administração do perfil</DialogTitle>
           </DialogHeader>
 
           <div className="space-y-3">
             <p className="text-sm text-gray-600">
-              Explique brevemente sua rela??o com este perfil e por que voc? deve administr?-lo.
+              Explique brevemente sua relação com este perfil e por que voc? deve administr?-lo.
             </p>
             <textarea
               value={profileControlDescription}
@@ -723,7 +723,7 @@ export function PersonProfile() {
               disabled={profileControlSubmitting}
               className="w-full sm:w-auto"
             >
-              {profileControlSubmitting ? 'Enviando...' : 'Enviar solicita??o'}
+              {profileControlSubmitting ? 'Enviando...' : 'Enviar solicitação'}
             </Button>
           </DialogFooter>
         </DialogContent>

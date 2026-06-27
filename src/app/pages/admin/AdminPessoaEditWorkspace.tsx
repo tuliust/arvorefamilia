@@ -42,7 +42,7 @@ export function AdminPessoaEditWorkspace() {
       <div className="min-h-screen bg-gray-50 p-6">
         <Card className="mx-auto max-w-3xl">
           <CardContent className="pt-6">
-            <p className="text-sm text-gray-600">Pessoa nao informada.</p>
+            <p className="text-sm text-gray-600">Pessoa não informada.</p>
           </CardContent>
         </Card>
       </div>
@@ -74,11 +74,11 @@ export function AdminPessoaEditWorkspace() {
               </TabsTrigger>
               <TabsTrigger value="vinculos" className="rounded-lg border border-gray-200 bg-white data-[state=active]:border-blue-200 data-[state=active]:bg-blue-50">
                 <Link2 className="mr-2 h-4 w-4" />
-                Vinculos
+                Vínculos
               </TabsTrigger>
               <TabsTrigger value="arquivos" className="rounded-lg border border-gray-200 bg-white data-[state=active]:border-blue-200 data-[state=active]:bg-blue-50">
                 <Archive className="mr-2 h-4 w-4" />
-                Arquivos historicos
+                Arquivos históricos
               </TabsTrigger>
             </TabsList>
 
@@ -98,7 +98,7 @@ export function AdminPessoaEditWorkspace() {
               <Card>
                 <CardContent className="pt-6">
                   <p className="text-sm text-gray-600">
-                    Aqui o admin gerencia diretamente os relacionamentos da pessoa selecionada sem alterar o fluxo de solicitacao usado pelos membros.
+                    Aqui o admin gerencia diretamente os relacionamentos da pessoa selecionada sem alterar o fluxo de solicitação usado pelos membros.
                   </p>
                 </CardContent>
               </Card>
