@@ -118,7 +118,13 @@ export function RelativeCard({
     );
 
   return (
-    <article className={cn('min-w-0 rounded-xl border p-4 shadow-sm', getRelationshipCardClassName(status))}>
+    <article
+      className={cn('min-w-0 rounded-xl border p-4 shadow-sm', getRelationshipCardClassName(status))}
+      data-relationship-group={relationshipGroup ?? ''}
+      data-relationship-status={status}
+      data-person-id={person.id}
+      data-person-name={person.nome_completo}
+    >
       <div className="flex min-w-0 flex-col gap-4">
         <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div className="flex min-w-0 gap-3">
