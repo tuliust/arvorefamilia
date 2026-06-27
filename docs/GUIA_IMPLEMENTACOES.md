@@ -1,6 +1,6 @@
 # Guia de implementações
 
-> Última revisão: 2026-06-26
+> Última revisão: 2026-06-27
 > Escopo: comportamento implementado na branch `main`.
 > Status: canônico.
 
@@ -84,7 +84,7 @@
 - `CuriosidadesAiSection` monta contexto por `buildAiTreeContext`, usa sugestões rápidas e envia perguntas para `/api/ai` quando a página possui dados carregados.
 - O placeholder da pergunta da IA é curto e específico: `Faça aqui sua pergunta…`.
 - `CuriosidadesQuizSection` usa `buildCuriosityQuizQuestions`; as opções são montadas por utilitários em `curiosidadesUtils.ts`, variam candidatos quando há base suficiente e desambiguam homônimos.
-- O quiz deve exibir até seis opções quando houver dados suficientes, usando nome curto sempre que possível e nome expandido quando necessário para diferenciar homônimos.
+- O quiz usa até cinco perguntas por rodada, exibe opções ampliadas em área própria, substitui as opções por feedback animado após seleção e apresenta resultado final consolidado.
 - `CuriosidadesMemoryWall` publica lembranças via `memoryWallService`, usando o usuário autenticado como autor, limite de 200 caracteres e exclusão restrita ao autor.
 - `CuriosidadesCharts` concentra aniversários por mês, profissões e faixa etária, com componentes visuais próprios para cada tipo de gráfico.
 - `CuriosidadesGenerations` exibe a primeira geração com pessoas expandida inicialmente; ao expandir outra, apenas a geração ativa permanece aberta.
@@ -102,7 +102,9 @@
 - A documentação funcional do fórum deve considerar `forumService.ts` e o SQL versionado em `supabase/forum-schema.sql`.
 - No desktop, a busca do fórum deve preservar alinhamento com `Categorias` à esquerda e com a ação `Criar novo` à direita.
 - `/forum/novo` usa categorias com título em duas linhas quando isso melhora a leitura e não deve duplicar o título interno `Novo tópico` se o header já cumpre esse papel.
-- Menções com `@` em `/forum/novo` exibem sugestões compactas, filtráveis e posicionadas próximas ao ponto de digitação.
+- Menções com `@` em `/forum/novo` exibem sugestões compactas, filtráveis e posicionadas próximas ao ponto de digitação; o texto mencionado no campo de conteúdo deve aparecer em azul e negrito quando possível.
+- `/forum/topico/:id` usa o container padrão das páginas internas e pode exibir coluna lateral de `Tópicos recentes` no desktop para equilibrar largura com `/forum`.
+- Reações devem ficar disponíveis apenas no tópico principal; respostas não devem exibir botões de reação.
 - Tópicos e respostas editados em `/forum/topico/:id` devem exibir badge `Editado` quando `updated_at` indicar alteração posterior à criação.
 - O campo de resposta do tópico deve manter avatar e textarea alinhados lado a lado.
 
@@ -114,18 +116,22 @@
 - Favoritos usam `/meus-favoritos`.
 - A busca global do header usa `HeaderGlobalSearch`, combinando resultados de pessoas e páginas via `globalSearchService`.
 - Páginas internas que usam `MemberPageHeader` devem exibir as mesmas sugestões de busca de pessoas e páginas disponíveis na experiência de mapa.
+- O menu de avatar deve exibir primeiro e segundo nome no topo, subtítulo `Editar perfil` e atalhos de dúvidas e saída sem sobrepor elementos sticky da página.
 - As buscas/filtros dessas áreas devem ser documentadas como comportamento de UI, não como regra de banco, salvo quando o serviço correspondente existir.
 
 ## Meus dados
 
 - O editor de redes sociais deve manter o perfil em digitação como rascunho editável até o usuário confirmar a adição.
 - Não transformar rede social com uma única letra digitada em item finalizado.
+- A área de outros ajustes deve usar os rótulos curtos `Meus Vínculos` e `Fatos e Arquivos Históricos`.
 
 ## Administração
 
 - A administração usa `ProtectedRoute`.
 - Rotas administrativas atuais estão listadas em `INVENTARIO_TECNICO.md`.
+- O header das rotas `/admin/*` deve exibir apenas `Painel Administrativo`, `Principal` e o menu do usuário; links administrativos secundários ficam nas páginas correspondentes, não no header global.
 - `/admin/relacionamentos/novo` exibe status conjugal inferido, força inatividade quando há separação e bloqueia combinações contraditórias.
 - `/admin/duvidas` usa `AdminDuvidasRefined`, com listagem sem slugs visíveis, filtros abaixo do título da seção e ações compactas por ícone.
 - `/admin/atividades` usa tabela com colunas `Data`, `Autor`, `Atividade` e `Resumo`; o botão `Limpar` zera apenas a lista local exibida, sem apagar banco.
+- `/admin/gestao-conteudo-pessoas` deve manter labels, botões, mensagens e títulos em UTF-8 válido, com acentuação correta.
 - Documentação de admin deve citar apenas rotas existentes em `src/app/routes.tsx`.
