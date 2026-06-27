@@ -576,7 +576,7 @@ function buildRequestIssues(requests: RelationshipChangeRequest[], pessoas: Pess
       severity: 'info' as Severity,
       title: 'Solicitações de vínculos indisponíveis',
       description: 'A tabela/service relationship_change_requests não retornou dados.',
-      link: '/admin/solicitacoes-vinculos',
+      link: '/admin/responsaveis',
       linkLabel: 'Ver solicitações',
     }];
   }
@@ -592,7 +592,7 @@ function buildRequestIssues(requests: RelationshipChangeRequest[], pessoas: Pess
         severity: 'warning',
         title: 'Solicitação pendente há mais de 7 dias',
         description: `${request.action} ${request.relationship_type}`,
-        link: '/admin/solicitacoes-vinculos',
+        link: '/admin/responsaveis',
         linkLabel: 'Ver solicitações',
       });
     }
@@ -608,7 +608,7 @@ function buildRequestIssues(requests: RelationshipChangeRequest[], pessoas: Pess
           severity: 'critical',
           title: `Solicitação com ${field} inexistente`,
           description: pessoaId,
-          link: '/admin/solicitacoes-vinculos',
+          link: '/admin/responsaveis',
           linkLabel: 'Ver solicitações',
         });
       }
@@ -619,7 +619,7 @@ function buildRequestIssues(requests: RelationshipChangeRequest[], pessoas: Pess
         id: `request-approved-admin-${request.id}`,
         severity: 'warning',
         title: 'Solicitação aprovada sem admin_reviewed_by',
-        link: '/admin/solicitacoes-vinculos',
+        link: '/admin/responsaveis',
         linkLabel: 'Ver solicitações',
       });
     }
@@ -629,7 +629,7 @@ function buildRequestIssues(requests: RelationshipChangeRequest[], pessoas: Pess
         id: `request-reviewed-at-${request.id}`,
         severity: 'warning',
         title: 'Solicitação aprovada/rejeitada sem admin_reviewed_at',
-        link: '/admin/solicitacoes-vinculos',
+        link: '/admin/responsaveis',
         linkLabel: 'Ver solicitações',
       });
     }

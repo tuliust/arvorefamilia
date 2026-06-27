@@ -268,7 +268,7 @@ const ADMIN_HEADER_ACTIONS: HeaderAction[] = [
   { label: 'Principal', to: '/mapa-familiar', icon: ArrowLeft, responsiveLabel: 'always' },
   { label: 'Membros', to: '/admin/pessoas', icon: Users, responsiveLabel: 'always' },
   { label: 'Conteudo', to: '/admin/gestao-conteudo-pessoas', icon: Sparkles, responsiveLabel: 'always' },
-  { label: 'Solicitações', to: '/admin/solicitacoes-vinculos', icon: UserPlus, responsiveLabel: 'always' },
+  { label: 'Responsáveis', to: '/admin/responsaveis', icon: UserPlus, responsiveLabel: 'always' },
 ];
 
 export function MemberPageHeader({

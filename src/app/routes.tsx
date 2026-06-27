@@ -184,7 +184,6 @@ export const router = createBrowserRouter([
   { path: '/admin/integridade', element: lazyRoute(<ProtectedRoute><AdminIntegridade /></ProtectedRoute>) },
   { path: '/admin/atividades', element: lazyRoute(<ProtectedRoute><AdminAtividades /></ProtectedRoute>) },
   { path: '/admin/responsaveis', element: lazyRoute(<ProtectedRoute><AdminResponsaveis /></ProtectedRoute>) },
-  { path: '/admin/solicitacoes-vinculos', element: lazyRoute(<ProtectedRoute><Navigate to="/admin/responsaveis" replace /></ProtectedRoute>) },
   { path: '/admin/notificacoes', element: lazyRoute(<ProtectedRoute><AdminNotificacoes /></ProtectedRoute>) },
   { path: '/admin/gestao-conteudo-pessoas', element: lazyRoute(<ProtectedRoute><AdminPeopleContentSettings /></ProtectedRoute>) },
   { path: '/admin/duvidas', element: lazyRoute(<ProtectedRoute><AdminDuvidas /></ProtectedRoute>) },
