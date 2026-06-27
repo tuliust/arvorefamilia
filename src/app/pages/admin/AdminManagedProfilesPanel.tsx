@@ -1,10 +1,11 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Baby, CheckCircle2, Clock, Cross, Link2, ShieldCheck, XCircle } from 'lucide-react';
+import { Baby, CheckCircle2, Clock, Cross, Filter, Link2, Search, ShieldCheck, XCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import { Badge } from '../../components/ui/badge';
 import { Button } from '../../components/ui/button';
 import { ConfirmDialog } from '../../components/ConfirmDialog';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
+import { Input } from '../../components/ui/input';
 import {
   adminListAllUserPersonLinks,
   adminListProfilesForLinking,
@@ -30,6 +31,7 @@ import {
 } from '../../utils/manageableProfiles';
 
 type LinkRecordWithPessoa = UserPersonLinkRecord & { pessoa?: Pessoa | null };
+type ResponsibleFilter = 'all' | 'with' | 'without';
 
 type PendingReviewAction = {
   request: AdminProfileControlRequestRecord;
@@ -46,6 +48,13 @@ type ManageableProfileCandidate = {
   responsiblePeople: PersonResponsibleLinkRecord[];
   pendingRequestCount: number;
 };
+
+function normalizeText(value: string) {
+  return value
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase();
+}
 
 function getRoleLabel(role?: UserPersonPermissionRole | string | null) {
   if (role === 'owner') return 'Responsável principal';
@@ -81,6 +90,23 @@ function getRequestStatusLabel(status: AdminProfileControlRequestRecord['status'
   return 'Cancelada';
 }
 
+function getResponsibleCountLabel(count: number) {
+  if (count <= 0) return 'Sem responsável';
+  if (count === 1) return '1 responsável';
+  return `${count} responsáveis`;
+}
+
+function getPendingRequestCountLabel(count: number) {
+  if (count === 1) return '1 solicitação';
+  return `${count} solicitações`;
+}
+
+function getFilterLabel(filter: ResponsibleFilter) {
+  if (filter === 'with') return 'Com responsável';
+  if (filter === 'without') return 'Sem responsável';
+  return 'Todos';
+}
+
 function buildProfileLabel(profile?: AdminLinkableProfile, fallback?: string) {
   return profile?.nome_exibicao || profile?.email || fallback || 'Usuário responsável';
 }
@@ -109,11 +135,18 @@ export function AdminManagedProfilesPanel() {
   const [pendingReviewAction, setPendingReviewAction] = useState<PendingReviewAction | null>(null);
   const [selectedResponsibleByPessoaId, setSelectedResponsibleByPessoaId] = useState<Record<string, string>>({});
   const [linkingPessoaId, setLinkingPessoaId] = useState<string | null>(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [responsibleFilter, setResponsibleFilter] = useState<ResponsibleFilter>('all');
+  const [showFilterOptions, setShowFilterOptions] = useState(false);
 
   const profilesById = useMemo(
     () => new Map(profiles.map((profile) => [profile.id, profile])),
     [profiles]
   );
+
+  const sortedPeople = useMemo(() => {
+    return [...people].sort((left, right) => left.nome_completo.localeCompare(right.nome_completo, 'pt-BR'));
+  }, [people]);
 
   const pendingRequests = useMemo(
     () => requests.filter((request) => request.status === 'pending'),
@@ -168,12 +201,28 @@ export function AdminManagedProfilesPanel() {
       .sort((left, right) => {
         const a = left as ManageableProfileCandidate;
         const b = right as ManageableProfileCandidate;
-        if (a.managerCount === 0 && b.managerCount > 0) return -1;
-        if (a.managerCount > 0 && b.managerCount === 0) return 1;
-        if (a.pendingRequestCount !== b.pendingRequestCount) return b.pendingRequestCount - a.pendingRequestCount;
         return a.person.nome_completo.localeCompare(b.person.nome_completo, 'pt-BR');
       }) as ManageableProfileCandidate[];
   }, [linksByPessoaId, pendingRequestCountByPessoaId, people, responsibleLinksByPessoaId]);
+
+  const filteredManageableProfiles = useMemo(() => {
+    const normalizedSearch = normalizeText(searchTerm.trim());
+
+    return manageableProfiles.filter((candidate) => {
+      if (responsibleFilter === 'with' && candidate.managerCount === 0) return false;
+      if (responsibleFilter === 'without' && candidate.managerCount > 0) return false;
+      if (!normalizedSearch) return true;
+
+      const responsibleLabels = buildResponsibleLabels(candidate, profilesById);
+      const searchableParts = [
+        candidate.person.nome_completo,
+        candidate.reasonLabel,
+        ...responsibleLabels,
+      ];
+
+      return searchableParts.some((part) => normalizeText(part).includes(normalizedSearch));
+    });
+  }, [manageableProfiles, profilesById, responsibleFilter, searchTerm]);
 
   const loadData = async () => {
     try {
@@ -308,75 +357,73 @@ export function AdminManagedProfilesPanel() {
 
   return (
     <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Clock className="h-5 w-5 text-amber-600" />
-            Solicitações de administração
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          {loading ? (
-            <p className="text-sm text-gray-500">Carregando solicitações...</p>
-          ) : pendingRequests.length === 0 ? (
-            <p className="rounded-lg border border-dashed border-gray-300 p-4 text-sm text-gray-500">
-              Nenhuma solicitação pendente.
-            </p>
-          ) : (
-            <div className="space-y-3">
-              {pendingRequests.map((request) => {
-                const defaultRole = getDefaultRoleForRequest(request);
+      {loading || pendingRequests.length > 0 ? (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Clock className="h-5 w-5 text-amber-600" />
+              Solicitações de administração
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {loading ? (
+              <p className="text-sm text-gray-500">Carregando solicitações...</p>
+            ) : (
+              <div className="space-y-3">
+                {pendingRequests.map((request) => {
+                  const defaultRole = getDefaultRoleForRequest(request);
 
-                return (
-                  <div key={request.id} className="rounded-lg border border-amber-200 bg-amber-50 p-4">
-                    <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
-                      <div className="min-w-0 space-y-2">
-                        <p className="break-words text-sm font-semibold text-gray-900">
-                          {request.requester_label} solicitou administrar {request.target_label}
-                        </p>
-                        <p className="break-words text-xs text-gray-600">
-                          {request.requester_email ? `${request.requester_email} • ` : ''}{getRequestReasonLabel(request.reason)}
-                        </p>
-                        {request.description ? (
-                          <p className="break-words rounded-md border border-amber-200 bg-white/70 px-3 py-2 text-xs text-gray-700">
-                            {request.description}
+                  return (
+                    <div key={request.id} className="rounded-lg border border-amber-200 bg-amber-50 p-4">
+                      <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
+                        <div className="min-w-0 space-y-2">
+                          <p className="break-words text-sm font-semibold text-gray-900">
+                            {request.requester_label} solicitou administrar {request.target_label}
                           </p>
-                        ) : null}
-                        <div className="flex flex-wrap gap-2">
-                          <Badge variant="secondary">{getRequestStatusLabel(request.status)}</Badge>
-                          <Badge variant="secondary">Papel sugerido: {getRoleLabel(defaultRole)}</Badge>
+                          <p className="break-words text-xs text-gray-600">
+                            {request.requester_email ? `${request.requester_email} • ` : ''}{getRequestReasonLabel(request.reason)}
+                          </p>
+                          {request.description ? (
+                            <p className="break-words rounded-md border border-amber-200 bg-white/70 px-3 py-2 text-xs text-gray-700">
+                              {request.description}
+                            </p>
+                          ) : null}
+                          <div className="flex flex-wrap gap-2">
+                            <Badge variant="secondary">{getRequestStatusLabel(request.status)}</Badge>
+                            <Badge variant="secondary">Papel sugerido: {getRoleLabel(defaultRole)}</Badge>
+                          </div>
+                        </div>
+
+                        <div className="flex flex-col gap-2 sm:flex-row xl:shrink-0">
+                          <Button
+                            type="button"
+                            onClick={() => void handleReviewRequest(request, 'approved')}
+                            disabled={reviewingRequestId === request.id}
+                            className="w-full sm:w-auto"
+                          >
+                            <CheckCircle2 className="mr-2 h-4 w-4" />
+                            Aprovar
+                          </Button>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            onClick={() => void handleReviewRequest(request, 'rejected')}
+                            disabled={reviewingRequestId === request.id}
+                            className="w-full text-red-700 sm:w-auto"
+                          >
+                            <XCircle className="mr-2 h-4 w-4" />
+                            Rejeitar
+                          </Button>
                         </div>
                       </div>
-
-                      <div className="flex flex-col gap-2 sm:flex-row xl:shrink-0">
-                        <Button
-                          type="button"
-                          onClick={() => void handleReviewRequest(request, 'approved')}
-                          disabled={reviewingRequestId === request.id}
-                          className="w-full sm:w-auto"
-                        >
-                          <CheckCircle2 className="mr-2 h-4 w-4" />
-                          Aprovar
-                        </Button>
-                        <Button
-                          type="button"
-                          variant="outline"
-                          onClick={() => void handleReviewRequest(request, 'rejected')}
-                          disabled={reviewingRequestId === request.id}
-                          className="w-full text-red-700 sm:w-auto"
-                        >
-                          <XCircle className="mr-2 h-4 w-4" />
-                          Rejeitar
-                        </Button>
-                      </div>
                     </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </CardContent>
-      </Card>
+                  );
+                })}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      ) : null}
 
       <Card>
         <CardHeader>
@@ -389,15 +436,60 @@ export function AdminManagedProfilesPanel() {
           </p>
         </CardHeader>
         <CardContent>
+          {!loading ? (
+            <div className="mb-4 space-y-3">
+              <div className="flex flex-col gap-2 sm:flex-row">
+                <div className="relative min-w-0 flex-1">
+                  <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                  <Input
+                    value={searchTerm}
+                    onChange={(event) => setSearchTerm(event.target.value)}
+                    placeholder="Buscar por pessoa, tipo ou responsável"
+                    className="pl-9"
+                  />
+                </div>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setShowFilterOptions((current) => !current)}
+                  className="shrink-0"
+                >
+                  <Filter className="mr-2 h-4 w-4" />
+                  Filtro: {getFilterLabel(responsibleFilter)}
+                </Button>
+              </div>
+
+              {showFilterOptions ? (
+                <div className="flex flex-wrap gap-2 rounded-lg border border-gray-200 bg-gray-50 p-3">
+                  {(['all', 'without', 'with'] as ResponsibleFilter[]).map((filter) => (
+                    <Button
+                      key={filter}
+                      type="button"
+                      size="sm"
+                      variant={responsibleFilter === filter ? 'default' : 'outline'}
+                      onClick={() => setResponsibleFilter(filter)}
+                    >
+                      {getFilterLabel(filter)}
+                    </Button>
+                  ))}
+                </div>
+              ) : null}
+            </div>
+          ) : null}
+
           {loading ? (
             <p className="text-sm text-gray-500">Carregando perfis gerenciáveis...</p>
           ) : manageableProfiles.length === 0 ? (
             <p className="rounded-lg border border-dashed border-gray-300 p-4 text-sm text-gray-500">
               Nenhum perfil legado ou de criança encontrado.
             </p>
+          ) : filteredManageableProfiles.length === 0 ? (
+            <p className="rounded-lg border border-dashed border-gray-300 p-4 text-sm text-gray-500">
+              Nenhum perfil encontrado para a busca ou filtro atual.
+            </p>
           ) : (
             <div className="space-y-3">
-              {manageableProfiles.map((candidate) => {
+              {filteredManageableProfiles.map((candidate) => {
                 const Icon = candidate.reason === 'deceased' ? Cross : Baby;
                 const selectedResponsibleId = selectedResponsibleByPessoaId[candidate.person.id] ?? '';
                 const linking = linkingPessoaId === candidate.person.id;
@@ -417,12 +509,10 @@ export function AdminManagedProfilesPanel() {
                         <div className="flex flex-wrap gap-2">
                           <Badge variant="secondary">{candidate.reasonLabel}</Badge>
                           <Badge variant={candidate.managerCount === 0 ? 'outline' : 'secondary'}>
-                            {candidate.managerCount === 0
-                              ? 'Sem responsável'
-                              : `${candidate.managerCount} responsável(is)`}
+                            {getResponsibleCountLabel(candidate.managerCount)}
                           </Badge>
                           {candidate.pendingRequestCount > 0 ? (
-                            <Badge variant="secondary">{candidate.pendingRequestCount} solicitação(ões)</Badge>
+                            <Badge variant="secondary">{getPendingRequestCountLabel(candidate.pendingRequestCount)}</Badge>
                           ) : null}
                         </div>
 
@@ -443,7 +533,7 @@ export function AdminManagedProfilesPanel() {
                             disabled={linking}
                           >
                             <option value="">Selecione uma pessoa</option>
-                            {people.map((person) => (
+                            {sortedPeople.map((person) => (
                               <option key={person.id} value={person.id}>
                                 {person.nome_completo}
                               </option>
