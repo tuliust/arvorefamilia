@@ -4,6 +4,7 @@ import { toast } from 'sonner';
 import { DEFAULT_MEMBER_HEADER_ACTIONS, MemberPageHeader } from '../../components/layout/MemberPageHeader';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../components/ui/tabs';
 import { Card, CardContent } from '../../components/ui/card';
+import { ConfirmDialog } from '../../components/ConfirmDialog';
 import { AdminNotificationsOverview } from '../../components/admin/notifications/AdminNotificationsOverview';
 import {
   AdminNotificationAutomations,
@@ -75,6 +76,11 @@ const CHANNEL_OPTIONS = [
   { value: 'push', label: 'Push' },
   { value: 'whatsapp', label: 'WhatsApp futuro' },
 ] as const;
+
+type NotificationConfirmAction =
+  | { type: 'email_test' }
+  | { type: 'manual_routine' }
+  | { type: 'automation_test'; automationId: string; automationTitle: string };
 
 type StoredAdminNotificationConfig = {
   frequencyOverrides?: Record<string, AdminNotificationFrequencyId>;
@@ -181,6 +187,7 @@ export function AdminNotificacoes() {
   const [loadError, setLoadError] = useState<string | null>(null);
   const [creatingTest, setCreatingTest] = useState(false);
   const [sendingEmailTest, setSendingEmailTest] = useState(false);
+  const [sendingAutomationTest, setSendingAutomationTest] = useState(false);
   const [emailTestResults, setEmailTestResults] = useState<NotificationDispatchResult[] | null>(null);
   const [runningManualRoutine, setRunningManualRoutine] = useState(false);
   const [manualRoutineSummary, setManualRoutineSummary] = useState<DailyNotificationRunSummary | null>(null);
@@ -198,6 +205,7 @@ export function AdminNotificacoes() {
   const [frequencyOverrides, setFrequencyOverrides] = useState<Record<string, AdminNotificationFrequencyId>>(storedConfig.frequencyOverrides || {});
   const [themeOverrides, setThemeOverrides] = useState<Record<string, AdminNotificationThemeId>>(storedConfig.themeOverrides || {});
   const [activeOverrides, setActiveOverrides] = useState<Record<string, boolean>>(storedConfig.activeOverrides || {});
+  const [pendingConfirmAction, setPendingConfirmAction] = useState<NotificationConfirmAction | null>(null);
 
   useEffect(() => {
     saveStoredAdminConfig({ frequencyOverrides, themeOverrides, activeOverrides });
@@ -304,46 +312,55 @@ export function AdminNotificacoes() {
     }
   };
 
-  const handleSendEmailTest = async () => {
+
+  const handleSendEmailTest = () => {
+    if (!user?.id || sendingEmailTest) return;
+    setPendingConfirmAction({ type: 'email_test' });
+  };
+
+  const confirmSendEmailTest = async () => {
     if (!user?.id) return;
-    const confirmed = window.confirm('Enviar um e-mail real de teste apenas para o seu usuário admin? A notificação interna também será criada.');
-    if (!confirmed) return;
 
     try {
       setSendingEmailTest(true);
       const results = await dispatchNotification({
         userId: user.id,
         type: 'notificacao',
-        titulo: 'Teste de e-mail de notificação',
-        mensagem: 'E-mail de teste enviado pelo painel admin para validar provider, preferências e logs.',
+        titulo: 'Teste de e-mail de notifica??o',
+        mensagem: 'E-mail de teste enviado pelo painel admin para validar provider, prefer?ncias e logs.',
         link: '/notificacoes',
         metadata: { source: 'admin-email-test', test: true },
         channels: ['interna', 'email'],
         respectPreferences: true,
       });
       setEmailTestResults(results);
+      setPendingConfirmAction(null);
       toast.success('Teste de e-mail executado.');
       await loadDiagnostics();
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Não foi possível enviar o teste de e-mail.');
+      toast.error(error instanceof Error ? error.message : 'N?o foi poss?vel enviar o teste de e-mail.');
     } finally {
       setSendingEmailTest(false);
     }
   };
 
-  const handleRunManualRoutine = async () => {
-    const confirmed = window.confirm('Executar a rotina manual de aniversários e memórias agora? Ela pode criar notificações internas reais para os destinatários elegíveis.');
-    if (!confirmed) return;
 
+  const handleRunManualRoutine = () => {
+    if (runningManualRoutine) return;
+    setPendingConfirmAction({ type: 'manual_routine' });
+  };
+
+  const confirmRunManualRoutine = async () => {
     try {
       setRunningManualRoutine(true);
       setManualRoutineError(null);
       const result = await runDailyNotificationChecks();
       setManualRoutineSummary(result);
+      setPendingConfirmAction(null);
       toast.success('Rotina manual executada.');
       await loadDiagnostics();
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Não foi possível executar a rotina manual de notificações.';
+      const message = error instanceof Error ? error.message : 'N?o foi poss?vel executar a rotina manual de notifica??es.';
       setManualRoutineError(message);
       toast.error(message);
     } finally {
@@ -351,29 +368,39 @@ export function AdminNotificacoes() {
     }
   };
 
-  const handleAutomationTest = async (automationId: string) => {
-    if (!user?.id) return;
+
+  const handleAutomationTest = (automationId: string) => {
+    if (!user?.id || sendingAutomationTest) return;
     const automation = ADMIN_NOTIFICATION_AUTOMATIONS.find((item) => item.id === automationId);
     if (!automation) return;
-    const confirmed = window.confirm(`Enviar um teste controlado da automação "${automation.title}" apenas para o admin logado?`);
-    if (!confirmed) return;
+    setPendingConfirmAction({ type: 'automation_test', automationId: automation.id, automationTitle: automation.title });
+  };
+
+  const confirmAutomationTest = async (automationId: string) => {
+    if (!user?.id || sendingAutomationTest) return;
+    const automation = ADMIN_NOTIFICATION_AUTOMATIONS.find((item) => item.id === automationId);
+    if (!automation) return;
 
     try {
+      setSendingAutomationTest(true);
       const channels = automation.channels.includes('email') ? ['interna', 'email'] : ['interna'];
       await dispatchNotification({
         userId: user.id,
         type: 'notificacao',
-        titulo: `Teste de automação: ${automation.title}`,
+        titulo: `Teste de automa??o: ${automation.title}`,
         mensagem: automation.description,
         link: '/admin/notificacoes',
         metadata: { source: 'admin-automation-test', automation_id: automation.id, test: true },
         channels: channels as Array<'interna' | 'email'>,
         respectPreferences: true,
       });
-      toast.success('Teste de automação enviado para o admin logado.');
+      setPendingConfirmAction(null);
+      toast.success('Teste de automa??o enviado para o admin logado.');
       await loadDiagnostics();
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Não foi possível enviar o teste da automação.');
+      toast.error(error instanceof Error ? error.message : 'N?o foi poss?vel enviar o teste da automa??o.');
+    } finally {
+      setSendingAutomationTest(false);
     }
   };
 
@@ -580,6 +607,51 @@ export function AdminNotificacoes() {
 
   const peopleOptions = useMemo(() => people.map((person) => ({ id: person.id, name: person.nome_completo })), [people]);
 
+  const confirmDialogContent = useMemo(() => {
+    if (!pendingConfirmAction) return null;
+
+    if (pendingConfirmAction.type === 'email_test') {
+      return {
+        title: 'Enviar e-mail de teste',
+        description: 'Enviar um e-mail real de teste apenas para o seu usu?rio admin? A notifica??o interna tamb?m ser? criada.',
+        confirmText: 'Enviar teste',
+        loading: sendingEmailTest,
+      };
+    }
+
+    if (pendingConfirmAction.type === 'manual_routine') {
+      return {
+        title: 'Executar rotina manual',
+        description: 'Executar a rotina manual de anivers?rios e mem?rias agora? Ela pode criar notifica??es internas reais para os destinat?rios eleg?veis.',
+        confirmText: 'Executar rotina',
+        loading: runningManualRoutine,
+      };
+    }
+
+    return {
+      title: 'Enviar teste de automa??o',
+      description: `Enviar um teste controlado da automa??o "${pendingConfirmAction.automationTitle}" apenas para o admin logado?`,
+      confirmText: 'Enviar teste',
+      loading: sendingAutomationTest,
+    };
+  }, [pendingConfirmAction, runningManualRoutine, sendingAutomationTest, sendingEmailTest]);
+
+  const confirmPendingAction = async () => {
+    if (!pendingConfirmAction) return;
+
+    if (pendingConfirmAction.type === 'email_test') {
+      await confirmSendEmailTest();
+      return;
+    }
+
+    if (pendingConfirmAction.type === 'manual_routine') {
+      await confirmRunManualRoutine();
+      return;
+    }
+
+    await confirmAutomationTest(pendingConfirmAction.automationId);
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       <MemberPageHeader
@@ -722,6 +794,20 @@ export function AdminNotificacoes() {
           </TabsContent>
         </Tabs>
       </main>
+
+      <ConfirmDialog
+        open={Boolean(pendingConfirmAction)}
+        onOpenChange={(open) => {
+          if (!open && !confirmDialogContent?.loading) setPendingConfirmAction(null);
+        }}
+        title={confirmDialogContent?.title || 'Confirmar a??o'}
+        description={confirmDialogContent?.description || 'Deseja continuar?'}
+        confirmText={confirmDialogContent?.confirmText || 'Confirmar'}
+        cancelText="Cancelar"
+        onConfirm={confirmPendingAction}
+        variant="warning"
+        loading={Boolean(confirmDialogContent?.loading)}
+      />
     </div>
   );
 }
