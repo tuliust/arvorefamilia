@@ -302,7 +302,6 @@ function buildMobileFamilyPanelData(
     coreLowerCount:
       groups.conjuges.count
       + groups.filhos.count
-      + groups.netos?.count
       + groups.sobrinhos.count
       + groups.pets.count,
     paternalCousinsCount: model.paternal.cousins.length,
