@@ -11,6 +11,7 @@
 - Manter desktop e mobile como experiências equivalentes, não idênticas.
 - Proteger fluxos de onboarding contra perda acidental de contexto.
 - Preservar contraste, legibilidade e áreas clicáveis confortáveis.
+- Alterações mobile devem ser isoladas por breakpoint/rota e não podem alterar desktop por herança.
 
 ## Mapa familiar
 
@@ -32,8 +33,28 @@
 ### Mobile
 
 - A navegação mobile evita manter painéis abertos por padrão.
+- O header das páginas de árvore deve usar `Árvore Familiar`.
 - Legenda e grupos devem poder ser abertos sem bloquear permanentemente a rolagem.
+- O modal/painel aberto pelo botão `+` deve ficar na camada mais alta, acima de header, toolbar, busca, notificações e canvas.
+- O painel de visualização deve mostrar contadores e familiares reais por grupo.
+- Nomes de familiares em listas mobile devem usar primeiro e segundo nome completos.
+- Se uma área inferior não tiver conteúdo, o gesto vertical para baixo deve ser bloqueado.
 - O modal de dica desktop/mobile deve respeitar chave de sessão e não reaparecer continuamente.
+
+### `/linha-geracional`
+
+- A versão mobile deve ter leitura geracional equivalente à visualização horizontal.
+- Cabeçalhos `Geração N` precisam de margem superior suficiente para não colar na toolbar.
+- Títulos de geração devem ter fonte e peso moderados.
+- Cards conjugais devem empilhar quando necessário.
+- Conectores devem representar relações reais e não criar ligação lateral em todos os cards.
+
+## Overlays de header no mobile
+
+- Dropdown de notificações deve ficar acima de todo conteúdo, inclusive toolbars e painéis de árvore.
+- Sugestões de busca devem ficar acima de todo conteúdo, inclusive teclado/sugestões nativas quando possível.
+- Menu do avatar deve ficar alto o suficiente para exibir conteúdo sem scroll vertical excessivo.
+- A área `Seus responsáveis`, quando existir, deve ficar dentro do menu do avatar em bloco visual separado.
 
 ## Fluxo de onboarding
 
@@ -55,13 +76,21 @@ Pessoa marcada como falecida em `/meus-dados` pula `/preferencias` e segue para 
 - O formulário coleta dados pessoais, preferências de privacidade, questionário e insumos para Mini Bio/Curiosidades.
 - O modo memorial depende de toggle explícito, não do tom textual.
 - Textos de IA devem caber em até 500 caracteres por campo.
-- A área `Outros ajustes` usa rótulos diretos: `Meus Vínculos` e `Fatos e Arquivos Históricos`.
+- No mobile, a área `Outros ajustes` não deve aparecer.
+- No mobile, o botão de foto deve usar `Adicionar foto`.
+- No mobile, o toggle `Vivo/Falecido` deve ser compacto.
+- O questionário `Sobre Mim` deve terminar em tela `Seu Perfil`, com Mini Bio e Curiosidades editáveis.
+- No mobile, os botões `Voltar`, `Pular Tudo` e `Avançar` devem ficar lado a lado; `Voltar` e `Avançar` podem usar apenas ícones.
 
 ## Meus vínculos
 
 - Pessoas e pets são grupos distintos.
-- O bloco de textos pessoais fica separado dos blocos de vínculos.
+- Cônjuges aparecem antes de filhos.
+- O bloco de textos pessoais não fica nos blocos de vínculos.
 - Alterações em vínculos são tratadas como solicitações quando aplicável.
+- Pets são cadastrados por modal próprio acionado na seção `Pets`.
+- Cards mobile devem manter lixeira no topo direito e badges alinhadas.
+- Modais de adicionar parentes não devem abrir teclado automaticamente.
 
 ## Arquivos históricos
 
@@ -74,6 +103,16 @@ Pessoa marcada como falecida em `/meus-dados` pula `/preferencias` e segue para 
 - Deve resumir os dados antes do envio final.
 - Deve deixar claro o que será mantido, atualizado ou solicitado.
 - Não deve prometer gravação direta quando a regra implementada gerar solicitação pendente.
+- Parentes pendentes devem aparecer como `Em análise`.
+- Se houver perfis sob responsabilidade do usuário, o modal final deve oferecer editar agora ou depois.
+
+## Perfil de pessoa
+
+- Cards vazios sem utilidade, como `Irmãos` sem irmãos, devem ser ocultados.
+- `Administração do perfil` não deve aparecer para o próprio usuário nem quando o perfil for administrado somente pelo usuário atual.
+- `Discussões relacionadas` deve aparecer abaixo da linha do tempo.
+- O CTA superior duplicado de criar discussão deve ser removido quando já houver CTA interno.
+- No mobile, o conteúdo inferior deve ter respiro para não ficar sob a navegação inferior.
 
 ## Curiosidades
 
@@ -116,3 +155,5 @@ Pessoa marcada como falecida em `/meus-dados` pula `/preferencias` e segue para 
 - O botão `Principal` não deve exibir seta; o retorno ao painel administrativo usa `Painel Administrativo`.
 - Ações administrativas secundárias, como membros, conteúdo e responsáveis, devem permanecer nas páginas correspondentes ou em cards internos, não no header global.
 - Páginas administrativas devem manter acentuação correta em títulos, labels, botões e mensagens.
+- Cards superiores de `/admin` devem priorizar número principal e não subtítulos redundantes.
+- `/admin/responsaveis` deve priorizar solicitação pendente quando houver e ocultar essa seção quando vazia.
