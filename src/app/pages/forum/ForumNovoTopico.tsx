@@ -20,6 +20,11 @@ import { useAuth } from '../../contexts/AuthContext';
 import { obterTodasPessoas } from '../../services/dataService';
 import { criarTopicoForum, listarCategoriasForum, vincularPessoasAoTopico } from '../../services/forumService';
 import { notifyForumTopicCreated } from '../../services/notificationTriggersService';
+import {
+  getResponsiblePerspective,
+  subscribeResponsiblePerspective,
+  type ResponsiblePerspective,
+} from '../../services/responsiblePerspectiveService';
 import { ForumCategoria, ForumTopicoTipo, Pessoa } from '../../types';
 
 const DEFAULT_TOPIC_TYPE: ForumTopicoTipo = 'discussao';
@@ -149,8 +154,14 @@ export function ForumNovoTopico() {
   const [mentionCursorIndex, setMentionCursorIndex] = useState<number | null>(null);
   const [mentionPosition, setMentionPosition] = useState({ top: 0, left: 0 });
   const [selectedMentionIndex, setSelectedMentionIndex] = useState(0);
+  const [activePerspective, setActivePerspective] = useState<ResponsiblePerspective | null>(() => getResponsiblePerspective());
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   const [salvando, setSalvando] = useState(false);
+  const isMemorialPerspective = activePerspective?.falecido === true;
+
+  useEffect(() => {
+    return subscribeResponsiblePerspective(setActivePerspective);
+  }, []);
 
   useEffect(() => {
     let mounted = true;
@@ -208,6 +219,8 @@ export function ForumNovoTopico() {
   }
 
   function detectMention(text: string, cursorPosition: number) {
+    if (isMemorialPerspective) return;
+
     const textBeforeCursor = text.slice(0, cursorPosition);
     const match = textBeforeCursor.match(/(^|\s)@([\p{L}\p{N}_-]*)$/u);
 
@@ -243,7 +256,7 @@ export function ForumNovoTopico() {
   }
 
   function insertMention(pessoa: Pessoa) {
-    if (mentionStartIndex === null || mentionCursorIndex === null) return;
+    if (mentionStartIndex === null || mentionCursorIndex === null || isMemorialPerspective) return;
 
     const before = conteudo.slice(0, mentionStartIndex);
     const after = conteudo.slice(mentionCursorIndex);
@@ -265,7 +278,7 @@ export function ForumNovoTopico() {
   }
 
   function handleConteudoKeyDown(event: KeyboardEvent<HTMLTextAreaElement>) {
-    if (!mentionOpen || filteredMentionPeople.length === 0) return;
+    if (!mentionOpen || filteredMentionPeople.length === 0 || isMemorialPerspective) return;
 
     if (event.key === 'ArrowDown') {
       event.preventDefault();
@@ -292,6 +305,11 @@ export function ForumNovoTopico() {
 
   async function publicar(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+
+    if (isMemorialPerspective) {
+      toast.error('Perfis memoriais não podem criar conteúdo no fórum.');
+      return;
+    }
 
     if (!user) {
       toast.error('Entre para criar um tópico.');
@@ -359,12 +377,18 @@ export function ForumNovoTopico() {
       />
 
       <main className="mx-auto max-w-4xl px-4 py-6">
+        {isMemorialPerspective ? (
+          <div className="mb-4 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+            Você está visualizando como {activePerspective?.nomeCompleto}. Perfis memoriais não podem criar tópicos, publicar lembranças ou responder em nome próprio.
+          </div>
+        ) : null}
+
         <Card className="min-w-0">
           <CardContent className="pt-6">
             <form onSubmit={publicar} className="space-y-5">
               <div className="min-w-0 space-y-2">
                 <label className="text-sm font-medium text-gray-700" htmlFor="titulo">Título</label>
-                <Input id="titulo" value={titulo} onChange={(event) => setTitulo(event.target.value)} />
+                <Input id="titulo" value={titulo} onChange={(event) => setTitulo(event.target.value)} disabled={isMemorialPerspective} />
               </div>
 
               <div className="min-w-0 space-y-3">
@@ -387,8 +411,9 @@ export function ForumNovoTopico() {
                         type="button"
                         aria-pressed={selected}
                         onClick={() => setCategoriaId(categoria.id)}
+                        disabled={isMemorialPerspective}
                         className={[
-                          'flex min-h-28 min-w-0 flex-col items-center justify-between rounded-2xl border px-3 py-4 text-center text-sm shadow-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2',
+                          'flex min-h-28 min-w-0 flex-col items-center justify-between rounded-2xl border px-3 py-4 text-center text-sm shadow-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60',
                           selected
                             ? 'border-blue-600 bg-blue-50 text-blue-800 shadow-md'
                             : 'border-gray-200 bg-white text-gray-700 hover:border-blue-200 hover:bg-gray-50',
@@ -426,10 +451,11 @@ export function ForumNovoTopico() {
                     onChange={handleConteudoChange}
                     onClick={handleConteudoClick}
                     onKeyDown={handleConteudoKeyDown}
-                    className="min-h-[160px] rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
+                    disabled={isMemorialPerspective}
+                    className="min-h-[160px] rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60"
                   />
 
-                  {mentionOpen && filteredMentionPeople.length > 0 && (
+                  {mentionOpen && filteredMentionPeople.length > 0 && !isMemorialPerspective && (
                     <div
                       className="absolute z-[13000] w-[min(17rem,calc(100%-1rem))] overflow-hidden rounded-xl border border-gray-200 bg-white shadow-xl"
                       style={{ top: mentionPosition.top, left: mentionPosition.left }}
@@ -458,7 +484,7 @@ export function ForumNovoTopico() {
               </div>
 
               <div className="flex flex-col sm:flex-row sm:justify-end">
-                <Button type="submit" disabled={salvando} className="w-full sm:w-auto">
+                <Button type="submit" disabled={salvando || isMemorialPerspective} className="w-full sm:w-auto">
                   <Send className="mr-2 h-4 w-4 shrink-0" />
                   {salvando ? 'Publicando...' : 'Publicar'}
                 </Button>
