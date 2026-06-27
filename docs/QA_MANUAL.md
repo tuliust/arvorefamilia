@@ -1,6 +1,6 @@
 # QA manual
 
-> Última revisão: 2026-06-26
+> Última revisão: 2026-06-27
 > Escopo: validação manual das rotas e contratos documentados.
 > Status: canônico.
 
@@ -71,6 +71,7 @@ Confirmar que as alterações documentais ficaram restritas aos documentos canô
 - Modo memorial depende de toggle explícito.
 - Redes sociais devem permitir digitação de perfil completo antes de converter o item em badge/lista finalizada.
 - Salvar e recarregar deve preservar o perfil completo da rede social, não apenas a primeira letra.
+- A área `Outros ajustes` deve exibir `Meus Vínculos` e `Fatos e Arquivos Históricos`.
 
 ### `/meus-vinculos`
 
@@ -109,6 +110,14 @@ Validar em desktop e mobile quando aplicável:
 - `Ver todos os resultados` navega para `/busca?q=...`.
 - Fechar a busca ou pressionar `Escape` não deixa dropdown preso acima do conteúdo.
 
+### Menu do avatar
+
+- O topo do menu deve exibir primeiro e segundo nome do usuário.
+- Abaixo do nome, deve aparecer subtítulo `Editar perfil` com ícone.
+- A lista não deve exibir botão duplicado `Atualizar perfil`.
+- O botão `Dúvidas?` deve ter borda cinza.
+- Em `/curiosidades`, o menu deve aparecer acima dos botões superiores e de elementos sticky.
+
 ### `/curiosidades`
 
 Validar desktop e mobile:
@@ -124,8 +133,11 @@ Validar desktop e mobile:
 - No mobile, `Pergunte à IA` mostra visualmente até três sugestões rápidas, alinhadas à esquerda.
 - O envio de pergunta à IA só habilita com contexto carregado e pergunta preenchida.
 - `Teste seus conhecimentos` exibe etapa compacta no formato `1/5`, sem ícone de interrogação no cabeçalho.
-- O quiz exibe até seis opções quando houver dados suficientes, com nome curto sempre que possível.
+- O quiz exibe até cinco perguntas por rodada e até seis opções quando houver dados suficientes.
+- Botões do quiz devem ocupar a área disponível, com avatar/iniciais e texto legíveis.
 - Perguntas do quiz devem variar alternativas quando houver base suficiente e diferenciar homônimos visualmente.
+- Ao selecionar resposta, as opções devem ser substituídas por feedback animado na mesma área, com explicação e botão de avanço.
+- Ao final do quiz, deve aparecer resultado consolidado e opção de refazer teste.
 - `Mural da família` não exibe campo de nome nem dropdown de visibilidade.
 - `Mural da família` destaca a pergunta `Qual sua lembrança favorita da família?`, publica com usuário logado, limita texto a 200 caracteres e permite exclusão apenas pelo autor.
 - A lista do mural deve ter rolagem vertical quando houver mais lembranças do que a área visível comporta.
@@ -144,6 +156,15 @@ Validar desktop e mobile:
 - A descoberta sem pessoa selecionada deve manter placeholder `Selecione` e não quebrar.
 - `Comparar interesses` deve pluralizar corretamente `1 ponto em comum` e `2 pontos em comum`, usando badges do questionário de perfil quando disponíveis.
 
+### `/calendario-familiar`
+
+- Mês atual renderiza.
+- Eventos aparecem sem quebrar layout.
+- Eventos de casamento exibem nomes curtos e não repetem o prefixo `Data de casamento de` no título visual.
+- Memórias exibem primeiro e segundo nome da pessoa quando possível.
+- Card `Casamentos` aparece abaixo de `Aniversariantes` quando houver casamentos no mês.
+- Datas sem evento não geram estado inválido.
+
 ### `/forum`
 
 - Lista tópicos.
@@ -155,11 +176,16 @@ Validar desktop e mobile:
 - O card de criação não deve duplicar o título interno `Novo tópico` quando o header já contextualiza a página.
 - Categorias devem manter labels em duas linhas quando necessário para preservar leitura.
 - Ao digitar `@`, sugestões de pessoas devem aparecer próximas ao cursor, com lista compacta, scroll vertical e filtro pelas letras digitadas.
+- Menções digitadas devem poder aparecer em azul e negrito dentro da área do conteúdo sem comprometer o valor real do texto.
 
 ### `/forum/topico/:id`
 
 - Tópicos editados exibem badge `Editado`.
 - Respostas editadas exibem badge `Editado`.
+- O layout desktop deve usar largura equivalente ao padrão de `/forum`.
+- A coluna de `Tópicos recentes` deve aparecer ao lado do tópico no desktop, sem incluir o tópico atual.
+- Reações devem aparecer apenas no tópico principal.
+- Respostas não devem exibir botões de reação.
 - O campo de resposta deve manter avatar e textarea lado a lado e alinhados.
 
 ### `/meus-favoritos`
@@ -189,6 +215,7 @@ Validar desktop e mobile:
 - `/admin/login` deve permanecer público.
 - Demais rotas `/admin/*` devem exigir `ProtectedRoute`.
 - Validar dashboard, pessoas, relacionamentos, importação, diagnóstico, integridade, atividades, notificações, dúvidas e solicitações de vínculos.
+- O header das páginas `/admin/*` deve exibir `Painel Administrativo`, `Principal` sem seta e menu do usuário; não deve exibir `Membros`, `Conteúdo` nem `Responsáveis`.
 
 ### `/admin/relacionamentos/novo`
 
@@ -211,10 +238,11 @@ Validar desktop e mobile:
 
 ### `/admin/atividades`
 
-- O filtro de ator deve aparecer como `Usuário Autor`.
+- O filtro de ator deve aparecer como `Autor`.
 - O placeholder do filtro de autor deve ser `Nome`.
 - O filtro de entidade afetada deve aparecer como `Usuário`.
 - O botão `Limpar` deve zerar apenas a lista local em tela, sem apagar registros do banco.
+- Após limpar, apenas novas atividades geradas depois daquele momento devem voltar a aparecer para o usuário local.
 - O cabeçalho da tabela deve usar `Autor`, não `Ator`.
 - Colunas de Data, Autor, Atividade e Resumo devem estar alinhadas com as linhas abaixo.
 - A coluna Autor deve exibir primeiro e segundo nome quando possível.
@@ -226,6 +254,7 @@ Validar desktop e mobile:
 - A página não deve quebrar se `person_visibility_settings` ainda não existir no schema remoto.
 - Quando a tabela estiver ausente, os defaults locais devem permitir carregamento da tela.
 - Salvar configurações de visibilidade depende da tabela existente no Supabase.
+- Títulos, labels, botões e mensagens devem manter acentuação correta em UTF-8.
 
 ## Critérios de aceite
 
