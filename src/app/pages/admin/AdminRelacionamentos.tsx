@@ -14,8 +14,6 @@ import { Relacionamento, Pessoa, SubtipoRelacionamento } from '../../types';
 import { isPersonDeceased } from '../../utils/personFields';
 import { Edit3, Plus, Save, Settings, Trash2, Heart, Users as UsersIcon, X } from 'lucide-react';
 import { DEFAULT_MEMBER_HEADER_ACTIONS, MemberPageHeader } from '../../components/layout/MemberPageHeader';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../components/ui/tabs';
-import { AdminUserPersonLinksTab } from './AdminUserPersonLinksTab';
 
 type MarriageEditForm = {
   subtipo_relacionamento: SubtipoRelacionamento;
@@ -185,17 +183,6 @@ export function AdminRelacionamentos() {
       />
 
       <main className="mx-auto max-w-7xl space-y-6 px-4 py-6 sm:px-6 sm:py-8">
-        <Tabs defaultValue="relacionamentos" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-1 gap-2 bg-transparent p-0 md:grid-cols-2">
-            <TabsTrigger value="relacionamentos" className="rounded-lg border border-gray-200 bg-white data-[state=active]:border-blue-200 data-[state=active]:bg-blue-50">
-              Relacionamentos
-            </TabsTrigger>
-            <TabsTrigger value="vinculos-usuarios" className="rounded-lg border border-gray-200 bg-white data-[state=active]:border-blue-200 data-[state=active]:bg-blue-50">
-              Vinculos de usuarios
-            </TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="relacionamentos" className="space-y-6">
         <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
           <Card className="min-w-0">
             <CardHeader className="pb-3">
@@ -234,6 +221,14 @@ export function AdminRelacionamentos() {
             </CardContent>
           </Card>
         </div>
+
+        {loading ? (
+          <Card className="min-w-0">
+            <CardContent className="py-8 text-center text-sm text-gray-500">
+              Carregando relacionamentos...
+            </CardContent>
+          </Card>
+        ) : null}
 
         <Card className="min-w-0">
           <CardHeader>
@@ -277,7 +272,7 @@ export function AdminRelacionamentos() {
                           {isEditing && (
                             <div className="mt-4 grid grid-cols-1 gap-3 rounded-lg border border-gray-200 bg-gray-50 p-3 md:grid-cols-2">
                               <div className="space-y-1">
-	                                <label className="text-xs font-medium text-gray-600">Tipo conjugal</label>
+                                <label className="text-xs font-medium text-gray-600">Tipo conjugal</label>
                                 <select
                                   value={marriageForm.subtipo_relacionamento}
                                   onChange={(event) =>
@@ -286,7 +281,7 @@ export function AdminRelacionamentos() {
                                       subtipo_relacionamento: event.target.value as SubtipoRelacionamento,
                                     }))
                                   }
-	                                  className="flex h-10 w-full min-w-0 rounded-md border border-gray-300 bg-white px-3 py-2 text-sm"
+                                  className="flex h-10 w-full min-w-0 rounded-md border border-gray-300 bg-white px-3 py-2 text-sm"
                                   disabled={savingMarriageId === rel.id}
                                 >
                                   <option value="casamento">Casamento</option>
@@ -296,14 +291,14 @@ export function AdminRelacionamentos() {
                               </div>
 
                               <label className="flex items-center gap-3 self-end rounded-md border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700">
-	                                <input
+                                <input
                                   type="checkbox"
                                   checked={marriageForm.ativo}
                                   onChange={(event) =>
                                     setMarriageForm((current) => ({ ...current, ativo: event.target.checked }))
                                   }
                                   disabled={savingMarriageId === rel.id}
-	                                  className="h-4 w-4 shrink-0"
+                                  className="h-4 w-4 shrink-0"
                                 />
                                 Relacionamento ativo
                               </label>
@@ -342,19 +337,19 @@ export function AdminRelacionamentos() {
                                 />
                               </div>
 
-	                              <div className="flex flex-col gap-2 md:col-span-2 sm:flex-row sm:justify-end">
-	                                <Button type="button" variant="outline" size="sm" className="w-full sm:w-auto" onClick={cancelMarriageEdit}>
-	                                  <X className="mr-2 h-4 w-4 shrink-0" />
+                              <div className="flex flex-col gap-2 md:col-span-2 sm:flex-row sm:justify-end">
+                                <Button type="button" variant="outline" size="sm" className="w-full sm:w-auto" onClick={cancelMarriageEdit}>
+                                  <X className="mr-2 h-4 w-4 shrink-0" />
                                   Cancelar
                                 </Button>
                                 <Button
-	                                  type="button"
-	                                  size="sm"
-	                                  className="w-full sm:w-auto"
-	                                  onClick={() => handleSaveMarriage(rel)}
+                                  type="button"
+                                  size="sm"
+                                  className="w-full sm:w-auto"
+                                  onClick={() => handleSaveMarriage(rel)}
                                   disabled={savingMarriageId === rel.id}
                                 >
-	                                  <Save className="mr-2 h-4 w-4 shrink-0" />
+                                  <Save className="mr-2 h-4 w-4 shrink-0" />
                                   {savingMarriageId === rel.id ? 'Salvando...' : 'Salvar'}
                                 </Button>
                               </div>
@@ -440,12 +435,6 @@ export function AdminRelacionamentos() {
             </div>
           </CardContent>
         </Card>
-          </TabsContent>
-
-          <TabsContent value="vinculos-usuarios">
-            <AdminUserPersonLinksTab />
-          </TabsContent>
-        </Tabs>
       </main>
     </div>
   );
