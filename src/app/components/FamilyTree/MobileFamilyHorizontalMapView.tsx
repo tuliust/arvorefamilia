@@ -115,13 +115,13 @@ const GENERATION_LABELS: Record<number, string> = {
 
 const MOBILE_HORIZONTAL_CANVAS = {
   left: 0,
-  top: 72,
+  top: 96,
   cardWidth: 216,
   cardHeight: 72,
   rowGap: 18,
   columnWidth: 304,
-  minHeight: 560,
-  headerTop: 18,
+  minHeight: 600,
+  headerTop: 42,
   headerHeight: 24,
   bottomPadding: 14,
   spouseConnectorOverlap: 8,
@@ -310,13 +310,13 @@ function isNamedPerson(person: Pessoa, expectedName: string) {
 }
 
 function shouldPlaceSpouseBeforeAnchor(anchor: Pessoa, spouse: Pessoa) {
-  // Exce??o visual expl?cita do Mapa Geneal?gico:
-  // Suze Souza ? o segundo relacionamento de M?rcio Ailton e deve aparecer acima dele.
+  // Exceção visual explícita do Mapa Genealógico:
+  // Suze Souza é o segundo relacionamento de Márcio Ailton e deve aparecer acima dele.
   return isNamedPerson(anchor, 'Marcio Ailton') && isNamedPerson(spouse, 'Suze Souza');
 }
 
 function shouldPlaceSpouseAfterAnchor(anchor: Pessoa, spouse: Pessoa) {
-  // Exce??o visual expl?cita do Mapa Geneal?gico:
+  // Exceção visual explícita do Mapa Genealógico:
   // Layana deve aparecer abaixo de Tassius Marcius.
   return isNamedPerson(anchor, 'Tassius Marcius') && isNamedPerson(spouse, 'Layana');
 }
@@ -693,63 +693,79 @@ function MobileFamilyHorizontalMapViewComponent({
 
         const personGeneration = getPersonGenerationForVisibility(person, inferredGenerations);
         const spouseGeneration = getPersonGenerationForVisibility(spouse, inferredGenerations);
-        const effectiveGeneration = personGeneration ?? spouseGeneration;
+        const spouseIsAlwaysVisible = isAlwaysVisibleSpouseGeneration(personGeneration) || isAlwaysVisibleSpouseGeneration(spouseGeneration);
+        const spouseIsFilterable = isFilterableSpouseGeneration(personGeneration) || isFilterableSpouseGeneration(spouseGeneration);
+        const isSelectedPersonCouple = selectedPersonIds.has(personId) && selectedPersonIds.has(spouseId);
+        const anchorGeneration = personGeneration ?? spouseGeneration;
 
-        if (isFilterableSpouseGeneration(effectiveGeneration)) {
-          filterableSpousePersonIds.add(personId);
-          filterableSpousePersonIds.add(spouseId);
+        if (spouseIsAlwaysVisible && isSelectedPersonCouple) {
+          selectedPersonIds.add(personId);
+          selectedPersonIds.add(spouseId);
+          spouseTonePersonIds.add(personId);
+          spouseTonePersonIds.add(spouseId);
+          connectorPairKeys.add(coupleKey);
+          return;
         }
 
-        if (!directRelativeFilters.conjuge && !isAlwaysVisibleSpouseGeneration(effectiveGeneration)) return;
+        const anchorGroup = ANCESTOR_SPOUSE_ANCHOR_GROUPS.find((group) => {
+          if (!directRelativeFilters[group]) return false;
+          if (group === 'avos') return anchorGeneration === 3;
+          if (group === 'bisavos') return anchorGeneration === 2;
+          if (group === 'tataravos') return anchorGeneration === 1;
+          return false;
+        });
 
-        connectorPairKeys.add(coupleKey);
-        selectedPersonIds.add(personId);
-        selectedPersonIds.add(spouseId);
+        if (anchorGroup && isSelectedPersonCouple) {
+          selectedPersonIds.add(personId);
+          selectedPersonIds.add(spouseId);
+          spouseTonePersonIds.add(personId);
+          spouseTonePersonIds.add(spouseId);
+          connectorPairKeys.add(coupleKey);
+          return;
+        }
 
-        if (personId !== centralPersonId) spouseTonePersonIds.add(personId);
-        if (spouseId !== centralPersonId) spouseTonePersonIds.add(spouseId);
+        const filterableGroupEnabled = FILTERABLE_SPOUSE_ANCHOR_GROUPS.some((group) => directRelativeFilters[group]);
+
+        if (spouseIsFilterable && filterableGroupEnabled && isSelectedPersonCouple && directRelativeFilters.conjuge) {
+          selectedPersonIds.add(personId);
+          selectedPersonIds.add(spouseId);
+          spouseTonePersonIds.add(personId);
+          spouseTonePersonIds.add(spouseId);
+          filterableSpousePersonIds.add(personId);
+          filterableSpousePersonIds.add(spouseId);
+          connectorPairKeys.add(coupleKey);
+        }
       });
     });
 
     return {
-      people: statusFilteredPeople.filter((person) => selectedPersonIds.has(person.id)),
+      selectedPersonIds,
+      generationByPersonId: inferredGenerations,
       spouseTonePersonIds,
       filterableSpousePersonIds,
       connectorPairKeys,
     };
-  }, [centralPersonId, directRelativeFilters.conjuge, maps, pessoas, visiblePersonIds]);
-  const visibleHorizontalPessoas = horizontalVisibility.people;
-  const spouseTonePersonIds = horizontalVisibility.spouseTonePersonIds;
-  const filterableSpousePersonIds = horizontalVisibility.filterableSpousePersonIds;
+  }, [centralPersonId, directRelativeFilters, maps, pessoas, visiblePersonIds]);
 
-  const centralPerson = React.useMemo(
-    () => pessoas.find((person) => person.id === centralPersonId),
-    [centralPersonId, pessoas],
+  const visibleHorizontalPessoas = React.useMemo(
+    () => pessoas.filter((person) => horizontalVisibility.selectedPersonIds.has(person.id)),
+    [horizontalVisibility.selectedPersonIds, pessoas],
   );
 
-  const exportTitle = React.useMemo(() => {
-    const firstName = getExportFirstName(centralPerson);
-    return firstName ? `Mapa Genealógico de ${firstName}` : 'Mapa Genealógico';
-  }, [centralPerson]);
-
-  const generationByPersonId = React.useMemo(
-    () => inferHorizontalGenerations(visibleHorizontalPessoas, maps, centralPersonId),
-    [centralPersonId, maps, visibleHorizontalPessoas],
-  );
+  const { generationByPersonId, spouseTonePersonIds, filterableSpousePersonIds } = horizontalVisibility;
 
   const genealogyReferencePlacements = React.useMemo(
-    () => new Map<string, GenealogyReferencePlacement>(),
-    [],
+    () => buildGenealogyReferencePlacements(pessoas, relacionamentos, onPersonClick),
+    [onPersonClick, pessoas, relacionamentos],
   );
 
   const peopleByGeneration = React.useMemo(() => {
     const result = new Map<number, Pessoa[]>();
-    GENERATIONS.forEach((generation) => result.set(generation, []));
 
     visibleHorizontalPessoas.forEach((person) => {
-      const generation = generationByPersonId.get(person.id);
-      if (!generation || generation < 1 || generation > 6) return;
-      result.get(generation)?.push(person);
+      const generation = generationByPersonId.get(person.id) ?? 5;
+      if (!result.has(generation)) result.set(generation, []);
+      result.get(generation)!.push(person);
     });
 
     result.forEach((generationPeople, generation) => {
@@ -1101,6 +1117,11 @@ function MobileFamilyHorizontalMapViewComponent({
 
     return captureElementToCanvas(element);
   }, []);
+
+  const exportTitle = React.useMemo(() => {
+    const currentPerson = pessoas.find((person) => person.id === centralPersonId);
+    return `Mapa familiar — ${getExportFirstName(currentPerson) ?? 'família'}`;
+  }, [centralPersonId, pessoas]);
 
   const handleSaveImage = React.useCallback(async () => {
     if (exportLoadingMessage) return;
