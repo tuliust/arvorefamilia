@@ -1,11 +1,12 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Baby, CheckCircle2, Clock, ShieldCheck, Skull, XCircle } from 'lucide-react';
+import { Baby, CheckCircle2, Clock, Cross, Link2, ShieldCheck, XCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import { Badge } from '../../components/ui/badge';
 import { Button } from '../../components/ui/button';
 import { ConfirmDialog } from '../../components/ConfirmDialog';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import {
+  adminCreateUserPersonLink,
   adminListAllUserPersonLinks,
   adminListProfilesForLinking,
   type AdminLinkableProfile,
@@ -21,6 +22,7 @@ import { Pessoa, UserPersonPermissionRole } from '../../types';
 import {
   getManageableProfileEligibility,
   getProfileEligibilityReasonLabel,
+  type ManageableProfileReason,
 } from '../../utils/manageableProfiles';
 
 type LinkRecordWithPessoa = UserPersonLinkRecord & { pessoa?: Pessoa | null };
@@ -33,8 +35,8 @@ type PendingReviewAction = {
 
 type ManageableProfileCandidate = {
   person: Pessoa;
+  reason: ManageableProfileReason;
   reasonLabel: string;
-  detail: string;
   managerCount: number;
   managers: LinkRecordWithPessoa[];
   pendingRequestCount: number;
@@ -51,6 +53,12 @@ function getRoleLabel(role?: UserPersonPermissionRole | string | null) {
 function getDefaultRoleForRequest(request: AdminProfileControlRequestRecord): UserPersonPermissionRole {
   if (request.reason === 'deceased') return 'legacy_editor';
   if (request.reason === 'minor_or_dependent') return 'guardian';
+  return 'editor';
+}
+
+function getDefaultRoleForCandidate(reason: ManageableProfileReason): UserPersonPermissionRole {
+  if (reason === 'deceased') return 'legacy_editor';
+  if (reason === 'child') return 'guardian';
   return 'editor';
 }
 
@@ -80,10 +88,17 @@ export function AdminManagedProfilesPanel() {
   const [loading, setLoading] = useState(true);
   const [reviewingRequestId, setReviewingRequestId] = useState<string | null>(null);
   const [pendingReviewAction, setPendingReviewAction] = useState<PendingReviewAction | null>(null);
+  const [selectedResponsibleByPessoaId, setSelectedResponsibleByPessoaId] = useState<Record<string, string>>({});
+  const [linkingPessoaId, setLinkingPessoaId] = useState<string | null>(null);
 
   const profilesById = useMemo(
     () => new Map(profiles.map((profile) => [profile.id, profile])),
     [profiles]
+  );
+
+  const peopleById = useMemo(
+    () => new Map(people.map((person) => [person.id, person])),
+    [people]
   );
 
   const pendingRequests = useMemo(
@@ -111,14 +126,14 @@ export function AdminManagedProfilesPanel() {
     return people
       .map((person) => {
         const eligibility = getManageableProfileEligibility(person);
-        if (!eligibility.eligible) return null;
+        if (!eligibility.eligible || !eligibility.reason) return null;
 
         const managers = (linksByPessoaId.get(person.id) ?? []).filter((link) => link.can_edit !== false);
 
         return {
           person,
+          reason: eligibility.reason,
           reasonLabel: getProfileEligibilityReasonLabel(eligibility.reason),
-          detail: eligibility.detail,
           managerCount: managers.length,
           managers,
           pendingRequestCount: pendingRequestCountByPessoaId.get(person.id) ?? 0,
@@ -168,6 +183,54 @@ export function AdminManagedProfilesPanel() {
     void loadData();
   }, []);
 
+  const handleResponsibleSelectionChange = (targetPessoaId: string, responsiblePessoaId: string) => {
+    setSelectedResponsibleByPessoaId((current) => ({
+      ...current,
+      [targetPessoaId]: responsiblePessoaId,
+    }));
+  };
+
+  const handleCreateResponsibleLink = async (candidate: ManageableProfileCandidate) => {
+    const responsiblePessoaId = selectedResponsibleByPessoaId[candidate.person.id];
+
+    if (!responsiblePessoaId) {
+      toast.error('Selecione a pessoa responsável.');
+      return;
+    }
+
+    if (responsiblePessoaId === candidate.person.id) {
+      toast.error('Selecione uma pessoa diferente do perfil administrado.');
+      return;
+    }
+
+    const role = getDefaultRoleForCandidate(candidate.reason);
+
+    try {
+      setLinkingPessoaId(candidate.person.id);
+      const result = await adminCreateUserPersonLink({
+        userId: responsiblePessoaId,
+        pessoaId: candidate.person.id,
+        relacaoComPerfil: getRoleLabel(role),
+        principal: false,
+        canEdit: true,
+        permissionRole: role,
+      });
+
+      if (result.error) throw new Error(result.error);
+
+      toast.success('Responsável vinculado.');
+      setSelectedResponsibleByPessoaId((current) => ({
+        ...current,
+        [candidate.person.id]: '',
+      }));
+      await loadData();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Não foi possível vincular responsável.');
+    } finally {
+      setLinkingPessoaId(null);
+    }
+  };
+
   const handleReviewRequest = (
     request: AdminProfileControlRequestRecord,
     status: 'approved' | 'rejected'
@@ -192,27 +255,26 @@ export function AdminManagedProfilesPanel() {
 
       if (result.error) throw new Error(result.error);
       setPendingReviewAction(null);
-      toast.success(status === 'approved' ? 'Solicita??o aprovada e v?nculo criado.' : 'Solicita??o rejeitada.');
+      toast.success(status === 'approved' ? 'Solicitação aprovada e vínculo criado.' : 'Solicitação rejeitada.');
       await loadData();
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'N?o foi poss?vel revisar a solicita??o.');
+      toast.error(error instanceof Error ? error.message : 'Não foi possível revisar a solicitação.');
     } finally {
       setReviewingRequestId(null);
     }
   };
 
-
   const reviewDialogContent = pendingReviewAction
     ? pendingReviewAction.status === 'approved'
       ? {
-          title: 'Aprovar solicita??o',
-          description: `Aprovar solicita??o e vincular ${pendingReviewAction.request.requester_label} como ${getRoleLabel(pendingReviewAction.defaultRole)} de ${pendingReviewAction.request.target_label}?`,
+          title: 'Aprovar solicitação',
+          description: `Aprovar solicitação e vincular ${pendingReviewAction.request.requester_label} como ${getRoleLabel(pendingReviewAction.defaultRole)} de ${pendingReviewAction.request.target_label}?`,
           confirmText: 'Aprovar',
           variant: 'default' as const,
         }
       : {
-          title: 'Rejeitar solicita??o',
-          description: `Rejeitar solicita??o de ${pendingReviewAction.request.requester_label} para administrar ${pendingReviewAction.request.target_label}?`,
+          title: 'Rejeitar solicitação',
+          description: `Rejeitar solicitação de ${pendingReviewAction.request.requester_label} para administrar ${pendingReviewAction.request.target_label}?`,
           confirmText: 'Rejeitar',
           variant: 'danger' as const,
         }
@@ -220,71 +282,6 @@ export function AdminManagedProfilesPanel() {
 
   return (
     <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <ShieldCheck className="h-5 w-5 text-blue-700" />
-            Perfis legados e crianças
-          </CardTitle>
-          <p className="text-sm text-gray-500">
-            Pessoas falecidas ou crianças até 10 anos que podem ter um ou mais usuários responsáveis.
-          </p>
-        </CardHeader>
-        <CardContent>
-          {loading ? (
-            <p className="text-sm text-gray-500">Carregando perfis gerenciáveis...</p>
-          ) : manageableProfiles.length === 0 ? (
-            <p className="rounded-lg border border-dashed border-gray-300 p-4 text-sm text-gray-500">
-              Nenhum perfil legado ou de criança encontrado.
-            </p>
-          ) : (
-            <div className="space-y-3">
-              {manageableProfiles.map((candidate) => {
-                const Icon = candidate.reasonLabel === 'Falecido' ? Skull : Baby;
-
-                return (
-                  <div key={candidate.person.id} className="rounded-lg border border-gray-200 bg-white p-4">
-                    <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
-                      <div className="min-w-0 space-y-2">
-                        <div className="flex min-w-0 items-start gap-2">
-                          <Icon className="mt-0.5 h-4 w-4 shrink-0 text-blue-700" />
-                          <div className="min-w-0">
-                            <p className="break-words text-sm font-semibold text-gray-900">{candidate.person.nome_completo}</p>
-                            <p className="mt-1 break-words text-xs text-gray-500">{candidate.detail}</p>
-                          </div>
-                        </div>
-
-                        <div className="flex flex-wrap gap-2">
-                          <Badge variant="secondary">{candidate.reasonLabel}</Badge>
-                          <Badge variant={candidate.managerCount === 0 ? 'outline' : 'secondary'}>
-                            {candidate.managerCount === 0
-                              ? 'Sem responsável'
-                              : `${candidate.managerCount} responsável(is)`}
-                          </Badge>
-                          {candidate.pendingRequestCount > 0 ? (
-                            <Badge variant="secondary">{candidate.pendingRequestCount} solicitação(ões)</Badge>
-                          ) : null}
-                        </div>
-
-                        {candidate.managers.length > 0 ? (
-                          <p className="break-words text-xs text-gray-500">
-                            Responsáveis: {candidate.managers.map((manager) => buildProfileLabel(profilesById.get(manager.user_id), manager.user_id)).join(', ')}
-                          </p>
-                        ) : null}
-                      </div>
-
-                      <div className="rounded-lg border border-blue-100 bg-blue-50 px-3 py-2 text-xs leading-5 text-blue-900 xl:max-w-xs">
-                        Para vincular manualmente, use o formulário “Vínculos de usuários” abaixo e selecione o papel correto.
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
@@ -355,12 +352,105 @@ export function AdminManagedProfilesPanel() {
         </CardContent>
       </Card>
 
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <ShieldCheck className="h-5 w-5 text-blue-700" />
+            Perfis legados e crianças
+          </CardTitle>
+          <p className="text-sm text-gray-500">
+            Pessoas falecidas ou crianças até 10 anos que podem ter um ou mais usuários responsáveis.
+          </p>
+        </CardHeader>
+        <CardContent>
+          {loading ? (
+            <p className="text-sm text-gray-500">Carregando perfis gerenciáveis...</p>
+          ) : manageableProfiles.length === 0 ? (
+            <p className="rounded-lg border border-dashed border-gray-300 p-4 text-sm text-gray-500">
+              Nenhum perfil legado ou de criança encontrado.
+            </p>
+          ) : (
+            <div className="space-y-3">
+              {manageableProfiles.map((candidate) => {
+                const Icon = candidate.reason === 'deceased' ? Cross : Baby;
+                const selectedResponsibleId = selectedResponsibleByPessoaId[candidate.person.id] ?? '';
+                const linking = linkingPessoaId === candidate.person.id;
+
+                return (
+                  <div key={candidate.person.id} className="rounded-lg border border-gray-200 bg-white p-4">
+                    <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
+                      <div className="min-w-0 space-y-2">
+                        <div className="flex min-w-0 items-start gap-2">
+                          <Icon className="mt-0.5 h-4 w-4 shrink-0 text-blue-700" />
+                          <div className="min-w-0">
+                            <p className="break-words text-sm font-semibold text-gray-900">{candidate.person.nome_completo}</p>
+                          </div>
+                        </div>
+
+                        <div className="flex flex-wrap gap-2">
+                          <Badge variant="secondary">{candidate.reasonLabel}</Badge>
+                          <Badge variant={candidate.managerCount === 0 ? 'outline' : 'secondary'}>
+                            {candidate.managerCount === 0
+                              ? 'Sem responsável'
+                              : `${candidate.managerCount} responsável(is)`}
+                          </Badge>
+                          {candidate.pendingRequestCount > 0 ? (
+                            <Badge variant="secondary">{candidate.pendingRequestCount} solicitação(ões)</Badge>
+                          ) : null}
+                        </div>
+
+                        {candidate.managers.length > 0 ? (
+                          <p className="break-words text-xs text-gray-500">
+                            Responsáveis: {candidate.managers.map((manager) => buildProfileLabel(
+                              profilesById.get(manager.user_id),
+                              peopleById.get(manager.user_id)?.nome_completo ?? manager.user_id,
+                            )).join(', ')}
+                          </p>
+                        ) : null}
+                      </div>
+
+                      <div className="space-y-2 rounded-lg border border-blue-100 bg-blue-50 px-3 py-3 text-xs leading-5 text-blue-900 xl:min-w-80 xl:max-w-sm">
+                        <label className="block space-y-1">
+                          <span className="font-medium">Responsável</span>
+                          <select
+                            className="w-full rounded-lg border border-blue-100 bg-white px-3 py-2 text-sm text-slate-900"
+                            value={selectedResponsibleId}
+                            onChange={(event) => handleResponsibleSelectionChange(candidate.person.id, event.target.value)}
+                            disabled={linking}
+                          >
+                            <option value="">Selecione uma pessoa</option>
+                            {people.map((person) => (
+                              <option key={person.id} value={person.id}>
+                                {person.nome_completo}
+                              </option>
+                            ))}
+                          </select>
+                        </label>
+                        <Button
+                          type="button"
+                          onClick={() => void handleCreateResponsibleLink(candidate)}
+                          disabled={linking || !selectedResponsibleId}
+                          className="w-full"
+                        >
+                          <Link2 className="mr-2 h-4 w-4" />
+                          {linking ? 'Vinculando...' : 'Adicionar responsável'}
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
       <ConfirmDialog
         open={Boolean(pendingReviewAction)}
         onOpenChange={(open) => {
           if (!open && !reviewingRequestId) setPendingReviewAction(null);
         }}
-        title={reviewDialogContent?.title || 'Revisar solicita??o'}
+        title={reviewDialogContent?.title || 'Revisar solicitação'}
         description={reviewDialogContent?.description || 'Deseja continuar?'}
         confirmText={reviewDialogContent?.confirmText || 'Confirmar'}
         cancelText="Cancelar"
