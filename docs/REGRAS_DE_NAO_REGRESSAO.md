@@ -13,7 +13,9 @@
 
 - `/` deve continuar redirecionando para `/mapa-familiar`.
 - `/mapa-familiar` e `/mapa-familiar-horizontal` devem continuar compartilhando a shell `Home`.
+- `/linha-geracional` deve permanecer rota própria de membro para experiência geracional mobile.
 - `/pessoa/:id` e `/pessoas/:id` devem continuar apontando para `PersonProfile`.
+- `/aprovacoes` e `/admin/aprovacoes` devem permanecer protegidas por `ProtectedRoute`.
 - Rotas administrativas, exceto `/admin/login`, devem continuar protegidas por `ProtectedRoute`.
 
 ## Mapa familiar
@@ -27,6 +29,29 @@
 - Cards do painel desktop devem preservar legibilidade e não podem cortar labels ou botões de exportação.
 - Em `/mapa-familiar` desktop, os alinhamentos de grupos inferiores devem preservar pai e mãe como referências visuais.
 - A ordenação visual de cards deve evitar linhas extras quando houver espaço para singles e pares conjugais.
+- No mobile, o header deve exibir `Árvore Familiar`, não `Família de X`.
+- O painel do botão `+` deve ficar acima de todos os demais elementos da página.
+- O painel mobile deve reconhecer pais, filhos, cônjuges, irmãos, pets, avós, tios, primos e sobrinhos a partir dos dados reais da árvore.
+- Itens de familiares no painel mobile devem exibir primeiro e segundo nome completos.
+- Não permitir arrasto vertical para regiões sem conteúdo abaixo da tela central.
+- Não permitir arrasto para primos quando não houver primos abaixo de tios.
+- Não exibir linha vertical abaixo de tios quando não houver primos no lado correspondente.
+
+## Linha geracional mobile
+
+- `/linha-geracional` deve preservar o título `Árvore Familiar` no header mobile.
+- Cabeçalhos `Geração N` não podem ficar colados à toolbar ou ao topo da área rolável.
+- Gerações vazias não devem aparecer como tela inicial quando houver gerações posteriores com conteúdo.
+- Cards de cônjuges devem ficar empilhados quando necessário.
+- Linhas laterais devem conectar apenas relações reais, não todos os cards da geração.
+- Mudanças na linha geracional mobile não devem alterar o layout desktop de `/mapa-familiar-horizontal`.
+
+## Overlays mobile de header
+
+- Dropdown de notificações deve aparecer acima de header, toolbar, canvas, painéis e conteúdo.
+- Sugestões de busca devem aparecer acima de header, toolbar, canvas, painéis e conteúdo.
+- Menu de avatar deve aparecer acima de elementos sticky e não deve exigir scroll vertical excessivo para mostrar ações essenciais.
+- Nenhum ajuste de `z-index` mobile deve afetar desktop.
 
 ## Feedback, confirmação e diálogos
 
@@ -63,6 +88,42 @@
 - O perfil deve manter vínculos conjugais agrupados em relacionamento atual, relacionamentos anteriores e uniões históricas.
 - O admin deve bloquear combinações contraditórias entre relacionamento ativo e dados de separação.
 
+## Meus dados
+
+- Redes sociais devem permitir digitação completa antes de salvar badge final.
+- No mobile, a área `Outros ajustes` não deve aparecer.
+- O botão de foto no mobile deve usar `Adicionar foto`.
+- O toggle `Vivo/Falecido` no mobile deve permanecer compacto.
+- A tela final do questionário `Sobre Mim` deve exibir `Seu Perfil`.
+- Mini Bio e Curiosidades devem ser editáveis em `/meus-dados`, não em `/meus-vinculos`.
+- `Voltar`, `Pular Tudo` e `Avançar` devem ficar na mesma linha no questionário mobile.
+
+## Meus vínculos
+
+- Cônjuges devem aparecer antes de filhos.
+- Filhos devem respeitar regra de cônjuge quando o fluxo pedir outro pai/mãe.
+- Pets devem abrir modal próprio e não podem reaparecer como área permanente separada de cadastro.
+- Badges `Pré-cadastrado`, `Vivo`, `Falecido` e `Falecida` devem manter formatação coerente no mobile.
+- Botão de lixeira no mobile deve ficar no topo direito do card.
+- Modais de adicionar parentes não devem abrir teclado automaticamente sem foco explícito.
+- A seleção de filhos, cônjuges, irmãos ou pets não pode travar o mobile.
+- Alterações pendentes devem aparecer como `Em análise` até revisão.
+
+## Revisão de dados
+
+- Parentes adicionados ou removidos devem aparecer como `Em análise`.
+- Antes de finalizar para `/mapa-familiar`, se o usuário tiver perfis sob responsabilidade, deve aparecer modal perguntando se deseja editar esses perfis agora.
+- O modal de responsáveis não deve aparecer quando não houver perfis sob responsabilidade.
+
+## Perfil de pessoa
+
+- `Administração do perfil` deve ficar oculta quando o perfil for do próprio usuário ou administrado somente pelo usuário atual.
+- `Irmãos` deve ficar oculto quando não houver irmãos cadastrados.
+- `Discussões relacionadas` deve aparecer abaixo da linha do tempo.
+- O botão superior `Criar discussão sobre esta pessoa` não deve reaparecer quando o CTA interno já existir.
+- `Seu parentesco com ele` não deve aparecer para o próprio usuário.
+- Badges de categorias do questionário não devem reaparecer quando o contrato visual pedir ocultação.
+
 ## Curiosidades
 
 - Seletores Radix não podem receber item com `value` vazio.
@@ -73,6 +134,7 @@
 - Marcadores `+N` em gerações devem ser acionáveis quando houver pessoas ocultas.
 - O quiz deve preservar até cinco perguntas por rodada, feedback animado na área das opções e resultado final consolidado.
 - O menu do avatar não deve ficar atrás da navegação sticky ou dos botões superiores de `/curiosidades`.
+- No mobile, botões superiores de `/curiosidades` devem permanecer visíveis e roláveis lateralmente.
 
 ## Calendário familiar
 
@@ -94,6 +156,12 @@
 
 - O header das rotas `/admin/*` deve exibir apenas `Painel Administrativo`, `Principal` e menu do usuário.
 - O botão `Principal` no header administrativo não deve exibir seta.
+- `/admin` deve exibir contagem do card `Relações`.
+- `/admin` deve direcionar `Solicitações de Aprovações` para `/aprovacoes` ou `/admin/aprovacoes`.
+- `/admin` não deve exibir subtítulos redundantes nos cards superiores quando o contrato pedir apenas contagem principal.
+- Convite por WhatsApp no admin não deve envolver o código final com asteriscos.
+- A ação rápida deve usar `Textos automáticos`, não `Conteúdo de Pessoas`.
+- `/admin/home` deve permitir salvar alterações após carregamento das configurações.
 - `/admin/atividades` não deve apagar registros do banco ao acionar `Limpar`; a limpeza é visual/local.
 - `/admin/atividades` deve usar label `Autor` no filtro de ator.
 - `/admin/gestao-conteudo-pessoas` deve manter acentuação correta em UTF-8.
@@ -104,6 +172,7 @@
 - O vínculo criado pelo seletor inline de `/admin/responsaveis` deve gravar em `person_responsible_links`, não em `user_person_links`.
 - O ícone de pessoa falecida em `/admin/responsaveis` deve permanecer como cruz, não caveira.
 - Cards de perfis legados e crianças não devem exibir texto instrucional mandando usar formulário externo de vínculos.
+- A seção `Solicitações de administração` deve ficar oculta quando não houver pendências.
 
 ## IA
 
