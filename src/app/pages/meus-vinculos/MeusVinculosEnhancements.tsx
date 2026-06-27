@@ -43,14 +43,31 @@ function ensureSpouseMessage(wrapper: HTMLElement, visible: boolean) {
     wrapper.appendChild(message);
   }
 
-  message.textContent = NO_SPOUSE_MESSAGE;
+  if (message.textContent !== NO_SPOUSE_MESSAGE) message.textContent = NO_SPOUSE_MESSAGE;
+}
+
+function getSelectOptionSignature(select: HTMLSelectElement) {
+  return Array.from(select.options).map((option) => `${option.value}:${option.textContent ?? ''}`).join('|');
+}
+
+function getSpouseOptionSignature(spouseOptions: Array<{ id: string; name: string }>) {
+  return ['', ...spouseOptions.map((option) => `${option.id}:${option.name}`)].join('|');
 }
 
 function replaceSelectOptionsWithSpouses(select: HTMLSelectElement, spouseOptions: Array<{ id: string; name: string }>) {
   const currentValue = select.value;
   const nextAllowedValues = new Set(['', ...spouseOptions.map((option) => option.id)]);
+  const nextSignature = getSpouseOptionSignature(spouseOptions);
+  const currentSignature = getSelectOptionSignature(select);
 
-  Array.from(select.options).forEach((option) => option.remove());
+  if (select.dataset.meusVinculosSpouseOnly === 'true' && currentSignature === nextSignature) {
+    const nextValue = nextAllowedValues.has(currentValue) ? currentValue : '';
+    if (select.value !== nextValue) select.value = nextValue;
+    select.disabled = spouseOptions.length === 0;
+    return;
+  }
+
+  select.replaceChildren();
 
   const emptyOption = document.createElement('option');
   emptyOption.value = '';
@@ -74,7 +91,7 @@ function enhanceChildrenOtherParentSelects() {
 
   document.querySelectorAll<HTMLSelectElement>('select[id^="child-other-parent-"]').forEach((select) => {
     const label = document.querySelector<HTMLLabelElement>(`label[for="${select.id}"]`);
-    if (label) label.textContent = 'Mãe do filho (a)';
+    if (label && label.textContent !== 'Mãe do filho (a)') label.textContent = 'Mãe do filho (a)';
 
     replaceSelectOptionsWithSpouses(select, spouseOptions);
 
@@ -83,7 +100,7 @@ function enhanceChildrenOtherParentSelects() {
 
     const legacyHelp = Array.from(select.closest('.space-y-3')?.querySelectorAll<HTMLParagraphElement>('p') ?? [])
       .find((paragraph) => paragraph.textContent?.includes('Adicione um cônjuge ou cadastre o outro pai/mãe'));
-    if (legacyHelp) legacyHelp.textContent = NO_SPOUSE_MESSAGE;
+    if (legacyHelp && legacyHelp.textContent !== NO_SPOUSE_MESSAGE) legacyHelp.textContent = NO_SPOUSE_MESSAGE;
   });
 }
 
@@ -105,20 +122,40 @@ function openPetModalFromPetsButton(event: MouseEvent) {
 
 export function MeusVinculosEnhancements() {
   useEffect(() => {
+    let frameId: number | null = null;
+
     const applyLayoutTweaks = () => {
-      moveSpousesBeforeChildren();
-      enhanceChildrenOtherParentSelects();
+      if (frameId !== null) return;
+
+      frameId = window.requestAnimationFrame(() => {
+        frameId = null;
+
+        try {
+          moveSpousesBeforeChildren();
+          enhanceChildrenOtherParentSelects();
+        } catch (error) {
+          console.warn('[MeusVinculosEnhancements] Ajustes mobile ignorados para evitar travamento:', error);
+        }
+      });
     };
 
     applyLayoutTweaks();
 
     const observer = new MutationObserver(applyLayoutTweaks);
-    observer.observe(document.body, { childList: true, subtree: true, characterData: true });
+    observer.observe(document.body, { childList: true, subtree: true });
     document.addEventListener('click', openPetModalFromPetsButton, true);
+
+    const timerIds = [
+      window.setTimeout(applyLayoutTweaks, 80),
+      window.setTimeout(applyLayoutTweaks, 250),
+      window.setTimeout(applyLayoutTweaks, 700),
+    ];
 
     return () => {
       observer.disconnect();
+      if (frameId !== null) window.cancelAnimationFrame(frameId);
       document.removeEventListener('click', openPetModalFromPetsButton, true);
+      timerIds.forEach((timerId) => window.clearTimeout(timerId));
     };
   }, []);
 
