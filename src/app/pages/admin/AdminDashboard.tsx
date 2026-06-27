@@ -1,12 +1,12 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router';
-import { Bell, ChevronDown, ChevronUp, Clock, GitPullRequest, HelpCircle, Link2, MessageCircle, Palette, PlusCircle, Send, Settings, ShieldCheck, Users } from 'lucide-react';
+import { Bell, ChevronDown, ChevronUp, FileText, GitPullRequest, HelpCircle, Link2, MessageCircle, Palette, PlusCircle, Send, Settings, ShieldCheck, UserCheck, Users } from 'lucide-react';
 import { DEFAULT_MEMBER_HEADER_ACTIONS, MemberPageHeader, PAGE_CONTAINER_CLASS } from '../../components/layout/MemberPageHeader';
 import { Button } from '../../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { useAuth } from '../../contexts/AuthContext';
 import { obterTodasPessoas, obterTodosRelacionamentos } from '../../services/dataService';
-import { getActivityActionLabel, getActivitySummary, listRecentActivityLogs } from '../../services/activityLogService';
+import { getActivitySummary, listRecentActivityLogs } from '../../services/activityLogService';
 import { listPendingRelationshipChangeRequests } from '../../services/relationshipChangeRequestService';
 import { adminListProfilesForLinking, getPrimaryLinkedPerson, type AdminLinkableProfile } from '../../services/memberProfileService';
 import { ActivityLog } from '../../types';
@@ -24,8 +24,15 @@ type Relacionamento = {
   tipo_relacionamento?: string;
 };
 
+type AdminLinkableProfileWithCreatedAt = AdminLinkableProfile & {
+  created_at?: string | null;
+};
+
 const dashboardCardButtonClass =
-  'group min-w-0 rounded-lg border border-gray-200 bg-white text-left shadow-sm transition-all hover:-translate-y-0.5 hover:border-gray-300 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2';
+  'group min-w-0 rounded-lg border border-blue-100 bg-blue-50/80 text-left shadow-sm transition-all hover:-translate-y-0.5 hover:border-blue-200 hover:bg-blue-100/70 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2';
+
+const dashboardCardIconClass =
+  'h-6 w-6 shrink-0 text-blue-500 transition-colors group-hover:text-blue-700 sm:h-7 sm:w-7';
 
 function digitsOnly(value: string) {
   return value.replace(/\D/g, '');
@@ -51,6 +58,31 @@ function getCadastroDisplayName(profile: AdminLinkableProfile) {
 
 function getCadastroSubtitle(profile: AdminLinkableProfile) {
   return String(profile.email || profile.id || 'Auth user id vinculado').trim();
+}
+
+function getProfileCreatedAtTime(profile: AdminLinkableProfile) {
+  const value = (profile as AdminLinkableProfileWithCreatedAt).created_at;
+  if (!value) return 0;
+  const time = new Date(value).getTime();
+  return Number.isFinite(time) ? time : 0;
+}
+
+function getFirstTwoNames(value?: string | null) {
+  const parts = String(value ?? '').trim().split(/\s+/).filter(Boolean);
+  return parts.slice(0, 2).join(' ') || 'Autor não identificado';
+}
+
+function normalizeRelationshipWords(value: string) {
+  return value
+    .replace(/\bmae\b/gi, 'mãe')
+    .replace(/\birmao\b/gi, 'irmão')
+    .replace(/\birmaos\b/gi, 'irmãos')
+    .replace(/\bconjuge\b/gi, 'cônjuge')
+    .replace(/\bconjuges\b/gi, 'cônjuges');
+}
+
+function getActivityTitle(activity: ActivityLog) {
+  return normalizeRelationshipWords(getActivitySummary(activity)).replace(/[.!?]+$/u, '');
 }
 
 function firstName(fullName?: string | null) {
@@ -85,16 +117,22 @@ export function AdminDashboard() {
         const [pessoasData, relacionamentosData, atividadesData, pendingRequestsData, profilesData] = await Promise.all([
           obterTodasPessoas(),
           obterTodosRelacionamentos(),
-          listRecentActivityLogs(5),
+          listRecentActivityLogs(10),
           listPendingRelationshipChangeRequests({ limit: 1000 }),
           adminListProfilesForLinking(),
         ]);
         setPessoas(Array.isArray(pessoasData) ? pessoasData : []);
         setRelacionamentos(Array.isArray(relacionamentosData) ? relacionamentosData : []);
-        setAtividadesRecentes(Array.isArray(atividadesData) ? atividadesData : []);
+        setAtividadesRecentes(Array.isArray(atividadesData) ? atividadesData.slice(0, 10) : []);
         setPendingRelationshipRequests(Array.isArray(pendingRequestsData) ? pendingRequestsData.length : 0);
         const profiles = profilesData.error ? [] : profilesData.data.filter((profile) => Boolean(profile.id));
-        setCadastrosRecentes(profiles.slice(0, 5));
+        const orderedProfiles = [...profiles].sort((left, right) => {
+          const rightCreatedAt = getProfileCreatedAtTime(right);
+          const leftCreatedAt = getProfileCreatedAtTime(left);
+          if (rightCreatedAt !== leftCreatedAt) return rightCreatedAt - leftCreatedAt;
+          return getCadastroDisplayName(left).localeCompare(getCadastroDisplayName(right), 'pt-BR');
+        });
+        setCadastrosRecentes(orderedProfiles.slice(0, 10));
         setTotalCadastros(profiles.length);
       } catch (error) {
         console.error('Erro ao carregar dashboard:', error);
@@ -129,7 +167,6 @@ export function AdminDashboard() {
   const stats = {
     totalPessoas: pessoas.length,
     totalHumanos: pessoas.filter((p) => p.humano_ou_pet === 'Humano').length,
-    totalPets: pessoas.filter((p) => p.humano_ou_pet === 'Pet').length,
     totalRelacionamentos: relacionamentos.length,
     pendingRelationshipRequests,
     totalCadastros,
@@ -138,14 +175,14 @@ export function AdminDashboard() {
 
   const quickActions = [
     { title: 'Adicionar Pessoa', description: 'Cadastrar novo membro', icon: PlusCircle, onClick: () => navigate('/admin/pessoas/nova'), color: 'bg-blue-500' },
-    { title: 'Dúvidas', description: 'Gerenciar perguntas, respostas e categorias', icon: HelpCircle, onClick: () => navigate('/admin/duvidas'), color: 'bg-indigo-600' },
-    { title: 'Histórico', description: 'Ver atividades recentes', icon: Clock, onClick: () => navigate('/admin/atividades'), color: 'bg-slate-800' },
-    { title: 'Notificações', description: 'Diagnóstico e envios', icon: Bell, onClick: () => navigate('/admin/notificacoes'), color: 'bg-blue-700' },
-    { title: 'Aparência da home', description: 'Logo, fundo e cores', icon: Palette, onClick: () => navigate('/admin/home'), color: 'bg-teal-700' },
-    { title: 'Integridade dos dados', description: 'Diagnóstico da base', icon: ShieldCheck, onClick: () => navigate('/admin/integridade'), color: 'bg-cyan-700' },
+    { title: 'Dúvidas', description: 'Gerenciar perguntas e respostas', icon: HelpCircle, onClick: () => navigate('/admin/duvidas'), color: 'bg-indigo-600' },
+    { title: 'Conteúdo de Pessoas', description: 'Gerenciar conteúdo dos perfis', icon: FileText, onClick: () => navigate('/admin/gestao-conteudo-pessoas'), color: 'bg-slate-800' },
+    { title: 'Notificações', description: 'Configuração de alertas e resultados', icon: Bell, onClick: () => navigate('/admin/notificacoes'), color: 'bg-blue-700' },
+    { title: 'Design', description: 'Logo, fundo e cores', icon: Palette, onClick: () => navigate('/admin/home'), color: 'bg-teal-700' },
+    { title: 'Diagnóstico', description: 'Diagnóstico da base', icon: ShieldCheck, onClick: () => navigate('/admin/integridade'), color: 'bg-cyan-700' },
   ];
 
-  const novosCadastros = cadastrosRecentes;
+  const novosCadastros = cadastrosRecentes.slice(0, 10);
 
   const formatActivityDate = (value?: string) => {
     if (!value) return 'Data não informada';
@@ -183,12 +220,12 @@ export function AdminDashboard() {
 
     if (linkedPerson.error) {
       console.error('Erro ao localizar pessoa vinculada ao cadastro:', linkedPerson.error);
-      window.alert('N?o foi poss?vel localizar o perfil vinculado a este cadastro.');
+      window.alert('Não foi possível localizar o perfil vinculado a este cadastro.');
       return;
     }
 
     if (!linkedPerson.data?.pessoa_id) {
-      window.alert('Este cadastro ainda n?o tem uma pessoa vinculada na ?rvore.');
+      window.alert('Este cadastro ainda não tem uma pessoa vinculada na árvore.');
       return;
     }
 
@@ -208,19 +245,18 @@ export function AdminDashboard() {
         <div className="mb-6 grid grid-cols-4 gap-2 sm:mb-8 sm:gap-4 lg:grid-cols-4">
           <button type="button" onClick={() => navigate('/admin/pessoas')} className={dashboardCardButtonClass} aria-label="Abrir página de pessoas">
             <span className="flex min-w-0 flex-col items-center justify-center gap-1 px-1 pb-1 pt-3 text-center sm:flex-row sm:justify-between sm:px-6 sm:pb-2 sm:pt-6">
-              <span className="truncate text-[10px] font-semibold text-gray-600 sm:text-sm">Membros</span>
-              <Users className="h-4 w-4 shrink-0 text-gray-400 transition-colors group-hover:text-gray-600" />
+              <span className="truncate text-[10px] font-semibold text-gray-700 sm:text-sm">Membros</span>
+              <Users className={dashboardCardIconClass} />
             </span>
             <span className="block px-1 pb-3 text-center sm:px-6 sm:pb-6">
-              <span className="block text-xl font-bold leading-none text-gray-900 sm:text-3xl">{stats.totalPessoas}</span>
-              <span className="mt-1 hidden break-words text-xs text-gray-500 sm:block">{stats.totalHumanos} humanos, {stats.totalPets} pets</span>
+              <span className="block text-xl font-bold leading-none text-gray-900 sm:text-3xl">{stats.totalHumanos}</span>
             </span>
           </button>
 
           <button type="button" onClick={() => navigate('/admin/relacionamentos')} className={dashboardCardButtonClass} aria-label="Abrir página de relacionamentos">
             <span className="flex min-w-0 flex-col items-center justify-center gap-1 px-1 pb-1 pt-3 text-center sm:flex-row sm:justify-between sm:px-6 sm:pb-2 sm:pt-6">
-              <span className="truncate text-[10px] font-semibold text-gray-600 sm:text-sm">Relações</span>
-              <Link2 className="h-4 w-4 shrink-0 text-gray-400 transition-colors group-hover:text-gray-600" />
+              <span className="truncate text-[10px] font-semibold text-gray-700 sm:text-sm">Relações</span>
+              <Link2 className={dashboardCardIconClass} />
             </span>
             <span className="block px-1 pb-3 text-center sm:px-6 sm:pb-6">
               <span className="block text-xl font-bold leading-none text-gray-900 sm:text-3xl">{stats.totalRelacionamentos}</span>
@@ -228,10 +264,10 @@ export function AdminDashboard() {
             </span>
           </button>
 
-          <button type="button" onClick={() => navigate('/admin/solicitacoes-vinculos')} className={dashboardCardButtonClass} aria-label="Abrir página de solicitações de vínculos">
+          <button type="button" onClick={() => navigate('/admin/responsaveis')} className={dashboardCardButtonClass} aria-label="Abrir página de solicitações de aprovações">
             <span className="flex min-w-0 flex-col items-center justify-center gap-1 px-1 pb-1 pt-3 text-center sm:flex-row sm:justify-between sm:px-6 sm:pb-2 sm:pt-6">
-              <span className="truncate text-[10px] font-semibold text-gray-600 sm:text-sm">Pendentes</span>
-              <GitPullRequest className="h-4 w-4 shrink-0 text-gray-400 transition-colors group-hover:text-gray-600" />
+              <span className="truncate text-[10px] font-semibold text-gray-700 sm:text-sm">Solicitações de Aprovações</span>
+              <GitPullRequest className={dashboardCardIconClass} />
             </span>
             <span className="block px-1 pb-3 text-center sm:px-6 sm:pb-6">
               <span className="block text-xl font-bold leading-none text-gray-900 sm:text-3xl">{stats.pendingRelationshipRequests}</span>
@@ -239,16 +275,16 @@ export function AdminDashboard() {
             </span>
           </button>
 
-          <Card className="min-w-0">
-            <CardHeader className="flex min-w-0 flex-col items-center justify-center gap-1 px-1 pb-1 pt-3 text-center sm:flex-row sm:justify-between sm:px-6 sm:pb-2 sm:pt-6">
-              <CardTitle className="truncate text-[10px] font-semibold text-gray-600 sm:text-sm">Cadastros</CardTitle>
-              <Users className="h-4 w-4 shrink-0 text-gray-400" />
-            </CardHeader>
-            <CardContent className="px-1 pb-3 text-center sm:px-6 sm:pb-6">
-              <div className="text-xl font-bold leading-none text-gray-900 sm:text-3xl">{stats.totalCadastros}</div>
-              <p className="mt-1 hidden break-words text-xs text-gray-500 sm:block">Usuários cadastrados na plataforma</p>
-            </CardContent>
-          </Card>
+          <button type="button" onClick={() => navigate('/admin/responsaveis')} className={dashboardCardButtonClass} aria-label="Abrir página de responsáveis por usuários">
+            <span className="flex min-w-0 flex-col items-center justify-center gap-1 px-1 pb-1 pt-3 text-center sm:flex-row sm:justify-between sm:px-6 sm:pb-2 sm:pt-6">
+              <span className="truncate text-[10px] font-semibold text-gray-700 sm:text-sm">Responsáveis por Usuários</span>
+              <UserCheck className={dashboardCardIconClass} />
+            </span>
+            <span className="block px-1 pb-3 text-center sm:px-6 sm:pb-6">
+              <span className="block text-xl font-bold leading-none text-gray-900 sm:text-3xl">{stats.totalCadastros}</span>
+              <span className="mt-1 hidden break-words text-xs text-gray-500 sm:block">Usuários cadastrados na plataforma</span>
+            </span>
+          </button>
         </div>
 
         <Card className="mb-8 overflow-hidden border-blue-100 bg-white shadow-sm">
@@ -356,12 +392,15 @@ export function AdminDashboard() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-2">
-          <Card className="h-fit min-w-0 self-start">
-            <CardHeader>
+        <div className="grid grid-cols-1 items-stretch gap-6 lg:grid-cols-2">
+          <Card className="flex min-h-[32rem] min-w-0 flex-col">
+            <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <CardTitle className="break-words">Novos Cadastros</CardTitle>
+              <Button variant="outline" size="sm" className="w-full sm:w-auto" onClick={() => navigate('/admin/pessoas/novas')}>
+                Ver Todos
+              </Button>
             </CardHeader>
-            <CardContent>
+            <CardContent className="flex-1">
               {loading ? (
                 <p className="text-sm text-gray-500">Carregando...</p>
               ) : novosCadastros.length === 0 ? (
@@ -385,31 +424,26 @@ export function AdminDashboard() {
             </CardContent>
           </Card>
 
-          <Card className="min-w-0">
+          <Card className="flex min-h-[32rem] min-w-0 flex-col">
             <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <CardTitle className="break-words">Histórico de Atividades</CardTitle>
               <Button variant="outline" size="sm" className="w-full sm:w-auto" onClick={() => navigate('/admin/atividades')}>
-                Ver histórico completo
+                Ver Histórico Completo
               </Button>
             </CardHeader>
-            <CardContent>
+            <CardContent className="flex-1">
               {loading ? (
                 <p className="text-sm text-gray-500">Carregando...</p>
               ) : atividadesRecentes.length === 0 ? (
                 <p className="text-sm text-gray-500">Nenhuma atividade registrada.</p>
               ) : (
                 <div className="space-y-3">
-                  {atividadesRecentes.map((atividade) => (
+                  {atividadesRecentes.slice(0, 10).map((atividade) => (
                     <div key={atividade.id} className="rounded-lg border border-gray-100 p-3">
-                      <div className="flex min-w-0 items-start justify-between gap-3">
-                        <div className="min-w-0">
-                          <p className="break-words text-sm font-medium text-gray-900">{getActivityActionLabel(atividade.action)}</p>
-                          <p className="break-words text-xs text-gray-500">
-                            {atividade.actor_display_name || 'Ator não identificado'} · {formatActivityDate(atividade.created_at)}
-                          </p>
-                        </div>
-                      </div>
-                      <p className="mt-2 break-words text-xs text-gray-600">{getActivitySummary(atividade)}</p>
+                      <p className="break-words text-sm font-medium text-gray-900">{getActivityTitle(atividade)}</p>
+                      <p className="mt-1 break-words text-xs text-gray-500">
+                        {getFirstTwoNames(atividade.actor_display_name)} · {formatActivityDate(atividade.created_at)}
+                      </p>
                     </div>
                   ))}
                 </div>
