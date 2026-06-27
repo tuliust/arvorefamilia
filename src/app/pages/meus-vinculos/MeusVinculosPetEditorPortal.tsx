@@ -1,8 +1,14 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { createPortal } from 'react-dom';
 import { ImagePlus, PawPrint, Pencil, Plus, RefreshCcw } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '../../components/ui/button';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '../../components/ui/dialog';
 import { Input } from '../../components/ui/input';
 import { Label } from '../../components/ui/label';
 import { useAuth } from '../../contexts/AuthContext';
@@ -36,7 +42,6 @@ type RelationshipGroups = {
   conjuges?: Pessoa[];
 };
 
-const PET_EDITOR_PORTAL_ID = 'meus-vinculos-pet-editor-host';
 const BREED_PREFIX = 'Raça:';
 
 const emptyPetForm: PetFormState = {
@@ -49,49 +54,6 @@ const emptyPetForm: PetFormState = {
   fotoPrincipalUrl: '',
   outroTutorId: '',
 };
-
-function ensurePetEditorPortalHost() {
-  if (typeof document === 'undefined') return null;
-
-  const existingHost = document.getElementById(PET_EDITOR_PORTAL_ID);
-  if (existingHost) return existingHost;
-
-  const petsSection = document.getElementById('vinculos-pets');
-  const parent = petsSection?.parentElement;
-  if (!parent || !petsSection) return null;
-
-  const host = document.createElement('div');
-  host.id = PET_EDITOR_PORTAL_ID;
-  host.className = 'mb-6';
-  parent.insertBefore(host, petsSection);
-  return host;
-}
-
-function usePetEditorPortalHost() {
-  const [host, setHost] = useState<HTMLElement | null>(() => ensurePetEditorPortalHost());
-
-  useEffect(() => {
-    if (host) return undefined;
-
-    const sync = () => {
-      const nextHost = ensurePetEditorPortalHost();
-      if (nextHost) setHost(nextHost);
-    };
-
-    sync();
-    const observer = new MutationObserver(sync);
-    observer.observe(document.body, { childList: true, subtree: true });
-
-    return () => observer.disconnect();
-  }, [host]);
-
-  useEffect(() => () => {
-    const currentHost = document.getElementById(PET_EDITOR_PORTAL_ID);
-    currentHost?.remove();
-  }, []);
-
-  return host;
-}
 
 function normalizeText(value?: string | number | null) {
   return String(value ?? '').trim();
@@ -211,14 +173,14 @@ async function createPetTutorRequest(args: {
   });
 }
 
-function MeusVinculosPetEditorSection() {
+function MeusVinculosPetEditorDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (open: boolean) => void }) {
   const { user } = useAuth();
   const [ownPerson, setOwnPerson] = useState<Pessoa | null>(null);
   const [canEdit, setCanEdit] = useState(true);
   const [pets, setPets] = useState<Pessoa[]>([]);
   const [spouses, setSpouses] = useState<Pessoa[]>([]);
   const [form, setForm] = useState<PetFormState>(emptyPetForm);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
 
   const selectedPet = useMemo(
@@ -253,8 +215,8 @@ function MeusVinculosPetEditorSection() {
   }
 
   useEffect(() => {
-    void loadData();
-  }, [user?.id]);
+    if (open) void loadData();
+  }, [open, user?.id]);
 
   function updateForm<Key extends keyof PetFormState>(field: Key, value: PetFormState[Key]) {
     setForm((current) => ({ ...current, [field]: value }));
@@ -311,6 +273,7 @@ function MeusVinculosPetEditorSection() {
         setPets((current) => current.map((pet) => pet.id === updatedPet.id ? updatedPet : pet));
         toast.success('Pet atualizado.');
         resetForm();
+        onOpenChange(false);
         return;
       }
 
@@ -345,6 +308,7 @@ function MeusVinculosPetEditorSection() {
       setPets((current) => [...current, createdPet]);
       toast.success('Pet cadastrado. O vínculo com tutor ficará em análise antes de aparecer definitivamente na árvore.');
       resetForm();
+      onOpenChange(false);
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Não foi possível salvar o pet.');
     } finally {
@@ -353,180 +317,192 @@ function MeusVinculosPetEditorSection() {
   }
 
   return (
-    <section className="rounded-2xl border border-blue-100 bg-white p-5 shadow-sm">
-      <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-        <div className="flex min-w-0 items-start gap-3">
-          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-blue-700 ring-1 ring-blue-100">
-            <PawPrint className="h-5 w-5" />
-          </span>
-          <div className="min-w-0">
-            <h2 className="break-words text-lg font-semibold text-gray-950">Cadastro e edição de pets</h2>
-            <p className="mt-1 max-w-3xl break-words text-sm text-gray-600">
-              Cadastre pets com nome, nascimento, raça, local, falecimento e foto.
-            </p>
-          </div>
+    <Dialog open={open} onOpenChange={(nextOpen) => {
+      if (!nextOpen) resetForm();
+      onOpenChange(nextOpen);
+    }}>
+      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-5xl">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-blue-700 ring-1 ring-blue-100">
+              <PawPrint className="h-5 w-5" />
+            </span>
+            Adicionar pet
+          </DialogTitle>
+          <DialogDescription>
+            Cadastre pets com nome, nascimento, raça, local, falecimento e foto.
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="flex justify-end">
+          <Button type="button" variant="outline" className="w-full shrink-0 sm:w-auto" onClick={() => void loadData()} disabled={loading || saving}>
+            <RefreshCcw className="h-4 w-4" />
+            Atualizar
+          </Button>
         </div>
 
-        <Button type="button" variant="outline" className="w-full shrink-0 sm:w-auto" onClick={() => void loadData()} disabled={loading || saving}>
-          <RefreshCcw className="h-4 w-4" />
-          Atualizar
-        </Button>
-      </div>
-
-      {loading ? (
-        <p className="mt-5 rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-600">
-          Carregando pets...
-        </p>
-      ) : (
-        <div className="mt-5 grid gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(18rem,0.8fr)]">
-          <form onSubmit={handleSubmit} className="grid gap-3 rounded-xl border border-gray-200 bg-gray-50 p-4 sm:grid-cols-2">
-            <div className="space-y-2 sm:col-span-2">
-              <Label htmlFor="meus-vinculos-pet-nome">Nome do pet</Label>
-              <Input
-                id="meus-vinculos-pet-nome"
-                value={form.nome}
-                onChange={(event) => updateForm('nome', event.target.value)}
-                placeholder="Ex: Bob, Mel, Thor..."
-                disabled={!canEdit || saving}
-              />
-            </div>
-
-            <div className="space-y-2 sm:col-span-2">
-              <Label htmlFor="meus-vinculos-pet-foto">Foto do pet</Label>
-              <div className="flex min-w-0 flex-col gap-3 rounded-xl border border-gray-200 bg-white p-3 sm:flex-row sm:items-center">
-                <span className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-blue-50 text-blue-700 ring-1 ring-blue-100">
-                  {form.fotoPrincipalUrl ? (
-                    <img src={form.fotoPrincipalUrl} alt={form.nome || 'Foto do pet'} className="h-full w-full object-cover" />
-                  ) : (
-                    <ImagePlus className="h-6 w-6" />
-                  )}
-                </span>
+        {loading ? (
+          <p className="rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-600">
+            Carregando pets...
+          </p>
+        ) : (
+          <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(18rem,0.8fr)]">
+            <form onSubmit={handleSubmit} className="grid gap-3 rounded-xl border border-gray-200 bg-gray-50 p-4 sm:grid-cols-2">
+              <div className="space-y-2 sm:col-span-2">
+                <Label htmlFor="meus-vinculos-pet-nome">Nome do pet</Label>
                 <Input
-                  id="meus-vinculos-pet-foto"
-                  type="file"
-                  accept="image/*"
-                  onChange={handlePhotoChange}
+                  id="meus-vinculos-pet-nome"
+                  value={form.nome}
+                  onChange={(event) => updateForm('nome', event.target.value)}
+                  placeholder="Ex: Bob, Mel, Thor..."
                   disabled={!canEdit || saving}
                 />
               </div>
-            </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="meus-vinculos-pet-nascimento">Data de nascimento</Label>
-              <Input
-                id="meus-vinculos-pet-nascimento"
-                value={form.dataNascimento}
-                onChange={(event) => updateForm('dataNascimento', event.target.value)}
-                placeholder="DD/MM/AAAA ou AAAA"
-                disabled={!canEdit || saving}
-              />
-            </div>
+              <div className="space-y-2 sm:col-span-2">
+                <Label htmlFor="meus-vinculos-pet-foto">Foto do pet</Label>
+                <div className="flex min-w-0 flex-col gap-3 rounded-xl border border-gray-200 bg-white p-3 sm:flex-row sm:items-center">
+                  <span className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-blue-50 text-blue-700 ring-1 ring-blue-100">
+                    {form.fotoPrincipalUrl ? (
+                      <img src={form.fotoPrincipalUrl} alt={form.nome || 'Foto do pet'} className="h-full w-full object-cover" />
+                    ) : (
+                      <ImagePlus className="h-6 w-6" />
+                    )}
+                  </span>
+                  <Input
+                    id="meus-vinculos-pet-foto"
+                    type="file"
+                    accept="image/*"
+                    onChange={handlePhotoChange}
+                    disabled={!canEdit || saving}
+                  />
+                </div>
+              </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="meus-vinculos-pet-raca">Raça</Label>
-              <Input
-                id="meus-vinculos-pet-raca"
-                value={form.raca}
-                onChange={(event) => updateForm('raca', event.target.value)}
-                placeholder="Ex: SRD, Poodle, Siamês"
-                disabled={!canEdit || saving}
-              />
-            </div>
-
-            <div className="space-y-2 sm:col-span-2">
-              <Label htmlFor="meus-vinculos-pet-local-nascimento">Local de nascimento</Label>
-              <Input
-                id="meus-vinculos-pet-local-nascimento"
-                value={form.localNascimento}
-                onChange={(event) => updateForm('localNascimento', event.target.value)}
-                placeholder="Cidade/UF ou cidade/país"
-                disabled={!canEdit || saving}
-              />
-            </div>
-
-            <label className="flex min-w-0 items-center gap-2 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700">
-              <input
-                type="checkbox"
-                checked={form.falecido}
-                onChange={(event) => updateForm('falecido', event.target.checked)}
-                disabled={!canEdit || saving}
-              />
-              Pet falecido
-            </label>
-
-            {form.falecido && (
               <div className="space-y-2">
-                <Label htmlFor="meus-vinculos-pet-falecimento">Data de falecimento</Label>
+                <Label htmlFor="meus-vinculos-pet-nascimento">Data de nascimento</Label>
                 <Input
-                  id="meus-vinculos-pet-falecimento"
-                  value={form.dataFalecimento}
-                  onChange={(event) => updateForm('dataFalecimento', event.target.value)}
+                  id="meus-vinculos-pet-nascimento"
+                  value={form.dataNascimento}
+                  onChange={(event) => updateForm('dataNascimento', event.target.value)}
                   placeholder="DD/MM/AAAA ou AAAA"
                   disabled={!canEdit || saving}
                 />
               </div>
-            )}
 
-            <div className="flex flex-col gap-2 sm:col-span-2 sm:flex-row">
-              <Button type="submit" disabled={!canEdit || saving} className="w-full sm:w-auto">
-                {form.id ? <Pencil className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
-                {saving ? 'Salvando...' : form.id ? 'Salvar pet' : 'Cadastrar pet'}
-              </Button>
-              {form.id && (
-                <Button type="button" variant="outline" onClick={resetForm} className="w-full sm:w-auto" disabled={saving}>
-                  Cancelar edição
+              <div className="space-y-2">
+                <Label htmlFor="meus-vinculos-pet-raca">Raça</Label>
+                <Input
+                  id="meus-vinculos-pet-raca"
+                  value={form.raca}
+                  onChange={(event) => updateForm('raca', event.target.value)}
+                  placeholder="Ex: SRD, Poodle, Siamês"
+                  disabled={!canEdit || saving}
+                />
+              </div>
+
+              <div className="space-y-2 sm:col-span-2">
+                <Label htmlFor="meus-vinculos-pet-local-nascimento">Local de nascimento</Label>
+                <Input
+                  id="meus-vinculos-pet-local-nascimento"
+                  value={form.localNascimento}
+                  onChange={(event) => updateForm('localNascimento', event.target.value)}
+                  placeholder="Cidade/UF ou cidade/país"
+                  disabled={!canEdit || saving}
+                />
+              </div>
+
+              <label className="flex min-w-0 items-center gap-2 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700">
+                <input
+                  type="checkbox"
+                  checked={form.falecido}
+                  onChange={(event) => updateForm('falecido', event.target.checked)}
+                  disabled={!canEdit || saving}
+                />
+                Pet falecido
+              </label>
+
+              {form.falecido && (
+                <div className="space-y-2">
+                  <Label htmlFor="meus-vinculos-pet-falecimento">Data de falecimento</Label>
+                  <Input
+                    id="meus-vinculos-pet-falecimento"
+                    value={form.dataFalecimento}
+                    onChange={(event) => updateForm('dataFalecimento', event.target.value)}
+                    placeholder="DD/MM/AAAA ou AAAA"
+                    disabled={!canEdit || saving}
+                  />
+                </div>
+              )}
+
+              <div className="flex flex-col gap-2 sm:col-span-2 sm:flex-row">
+                <Button type="submit" disabled={!canEdit || saving} className="w-full sm:w-auto">
+                  {form.id ? <Pencil className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
+                  {saving ? 'Salvando...' : form.id ? 'Salvar pet' : 'Cadastrar pet'}
                 </Button>
+                {form.id && (
+                  <Button type="button" variant="outline" onClick={resetForm} className="w-full sm:w-auto" disabled={saving}>
+                    Cancelar edição
+                  </Button>
+                )}
+              </div>
+            </form>
+
+            <div className="min-w-0 space-y-2">
+              <p className="text-sm font-semibold text-gray-900">Pets cadastrados</p>
+
+              {pets.length === 0 ? (
+                <p className="rounded-xl border border-dashed border-gray-300 bg-gray-50 p-4 text-sm text-gray-600">
+                  Nenhum pet cadastrado ainda.
+                </p>
+              ) : (
+                pets.map((pet) => {
+                  const meta = getPetMeta(pet);
+
+                  return (
+                    <button
+                      key={pet.id}
+                      type="button"
+                      onClick={() => setForm(petToForm(pet))}
+                      className="flex w-full min-w-0 items-start gap-3 rounded-xl border border-gray-200 bg-white p-3 text-left transition hover:border-blue-200 hover:bg-blue-50/40"
+                      disabled={saving}
+                    >
+                      <span className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full bg-blue-50 text-blue-700 ring-1 ring-blue-100">
+                        {pet.foto_principal_url ? (
+                          <img src={pet.foto_principal_url} alt={pet.nome_completo} className="h-full w-full object-cover" />
+                        ) : (
+                          <PawPrint className="h-4 w-4" />
+                        )}
+                      </span>
+                      <span className="min-w-0">
+                        <span className="block break-words text-sm font-semibold text-gray-950">{pet.nome_completo}</span>
+                        <span className="mt-1 block break-words text-xs text-gray-600">
+                          {meta.length > 0 ? meta.join(' · ') : 'Clique para editar'}
+                        </span>
+                      </span>
+                    </button>
+                  );
+                })
               )}
             </div>
-          </form>
-
-          <div className="min-w-0 space-y-2">
-            <p className="text-sm font-semibold text-gray-900">Pets cadastrados</p>
-
-            {pets.length === 0 ? (
-              <p className="rounded-xl border border-dashed border-gray-300 bg-gray-50 p-4 text-sm text-gray-600">
-                Nenhum pet cadastrado ainda.
-              </p>
-            ) : (
-              pets.map((pet) => {
-                const meta = getPetMeta(pet);
-
-                return (
-                  <button
-                    key={pet.id}
-                    type="button"
-                    onClick={() => setForm(petToForm(pet))}
-                    className="flex w-full min-w-0 items-start gap-3 rounded-xl border border-gray-200 bg-white p-3 text-left transition hover:border-blue-200 hover:bg-blue-50/40"
-                    disabled={saving}
-                  >
-                    <span className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full bg-blue-50 text-blue-700 ring-1 ring-blue-100">
-                      {pet.foto_principal_url ? (
-                        <img src={pet.foto_principal_url} alt={pet.nome_completo} className="h-full w-full object-cover" />
-                      ) : (
-                        <PawPrint className="h-4 w-4" />
-                      )}
-                    </span>
-                    <span className="min-w-0">
-                      <span className="block break-words text-sm font-semibold text-gray-950">{pet.nome_completo}</span>
-                      <span className="mt-1 block break-words text-xs text-gray-600">
-                        {meta.length > 0 ? meta.join(' · ') : 'Clique para editar'}
-                      </span>
-                    </span>
-                  </button>
-                );
-              })
-            )}
           </div>
-        </div>
-      )}
-    </section>
+        )}
+      </DialogContent>
+    </Dialog>
   );
 }
 
 export function MeusVinculosPetEditorPortal() {
-  const host = usePetEditorPortalHost();
+  const [open, setOpen] = useState(false);
 
-  if (!host) return null;
+  useEffect(() => {
+    const handleOpenPetModal = () => setOpen(true);
+    window.addEventListener('meus-vinculos:open-pet-modal', handleOpenPetModal);
 
-  return createPortal(<MeusVinculosPetEditorSection />, host);
+    return () => {
+      window.removeEventListener('meus-vinculos:open-pet-modal', handleOpenPetModal);
+    };
+  }, []);
+
+  return <MeusVinculosPetEditorDialog open={open} onOpenChange={setOpen} />;
 }
