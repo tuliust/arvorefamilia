@@ -43,6 +43,7 @@ docs/
     MEUS_VINCULOS.md
     MINI_BIO_CURIOSIDADES_IA.md
     REVISAO_DADOS.md
+    STATUS_CONJUGAL.md
 
   historico/
     AUDITORIA_DOCUMENTACAO_FINAL_20260623.md
@@ -73,6 +74,7 @@ Arquivos residuais fora desse índice não devem ser usados como contrato operac
 | Storage | `operacao/STORAGE_MAINTENANCE.md` |
 | Mapa familiar | `funcionalidades/MAPA_FAMILIAR_VIEW.md` |
 | Árvore, conectores e painel | `funcionalidades/ARVORE_LEGENDAS_CONECTORES_PAINEL.md` |
+| Status conjugal | `funcionalidades/STATUS_CONJUGAL.md` |
 | Meus dados, IA, Mini Bio e Curiosidades | `funcionalidades/MINI_BIO_CURIOSIDADES_IA.md` |
 | Meus vínculos | `funcionalidades/MEUS_VINCULOS.md` |
 | Revisão de dados | `funcionalidades/REVISAO_DADOS.md` |
