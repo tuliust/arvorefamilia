@@ -122,6 +122,20 @@ const mobileGlobalTweaks = `
   html[data-mobile-route="person-profile"] main {
     padding-bottom: calc(9.5rem + env(safe-area-inset-bottom, 0px)) !important;
   }
+
+  html[data-mobile-route="meus-vinculos"] article[data-relationship-group] {
+    position: relative !important;
+    padding-right: 3.75rem !important;
+  }
+
+  html[data-mobile-route="meus-vinculos"] article[data-relationship-group] button[aria-label="Solicitar remoção"],
+  html[data-mobile-route="meus-vinculos"] article[data-relationship-group] button[aria-label="Cancelar adição"],
+  html[data-mobile-route="meus-vinculos"] article[data-relationship-group] button[aria-label="Desfazer solicitação de remoção"] {
+    position: absolute !important;
+    right: 1rem !important;
+    top: 1rem !important;
+    z-index: 2 !important;
+  }
 }
 `;
 
@@ -152,6 +166,20 @@ function findExactTextElement(text: string) {
     .find((element) => normalizeText(element.textContent) === normalizedTarget) ?? null;
 }
 
+function setInlineBadgeStyle(element: HTMLElement | null) {
+  if (!element) return;
+  element.style.display = 'inline-flex';
+  element.style.alignItems = 'center';
+  element.style.borderRadius = '9999px';
+  element.style.border = '1px solid rgb(229, 231, 235)';
+  element.style.background = 'rgb(255, 255, 255)';
+  element.style.padding = '0.25rem 0.625rem';
+  element.style.fontSize = '0.75rem';
+  element.style.fontWeight = '600';
+  element.style.lineHeight = '1rem';
+  element.style.color = 'rgb(55, 65, 81)';
+}
+
 function hideMeusDadosOtherAdjustments() {
   if (!isMobileViewport()) return;
   const heading = findExactTextElement('Outros ajustes');
@@ -160,6 +188,93 @@ function hideMeusDadosOtherAdjustments() {
 
   card.style.display = 'none';
   card.dataset.mobileHiddenOtherAdjustments = 'true';
+}
+
+function rewriteMeusDadosPhotoButton() {
+  if (!isMobileViewport()) return;
+
+  Array.from(document.querySelectorAll<HTMLButtonElement>('button')).forEach((button) => {
+    if (normalizeText(button.textContent) !== 'cadastrar') return;
+
+    const visibleLabel = Array.from(button.querySelectorAll<HTMLElement>('span'))
+      .find((span) => normalizeText(span.textContent) === 'cadastrar');
+
+    if (visibleLabel) {
+      visibleLabel.textContent = 'Adicionar foto';
+    } else {
+      button.childNodes.forEach((node) => {
+        if (node.nodeType === Node.TEXT_NODE && normalizeText(node.textContent) === 'cadastrar') {
+          node.textContent = 'Adicionar foto';
+        }
+      });
+    }
+  });
+}
+
+function compactDeathStatusToggle() {
+  if (!isMobileViewport()) return;
+
+  const heading = findExactTextElement('Status da pessoa');
+  const wrapper = heading?.closest('div')?.parentElement as HTMLElement | null;
+  if (!wrapper) return;
+
+  const toggle = Array.from(wrapper.querySelectorAll<HTMLElement>('div'))
+    .find((element) => normalizeText(element.textContent).includes('vivo') && normalizeText(element.textContent).includes('falecido'));
+
+  if (!toggle) return;
+
+  toggle.style.width = 'fit-content';
+  toggle.style.maxWidth = '100%';
+  toggle.style.alignSelf = 'flex-start';
+
+  toggle.querySelectorAll<HTMLButtonElement>('button').forEach((button) => {
+    button.style.minWidth = '4.35rem';
+    button.style.paddingLeft = '0.75rem';
+    button.style.paddingRight = '0.75rem';
+  });
+}
+
+function fixQuestionnaireNavigationIcons() {
+  if (!isMobileViewport()) return;
+
+  const section = Array.from(document.querySelectorAll<HTMLElement>('section')).find((candidate) => {
+    const text = normalizeText(candidate.textContent);
+    return text.includes('sobre mim') && text.includes('etapa') && text.includes('voltar');
+  });
+
+  if (!section) return;
+
+  Array.from(section.querySelectorAll<HTMLButtonElement>('button')).forEach((button) => {
+    const text = normalizeText(button.textContent);
+    const svg = button.querySelector<SVGElement>('svg');
+    if (!svg) return;
+
+    if (text.includes('voltar')) {
+      button.style.opacity = '1';
+      svg.style.opacity = '1';
+      svg.style.color = 'rgb(37, 99, 235)';
+      svg.style.stroke = 'rgb(37, 99, 235)';
+      svg.setAttribute('aria-hidden', 'true');
+    }
+
+    if (text.includes('avancar') || text.includes('avançar')) {
+      svg.style.opacity = '1';
+      svg.style.color = 'rgb(255, 255, 255)';
+      svg.style.stroke = 'rgb(255, 255, 255)';
+      svg.setAttribute('aria-hidden', 'true');
+    }
+  });
+}
+
+function rewriteMobileTreeHeaderTitle() {
+  if (!isMobileViewport()) return;
+
+  document.querySelectorAll<HTMLElement>('header h1').forEach((title) => {
+    if (normalizeText(title.textContent).startsWith('familia de ')) {
+      title.textContent = 'Árvore Familiar';
+      title.dataset.mobileTreeTitleNormalized = 'true';
+    }
+  });
 }
 
 function expandMobileUserMenu() {
@@ -175,14 +290,107 @@ function expandMobileUserMenu() {
   panel.style.zIndex = '11110';
 }
 
+function preventMobileSpouseDialogAutoKeyboard() {
+  if (!isMobileViewport()) return;
+
+  const title = findExactTextElement('Adicionar cônjuge');
+  const dialog = title?.closest('[data-slot="dialog-content"]') as HTMLElement | null;
+  if (!dialog || dialog.dataset.mobileSpouseAutoblurred === 'true') return;
+
+  dialog.dataset.mobileSpouseAutoblurred = 'true';
+  dialog.setAttribute('tabindex', '-1');
+
+  const blurInput = () => {
+    const input = dialog.querySelector<HTMLInputElement>('#relative-search-name');
+    if (!input) return;
+    if (document.activeElement === input) input.blur();
+    dialog.focus({ preventScroll: true });
+  };
+
+  window.requestAnimationFrame(blurInput);
+  window.setTimeout(blurInput, 80);
+  window.setTimeout(blurInput, 220);
+}
+
+function restoreRelationshipCardsForDesktop() {
+  document.querySelectorAll<HTMLElement>('[data-mobile-review-badge="true"]').forEach((badge) => badge.remove());
+  document.querySelectorAll<HTMLElement>('[data-mobile-original-review-badge="true"]').forEach((badge) => {
+    badge.style.display = '';
+    delete badge.dataset.mobileOriginalReviewBadge;
+  });
+  document.querySelectorAll<HTMLElement>('[data-mobile-life-badge="true"]').forEach((badge) => {
+    badge.removeAttribute('style');
+    delete badge.dataset.mobileLifeBadge;
+  });
+}
+
+function enhanceMobileRelationshipCards() {
+  if (!isMobileViewport()) {
+    restoreRelationshipCardsForDesktop();
+    return;
+  }
+
+  document.querySelectorAll<HTMLElement>('article[data-relationship-group]').forEach((card) => {
+    const actionButton = card.querySelector<HTMLButtonElement>('button[aria-label="Solicitar remoção"], button[aria-label="Cancelar adição"], button[aria-label="Desfazer solicitação de remoção"]');
+    const actionContainer = actionButton?.closest('div') as HTMLElement | null;
+    const originalBadge = actionContainer?.querySelector<HTMLElement>('span');
+    const lifeBadge = Array.from(card.querySelectorAll<HTMLElement>('span')).find((span) => {
+      const text = normalizeText(span.textContent);
+      return text === 'vivo' || text === 'falecido' || text === 'falecida';
+    }) ?? null;
+
+    if (!originalBadge || !lifeBadge) return;
+
+    const badgesRow = lifeBadge.closest('div') as HTMLElement | null;
+    if (!badgesRow) return;
+
+    originalBadge.dataset.mobileOriginalReviewBadge = 'true';
+    originalBadge.style.display = 'none';
+
+    let mobileBadge = badgesRow.querySelector<HTMLElement>('[data-mobile-review-badge="true"]');
+    if (!mobileBadge) {
+      mobileBadge = document.createElement('span');
+      mobileBadge.dataset.mobileReviewBadge = 'true';
+      badgesRow.insertBefore(mobileBadge, badgesRow.firstChild);
+    }
+
+    mobileBadge.textContent = originalBadge.textContent ?? '';
+    setInlineBadgeStyle(mobileBadge);
+    setInlineBadgeStyle(lifeBadge);
+    lifeBadge.dataset.mobileLifeBadge = 'true';
+
+    badgesRow.style.display = 'flex';
+    badgesRow.style.flexDirection = 'row';
+    badgesRow.style.alignItems = 'center';
+    badgesRow.style.gap = '0.5rem';
+    badgesRow.style.flexWrap = 'wrap';
+  });
+}
+
 function applyMobileDomTweaks(pathname: string) {
   const route = getMobileRoute(pathname);
 
   document.documentElement.dataset.mobileRoute = route;
 
-  if (!isMobileViewport()) return;
-  if (route === 'meus-dados') hideMeusDadosOtherAdjustments();
+  if (!isMobileViewport()) {
+    restoreRelationshipCardsForDesktop();
+    return;
+  }
+
+  rewriteMobileTreeHeaderTitle();
   expandMobileUserMenu();
+
+  if (route === 'meus-dados') {
+    hideMeusDadosOtherAdjustments();
+    rewriteMeusDadosPhotoButton();
+    compactDeathStatusToggle();
+    fixQuestionnaireNavigationIcons();
+  }
+
+  if (route === 'meus-vinculos') {
+    enhanceMobileRelationshipCards();
+    preventMobileSpouseDialogAutoKeyboard();
+  }
 }
 
 export function MobileGlobalTweaks() {
