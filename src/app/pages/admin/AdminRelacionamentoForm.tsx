@@ -15,8 +15,13 @@ import {
 } from '../../components/ui/select';
 import { Textarea } from '../../components/ui/textarea';
 import { adicionarRelacionamentoComInverso, obterTodasPessoas } from '../../services/dataService';
-import { Pessoa, SubtipoRelacionamento, TipoRelacionamento } from '../../types';
+import { Pessoa, Relacionamento, SubtipoRelacionamento, TipoRelacionamento } from '../../types';
 import { isPetFamilyMember } from '../../utils/personEntity';
+import {
+  getConjugalRelationshipStatus,
+  getConjugalRelationshipStatusDescription,
+  getConjugalRelationshipStatusLabel,
+} from '../../utils/conjugalRelationshipStatus';
 
 const TIPOS_RELACIONAMENTO: Array<{ value: TipoRelacionamento; label: string }> = [
   { value: 'pai', label: 'Pai' },
@@ -32,6 +37,37 @@ const SUBTIPOS_CONJUGAIS: Array<{ value: SubtipoRelacionamento; label: string }>
   { value: 'uniao_estavel' as SubtipoRelacionamento, label: 'União estável' },
   { value: 'separado', label: 'Separado' },
 ];
+
+function buildConjugalValidationMessage({
+  isConjugal,
+  ativo,
+  subtipoRelacionamento,
+  dataSeparacao,
+  localSeparacao,
+}: {
+  isConjugal: boolean;
+  ativo: boolean;
+  subtipoRelacionamento: SubtipoRelacionamento;
+  dataSeparacao: string;
+  localSeparacao: string;
+}) {
+  if (!isConjugal) return '';
+
+  const hasSeparationDate = Boolean(dataSeparacao);
+  const hasSeparationPlace = Boolean(localSeparacao.trim());
+  const isSeparatedSubtype = subtipoRelacionamento === 'separado';
+  const hasSeparationInfo = isSeparatedSubtype || hasSeparationDate || hasSeparationPlace;
+
+  if (ativo && hasSeparationInfo) {
+    return 'Relacionamentos ativos não devem ter subtipo Separado, data de separação ou local de separação.';
+  }
+
+  if (hasSeparationPlace && !hasSeparationDate && !isSeparatedSubtype) {
+    return 'Para informar local de separação, selecione o subtipo Separado ou preencha a data de separação.';
+  }
+
+  return '';
+}
 
 export function AdminRelacionamentoForm() {
   const navigate = useNavigate();
@@ -49,6 +85,11 @@ export function AdminRelacionamentoForm() {
   const [error, setError] = useState('');
 
   const isConjugal = tipoRelacionamento === 'conjuge';
+  const isSeparatedSubtype = isConjugal && subtipoRelacionamento === 'separado';
+  const hasSeparationDate = isConjugal && Boolean(dataSeparacao);
+  const relationshipShouldBeInactive = isSeparatedSubtype || hasSeparationDate;
+  const effectiveAtivo = relationshipShouldBeInactive ? false : ativo;
+  const localSeparacaoTrimmed = localSeparacao.trim();
 
   useEffect(() => {
     async function loadPessoas() {
@@ -87,6 +128,52 @@ export function AdminRelacionamentoForm() {
     isPetFamilyMember(pessoaOrigemSelecionada) || isPetFamilyMember(pessoaDestinoSelecionada)
   );
 
+  const conjugalValidationMessage = useMemo(
+    () => buildConjugalValidationMessage({
+      isConjugal,
+      ativo: effectiveAtivo,
+      subtipoRelacionamento,
+      dataSeparacao,
+      localSeparacao,
+    }),
+    [dataSeparacao, effectiveAtivo, isConjugal, localSeparacao, subtipoRelacionamento]
+  );
+
+  const previewRelationship = useMemo(() => {
+    if (!isConjugal) return undefined;
+
+    return {
+      pessoa_origem_id: pessoaOrigemId,
+      pessoa_destino_id: pessoaDestinoId,
+      tipo_relacionamento: 'conjuge',
+      subtipo_relacionamento: subtipoRelacionamento,
+      ativo: effectiveAtivo,
+      data_separacao: dataSeparacao || undefined,
+      local_separacao: localSeparacaoTrimmed || undefined,
+      observacoes: observacoes.trim() || undefined,
+    } as Relacionamento;
+  }, [dataSeparacao, effectiveAtivo, isConjugal, localSeparacaoTrimmed, observacoes, pessoaDestinoId, pessoaOrigemId, subtipoRelacionamento]);
+
+  const inferredConjugalStatus = previewRelationship
+    ? getConjugalRelationshipStatus(
+      previewRelationship,
+      pessoaOrigemSelecionada || undefined,
+      pessoaDestinoSelecionada || undefined
+    )
+    : undefined;
+  const inferredConjugalStatusLabel = inferredConjugalStatus
+    ? getConjugalRelationshipStatusLabel(inferredConjugalStatus)
+    : '';
+  const inferredConjugalStatusDescription = inferredConjugalStatus
+    ? getConjugalRelationshipStatusDescription(inferredConjugalStatus)
+    : '';
+
+  useEffect(() => {
+    if (relationshipShouldBeInactive && ativo) {
+      setAtivo(false);
+    }
+  }, [ativo, relationshipShouldBeInactive]);
+
   const getTipoRelacionamentoLabel = (tipo: { value: TipoRelacionamento; label: string }) => {
     if (tipo.value === 'filho' && relationshipInvolvesPet) {
       return 'Pet da família';
@@ -106,6 +193,20 @@ export function AdminRelacionamentoForm() {
     }
   };
 
+  const handleSubtipoChange = (value: SubtipoRelacionamento) => {
+    setSubtipoRelacionamento(value);
+    if (value === 'separado') {
+      setAtivo(false);
+    }
+  };
+
+  const handleDataSeparacaoChange = (value: string) => {
+    setDataSeparacao(value);
+    if (value) {
+      setAtivo(false);
+    }
+  };
+
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setError('');
@@ -120,6 +221,11 @@ export function AdminRelacionamentoForm() {
       return;
     }
 
+    if (conjugalValidationMessage) {
+      setError(conjugalValidationMessage);
+      return;
+    }
+
     try {
       setSaving(true);
       const relacionamento = await adicionarRelacionamentoComInverso({
@@ -127,9 +233,9 @@ export function AdminRelacionamentoForm() {
         pessoa_destino_id: pessoaDestinoId,
         tipo_relacionamento: tipoRelacionamento,
         subtipo_relacionamento: isConjugal ? subtipoRelacionamento : undefined,
-        ativo: isConjugal ? ativo : true,
+        ativo: isConjugal ? effectiveAtivo : true,
         data_separacao: isConjugal ? dataSeparacao || undefined : undefined,
-        local_separacao: isConjugal ? localSeparacao.trim() || undefined : undefined,
+        local_separacao: isConjugal ? localSeparacaoTrimmed || undefined : undefined,
         observacoes: isConjugal ? observacoes.trim() || undefined : undefined,
       });
 
@@ -237,7 +343,7 @@ export function AdminRelacionamentoForm() {
                     <label className="text-sm font-medium text-gray-700">Subtipo conjugal</label>
                     <Select
                       value={subtipoRelacionamento}
-                      onValueChange={(value) => setSubtipoRelacionamento(value as SubtipoRelacionamento)}
+                      onValueChange={(value) => handleSubtipoChange(value as SubtipoRelacionamento)}
                       disabled={saving}
                     >
                       <SelectTrigger>
@@ -258,13 +364,34 @@ export function AdminRelacionamentoForm() {
               {isConjugal && (
                 <div className="min-w-0 rounded-lg border border-gray-200 bg-gray-50 p-4">
                   <h2 className="mb-4 break-words text-sm font-semibold text-gray-900">Status conjugal</h2>
+
+                  {inferredConjugalStatus && (
+                    <Alert className="mb-4 border-blue-200 bg-blue-50 text-blue-900">
+                      <AlertTitle>Status inferido: {inferredConjugalStatusLabel}</AlertTitle>
+                      <AlertDescription>{inferredConjugalStatusDescription}</AlertDescription>
+                    </Alert>
+                  )}
+
+                  {relationshipShouldBeInactive && (
+                    <p className="mb-4 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-xs leading-relaxed text-amber-800">
+                      Como há separação registrada, este relacionamento será salvo como inativo.
+                    </p>
+                  )}
+
+                  {conjugalValidationMessage && (
+                    <Alert variant="destructive" className="mb-4">
+                      <AlertTitle>Validação necessária</AlertTitle>
+                      <AlertDescription>{conjugalValidationMessage}</AlertDescription>
+                    </Alert>
+                  )}
+
                   <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                     <label className="flex min-w-0 items-start gap-3 rounded-md border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700">
                       <input
                         type="checkbox"
-                        checked={ativo}
+                        checked={effectiveAtivo}
                         onChange={(event) => setAtivo(event.target.checked)}
-                        disabled={saving}
+                        disabled={saving || relationshipShouldBeInactive}
                         className="mt-0.5 h-4 w-4 shrink-0"
                       />
                       <span className="min-w-0 break-words">Relacionamento ativo</span>
@@ -275,7 +402,7 @@ export function AdminRelacionamentoForm() {
                       <Input
                         type="date"
                         value={dataSeparacao}
-                        onChange={(event) => setDataSeparacao(event.target.value)}
+                        onChange={(event) => handleDataSeparacaoChange(event.target.value)}
                         disabled={saving}
                       />
                     </div>
@@ -313,7 +440,11 @@ export function AdminRelacionamentoForm() {
                 >
                   Cancelar
                 </Button>
-                <Button type="submit" disabled={loading || saving || pessoasOrdenadas.length < 2} className="w-full sm:w-auto">
+                <Button
+                  type="submit"
+                  disabled={loading || saving || pessoasOrdenadas.length < 2 || Boolean(conjugalValidationMessage)}
+                  className="w-full sm:w-auto"
+                >
                   <Save className="mr-2 h-4 w-4 shrink-0" />
                   {saving ? 'Salvando...' : 'Salvar relacionamento'}
                 </Button>
