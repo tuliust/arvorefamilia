@@ -1,7 +1,7 @@
 # Funcionalidades complementares
 
 > Última revisão: 2026-06-27  
-> Escopo: calendário, dúvidas, fórum, favoritos, notificações, onboarding, exportação, busca global, timeline e cadastros administrativos de pessoas.  
+> Escopo: calendário, dúvidas, fórum, favoritos, notificações, onboarding, exportação, busca global, timeline, perfil, aprovações e cadastros administrativos de pessoas.  
 > Status: canônico complementar.
 
 ## Objetivo
@@ -30,7 +30,8 @@ Regras:
 - sugestões de pessoas devem navegar para `/pessoa/:id`;
 - sugestões de páginas devem navegar para a rota correspondente;
 - o botão `Ver todos os resultados` deve enviar para `/busca?q=...`;
-- páginas internas como `/curiosidades`, `/forum` e `/calendario-familiar` devem usar o mesmo componente compartilhado de busca do header.
+- páginas internas como `/curiosidades`, `/forum` e `/calendario-familiar` devem usar o mesmo componente compartilhado de busca do header;
+- no mobile, o dropdown de sugestões deve aparecer acima de headers, toolbars sticky, painéis da árvore, menus e conteúdo da página.
 
 ## Menu do avatar
 
@@ -42,7 +43,21 @@ Regras:
 - abaixo do nome deve aparecer subtítulo `Editar perfil` com ícone;
 - a ação de edição de perfil fica no bloco superior do menu, não como botão duplicado na lista de atalhos;
 - o botão `Dúvidas?` no rodapé do menu deve ter borda cinza;
-- o menu deve ficar em camada superior a barras sticky, botões superiores e demais controles da página.
+- o menu deve ficar em camada superior a barras sticky, botões superiores e demais controles da página;
+- quando o usuário for responsável por outros perfis, o menu pode exibir a área `Seus responsáveis` com dropdown de visualização;
+- ao selecionar perfil administrado, a navegação deve usar a perspectiva do perfil selecionado;
+- se o perfil administrado for de pessoa falecida, ações de criação social como fórum/mural devem respeitar as restrições do modo memorial.
+
+## Notificações no header
+
+O botão de notificações/alertas no header deve abrir dropdown de notificações recentes quando a experiência da página usar header autenticado.
+
+Regras:
+
+- no mobile, o dropdown deve aparecer na camada mais alta da página, acima de toolbar, canvas, painéis, busca e conteúdo;
+- o rodapé do dropdown usa ações curtas com largura equivalente: `Ver todas` e `Preferências`;
+- estado vazio deve permanecer legível, sem cortar botões;
+- abrir o dropdown não deve deslocar indevidamente o layout da página.
 
 ## Calendário familiar
 
@@ -156,6 +171,25 @@ Não regressão mínima:
 - ações do rodapé do dropdown permanecem em uma linha e com largura equivalente;
 - ajuste de preferência não quebra navegação.
 
+## Perfil de pessoa
+
+Rotas principais:
+
+- `/pessoa/:id`;
+- `/pessoas/:id`.
+
+Regras:
+
+- o perfil deve respeitar privacidade e permissões de exibição;
+- o botão duplicado `Voltar para a árvore` não deve aparecer ao lado do avatar quando o header já fornece navegação;
+- o card `Administração do perfil` deve ficar oculto quando a página for do próprio usuário ou quando o perfil for administrado somente pelo usuário atual;
+- o card `Irmãos` deve ficar oculto quando não houver irmãos cadastrados;
+- `Discussões relacionadas` deve aparecer abaixo da linha do tempo;
+- o botão superior `Criar discussão sobre esta pessoa` não deve aparecer quando houver CTA interno no estado vazio;
+- badges derivadas do questionário de perfil podem ser ocultadas quando o contrato visual pedir uma página mais limpa;
+- `Seu parentesco com ele` não deve aparecer quando a página estiver sendo vista pelo próprio usuário;
+- no mobile, o conteúdo final deve ter respiro inferior para não ficar atrás da navegação inferior.
+
 ## Onboarding de membro
 
 Função:
@@ -179,7 +213,8 @@ Não regressão mínima:
 - botão ou fluxo de exportação existe quando aplicável;
 - erro é tratado;
 - exportação não altera dados;
-- fluxos de imagem, PDF e impressão devem preservar feedback visual de preparação e não travar a página em estado permanente.
+- fluxos de imagem, PDF e impressão devem preservar feedback visual de preparação e não travar a página em estado permanente;
+- quando exportação abrir nova aba ou janela, a página principal deve permanecer preservada.
 
 ## Timeline
 
@@ -211,6 +246,51 @@ Nas rotas `/admin/*`, o header global deve ser reduzido para navegação essenci
 - menu do usuário.
 
 Botões como `Membros`, `Conteúdo` e `Responsáveis` não devem aparecer no header global administrativo. Essas entradas devem ficar em cards, menus ou páginas internas quando forem necessárias.
+
+## Admin dashboard e aprovações
+
+Rotas principais:
+
+- `/admin`;
+- `/admin/dashboard`;
+- `/aprovacoes`;
+- `/admin/aprovacoes`.
+
+Regras:
+
+- os cards superiores do dashboard devem exibir os números principais sem subtítulos redundantes;
+- o card `Relações` deve exibir a contagem total de relacionamentos;
+- o card `Solicitações de Aprovações` deve levar para a página de aprovações;
+- a página de aprovações concentra solicitações de novos usuários, edições de vínculos e demais revisões pendentes quando implementadas;
+- o convite por WhatsApp não deve envolver o código final com asteriscos;
+- a ação rápida `Conteúdo de Pessoas` deve aparecer como `Textos automáticos`.
+
+## `/admin/home`
+
+A página de configurações públicas deve permitir salvar alterações nas abas depois do carregamento das configurações.
+
+Não regressão mínima:
+
+- botão de salvar visível quando houver alterações aplicáveis;
+- toast `Aguarde o carregamento das configurações antes de salvar.` não deve bloquear salvamento depois que os dados carregarem;
+- configurações salvas devem persistir após recarregar.
+
+## `/admin/responsaveis`
+
+Rota principal: `/admin/responsaveis`.
+
+Regras:
+
+- `Solicitações de administração` deve aparecer acima de `Perfis legados e crianças`;
+- a seção de solicitações deve ficar oculta quando não houver solicitações pendentes;
+- `Perfis legados e crianças` deve listar pessoas falecidas e crianças até 10 anos;
+- a listagem deve ficar em ordem alfabética, independentemente de já existir responsável;
+- deve haver campo de busca e filtro acima do primeiro item;
+- pessoas falecidas devem usar ícone de cruz, não caveira;
+- cards não devem exibir texto instrucional longo mandando usar formulário externo;
+- o seletor inline de responsável deve listar pessoas da tabela `pessoas`, não apenas usuários autenticados;
+- vínculos pessoa-a-pessoa de responsáveis devem usar `person_responsible_links`;
+- badges devem pluralizar corretamente: `1 responsável`, `2 responsáveis`.
 
 ## Administração de dúvidas
 
