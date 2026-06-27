@@ -9,34 +9,29 @@ const LINHA_GERACIONAL_MOBILE_STYLE_ID = 'linha-geracional-mobile-runtime-style'
 const LINHA_GERACIONAL_MOBILE_CSS = `
 @media (max-width: 767px) {
   [data-linha-geracional-mobile-root="true"] section[aria-label] {
-    padding-top: 1.35rem !important;
-  }
-
-  [data-linha-geracional-mobile-root="true"] section[aria-label] h1 {
-    margin-top: 1rem !important;
-    font-size: 0.875rem !important;
-    font-weight: 600 !important;
-    letter-spacing: 0 !important;
+    padding-top: 1.5rem !important;
   }
 
   [data-linha-geracional-mobile-root="true"] section[aria-label] div.relative.px-8 {
-    margin-bottom: 0.35rem !important;
+    margin-bottom: 0.65rem !important;
   }
 
-  [data-linha-geracional-mobile-root="true"] section[aria-label] div.relative.px-8 > span:first-child,
-  [data-linha-geracional-mobile-root="true"] section[aria-label] div.relative.flex.flex-1.flex-col > span:first-child {
+  [data-linha-geracional-mobile-root="true"] section[aria-label]:not([aria-label="Núcleo"]) div.relative.px-8 > span,
+  [data-linha-geracional-mobile-root="true"] section[aria-label]:not([aria-label="Núcleo"]) div.relative.flex.flex-1.flex-col > span {
     display: none !important;
   }
 
   [data-linha-geracional-mobile-root="true"] section[aria-label="Núcleo"] div.relative.flex.flex-1.flex-col {
-    gap: 0.85rem !important;
+    gap: 0.95rem !important;
   }
 
-  [data-linha-geracional-mobile-root="true"] section[aria-label="Núcleo"] div.relative.px-8:first-of-type > span:nth-child(2) {
+  [data-linha-geracional-mobile-root="true"] section[aria-label="Núcleo"] div.relative.px-8 > span:first-child {
     display: none !important;
   }
 }
 `;
+
+type AncestorSide = 'paternal' | 'maternal';
 
 function normalizeText(value?: string | null) {
   return String(value ?? '')
@@ -179,6 +174,21 @@ function rewriteLinhaGeracionalHeaderTitle() {
   });
 }
 
+function styleLinhaGeracionalGenerationTitle() {
+  if (!isMobileViewport()) return;
+  if (window.location.pathname !== '/linha-geracional') return;
+
+  Array.from(document.querySelectorAll<HTMLElement>('[data-linha-geracional-mobile-root="true"] h1')).forEach((title) => {
+    if (!normalizeText(title.textContent).startsWith('geracao ')) return;
+
+    title.style.marginTop = '0.9rem';
+    title.style.fontSize = '0.95rem';
+    title.style.fontWeight = '650';
+    title.style.letterSpacing = '0';
+    title.style.lineHeight = '1.2';
+  });
+}
+
 function skipEmptyFirstLinhaGeracionalScreen() {
   if (!isMobileViewport()) return;
   if (window.location.pathname !== '/linha-geracional') return;
@@ -199,30 +209,63 @@ function skipEmptyFirstLinhaGeracionalScreen() {
   nextButton.click();
 }
 
-function reorderMobileAncestorSides() {
+function getAncestorGroupRow(title: string) {
+  const normalized = normalizeText(title);
+  if (normalized.includes('tataravo')) return '1';
+  if (normalized.includes('bisavo')) return '2';
+  if (normalized.includes('avo')) return '3';
+  return '';
+}
+
+function getAncestorGroupSide(title: string): AncestorSide | null {
+  const normalized = normalizeText(title);
+  if (normalized.includes('paterno')) return 'paternal';
+  if (normalized.includes('materno')) return 'maternal';
+  return null;
+}
+
+function fixMobileAncestorSides() {
   if (!isMobileViewport()) return;
   if (window.location.pathname !== '/mapa-familiar') return;
 
   const ancestorsScreen = document.querySelector<HTMLElement>('[data-mobile-family-tree-screen="ancestors"]');
-  if (!ancestorsScreen) return;
+  const grid = ancestorsScreen?.querySelector<HTMLElement>('.grid.grid-cols-2');
+  if (!grid) return;
 
-  Array.from(ancestorsScreen.querySelectorAll<HTMLElement>('section')).forEach((section) => {
+  Array.from(grid.querySelectorAll<HTMLElement>('section')).forEach((section) => {
     const heading = section.querySelector<HTMLElement>('h2, h3, h4');
-    const text = normalizeText(heading?.textContent);
+    const title = heading?.textContent ?? '';
+    const side = getAncestorGroupSide(title);
+    const row = getAncestorGroupRow(title);
 
-    if (text.includes('paterno')) {
-      section.style.order = '1';
-    }
+    if (!side || !row) return;
 
-    if (text.includes('materno')) {
-      section.style.order = '2';
-    }
+    section.style.gridColumn = side === 'paternal' ? '1' : '2';
+    section.style.gridRow = row;
+    section.style.order = '0';
   });
 }
 
-function hasCousinCards(side: 'paternal' | 'maternal') {
-  const screen = document.querySelector<HTMLElement>(`[data-mobile-family-tree-screen="${side}-cousins"]`);
+function hasCousinCards(side: AncestorSide) {
+  const screenName = side === 'paternal' ? 'paternal-cousins' : 'maternal-cousins';
+  const screen = document.querySelector<HTMLElement>(`[data-mobile-family-tree-screen="${screenName}"]`);
   return Boolean(screen?.querySelector('[data-family-map-mobile-card="true"]'));
+}
+
+function hideMissingCousinVerticalConnectors() {
+  if (!isMobileViewport()) return;
+  if (window.location.pathname !== '/mapa-familiar') return;
+
+  (['paternal', 'maternal'] as AncestorSide[]).forEach((side) => {
+    const unclesScreenName = side === 'paternal' ? 'paternal-uncles' : 'maternal-uncles';
+    const unclesScreen = document.querySelector<HTMLElement>(`[data-mobile-family-tree-screen="${unclesScreenName}"]`);
+    if (!unclesScreen) return;
+
+    const shouldHide = !hasCousinCards(side);
+    Array.from(unclesScreen.querySelectorAll<HTMLElement>('div.pointer-events-none.absolute.left-1\/2.w-px, div.pointer-events-none.absolute.left-1\/2.z-0.w-px')).forEach((line) => {
+      line.style.display = shouldHide ? 'none' : '';
+    });
+  });
 }
 
 function getActiveMobileFamilyTreeScreen() {
@@ -264,8 +307,10 @@ function applyTutorialTweaks() {
   }
 
   rewriteLinhaGeracionalHeaderTitle();
+  styleLinhaGeracionalGenerationTitle();
   skipEmptyFirstLinhaGeracionalScreen();
-  reorderMobileAncestorSides();
+  fixMobileAncestorSides();
+  hideMissingCousinVerticalConnectors();
 }
 
 export function FirstLoginTutorialRuntimeTweaks() {
