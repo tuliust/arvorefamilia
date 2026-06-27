@@ -1,6 +1,6 @@
 # Revisão de dados
 
-> Última revisão: 2026-06-23
+> Última revisão: 2026-06-27
 > Escopo: `/revisao-dados` e fechamento do fluxo de membro.
 > Status: canônico.
 
@@ -22,10 +22,34 @@ Apresentar ao membro um resumo final dos dados antes de concluir o fluxo e segui
 - Alterações que dependem de aprovação não devem ser descritas como aplicadas definitivamente.
 - Dados privados devem respeitar permissões de exibição.
 - Pets devem permanecer separados de filhos humanos.
+- Parentes adicionados ou removidos em `/meus-vinculos` devem aparecer com badge `Em análise` ou estado equivalente de pendência.
+- A regra de pendência vale para irmãos, filhos, cônjuges, pais, pets e demais parentes quando a alteração não for definitiva.
 
 ## Saída do fluxo
 
 Ao concluir, o usuário deve ser direcionado para a experiência de árvore, preferencialmente `/mapa-familiar`.
+
+Antes de carregar a árvore, se o usuário logado for responsável por outros perfis, o sistema deve exibir modal informando os perfis sob responsabilidade e perguntando se deseja editar essas páginas agora.
+
+Texto funcional do modal:
+
+```text
+Você foi selecionado como responsável pelos perfis:
+
+XXX
+XXX
+
+Deseja editar as páginas agora?
+
+Sim / Depois
+```
+
+Regras do modal:
+
+- `Sim` deve encaminhar para edição/fluxo dos perfis indicados;
+- `Depois` deve seguir para a árvore sem perder o vínculo de responsabilidade;
+- a ausência de perfis sob responsabilidade deve pular o modal;
+- o modal não deve aparecer repetidamente sem mudança de estado.
 
 ## QA mínimo
 
@@ -33,4 +57,7 @@ Ao concluir, o usuário deve ser direcionado para a experiência de árvore, pre
 - Revisar fluxo de pessoa falecida.
 - Confirmar resumo de vínculos.
 - Confirmar fatos/arquivos históricos.
+- Confirmar que parentes adicionados/removidos aparecem como `Em análise`.
 - Confirmar que o botão final não perde estado ou duplica solicitações.
+- Confirmar modal de responsáveis antes da árvore quando o usuário tiver perfis sob responsabilidade.
+- Confirmar que o modal não aparece quando não há perfis sob responsabilidade.
