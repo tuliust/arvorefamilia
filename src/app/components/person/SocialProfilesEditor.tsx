@@ -33,15 +33,8 @@ function getProfileUrl(profile: SocialProfileForm) {
   return `${prefix}${profile.perfil}`.trim();
 }
 
-function withDraft(profiles: SocialProfileForm[]) {
-  const safeProfiles = profiles.length > 0 ? profiles : [createSocialProfile()];
-  const lastProfile = safeProfiles[safeProfiles.length - 1];
-
-  if (!lastProfile || isCompleteProfile(lastProfile)) {
-    return [...safeProfiles, createSocialProfile()];
-  }
-
-  return safeProfiles;
+function getInitialDraftProfile(profiles: SocialProfileForm[]) {
+  return profiles.find((profile) => !isCompleteProfile(profile)) ?? createSocialProfile();
 }
 
 export function SocialProfilesEditor({
@@ -51,27 +44,30 @@ export function SocialProfilesEditor({
   errors,
   compactDraftFlow = false,
 }: SocialProfilesEditorProps) {
-  const safeProfiles = withDraft(profiles);
-  const draftProfile = safeProfiles[safeProfiles.length - 1];
-  const completedProfiles = safeProfiles.slice(0, -1).filter(isCompleteProfile);
+  const completedProfiles = React.useMemo(
+    () => profiles.filter(isCompleteProfile),
+    [profiles],
+  );
+  const [draftProfile, setDraftProfile] = React.useState<SocialProfileForm>(() => getInitialDraftProfile(profiles));
   const RemoveIcon = compactDraftFlow ? Trash2 : X;
   const removeButtonSizeClass = compactDraftFlow ? 'h-10 w-10' : 'h-8 w-8';
 
-  const updateProfile = (profileId: string, field: 'rede' | 'perfil', value: string) => {
-    onChange(
-      safeProfiles.map((profile) =>
-        profile.id === profileId ? { ...profile, [field]: value } : profile,
-      ),
-    );
+  React.useEffect(() => {
+    const incompleteProfile = profiles.find((profile) => !isCompleteProfile(profile));
+    if (incompleteProfile) setDraftProfile(incompleteProfile);
+  }, [profiles]);
+
+  const updateDraftProfile = (field: 'rede' | 'perfil', value: string) => {
+    setDraftProfile((current) => ({ ...current, [field]: value }));
   };
 
   const removeProfile = (profileId: string) => {
-    onChange(withDraft(safeProfiles.filter((profile) => profile.id !== profileId)));
+    onChange(completedProfiles.filter((profile) => profile.id !== profileId));
   };
 
   const canAdd = Boolean(
-    draftProfile?.rede.trim() &&
-    draftProfile?.perfil.trim() &&
+    draftProfile.rede.trim() &&
+    draftProfile.perfil.trim() &&
     !disabled &&
     !completedProfiles.some(
       (profile) =>
@@ -82,7 +78,8 @@ export function SocialProfilesEditor({
 
   const addProfile = () => {
     if (!canAdd) return;
-    onChange([...safeProfiles, createSocialProfile()]);
+    onChange([...completedProfiles, draftProfile]);
+    setDraftProfile(createSocialProfile());
   };
 
   return (
@@ -110,60 +107,58 @@ export function SocialProfilesEditor({
           </div>
         ))}
 
-        {draftProfile && (
-          <div className="space-y-2">
-            {!draftProfile.rede ? (
-              <select
-                value={draftProfile.rede}
-                onChange={(event) => updateProfile(draftProfile.id, 'rede', event.target.value)}
-                disabled={disabled}
-                className="flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm ring-offset-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60"
-                aria-invalid={Boolean(errors?.rede_social)}
-              >
-                <option value="">Selecione a plataforma</option>
-                {SOCIAL_NETWORKS.map((network) => (
-                  <option key={network} value={network}>
-                    {network}
-                  </option>
-                ))}
-              </select>
-            ) : (
-              <div className={compactDraftFlow ? 'grid min-w-0 grid-cols-[minmax(0,1fr)_auto] items-start gap-2 sm:flex sm:flex-row' : 'flex min-w-0 items-center gap-2'}>
-                <div className="flex min-w-0 flex-1 overflow-hidden">
-                  <span className={compactDraftFlow ? 'inline-flex h-10 min-w-[8.5rem] shrink-0 items-center rounded-l-md border border-r-0 border-gray-300 bg-gray-50 px-3 text-sm text-gray-600' : 'inline-flex h-10 shrink-0 items-center whitespace-nowrap rounded-l-md border border-r-0 border-gray-300 bg-gray-50 px-3 text-sm text-gray-600'}>
-                    {SOCIAL_PROFILE_PREFIXES[draftProfile.rede]}
-                  </span>
-                  <Input
-                    value={draftProfile.perfil}
-                    onChange={(event) => updateProfile(draftProfile.id, 'perfil', event.target.value)}
-                    placeholder={getSocialPlaceholder(draftProfile.rede)}
-                    disabled={disabled}
-                    className="min-w-0 rounded-l-none"
-                    aria-invalid={Boolean(errors?.instagram_usuario)}
-                  />
-                </div>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="icon"
-                  className="h-10 w-10 shrink-0"
-                  onClick={addProfile}
-                  disabled={!canAdd}
-                  aria-label="Adicionar rede social"
-                  title="Adicionar rede social"
-                >
-                  <Plus className="h-4 w-4" />
-                </Button>
+        <div className="space-y-2">
+          {!draftProfile.rede ? (
+            <select
+              value={draftProfile.rede}
+              onChange={(event) => updateDraftProfile('rede', event.target.value)}
+              disabled={disabled}
+              className="flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm ring-offset-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60"
+              aria-invalid={Boolean(errors?.rede_social)}
+            >
+              <option value="">Selecione a plataforma</option>
+              {SOCIAL_NETWORKS.map((network) => (
+                <option key={network} value={network}>
+                  {network}
+                </option>
+              ))}
+            </select>
+          ) : (
+            <div className={compactDraftFlow ? 'grid min-w-0 grid-cols-[minmax(0,1fr)_auto] items-start gap-2 sm:flex sm:flex-row' : 'flex min-w-0 items-center gap-2'}>
+              <div className="flex min-w-0 flex-1 overflow-hidden">
+                <span className={compactDraftFlow ? 'inline-flex h-10 min-w-[8.5rem] shrink-0 items-center rounded-l-md border border-r-0 border-gray-300 bg-gray-50 px-3 text-sm text-gray-600' : 'inline-flex h-10 shrink-0 items-center whitespace-nowrap rounded-l-md border border-r-0 border-gray-300 bg-gray-50 px-3 text-sm text-gray-600'}>
+                  {SOCIAL_PROFILE_PREFIXES[draftProfile.rede]}
+                </span>
+                <Input
+                  value={draftProfile.perfil}
+                  onChange={(event) => updateDraftProfile('perfil', event.target.value)}
+                  placeholder={getSocialPlaceholder(draftProfile.rede)}
+                  disabled={disabled}
+                  className="min-w-0 rounded-l-none"
+                  aria-invalid={Boolean(errors?.instagram_usuario)}
+                />
               </div>
-            )}
+              <Button
+                type="button"
+                variant="outline"
+                size="icon"
+                className="h-10 w-10 shrink-0"
+                onClick={addProfile}
+                disabled={!canAdd}
+                aria-label="Adicionar rede social"
+                title="Adicionar rede social"
+              >
+                <Plus className="h-4 w-4" />
+              </Button>
+            </div>
+          )}
 
-            {(errors?.rede_social || errors?.instagram_usuario) && (
-              <p className="text-xs font-medium text-red-600">
-                {errors.rede_social || errors.instagram_usuario}
-              </p>
-            )}
-          </div>
-        )}
+          {(errors?.rede_social || errors?.instagram_usuario) && (
+            <p className="text-xs font-medium text-red-600">
+              {errors.rede_social || errors.instagram_usuario}
+            </p>
+          )}
+        </div>
       </div>
     </div>
   );
