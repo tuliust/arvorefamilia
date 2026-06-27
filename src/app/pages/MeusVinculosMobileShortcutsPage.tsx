@@ -1,5 +1,11 @@
-import { MeusVinculosWithProfileBio } from './MeusVinculosWithProfileBio';
+import { MeusVinculos } from './MeusVinculos';
+import { MeusVinculosPetEditorPortal } from './meus-vinculos/MeusVinculosPetEditorPortal';
 
 export function MeusVinculosMobileShortcutsPage() {
-  return <MeusVinculosWithProfileBio />;
+  return (
+    <div>
+      <MeusVinculosPetEditorPortal />
+      <MeusVinculos />
+    </div>
+  );
 }
