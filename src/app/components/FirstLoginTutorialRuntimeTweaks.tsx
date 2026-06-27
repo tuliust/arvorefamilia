@@ -6,6 +6,19 @@ const FAVORITES_BULLETS = [
   'Use o botão de estrela nas páginas do site para guardar o conteúdo que desejar.',
 ];
 
+function normalizeText(value?: string | null) {
+  return String(value ?? '')
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function isMobileViewport() {
+  return window.matchMedia('(max-width: 767px)').matches;
+}
+
 function getTutorialRoot() {
   return document.querySelector<HTMLElement>('[data-first-login-tutorial="true"]');
 }
@@ -113,25 +126,148 @@ function increaseProfileCardGap(root: HTMLElement) {
   panel.style.top = `${Math.max(viewportMargin, nextTop)}px`;
 }
 
+function rewriteLinhaGeracionalHeaderTitle() {
+  if (!isMobileViewport()) return;
+  if (window.location.pathname !== '/linha-geracional') return;
+
+  document.querySelectorAll<HTMLElement>('header h1').forEach((title) => {
+    const normalized = normalizeText(title.textContent);
+    if (normalized.startsWith('familia de ') || normalized === 'linha geracional') {
+      title.textContent = 'Árvore Familiar';
+      title.dataset.mobileLinhaGeracionalTitleNormalized = 'true';
+    }
+  });
+}
+
+function skipEmptyFirstLinhaGeracionalScreen() {
+  if (!isMobileViewport()) return;
+  if (window.location.pathname !== '/linha-geracional') return;
+
+  const root = document.querySelector<HTMLElement>('[data-linha-geracional-mobile-root="true"]');
+  if (!root || root.dataset.emptyFirstGenerationSkipped === 'true') return;
+
+  const heading = Array.from(root.querySelectorAll<HTMLElement>('h1')).find((element) => normalizeText(element.textContent) === 'geracao 1');
+  if (!heading) return;
+
+  const hasEmptyFirstGeneration = normalizeText(root.textContent).includes('nenhum tataravo encontrado neste recorte');
+  if (!hasEmptyFirstGeneration) return;
+
+  const nextButton = root.querySelector<HTMLButtonElement>('button[aria-label="Próxima geração"]');
+  if (!nextButton || nextButton.disabled) return;
+
+  root.dataset.emptyFirstGenerationSkipped = 'true';
+  nextButton.click();
+}
+
+function reorderMobileAncestorSides() {
+  if (!isMobileViewport()) return;
+  if (window.location.pathname !== '/mapa-familiar') return;
+
+  const ancestorsScreen = document.querySelector<HTMLElement>('[data-mobile-family-tree-screen="ancestors"]');
+  if (!ancestorsScreen) return;
+
+  Array.from(ancestorsScreen.querySelectorAll<HTMLElement>('section')).forEach((section) => {
+    const heading = section.querySelector<HTMLElement>('h2, h3, h4');
+    const text = normalizeText(heading?.textContent);
+
+    if (text.includes('paterno')) {
+      section.style.order = '1';
+    }
+
+    if (text.includes('materno')) {
+      section.style.order = '2';
+    }
+  });
+}
+
+function hasCousinCards(side: 'paternal' | 'maternal') {
+  const screen = document.querySelector<HTMLElement>(`[data-mobile-family-tree-screen="${side}-cousins"]`);
+  return Boolean(screen?.querySelector('[data-family-map-mobile-card="true"]'));
+}
+
+function getActiveMobileFamilyTreeScreen() {
+  const stage = document.querySelector<HTMLElement>('[data-mobile-family-tree-stage="true"]');
+  const transform = stage?.style.transform ?? '';
+  const match = transform.match(/calc\((-?\d+(?:\.\d+)?)%[^)]*\),\s*calc\((-?\d+(?:\.\d+)?)%/);
+  if (!match) return null;
+
+  const x = Number(match[1]);
+  const y = Number(match[2]);
+  const column = Math.round(Math.abs(x) / (100 / 3));
+  const row = Math.round(Math.abs(y) / (100 / 3));
+
+  if (row === 1 && column === 0) return 'paternal-uncles';
+  if (row === 1 && column === 2) return 'maternal-uncles';
+  return null;
+}
+
+function shouldBlockSwipeToMissingCousins(deltaY: number) {
+  if (!isMobileViewport()) return false;
+  if (window.location.pathname !== '/mapa-familiar') return false;
+  if (deltaY >= -10) return false;
+
+  const activeScreen = getActiveMobileFamilyTreeScreen();
+  if (activeScreen === 'paternal-uncles') return !hasCousinCards('paternal');
+  if (activeScreen === 'maternal-uncles') return !hasCousinCards('maternal');
+  return false;
+}
+
 function applyTutorialTweaks() {
   const root = getTutorialRoot();
-  if (!root) return;
+  if (root) {
+    removeControlsBullet(root);
+    rewriteFavoritesBullets(root);
+    tuneFavoritesSpotlight(root);
+    increaseProfileCardGap(root);
+  }
 
-  removeControlsBullet(root);
-  rewriteFavoritesBullets(root);
-  tuneFavoritesSpotlight(root);
-  increaseProfileCardGap(root);
+  rewriteLinhaGeracionalHeaderTitle();
+  skipEmptyFirstLinhaGeracionalScreen();
+  reorderMobileAncestorSides();
 }
 
 export function FirstLoginTutorialRuntimeTweaks() {
   useEffect(() => {
+    let touchStartY: number | null = null;
     const apply = () => window.requestAnimationFrame(applyTutorialTweaks);
+
+    const handleTouchStart = (event: TouchEvent) => {
+      touchStartY = event.touches[0]?.clientY ?? null;
+    };
+
+    const handleTouchMove = (event: TouchEvent) => {
+      if (touchStartY === null) return;
+      const touch = event.touches[0];
+      if (!touch) return;
+
+      if (!shouldBlockSwipeToMissingCousins(touch.clientY - touchStartY)) return;
+
+      event.preventDefault();
+      event.stopPropagation();
+      event.stopImmediatePropagation();
+    };
+
+    const handleTouchEnd = (event: TouchEvent) => {
+      if (touchStartY === null) return;
+      const touch = event.changedTouches[0];
+      const deltaY = touch ? touch.clientY - touchStartY : 0;
+      touchStartY = null;
+
+      if (!shouldBlockSwipeToMissingCousins(deltaY)) return;
+
+      event.preventDefault();
+      event.stopPropagation();
+      event.stopImmediatePropagation();
+    };
 
     apply();
     const observer = new MutationObserver(apply);
     observer.observe(document.body, { childList: true, subtree: true, characterData: true, attributes: true });
     window.addEventListener('resize', apply);
     window.addEventListener('scroll', apply, true);
+    document.addEventListener('touchstart', handleTouchStart, { capture: true, passive: true });
+    document.addEventListener('touchmove', handleTouchMove, { capture: true, passive: false });
+    document.addEventListener('touchend', handleTouchEnd, { capture: true, passive: false });
 
     const timerIds = [
       window.setTimeout(apply, 80),
@@ -143,6 +279,9 @@ export function FirstLoginTutorialRuntimeTweaks() {
       observer.disconnect();
       window.removeEventListener('resize', apply);
       window.removeEventListener('scroll', apply, true);
+      document.removeEventListener('touchstart', handleTouchStart, true);
+      document.removeEventListener('touchmove', handleTouchMove, true);
+      document.removeEventListener('touchend', handleTouchEnd, true);
       timerIds.forEach((timerId) => window.clearTimeout(timerId));
     };
   }, []);
