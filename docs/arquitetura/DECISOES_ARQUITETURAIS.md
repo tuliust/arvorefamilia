@@ -30,7 +30,7 @@ A fonte de verdade é `src/app/routes.tsx`.
 
 - Rotas públicas: home, login, termos, privacidade e perfis públicos.
 - Rotas de membro: mapa, árvore, dados, vínculos, revisão, curiosidades, fórum, favoritos, notificações, preferências e calendário.
-- Rotas administrativas: `/admin` e subrotas.
+- Rotas administrativas: `/admin`, `/aprovacoes` e subrotas administrativas.
 - Guards principais: `ProtectedRoute`, `MemberRoute`, `TreeAccessRoute` e checagens administrativas.
 
 Detalhes operacionais ficam em `arquitetura/ROTAS_E_GUARDS.md`.
@@ -52,20 +52,51 @@ Essa separação evita gravar `pessoas.id` em campos que referenciam `auth.users
 
 A página `/admin/responsaveis` usa `person_responsible_links` para o seletor inline de responsáveis em perfis legados e crianças. As solicitações de administração continuam sendo tratadas pelo fluxo próprio de solicitações e, quando aprovadas, podem gerar vínculo com usuário autenticado.
 
+## Runtimes defensivos de UI
+
+A aplicação admite componentes de runtime para compatibilidade visual temporária, desde que o escopo seja controlado.
+
+Decisão vigente:
+
+- runtime de UI não deve substituir lógica de domínio ou regra de banco;
+- ajustes de DOM devem ser isolados por rota, breakpoint e seletor explícito;
+- `MutationObserver` não deve observar `attributes` quando o próprio runtime altera `style`, `dataset` ou classes;
+- a execução deve ser agrupada via `requestAnimationFrame`;
+- falhas devem ser capturadas com `try/catch` para não bloquear a página;
+- componentes de origem devem ser corrigidos quando o ajuste deixar de ser pontual.
+
+Casos aceitos nesta fase:
+
+- sobreposição de dropdowns do header mobile;
+- compatibilidade visual temporária em `/meus-dados` e `/meus-vinculos` mobile;
+- ajustes de camadas no painel mobile da árvore;
+- ocultações condicionais em `/pessoa/:id` enquanto o layout definitivo não absorve a regra.
+
 ## IA
 
 A IA é funcionalidade de apoio e não substitui revisão humana dos dados.
 
 - Endpoint principal: `api/ai.ts`.
 - Textos de perfil: `purpose === "profile_text"`.
+- Conteúdos automáticos de pessoas: serviço e Edge Function específicos quando aplicável.
 - Documentação funcional: `funcionalidades/MINI_BIO_CURIOSIDADES_IA.md`.
 
 ## Mapa familiar e árvore
 
-- `funcionalidades/MAPA_FAMILIAR_VIEW.md`: contrato das views `/mapa-familiar` e `/mapa-familiar-horizontal`.
+- `funcionalidades/MAPA_FAMILIAR_VIEW.md`: contrato das views `/mapa-familiar`, `/mapa-familiar-horizontal` e `/linha-geracional`.
 - `funcionalidades/ARVORE_LEGENDAS_CONECTORES_PAINEL.md`: painéis, conectores, legendas, seletor de visualização e edição da árvore.
 
 Documentos antigos de mobile, baseline e ajustes por rodada foram removidos porque o contrato vigente passou a estar nos documentos canônicos.
+
+## Administração
+
+A área administrativa deve manter rotas protegidas, header reduzido e páginas especializadas.
+
+- `/admin` concentra dashboard e ações rápidas.
+- `/aprovacoes` e `/admin/aprovacoes` concentram solicitações pendentes.
+- `/admin/home` concentra configurações públicas salváveis.
+- `/admin/responsaveis` concentra responsáveis por perfis legados e crianças.
+- `/admin/gestao-conteudo-pessoas` concentra textos automáticos, visibilidade e conteúdos de pessoas.
 
 ## Decisões de documentação
 
