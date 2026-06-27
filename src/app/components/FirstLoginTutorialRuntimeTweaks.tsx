@@ -252,6 +252,14 @@ function hasCousinCards(side: AncestorSide) {
   return Boolean(screen?.querySelector('[data-family-map-mobile-card="true"]'));
 }
 
+function isVerticalConnectorLine(element: HTMLElement) {
+  const className = String(element.getAttribute('class') ?? '');
+  return className.includes('pointer-events-none')
+    && className.includes('absolute')
+    && className.includes('left-1/2')
+    && className.includes('w-px');
+}
+
 function hideMissingCousinVerticalConnectors() {
   if (!isMobileViewport()) return;
   if (window.location.pathname !== '/mapa-familiar') return;
@@ -262,7 +270,8 @@ function hideMissingCousinVerticalConnectors() {
     if (!unclesScreen) return;
 
     const shouldHide = !hasCousinCards(side);
-    Array.from(unclesScreen.querySelectorAll<HTMLElement>('div.pointer-events-none.absolute.left-1\/2.w-px, div.pointer-events-none.absolute.left-1\/2.z-0.w-px')).forEach((line) => {
+    Array.from(unclesScreen.querySelectorAll<HTMLElement>('div')).forEach((line) => {
+      if (!isVerticalConnectorLine(line)) return;
       line.style.display = shouldHide ? 'none' : '';
     });
   });
@@ -321,7 +330,11 @@ export function FirstLoginTutorialRuntimeTweaks() {
       if (frameId !== null) return;
       frameId = window.requestAnimationFrame(() => {
         frameId = null;
-        applyTutorialTweaks();
+        try {
+          applyTutorialTweaks();
+        } catch (error) {
+          console.warn('[FirstLoginTutorialRuntimeTweaks] Ajustes mobile ignorados para evitar bloqueio da página:', error);
+        }
       });
     };
 
