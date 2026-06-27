@@ -1,6 +1,6 @@
 # Migrations Supabase
 
-> Última revisão: 2026-06-23
+> Última revisão: 2026-06-26
 > Escopo: fontes SQL e orientação de validação do Supabase na branch `main`.
 > Status: canônico.
 
@@ -21,6 +21,7 @@ A branch atual possui diretório versionado `supabase/migrations`. As fontes SQL
 - Não copiar SQL legado para produção sem adaptar ao estado atual do banco.
 - Sempre validar RLS depois de criar ou alterar tabela.
 - Manter migrations numeradas em `supabase/migrations` quando houver alteração de schema ou RPC.
+- Status conjugal permanece inferido pelos campos existentes; não criar migration de `status_conjugal` sem decisão explícita de schema.
 
 ## Tabelas e domínios esperados pela aplicação
 
