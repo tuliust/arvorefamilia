@@ -39,6 +39,23 @@ function removeStatSubtitles() {
   });
 }
 
+function ensureRelationshipCountVisible() {
+  const relationshipButton = Array.from(document.querySelectorAll<HTMLButtonElement>('[data-admin-dashboard-page="true"] button'))
+    .find((button) => Array.from(button.querySelectorAll('span')).some((span) => normalizeText(span.textContent) === 'relacoes'));
+
+  if (!relationshipButton) return;
+
+  const numberSpan = Array.from(relationshipButton.querySelectorAll<HTMLElement>('span'))
+    .find((span) => /^\d+$/.test(normalizeText(span.textContent)));
+
+  if (!numberSpan) return;
+
+  numberSpan.style.display = 'block';
+  numberSpan.style.visibility = 'visible';
+  numberSpan.style.opacity = '1';
+  numberSpan.classList.add('text-xl', 'font-bold', 'leading-none', 'text-gray-900', 'sm:text-3xl');
+}
+
 function renamePeopleContentAction() {
   document.querySelectorAll<HTMLElement>('[data-admin-dashboard-page="true"] h3').forEach((title) => {
     if (normalizeText(title.textContent) === 'conteudo de pessoas') {
@@ -61,6 +78,7 @@ function applyDashboardTweaks(pathname: string) {
   if (!DASHBOARD_PATHS.has(pathname)) return;
 
   removeStatSubtitles();
+  ensureRelationshipCountVisible();
   renamePeopleContentAction();
   removeInviteCodeAsterisks();
 }
