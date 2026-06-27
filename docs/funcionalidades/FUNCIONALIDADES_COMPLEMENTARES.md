@@ -1,6 +1,6 @@
 # Funcionalidades complementares
 
-> Última revisão: 2026-06-26  
+> Última revisão: 2026-06-27  
 > Escopo: calendário, dúvidas, fórum, favoritos, notificações, onboarding, exportação, busca global, timeline e cadastros administrativos de pessoas.  
 > Status: canônico complementar.
 
@@ -32,6 +32,18 @@ Regras:
 - o botão `Ver todos os resultados` deve enviar para `/busca?q=...`;
 - páginas internas como `/curiosidades`, `/forum` e `/calendario-familiar` devem usar o mesmo componente compartilhado de busca do header.
 
+## Menu do avatar
+
+O menu do avatar fica disponível no header das páginas internas autenticadas.
+
+Regras:
+
+- o topo do menu deve exibir foto/avatar e primeiro e segundo nome do usuário quando houver nome disponível;
+- abaixo do nome deve aparecer subtítulo `Editar perfil` com ícone;
+- a ação de edição de perfil fica no bloco superior do menu, não como botão duplicado na lista de atalhos;
+- o botão `Dúvidas?` no rodapé do menu deve ter borda cinza;
+- o menu deve ficar em camada superior a barras sticky, botões superiores e demais controles da página.
+
 ## Calendário familiar
 
 Rota principal: `/calendario-familiar`.
@@ -42,11 +54,19 @@ Função:
 - destacar aniversários, eventos e marcos;
 - funcionar como consulta complementar aos dados da árvore.
 
+Regras atuais:
+
+- eventos de casamento no calendário devem omitir o prefixo `Data de casamento de` quando exibidos como título;
+- nomes de casamentos devem usar primeiro e segundo nome de cada pessoa quando possível;
+- memórias devem usar nome curto, com primeiro e segundo nome da pessoa;
+- abaixo de `Aniversariantes`, deve haver card `Casamentos` quando existirem casamentos filtrados no mês.
+
 Não regressão mínima:
 
 - mês atual renderiza;
 - eventos aparecem sem quebrar layout;
-- datas sem evento não geram estado inválido.
+- datas sem evento não geram estado inválido;
+- card de aniversariantes e card de casamentos permanecem legíveis.
 
 ## Dúvidas
 
@@ -82,6 +102,10 @@ Regras implementadas:
 - `/forum/novo` não deve duplicar título interno de container quando o header já contextualiza a criação;
 - categorias de novo tópico podem usar títulos quebrados em duas linhas para preservar legibilidade;
 - ao digitar `@` no conteúdo de novo tópico, o menu de pessoas deve aparecer de forma compacta próximo ao cursor, com filtro por letras digitadas e scroll vertical;
+- menções já digitadas no campo de conteúdo podem receber destaque visual em azul e negrito sem alterar o valor real do texto;
+- `/forum/topico/:id` deve usar largura compatível com o container de `/forum`, não um card estreito isolado;
+- no desktop, `/forum/topico/:id` pode exibir coluna lateral de `Tópicos recentes`, excluindo o tópico atual;
+- reações devem ficar disponíveis apenas para o tópico principal, não para respostas;
 - tópicos e respostas editados devem exibir badge `Editado` quando `updated_at` indicar alteração posterior à criação;
 - no campo de resposta do tópico, avatar e input devem permanecer lado a lado e alinhados.
 
@@ -91,7 +115,9 @@ Não regressão mínima:
 - tópico abre por ID;
 - novo tópico respeita autenticação;
 - edição respeita permissões;
-- menções com `@` não quebram digitação nem layout.
+- menções com `@` não quebram digitação nem layout;
+- reações das respostas não reaparecem em `/forum/topico/:id`;
+- coluna de tópicos recentes não quebra a leitura do tópico principal no desktop nem cria overflow no mobile.
 
 ## Favoritos
 
@@ -176,6 +202,16 @@ Regras:
 - preservar relações existentes;
 - refletir mudanças nas telas de membro após atualização.
 
+## Header administrativo
+
+Nas rotas `/admin/*`, o header global deve ser reduzido para navegação essencial:
+
+- `Painel Administrativo`, com seta de retorno para `/admin`;
+- `Principal`, sem seta, apontando para a experiência principal;
+- menu do usuário.
+
+Botões como `Membros`, `Conteúdo` e `Responsáveis` não devem aparecer no header global administrativo. Essas entradas devem ficar em cards, menus ou páginas internas quando forem necessárias.
+
 ## Administração de dúvidas
 
 Rota principal: `/admin/duvidas`.
@@ -195,9 +231,10 @@ Rota principal: `/admin/atividades`.
 
 Regras atuais:
 
-- filtro de ator deve usar label `Usuário Autor` e placeholder `Nome`;
+- filtro de ator deve usar label `Autor` e placeholder `Nome`;
 - filtro de entidade afetada deve usar label `Usuário`;
 - o botão `Limpar` zera apenas a lista local exibida em tela, sem apagar registros do banco;
+- após limpar, apenas novas atividades geradas depois daquele momento devem voltar a aparecer para o usuário local;
 - o cabeçalho da tabela deve usar `Autor`;
 - a coluna de autor deve exibir primeiro e segundo nome quando possível;
 - a coluna `Atividade` não deve repetir subtítulo de entidade abaixo do título da ação;
@@ -208,6 +245,8 @@ Regras atuais:
 Rota principal: `/admin/gestao-conteudo-pessoas`.
 
 A página de gestão de conteúdo de pessoas deve lidar de forma defensiva com a ausência da tabela `person_visibility_settings` no ambiente remoto, usando defaults locais para evitar quebra de carregamento. A criação ou aplicação da tabela no Supabase permanece pendência operacional quando o ambiente ainda não tiver a migration correspondente.
+
+Todos os textos visíveis da página devem preservar acentuação correta em UTF-8, incluindo `Gestão`, `Conteúdo`, `Geração`, `páginas`, `Árvore`, `históricos`, `Calendário`, `Fórum`, `sensíveis`, `automáticos`, `Título` e `básica`.
 
 ## Regra de manutenção
 
