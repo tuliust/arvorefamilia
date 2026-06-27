@@ -4,6 +4,7 @@ import { Button } from '../../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { Input } from '../../components/ui/input';
 import { DEFAULT_MEMBER_HEADER_ACTIONS, MemberPageHeader } from '../../components/layout/MemberPageHeader';
+import { supabase } from '../../lib/supabaseClient';
 import {
   ACTIVITY_ACTION_LABELS,
   ACTIVITY_ENTITY_LABELS,
@@ -63,6 +64,16 @@ function buildServiceFilters(filters: ActivityFilters): ActivityLogFilters {
     created_from: filters.createdFrom ? new Date(`${filters.createdFrom}T00:00:00`).toISOString() : undefined,
     created_to: filters.createdTo ? new Date(`${filters.createdTo}T23:59:59`).toISOString() : undefined,
   };
+}
+
+function applyDeleteFilters(query: any, filters: ActivityFilters) {
+  if (filters.action !== 'all') query = query.eq('action', filters.action);
+  if (filters.entityType !== 'all') query = query.eq('entity_type', filters.entityType);
+  if (filters.actorQuery.trim()) query = query.ilike('actor_display_name', `%${filters.actorQuery.trim()}%`);
+  if (filters.entityQuery.trim()) query = query.ilike('entity_label', `%${filters.entityQuery.trim()}%`);
+  if (filters.createdFrom) query = query.gte('created_at', new Date(`${filters.createdFrom}T00:00:00`).toISOString());
+  if (filters.createdTo) query = query.lte('created_at', new Date(`${filters.createdTo}T23:59:59`).toISOString());
+  return query;
 }
 
 function ActivityRow({ activity }: { activity: ActivityLog }) {
@@ -127,8 +138,36 @@ export function AdminAtividades() {
     loadActivities(INITIAL_FILTERS);
   };
 
-  const handleClearActivities = () => {
-    setActivities([]);
+  const handleClearActivities = async () => {
+    const confirmed = window.confirm(
+      activeFiltersCount > 0
+        ? 'Limpar permanentemente as atividades filtradas? Esta ação não pode ser desfeita.'
+        : 'Limpar permanentemente todo o histórico de atividades? Esta ação não pode ser desfeita.'
+    );
+
+    if (!confirmed) return;
+
+    try {
+      setLoading(true);
+      const deleteQuery = applyDeleteFilters(
+        supabase
+          .from('activity_logs')
+          .delete({ count: 'exact' })
+          .not('id', 'is', null),
+        filters
+      );
+      const { error } = await deleteQuery;
+
+      if (error) throw error;
+
+      const data = await listActivityLogs(buildServiceFilters(filters));
+      setActivities(data);
+    } catch (error) {
+      console.error('Erro ao limpar histórico de atividades:', error);
+      window.alert('Não foi possível limpar o histórico de atividades.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -252,7 +291,7 @@ export function AdminAtividades() {
               <Button variant="outline" className="w-full sm:w-auto" onClick={handleClearFilters} disabled={loading}>
                 Limpar filtros
               </Button>
-              <Button variant="outline" className="w-full sm:w-auto" onClick={handleClearActivities} disabled={loading || activities.length === 0}>
+              <Button variant="outline" className="w-full sm:w-auto" onClick={() => void handleClearActivities()} disabled={loading || activities.length === 0}>
                 <Trash2 className="mr-2 h-4 w-4 shrink-0" />
                 Limpar
               </Button>
