@@ -41,7 +41,7 @@ const AdminMigrationTool = React.lazy(() => import('./pages/admin/AdminMigrarDad
 const AdminDiagnostico = React.lazy(() => import('./pages/admin/AdminDiagnostico').then((module) => ({ default: module.AdminDiagnostico })));
 const AdminIntegridade = React.lazy(() => import('./pages/admin/AdminIntegridade').then((module) => ({ default: module.AdminIntegridade })));
 const AdminAtividades = React.lazy(() => import('./pages/admin/AdminAtividades').then((module) => ({ default: module.AdminAtividades })));
-const AdminSolicitacoesVinculos = React.lazy(() => import('./pages/admin/AdminSolicitacoesVinculos').then((module) => ({ default: module.AdminSolicitacoesVinculos })));
+const AdminResponsaveis = React.lazy(() => import('./pages/admin/AdminResponsaveis').then((module) => ({ default: module.AdminResponsaveis })));
 const AdminNotificacoes = React.lazy(() => import('./pages/admin/AdminNotificacoes').then((module) => ({ default: module.AdminNotificacoes })));
 const AdminDuvidas = React.lazy(() => import('./pages/admin/AdminDuvidasRefined').then((module) => ({ default: module.AdminDuvidasRefined })));
 const AdminPeopleContentSettings = React.lazy(() => import('./pages/admin/AdminPeopleContentSettings').then((module) => ({ default: module.AdminPeopleContentSettings })));
@@ -172,6 +172,7 @@ export const router = createBrowserRouter([
   { path: '/admin/dashboard', element: lazyRoute(<ProtectedRoute><AdminDashboard /></ProtectedRoute>) },
   { path: '/admin/home', element: lazyRoute(<ProtectedRoute><AdminHomeSettings /></ProtectedRoute>) },
   { path: '/admin/pessoas', element: lazyRoute(<ProtectedRoute><AdminPessoas /></ProtectedRoute>) },
+  { path: '/admin/pessoas/novas', element: lazyRoute(<ProtectedRoute><AdminPessoas /></ProtectedRoute>) },
   { path: '/admin/pessoas/nova', element: lazyRoute(<ProtectedRoute><AdminPessoaForm /></ProtectedRoute>) },
   { path: '/admin/pessoas/:id/editar', element: lazyRoute(<ProtectedRoute><AdminPessoaEditWorkspace /></ProtectedRoute>) },
   { path: '/admin/pessoas/:id', element: lazyRoute(<ProtectedRoute><AdminPessoaEditWorkspace /></ProtectedRoute>) },
@@ -182,10 +183,10 @@ export const router = createBrowserRouter([
   { path: '/admin/diagnostico', element: lazyRoute(<ProtectedRoute><AdminDiagnostico /></ProtectedRoute>) },
   { path: '/admin/integridade', element: lazyRoute(<ProtectedRoute><AdminIntegridade /></ProtectedRoute>) },
   { path: '/admin/atividades', element: lazyRoute(<ProtectedRoute><AdminAtividades /></ProtectedRoute>) },
+  { path: '/admin/responsaveis', element: lazyRoute(<ProtectedRoute><AdminResponsaveis /></ProtectedRoute>) },
   { path: '/admin/notificacoes', element: lazyRoute(<ProtectedRoute><AdminNotificacoes /></ProtectedRoute>) },
   { path: '/admin/gestao-conteudo-pessoas', element: lazyRoute(<ProtectedRoute><AdminPeopleContentSettings /></ProtectedRoute>) },
   { path: '/admin/duvidas', element: lazyRoute(<ProtectedRoute><AdminDuvidas /></ProtectedRoute>) },
-  { path: '/admin/solicitacoes-vinculos', element: lazyRoute(<ProtectedRoute><AdminSolicitacoesVinculos /></ProtectedRoute>) },
   {
     path: '*',
     element: <div className="min-h-screen flex items-center justify-center bg-gray-50">
