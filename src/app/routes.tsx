@@ -31,7 +31,8 @@ const ForumTopico = React.lazy(() => import('./pages/forum/ForumTopico').then((m
 const ForumNovoTopico = React.lazy(() => import('./pages/forum/ForumNovoTopico').then((module) => ({ default: module.ForumNovoTopico })));
 const ForumEditarTopico = React.lazy(() => import('./pages/forum/ForumEditarTopico').then((module) => ({ default: module.ForumEditarTopico })));
 const AdminLogin = React.lazy(() => import('./pages/admin/AdminLogin').then((module) => ({ default: module.AdminLogin })));
-const AdminDashboard = React.lazy(() => import('./pages/admin/AdminDashboard').then((module) => ({ default: module.AdminDashboard })));
+const AdminDashboard = React.lazy(() => import('./pages/admin/AdminDashboardWithTweaks').then((module) => ({ default: module.AdminDashboardWithTweaks })));
+const AdminAprovacoes = React.lazy(() => import('./pages/admin/AdminAprovacoes').then((module) => ({ default: module.AdminAprovacoes })));
 const AdminHomeSettings = React.lazy(() => import('./pages/admin/AdminHomeSettingsWithSaveBar').then((module) => ({ default: module.AdminHomeSettingsWithSaveBar })));
 const AdminPessoas = React.lazy(() => import('./pages/admin/AdminPessoas').then((module) => ({ default: module.AdminPessoas })));
 const AdminPessoaForm = React.lazy(() => import('./pages/admin/AdminPessoaForm').then((module) => ({ default: module.AdminPessoaForm })));
@@ -172,6 +173,8 @@ export const router = createBrowserRouter([
   { path: '/forum/topico/:id', element: lazyRoute(<MemberRoute><ForumTopico /></MemberRoute>) },
   { path: '/forum/topico/:id/editar', element: lazyRoute(<MemberRoute><ForumEditarTopico /></MemberRoute>) },
   { path: '/admin', element: lazyRoute(<ProtectedRoute><AdminDashboard /></ProtectedRoute>) },
+  { path: '/aprovacoes', element: lazyRoute(<ProtectedRoute><AdminAprovacoes /></ProtectedRoute>) },
+  { path: '/admin/aprovacoes', element: lazyRoute(<ProtectedRoute><AdminAprovacoes /></ProtectedRoute>) },
   { path: '/admin/login', element: lazyRoute(<AdminLogin />) },
   { path: '/admin/dashboard', element: lazyRoute(<ProtectedRoute><AdminDashboard /></ProtectedRoute>) },
   { path: '/admin/home', element: lazyRoute(<ProtectedRoute><AdminHomeSettings /></ProtectedRoute>) },
