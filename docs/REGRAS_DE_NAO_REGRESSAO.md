@@ -1,6 +1,6 @@
 # Regras de não regressão
 
-> Última revisão: 2026-06-26
+> Última revisão: 2026-06-27
 > Escopo: contratos que não devem ser quebrados em novas alterações.
 > Status: canônico.
 
@@ -54,12 +54,32 @@
 - Badges de status devem preservar texto em uma linha.
 - Bodas devem respeitar apenas marcos exatos permitidos para casais ativos e sem separação registrada.
 - Marcadores `+N` em gerações devem ser acionáveis quando houver pessoas ocultas.
+- O quiz deve preservar até cinco perguntas por rodada, feedback animado na área das opções e resultado final consolidado.
+- O menu do avatar não deve ficar atrás da navegação sticky ou dos botões superiores de `/curiosidades`.
+
+## Calendário familiar
+
+- Eventos de casamento devem manter títulos curtos, sem prefixo `Data de casamento de` na exibição visual.
+- Casamentos devem usar primeiro e segundo nome de cada pessoa quando possível.
+- Memórias devem exibir primeiro e segundo nome da pessoa quando possível.
+- O card `Casamentos` deve permanecer abaixo de `Aniversariantes` quando houver dados no mês.
 
 ## Fórum e notificações
 
 - A busca do fórum em desktop deve manter alinhamento à esquerda com `Categorias` e ação à direita com `Criar novo`.
+- `/forum/topico/:id` deve preservar largura compatível com `/forum` no desktop, com coluna lateral de tópicos recentes quando aplicável.
+- Reações devem aparecer apenas no tópico principal em `/forum/topico/:id`, não nas respostas.
+- Menções digitadas em `/forum/novo` não podem quebrar o valor real do campo de conteúdo.
 - O botão desktop de notificações deve abrir dropdown sem redirecionar diretamente.
 - O rodapé do dropdown de notificações deve manter `Ver todas` e `Preferências` com larguras equivalentes e sem quebra.
+
+## Administração
+
+- O header das rotas `/admin/*` deve exibir apenas `Painel Administrativo`, `Principal` e menu do usuário.
+- O botão `Principal` no header administrativo não deve exibir seta.
+- `/admin/atividades` não deve apagar registros do banco ao acionar `Limpar`; a limpeza é visual/local.
+- `/admin/atividades` deve usar label `Autor` no filtro de ator.
+- `/admin/gestao-conteudo-pessoas` deve manter acentuação correta em UTF-8.
 
 ## IA
 
