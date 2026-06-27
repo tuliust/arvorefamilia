@@ -230,7 +230,7 @@ export function AdminPessoas() {
       await loadPessoas();
       setDeleteId(null);
     } else {
-      alert('Erro ao deletar pessoa. Tente novamente.');
+      toast.error('Erro ao deletar pessoa. Tente novamente.');
     }
     setIsDeleting(false);
   };

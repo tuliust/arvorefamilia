@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/ca
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import { Textarea } from '../../components/ui/textarea';
+import { toast } from 'sonner';
 import {
   atualizarRelacionamento,
   obterTodosRelacionamentos,
@@ -86,7 +87,7 @@ export function AdminRelacionamentos() {
       if (success) {
         await loadData();
       } else {
-        alert('Erro ao excluir relacionamento');
+        toast.error('Erro ao excluir relacionamento');
       }
     }
   };
@@ -127,7 +128,7 @@ export function AdminRelacionamentos() {
 
       const updated = await atualizarRelacionamento(rel.id, payload);
       if (!updated) {
-        alert('Não foi possível atualizar o relacionamento conjugal.');
+        toast.error('Não foi possível atualizar o relacionamento conjugal.');
         return;
       }
 
@@ -146,7 +147,7 @@ export function AdminRelacionamentos() {
       cancelMarriageEdit();
     } catch (error) {
       console.error('Erro ao atualizar relacionamento conjugal:', error);
-      alert('Erro ao atualizar relacionamento conjugal.');
+      toast.error('Erro ao atualizar relacionamento conjugal.');
     } finally {
       setSavingMarriageId(null);
     }

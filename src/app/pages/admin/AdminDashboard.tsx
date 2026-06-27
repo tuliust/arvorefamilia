@@ -10,6 +10,7 @@ import { getActivitySummary, listRecentActivityLogs } from '../../services/activ
 import { listPendingRelationshipChangeRequests } from '../../services/relationshipChangeRequestService';
 import { adminListProfilesForLinking, getPrimaryLinkedPerson, type AdminLinkableProfile } from '../../services/memberProfileService';
 import { ActivityLog } from '../../types';
+import { toast } from 'sonner';
 
 type Pessoa = {
   id: string;
@@ -199,13 +200,13 @@ export function AdminDashboard() {
 
   const handleOpenInvite = () => {
     if (!selectedPessoa) {
-      window.alert('Selecione um usuário antes de enviar o convite.');
+      toast.error('Selecione um usuário antes de enviar o convite.');
       return;
     }
 
     const localDigits = getLocalPhoneDigits(whatsappLocal);
     if (localDigits.length < 10) {
-      window.alert('Informe um WhatsApp válido com DDD.');
+      toast.error('Informe um WhatsApp válido com DDD.');
       return;
     }
 
@@ -220,12 +221,12 @@ export function AdminDashboard() {
 
     if (linkedPerson.error) {
       console.error('Erro ao localizar pessoa vinculada ao cadastro:', linkedPerson.error);
-      window.alert('Não foi possível localizar o perfil vinculado a este cadastro.');
+      toast.error('Não foi possível localizar o perfil vinculado a este cadastro.');
       return;
     }
 
     if (!linkedPerson.data?.pessoa_id) {
-      window.alert('Este cadastro ainda não tem uma pessoa vinculada na árvore.');
+      toast.error('Este cadastro ainda não tem uma pessoa vinculada na árvore.');
       return;
     }
 

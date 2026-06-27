@@ -3,6 +3,7 @@ import { Input } from './ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
 import { User, Upload } from 'lucide-react';
 import { uploadPersonAvatarFile } from '../services/storageService';
+import { toast } from 'sonner';
 
 interface FotoUploadProps {
   value: string;
@@ -19,12 +20,12 @@ export function FotoUpload({ value, onChange, pessoaId }: FotoUploadProps) {
     if (!file) return;
 
     if (!file.type.startsWith('image/')) {
-      alert('Por favor, selecione apenas arquivos de imagem');
+      toast.error('Por favor, selecione apenas arquivos de imagem');
       return;
     }
 
     if (file.size > 5 * 1024 * 1024) {
-      alert('A foto deve ter no máximo 5MB');
+      toast.error('A foto deve ter no máximo 5MB');
       return;
     }
 
@@ -33,7 +34,7 @@ export function FotoUpload({ value, onChange, pessoaId }: FotoUploadProps) {
       const upload = await uploadPersonAvatarFile(file, { pessoaId });
       onChange(upload.url);
     } catch (error) {
-      alert(error instanceof Error ? error.message : 'Não foi possível enviar a foto.');
+      toast.error(error instanceof Error ? error.message : 'Não foi possível enviar a foto.');
     } finally {
       setUploading(false);
       e.target.value = '';

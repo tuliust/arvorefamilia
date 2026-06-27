@@ -3,6 +3,7 @@ import { Pessoa, Relacionamento, TipoRelacionamento, SubtipoRelacionamento } fro
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
+import { toast } from 'sonner';
 import {
   Plus,
   X,
@@ -196,7 +197,7 @@ export function RelacionamentoManager({
       onChange?.();
     } catch (error) {
       console.error('Erro ao adicionar relacionamento:', error);
-      alert(`Erro ao adicionar relacionamento: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
+      toast.error(`Erro ao adicionar relacionamento: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
     } finally {
       setLoading(false);
     }
@@ -239,7 +240,7 @@ export function RelacionamentoManager({
       onChange?.();
     } catch (error) {
       console.error('Erro ao salvar dados conjugais:', error);
-      alert(error instanceof Error ? error.message : 'Erro ao salvar dados conjugais');
+      toast.error(error instanceof Error ? error.message : 'Erro ao salvar dados conjugais');
     } finally {
       setSavingMarriageId(null);
     }
@@ -265,7 +266,7 @@ export function RelacionamentoManager({
       onChange?.();
     } catch (error) {
       console.error('Erro ao remover relacionamento:', error);
-      alert('Erro ao remover relacionamento');
+      toast.error('Erro ao remover relacionamento');
     } finally {
       setLoading(false);
     }

@@ -4,6 +4,7 @@ import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Dialog, DialogClose, DialogContent, DialogFooter, DialogHeader, DialogTitle } from './ui/dialog';
 import { ArquivoHistorico, HistoricalFileEventCategory, Pessoa } from '../types';
+import { toast } from 'sonner';
 import {
   Baby,
   Briefcase,
@@ -312,7 +313,7 @@ export function ArquivosHistoricos({
     const isImage = ['image/jpeg', 'image/png', 'image/webp'].includes(file.type);
 
     if (!ACCEPTED_FILE_TYPES.includes(file.type)) {
-      alert('Apenas JPG, PNG, WebP e PDF são permitidos');
+      toast.error('Apenas JPG, PNG, WebP e PDF são permitidos');
       return;
     }
 
@@ -328,7 +329,7 @@ export function ArquivosHistoricos({
         tipo: isImage ? 'imagem' : 'pdf',
       }));
     } catch (error) {
-      alert(error instanceof Error ? error.message : 'Não foi possível enviar o arquivo.');
+      toast.error(error instanceof Error ? error.message : 'Não foi possível enviar o arquivo.');
     } finally {
       setIsUploadingFile(false);
     }
@@ -457,7 +458,7 @@ export function ArquivosHistoricos({
     const descricao = novoArquivo.descricao.trim();
 
     if (!titulo && !descricao) {
-      alert('Informe pelo menos um título ou uma descrição para salvar o fato ou memória.');
+      toast.error('Informe pelo menos um título ou uma descrição para salvar o fato ou memória.');
       return;
     }
 
