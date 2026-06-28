@@ -1,0 +1,54 @@
+/* Ajuste 2026-06-28: distribui melhor os itens dos cards Núcleo/Ascendentes/Colaterais. */
+
+@media (min-width: 768px) {
+  .desktop-tree-family-group-card {
+    display: flex !important;
+    flex-direction: column !important;
+  }
+
+  .desktop-tree-family-group-row-list {
+    display: flex !important;
+    flex: 1 1 auto !important;
+    flex-direction: column !important;
+    justify-content: space-evenly !important;
+    gap: clamp(0.14rem, 0.38vh, 0.28rem) !important;
+    min-height: 0 !important;
+  }
+
+  .desktop-tree-family-group-row,
+  .desktop-tree-family-group-card[aria-label='Núcleo'] .desktop-tree-family-group-row {
+    min-height: clamp(1.02rem, 2.08vh, 1.28rem) !important;
+    padding-top: 0.03rem !important;
+    padding-bottom: 0.03rem !important;
+  }
+
+  .desktop-tree-family-group-row span:not(.desktop-tree-family-group-icon) {
+    font-size: clamp(0.7rem, 1.44vh, 0.84rem) !important;
+    line-height: 1.08 !important;
+  }
+
+  .desktop-tree-family-group-row strong {
+    font-size: clamp(0.72rem, 1.48vh, 0.86rem) !important;
+    line-height: 1.08 !important;
+  }
+}
+
+@media (max-height: 720px) and (min-width: 768px) {
+  .desktop-tree-family-group-row-list {
+    justify-content: space-evenly !important;
+    gap: clamp(0.08rem, 0.22vh, 0.16rem) !important;
+  }
+
+  .desktop-tree-family-group-row,
+  .desktop-tree-family-group-card[aria-label='Núcleo'] .desktop-tree-family-group-row {
+    min-height: clamp(0.88rem, 1.88vh, 1.08rem) !important;
+  }
+
+  .desktop-tree-family-group-row span:not(.desktop-tree-family-group-icon) {
+    font-size: 0.68rem !important;
+  }
+
+  .desktop-tree-family-group-row strong {
+    font-size: 0.7rem !important;
+  }
+}
