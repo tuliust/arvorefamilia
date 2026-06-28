@@ -1,6 +1,6 @@
-﻿import React from 'react';
+import React from 'react';
 import { useLocation } from 'react-router';
-import { Minus, Plus, Scan } from 'lucide-react';
+import { FileDown, ImageDown, Minus, Plus, Printer, Scan } from 'lucide-react';
 
 import type { FamilyTreeActions } from '../../components/FamilyTree/actions';
 import { DesktopFamilyMapView } from '../../components/FamilyTree/DesktopFamilyMapView';
@@ -42,6 +42,41 @@ function getDesktopTreeTitle(viewMode: TreeViewMode, firstName: string) {
   }
 
   return `Mapa Genealógico de ${firstName}`;
+}
+
+function getExportPreviewIntent(action: SidebarTreeAction) {
+  if (action === 'save-image') return 'png';
+  if (action === 'save-pdf') return 'pdf';
+  if (action === 'print') return 'print';
+  return null;
+}
+
+function openTreeExportPreviewRoute(location: ReturnType<typeof useLocation>, action: SidebarTreeAction) {
+  const intent = getExportPreviewIntent(action);
+  if (!intent) return false;
+
+  const params = new URLSearchParams(location.search);
+  params.set('exportPreview', '1');
+  params.set('exportIntent', intent);
+  params.delete('exportAction');
+  params.delete('tutorial');
+
+  const query = params.toString();
+  const url = `${location.pathname}${query ? `?${query}` : ''}`;
+  const previewWindow = window.open(url, '_blank', 'noopener,noreferrer');
+
+  if (!previewWindow) {
+    window.alert('O navegador bloqueou a janela de preview da exportação. Libere pop-ups para este site e tente novamente.');
+  }
+
+  return true;
+}
+
+function getExportIntentTitle(intent: string | null) {
+  if (intent === 'png') return 'Preview para salvar imagem';
+  if (intent === 'pdf') return 'Preview para exportar PDF';
+  if (intent === 'print') return 'Preview para impressão';
+  return 'Preview de exportação';
 }
 
 interface HomeTreeSectionProps {
@@ -103,6 +138,9 @@ export function HomeTreeSection({
   const [familyMapHasScrolled, setFamilyMapHasScrolled] = React.useState(false);
   const [restoreViewRevision, setRestoreViewRevision] = React.useState(0);
   const effectiveTreeLayoutRevision = treeLayoutRevision + restoreViewRevision;
+  const searchParams = React.useMemo(() => new URLSearchParams(location.search), [location.search]);
+  const isExportPreview = searchParams.get('exportPreview') === '1';
+  const exportIntent = searchParams.get('exportIntent');
   const desktopTitleFirstName = React.useMemo(() => {
     const centralPerson = pessoas.find((pessoa) => pessoa.id === centralReferencePersonId);
     return getTreeTitleFirstName(centralPerson?.nome_completo);
@@ -122,6 +160,11 @@ export function HomeTreeSection({
   React.useEffect(() => {
     const handleSidebarTreeAction = (event: Event) => {
       const action = (event as CustomEvent<SidebarTreeAction>).detail;
+
+      if (!isExportPreview && (action === 'save-image' || action === 'save-pdf' || action === 'print')) {
+        openTreeExportPreviewRoute(location, action);
+        return;
+      }
 
       if (action === 'restore-view') {
         setFamilyMapHasScrolled(false);
@@ -158,16 +201,65 @@ export function HomeTreeSection({
       }
 
       if (action === 'print') {
+        if (isExportPreview) {
+          window.print();
+          return;
+        }
         void treeActions.print();
       }
     };
 
     window.addEventListener(SIDEBAR_TREE_ACTION_EVENT, handleSidebarTreeAction);
     return () => window.removeEventListener(SIDEBAR_TREE_ACTION_EVENT, handleSidebarTreeAction);
-  }, [familyTreeRef]);
+  }, [familyTreeRef, isExportPreview, location]);
 
   return (
-    <section className="relative min-w-0 w-0 flex-1 overflow-hidden overscroll-none bg-gray-100">
+    <section
+      className={["relative min-w-0 w-0 flex-1 overflow-hidden overscroll-none", isExportPreview ? 'bg-[#f7f1e8]' : 'bg-gray-100'].join(' ')}
+      data-tree-export-preview-page={isExportPreview ? 'true' : undefined}
+    >
+      {isExportPreview && (
+        <style>
+          {`
+            body:has([data-tree-export-preview-page="true"]) header,
+            body:has([data-tree-export-preview-page="true"]) aside,
+            body:has([data-tree-export-preview-page="true"]) nav,
+            body:has([data-tree-export-preview-page="true"]) [data-tour-target="tree-favorite"],
+            body:has([data-tree-export-preview-page="true"]) .tree-canvas-zoom-controls,
+            body:has([data-tree-export-preview-page="true"]) a[href="/duvidas"].fixed.bottom-8.right-8 {
+              display: none !important;
+            }
+
+            body:has([data-tree-export-preview-page="true"]) main {
+              width: 100vw !important;
+              height: 100vh !important;
+              max-width: 100vw !important;
+              overflow: hidden !important;
+            }
+
+            body:has([data-tree-export-preview-page="true"]) [data-tree-export-preview-page="true"] {
+              min-width: 100vw !important;
+              width: 100vw !important;
+              flex-basis: 100vw !important;
+            }
+
+            @media print {
+              [data-tree-export-preview-toolbar="true"] {
+                display: none !important;
+              }
+
+              body:has([data-tree-export-preview-page="true"]),
+              body:has([data-tree-export-preview-page="true"]) main,
+              body:has([data-tree-export-preview-page="true"]) [data-tree-export-preview-page="true"] {
+                width: 100vw !important;
+                height: 100vh !important;
+                background: #f7f1e8 !important;
+              }
+            }
+          `}
+        </style>
+      )}
+
       {!isMobile && (
         <>
           <style>
@@ -189,7 +281,7 @@ export function HomeTreeSection({
           <div
             className={[
               'pointer-events-none absolute inset-x-0 top-5 z-20 text-center transition duration-200 ease-out',
-              (treeViewMode === 'mapa-familiar' || treeViewMode === 'mapa-familiar-horizontal') && familyMapHasScrolled
+              !isExportPreview && (treeViewMode === 'mapa-familiar' || treeViewMode === 'mapa-familiar-horizontal') && familyMapHasScrolled
                 ? 'opacity-0 -translate-y-2'
                 : 'translate-y-0 opacity-100',
             ].join(' ')}
@@ -198,10 +290,47 @@ export function HomeTreeSection({
               {desktopTreeTitle}
             </h1>
           </div>
-          <div className="absolute right-[6.75rem] top-4 z-30" data-tour-target="tree-favorite">
-            <PageFavoriteButton path={location.pathname} className="h-9 w-9 rounded-xl border-gray-200 shadow-sm" />
-          </div>
+          {!isExportPreview && (
+            <div className="absolute right-[6.75rem] top-4 z-30" data-tour-target="tree-favorite">
+              <PageFavoriteButton path={location.pathname} className="h-9 w-9 rounded-xl border-gray-200 shadow-sm" />
+            </div>
+          )}
         </>
+      )}
+
+      {isExportPreview && canRenderTree && (
+        <div
+          className="absolute right-5 top-5 z-40 flex flex-wrap items-center gap-2 rounded-2xl border border-slate-200 bg-white/95 p-2 shadow-xl backdrop-blur"
+          data-tree-export-preview-toolbar="true"
+          data-tree-export-ignore="true"
+          aria-label={getExportIntentTitle(exportIntent)}
+        >
+          <button
+            type="button"
+            className="inline-flex h-9 items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 text-sm font-bold text-slate-800 shadow-sm transition hover:bg-blue-50 hover:text-blue-800"
+            onClick={() => dispatchTreeAction('save-image')}
+          >
+            <ImageDown className="h-4 w-4" />
+            Salvar PNG
+          </button>
+          <button
+            type="button"
+            className="inline-flex h-9 items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 text-sm font-bold text-slate-800 shadow-sm transition hover:bg-blue-50 hover:text-blue-800"
+            onClick={() => window.print()}
+            title="Use a opção Salvar como PDF na janela de impressão do navegador."
+          >
+            <FileDown className="h-4 w-4" />
+            Exportar PDF
+          </button>
+          <button
+            type="button"
+            className="inline-flex h-9 items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 text-sm font-bold text-slate-800 shadow-sm transition hover:bg-blue-50 hover:text-blue-800"
+            onClick={() => window.print()}
+          >
+            <Printer className="h-4 w-4" />
+            Imprimir
+          </button>
+        </div>
       )}
 
       {isMobile && (
@@ -243,7 +372,7 @@ export function HomeTreeSection({
         </style>
       )}
 
-      {!isMobile && canRenderTree && (
+      {!isMobile && canRenderTree && !isExportPreview && (
         <div className="tree-canvas-zoom-controls" aria-label="Controles de zoom da árvore" data-tree-export-ignore="true">
           <button type="button" onClick={() => dispatchTreeAction('zoom-in')} aria-label="Aumentar zoom" title="Aumentar zoom">
             <Plus className="h-4 w-4" />
@@ -329,7 +458,7 @@ export function HomeTreeSection({
           directRelativeFilters={directRelativeFilters}
           onPersonClick={onPersonClick}
           layoutRevision={effectiveTreeLayoutRevision}
-          sidebarCollapsed={!sidebarOpen}
+          sidebarCollapsed={isExportPreview ? true : !sidebarOpen}
           onScrollStateChange={setFamilyMapHasScrolled}
           onDirectRelationRenderedCounts={onDirectRelationRenderedCounts}
         />
