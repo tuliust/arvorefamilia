@@ -28,6 +28,7 @@ export interface ElementCaptureMetrics {
 export const DEFAULT_TREE_EXPORT_MIN_SCALE = 1.5;
 export const DEFAULT_TREE_EXPORT_MAX_SCALE = 1.5;
 export const DEFAULT_TREE_EXPORT_MAX_PIXELS = 54_000_000;
+const TREE_EXPORT_CAPTURE_TIMEOUT_MS = 20_000;
 
 export function resolveTreeExportTarget(
   explicitTarget?: HTMLElement | null,
@@ -55,6 +56,22 @@ function getBrowserExportScale(maxScale = DEFAULT_TREE_EXPORT_MAX_SCALE) {
   if (typeof window === 'undefined') return 1;
 
   return Math.min(maxScale, Math.max(DEFAULT_TREE_EXPORT_MIN_SCALE, window.devicePixelRatio || 1));
+}
+
+function withTimeout<T>(promise: Promise<T>, timeoutMs: number, message: string): Promise<T> {
+  return new Promise((resolve, reject) => {
+    const timeoutId = window.setTimeout(() => reject(new Error(message)), timeoutMs);
+
+    promise
+      .then((value) => {
+        window.clearTimeout(timeoutId);
+        resolve(value);
+      })
+      .catch((error) => {
+        window.clearTimeout(timeoutId);
+        reject(error);
+      });
+  });
 }
 
 function canvasToDataUrl(canvas: HTMLCanvasElement) {
@@ -108,6 +125,38 @@ export function openTreeExportPreviewWindow(title: string) {
   }
 
   return previewWindow;
+}
+
+export function writeTreeExportErrorWindow(
+  previewWindow: Window | null | undefined,
+  message: string
+) {
+  if (!previewWindow || previewWindow.closed) return;
+
+  const safeMessage = escapeHtml(message || 'Ocorreu um erro inesperado durante a exportação.');
+
+  previewWindow.document.open();
+  previewWindow.document.write(`<!doctype html>
+<html>
+  <head>
+    <title>Erro na exportação</title>
+    <style>
+      html, body { margin: 0; min-height: 100%; background: #f8fafc; color: #0f172a; font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+      body { min-height: 100vh; display: flex; align-items: center; justify-content: center; box-sizing: border-box; padding: 2rem; }
+      div { max-width: 32rem; border: 1px solid #fecaca; border-radius: 1rem; background: #fff; padding: 1.25rem; box-shadow: 0 12px 32px rgb(15 23 42 / 0.12); }
+      h1 { margin: 0 0 0.5rem; font-size: 1rem; line-height: 1.3; color: #991b1b; }
+      p { margin: 0; color: #475569; font-size: 0.9rem; line-height: 1.5; }
+    </style>
+  </head>
+  <body>
+    <div>
+      <h1>Não foi possível preparar a exportação</h1>
+      <p>${safeMessage}</p>
+    </div>
+  </body>
+</html>`);
+  previewWindow.document.close();
+  previewWindow.focus();
 }
 
 function writeImagePreviewWindow(
@@ -320,7 +369,7 @@ export async function waitForTreeExportStability() {
   const documentWithFonts = document as Document & { fonts?: { ready?: Promise<unknown> } };
 
   try {
-    await documentWithFonts.fonts?.ready;
+    await withTimeout(Promise.resolve(documentWithFonts.fonts?.ready), 5_000, 'Não foi possível carregar as fontes da árvore a tempo.');
   } catch {
     // Font readiness is best effort; export can continue with fallback fonts.
   }
@@ -443,32 +492,6 @@ function normalizeInlineSvgIconsForTreeExport(root: ParentNode) {
         shape.style.setProperty('stroke', stroke, 'important');
       }
     });
-
-    if (!svg.closest('[data-family-map-color-key]')) return;
-
-    try {
-      const serializedSvg = new XMLSerializer().serializeToString(svg);
-      const image = documentRef.createElement('img');
-      const computed = windowRef?.getComputedStyle(svg);
-
-      image.setAttribute('src', `data:image/svg+xml;charset=utf-8,${encodeURIComponent(serializedSvg)}`);
-      image.setAttribute('alt', '');
-      image.setAttribute('aria-hidden', 'true');
-      image.setAttribute('decoding', 'sync');
-      image.className = svg.getAttribute('class') ?? '';
-
-      if (computed) {
-        image.style.width = computed.width;
-        image.style.height = computed.height;
-        image.style.display = computed.display === 'inline' ? 'inline-block' : computed.display;
-        image.style.verticalAlign = computed.verticalAlign;
-        image.style.flexShrink = computed.flexShrink;
-      }
-
-      svg.replaceWith(image);
-    } catch {
-      // Keep the original inline SVG if serialization is not available.
-    }
   });
 }
 
@@ -492,16 +515,6 @@ function injectTreeExportLayoutCss(clonedDocument: Document) {
       filter: none !important;
     }
 
-    .is-exporting-family-tree [data-family-map-export-root="true"] [data-family-map-color-key],
-    .is-exporting-family-tree [data-family-map-horizontal-root="true"] [data-family-map-color-key],
-    .is-exporting-family-tree [data-export-root="family-tree"] [data-family-map-color-key],
-    .is-exporting-family-tree [data-family-map-group="true"],
-    .is-exporting-family-tree [data-family-map-group-title="true"],
-    .is-exporting-family-tree [data-family-map-avatar="true"] {
-      box-shadow: none !important;
-      text-shadow: none !important;
-    }
-
     .is-exporting-family-tree [data-family-map-group-title="true"] {
       box-sizing: border-box !important;
       display: inline-flex !important;
@@ -513,7 +526,6 @@ function injectTreeExportLayoutCss(clonedDocument: Document) {
       text-align: center !important;
       line-height: 1 !important;
       overflow: visible !important;
-      transform: translateY(1px) !important;
       vertical-align: middle !important;
     }
 
@@ -590,7 +602,6 @@ function prepareClonedDocumentForTreeExport(clonedDocument: Document) {
   sanitizeUnsupportedExportColors(clonedDocument.body);
 
   clonedRoots.forEach((clonedRoot) => {
-    clonedRoot.style.overflow = 'visible';
     sanitizeUnsupportedExportColors(clonedRoot);
     normalizeInlineSvgIconsForTreeExport(clonedRoot);
   });
@@ -617,24 +628,28 @@ export async function captureElementToCanvas(
 
   await waitForTreeExportStability();
 
-  return html2canvas(element, {
-    backgroundColor,
-    scale: metrics.scale,
-    width: metrics.width,
-    height: metrics.height,
-    windowWidth: Math.max(window.innerWidth, document.documentElement.clientWidth, metrics.width),
-    windowHeight: Math.max(window.innerHeight, document.documentElement.clientHeight, metrics.height),
-    scrollX: -window.scrollX,
-    scrollY: -window.scrollY,
-    useCORS: true,
-    allowTaint: false,
-    imageTimeout: 15000,
-    logging: false,
-    removeContainer: true,
-    ignoreElements: (node) =>
-      getDefaultTreeExportIgnoreElements(node) || Boolean(options.ignoreElements?.(node)),
-    onclone: prepareClonedDocumentForTreeExport,
-  });
+  return withTimeout(
+    html2canvas(element, {
+      backgroundColor,
+      scale: metrics.scale,
+      width: metrics.width,
+      height: metrics.height,
+      windowWidth: Math.max(window.innerWidth, document.documentElement.clientWidth, metrics.width),
+      windowHeight: Math.max(window.innerHeight, document.documentElement.clientHeight, metrics.height),
+      scrollX: -window.scrollX,
+      scrollY: -window.scrollY,
+      useCORS: true,
+      allowTaint: false,
+      imageTimeout: 15000,
+      logging: false,
+      removeContainer: true,
+      ignoreElements: (node) =>
+        getDefaultTreeExportIgnoreElements(node) || Boolean(options.ignoreElements?.(node)),
+      onclone: prepareClonedDocumentForTreeExport,
+    }),
+    TREE_EXPORT_CAPTURE_TIMEOUT_MS,
+    'A exportação demorou demais para concluir. Tente reduzir o zoom ou exportar uma área menor.'
+  );
 }
 
 export function cropCanvas(sourceCanvas: HTMLCanvasElement, rect: ExportRect) {
