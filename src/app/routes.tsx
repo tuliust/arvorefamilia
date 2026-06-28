@@ -6,6 +6,7 @@ import { TreeAccessRoute } from './components/TreeAccessRoute';
 import { getTreeViewModeFromPath } from './components/FamilyTree/treeViewMode';
 import { MobileGlobalTweaks } from './components/MobileGlobalTweaks';
 import { MobileTopLayerTweaks } from './components/MobileTopLayerTweaks';
+import { LinhaGeracionalMobilePanelLayerTweaks } from './components/LinhaGeracionalMobilePanelLayerTweaks';
 import { FirstLoginTutorialRuntimeTweaks } from './components/FirstLoginTutorialRuntimeTweaks';
 import { PersonProfileRuntimeTweaks } from './components/person/PersonProfileRuntimeTweaks';
 
@@ -111,6 +112,7 @@ function lazyRoute(element: React.ReactElement, options?: { disableMobileGlobalT
         <PersonProfileRuntimeTweaks />
         {options?.disableMobileGlobalTweaks ? null : <MobileGlobalTweaks />}
         <MobileTopLayerTweaks />
+        <LinhaGeracionalMobilePanelLayerTweaks />
         {element}
       </Suspense>
     </RouteErrorBoundary>
