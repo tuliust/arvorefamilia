@@ -91,12 +91,12 @@ const styles = `
 
   html.${LINE_PANEL_OPEN_CLASS} [role="dialog"][aria-label="Painel de visualização"] button[class*="border-blue-100"][class*="w-full"] {
     min-height: 2.7rem !important;
-    justify-content: flex-start !important;
+    justify-content: center !important;
     padding-top: 0.38rem !important;
     padding-bottom: 0.38rem !important;
-    padding-left: 1.5rem !important;
-    padding-right: 1.5rem !important;
-    text-align: left !important;
+    padding-left: 0.75rem !important;
+    padding-right: 0.75rem !important;
+    text-align: center !important;
   }
 
   html.${LINE_PANEL_OPEN_CLASS} [role="dialog"][aria-label="Painel de visualização"] button[class*="border-blue-100"][class*="w-full"] > span {
@@ -105,7 +105,7 @@ const styles = `
     min-width: 0 !important;
     max-width: 100% !important;
     overflow: hidden !important;
-    text-align: left !important;
+    text-align: center !important;
     text-overflow: ellipsis !important;
     white-space: nowrap !important;
     overflow-wrap: normal !important;
@@ -127,12 +127,12 @@ const styles = `
     justify-content: center !important;
     border-radius: 9999px !important;
     border: 1px solid rgb(226 232 240) !important;
-    background: rgba(255, 255, 255, 0.96) !important;
+    background: rgba(255, 255, 255, 0.98) !important;
     color: rgb(15 23 42) !important;
     font-size: 2rem !important;
     font-weight: 500 !important;
     line-height: 1 !important;
-    box-shadow: 0 12px 28px rgba(15, 23, 42, 0.18) !important;
+    box-shadow: 0 6px 14px rgba(15, 23, 42, 0.12) !important;
     -webkit-tap-highlight-color: transparent !important;
   }
 }
@@ -348,7 +348,7 @@ function renderFamilyGroupDetails(
   people.forEach((person) => {
     const button = document.createElement('button');
     button.type = 'button';
-    button.className = 'flex min-h-10 w-full items-center justify-start rounded-xl border border-blue-100 bg-white px-6 py-1.5 text-left text-[13px] font-bold leading-none text-blue-950 shadow-sm transition active:scale-[0.98]';
+    button.className = 'flex min-h-10 w-full items-center justify-center rounded-xl border border-blue-100 bg-white px-3 py-1.5 text-center text-[13px] font-bold leading-none text-blue-950 shadow-sm transition active:scale-[0.98]';
     button.setAttribute('aria-label', `Visualizar ${person.label}`);
     button.addEventListener('click', (event) => {
       event.preventDefault();
@@ -388,8 +388,9 @@ function ensureLineGenerationCloseButton(panel: HTMLElement) {
   const surface = panel.querySelector<HTMLElement>('section');
   if (!surface) return;
 
-  const existingButton = surface.querySelector<HTMLButtonElement>(`.${LINE_PANEL_CLOSE_BUTTON_CLASS}`);
-  if (existingButton) return;
+  const existingButtons = Array.from(surface.querySelectorAll<HTMLButtonElement>(`.${LINE_PANEL_CLOSE_BUTTON_CLASS}`));
+  existingButtons.slice(1).forEach((button) => button.remove());
+  if (existingButtons[0]) return;
 
   const closeButton = document.createElement('button');
   closeButton.type = 'button';
