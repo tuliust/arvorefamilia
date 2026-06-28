@@ -337,3 +337,33 @@ html.is-exporting-family-tree [data-family-map-horizontal-root='true'] .family-m
     line-height: 1.05 !important;
   }
 }
+
+/* Frente 2026-06-28: refinamento adicional do painel esquerdo. */
+@media (min-width: 768px) {
+  .desktop-tree-panel-title {
+    font-size: 1.1rem !important;
+    line-height: 1.65rem !important;
+  }
+
+  .desktop-tree-family-group-row-list {
+    gap: clamp(0.01rem, 0.12vh, 0.08rem) !important;
+  }
+
+  .desktop-tree-family-group-row,
+  .desktop-tree-family-group-card[aria-label='Núcleo'] .desktop-tree-family-group-row {
+    min-height: clamp(0.72rem, 1.34vh, 0.92rem) !important;
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+  }
+}
+
+@media (max-height: 720px) and (min-width: 768px) {
+  .desktop-tree-family-group-row-list {
+    gap: 0 !important;
+  }
+
+  .desktop-tree-family-group-row,
+  .desktop-tree-family-group-card[aria-label='Núcleo'] .desktop-tree-family-group-row {
+    min-height: 0.62rem !important;
+  }
+}
