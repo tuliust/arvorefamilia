@@ -487,30 +487,33 @@ export function UserProfileMenu({ variant = 'avatar' }: UserProfileMenuProps) {
                   </button>
                 )}
 
-                {managedPeopleLinks.length > 0 ? (
-                  <div className="mt-2 rounded-2xl border border-gray-200 bg-gray-50 p-3">
-                    <div className="mb-2 flex items-center gap-2 text-sm font-bold text-gray-900">
-                      <UserCheck className="h-4 w-4 text-blue-700" />
-                      Seus responsáveis
-                    </div>
-                    <select
+                  {managedPeopleLinks.length > 0 ? (
+                    <div className="mt-2 rounded-2xl border border-gray-200 bg-gray-50 p-3">
+                      <div className="mb-2">
+                        <div className="flex items-center gap-2 text-sm font-bold text-gray-900">
+                          <UserCheck className="h-4 w-4 text-blue-700" />
+                          Perfis gerenciados
+                        </div>
+                        <p className="mt-1 pl-6 text-xs leading-4 text-gray-500">
+                          Familiares vinculados à sua conta
+                        </p>
+                      </div>
+                      <select
                       value={activePerspective?.pessoaId ?? ''}
                       onChange={(event) => handlePerspectiveChange(event.target.value)}
                       className="w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm font-semibold text-gray-800 outline-none focus:border-blue-300 focus:ring-2 focus:ring-blue-100"
                     >
                       <option value="">Minha visualização</option>
-                      {managedPeopleLinks.map((link) => {
-                        const managedPerson = link.managed_pessoa;
-                        if (!managedPerson) return null;
-                        const deceased = isPersonDeceased(managedPerson);
-
-                        return (
-                          <option key={link.id} value={managedPerson.id}>
-                            {managedPerson.nome_completo}{deceased ? ' — memorial' : ''}
-                          </option>
-                        );
-                      })}
-                    </select>
+                        {managedPeopleLinks.map((link) => {
+                          const managedPerson = link.managed_pessoa;
+                          if (!managedPerson) return null;
+                          return (
+                            <option key={link.id} value={managedPerson.id}>
+                              {getFirstTwoNames(managedPerson.nome_completo || managedPerson.id)}
+                            </option>
+                          );
+                        })}
+                      </select>
                     {activePerspective?.falecido ? (
                       <p className="mt-2 text-xs leading-5 text-gray-600">
                         Perfil memorial: criação de conteúdo será bloqueada. Edição de dados e arquivos permanece permitida conforme permissões.
