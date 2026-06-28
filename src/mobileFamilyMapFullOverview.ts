@@ -6,24 +6,46 @@ const FULL_MAP_ID = 'mobile-family-map-full-overview';
 const STYLE_ID = 'mobile-family-map-full-overview-style';
 const FULL_MAP_BUTTON_ATTR = 'data-mobile-family-full-map-button';
 
-const STAGE_WIDTH = 1160;
+const STAGE_WIDTH = 1240;
 const STAGE_HEIGHT = 1480;
 
 type GestureState =
   | { mode: 'pan'; x: number; y: number; translateX: number; translateY: number }
   | { mode: 'pinch'; startDistance: number; startScale: number; anchorX: number; anchorY: number };
 
-type MosaicGroupKind = 'ancestor' | 'uncles' | 'cousins' | 'core-group' | 'person';
+type FullMapCardVariant = 'ancestor' | 'mini' | 'parent' | 'central' | 'core' | 'empty';
+type FullMapGroupKind = 'ancestor' | 'uncles' | 'cousins' | 'core-group' | 'person' | 'empty';
+type Anchor = 'top' | 'right' | 'bottom' | 'left';
 
-type MosaicGroupConfig = {
+type FullMapPerson = {
   id: string;
-  kind: MosaicGroupKind;
+  name: string;
+  birthYear?: string;
+  deathYear?: string;
+  photoSrc?: string;
+  colorKey?: string;
+  pet?: boolean;
+};
+
+type FullMapNode = {
+  id: string;
+  kind: FullMapGroupKind;
+  label: string;
   left: number;
   top: number;
   width: number;
-  height?: number;
-  source: () => HTMLElement | null;
-  fallbackTitle?: string;
+  minHeight: number;
+  columns: number;
+  variant: FullMapCardVariant;
+  people: FullMapPerson[];
+};
+
+type FullMapEdge = {
+  from: string;
+  to: string;
+  fromAnchor: Anchor;
+  toAnchor: Anchor;
+  via?: 'vertical' | 'horizontal' | 'elbow';
 };
 
 let gestureState: GestureState | null = null;
@@ -54,6 +76,15 @@ function normalizeText(value?: string | null) {
     .trim();
 }
 
+function escapeHtml(value: string) {
+  return value
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
 function ensureStyles() {
   const css = `
     @media (max-width: 767px) {
@@ -82,7 +113,7 @@ function ensureStyles() {
       #${FULL_MAP_ID} {
         position: fixed !important;
         inset: 0 !important;
-        z-index: 12140 !important;
+        z-index: 2147483900 !important;
         display: flex !important;
         flex-direction: column !important;
         background: rgba(248, 250, 252, 0.985) !important;
@@ -93,7 +124,7 @@ function ensureStyles() {
       #${FULL_MAP_ID} .mobile-family-full-map-header {
         display: flex !important;
         align-items: center !important;
-        gap: 0.75rem !important;
+        gap: 0.65rem !important;
         width: min(100%, 28rem) !important;
         margin: 0 auto 0.75rem !important;
         border: 1px solid rgb(226, 232, 240) !important;
@@ -188,210 +219,258 @@ function ensureStyles() {
 
       #${FULL_MAP_ID} .mobile-family-full-map-connectors path {
         fill: none !important;
-        stroke: var(--tree-palette-edge-child, #0e7490) !important;
-        stroke-width: 3 !important;
+        stroke: #d19006 !important;
+        stroke-width: 4 !important;
         stroke-linecap: round !important;
         stroke-linejoin: round !important;
       }
 
-      #${FULL_MAP_ID} .mobile-family-full-map-group {
+      #${FULL_MAP_ID} .mobile-family-full-map-node {
         position: absolute !important;
         z-index: 2 !important;
         overflow: visible !important;
       }
 
-      #${FULL_MAP_ID} .mobile-family-full-map-group[data-full-map-kind="person"] {
+      #${FULL_MAP_ID} .mobile-family-full-map-node[data-full-map-kind="person"] {
         z-index: 3 !important;
       }
 
       #${FULL_MAP_ID} .mobile-family-full-map-group-shell {
         width: 100% !important;
-        height: auto !important;
         min-height: 100% !important;
         border: 2px solid rgba(14, 116, 144, 0.58) !important;
         border-radius: 1.1rem !important;
-        background: rgba(255, 255, 255, 0.97) !important;
+        background: rgba(255, 255, 255, 0.98) !important;
         box-shadow: 0 12px 26px rgba(15, 23, 42, 0.1) !important;
         padding: 0.55rem !important;
         overflow: visible !important;
       }
 
-      #${FULL_MAP_ID} .mobile-family-full-map-group[data-full-map-kind="person"] .mobile-family-full-map-group-shell {
+      #${FULL_MAP_ID} .mobile-family-full-map-node[data-full-map-kind="person"] .mobile-family-full-map-group-shell {
+        min-height: 0 !important;
         border: 0 !important;
         border-radius: 0 !important;
         background: transparent !important;
         box-shadow: none !important;
         padding: 0 !important;
-        min-height: 0 !important;
       }
 
-      #${FULL_MAP_ID} .mobile-family-full-map-clone,
-      #${FULL_MAP_ID} .mobile-family-full-map-clone * {
-        max-width: 100% !important;
-      }
-
-      #${FULL_MAP_ID} .mobile-family-full-map-clone,
-      #${FULL_MAP_ID} .mobile-family-full-map-clone > div,
-      #${FULL_MAP_ID} .mobile-family-full-map-clone > div > div,
-      #${FULL_MAP_ID} .mobile-family-full-map-clone [class*="z-10"] {
-        width: 100% !important;
-        min-width: 0 !important;
-        max-width: 100% !important;
-        min-height: 0 !important;
-        height: auto !important;
-        margin: 0 !important;
-        padding: 0 !important;
-        transform: none !important;
-        overflow: visible !important;
-      }
-
-      #${FULL_MAP_ID} .mobile-family-full-map-clone .pointer-events-none.absolute,
-      #${FULL_MAP_ID} .mobile-family-full-map-clone [data-mobile-uncle-branch-connector],
-      #${FULL_MAP_ID} .mobile-family-full-map-clone [data-mobile-maternal-uncle-down-connector],
-      #${FULL_MAP_ID} .mobile-family-full-map-clone [data-mobile-uncle-native-connector],
-      #${FULL_MAP_ID} .mobile-family-full-map-clone [data-mobile-core-center-descendant-line],
-      #${FULL_MAP_ID} .mobile-family-full-map-clone [data-mobile-family-tree-descendant-source],
-      #${FULL_MAP_ID} .mobile-family-full-map-clone [data-mobile-family-tree-descendant-connector] {
-        display: none !important;
-      }
-
-      #${FULL_MAP_ID} .mobile-family-full-map-clone section {
-        display: block !important;
-        width: 100% !important;
-        min-width: 0 !important;
-        min-height: 0 !important;
-        height: auto !important;
-        margin: 0 !important;
-        padding: 0 !important;
-        overflow: visible !important;
-      }
-
-      #${FULL_MAP_ID} .mobile-family-full-map-clone section > div:has(> h2),
-      #${FULL_MAP_ID} .mobile-family-full-map-clone section > div:has(> h3),
-      #${FULL_MAP_ID} .mobile-family-full-map-clone > div:has(> h2),
-      #${FULL_MAP_ID} .mobile-family-full-map-clone > div:has(> h3) {
-        width: 100% !important;
-        min-height: 0 !important;
-        height: auto !important;
-        padding: 0 !important;
-        border: 0 !important;
-        border-radius: 0 !important;
-        background: transparent !important;
-        box-shadow: none !important;
-        overflow: visible !important;
-      }
-
-      #${FULL_MAP_ID} .mobile-family-full-map-clone h2,
-      #${FULL_MAP_ID} .mobile-family-full-map-clone h3,
-      #${FULL_MAP_ID} .mobile-family-full-map-clone [data-family-map-group-title="true"] {
+      #${FULL_MAP_ID} .mobile-family-full-map-group-title {
         display: block !important;
         margin: 0 0 0.45rem !important;
         color: rgb(15, 23, 42) !important;
-        font-size: 0.58rem !important;
+        font-size: 0.66rem !important;
         font-weight: 950 !important;
         line-height: 1.05 !important;
         letter-spacing: 0.12em !important;
         text-align: center !important;
         text-transform: uppercase !important;
-        white-space: normal !important;
       }
 
-      #${FULL_MAP_ID} .mobile-family-full-map-clone h2 + div,
-      #${FULL_MAP_ID} .mobile-family-full-map-clone h3 + div,
-      #${FULL_MAP_ID} .mobile-family-full-map-clone [data-family-map-group="true"] > div:last-child {
+      #${FULL_MAP_ID} .mobile-family-full-map-card-grid {
         display: grid !important;
-        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+        grid-template-columns: repeat(var(--full-map-columns, 2), minmax(0, 1fr)) !important;
         align-items: stretch !important;
-        gap: 0.32rem !important;
-        min-height: 0 !important;
-        max-height: none !important;
-        overflow: visible !important;
-      }
-
-      #${FULL_MAP_ID} .mobile-family-full-map-group[data-full-map-kind="ancestor"] .mobile-family-full-map-clone h2 + div,
-      #${FULL_MAP_ID} .mobile-family-full-map-group[data-full-map-kind="ancestor"] .mobile-family-full-map-clone h3 + div {
-        grid-template-columns: 1fr !important;
-      }
-
-      #${FULL_MAP_ID} .mobile-family-full-map-group[data-full-map-kind="cousins"] .mobile-family-full-map-clone h2 + div,
-      #${FULL_MAP_ID} .mobile-family-full-map-group[data-full-map-kind="cousins"] .mobile-family-full-map-clone h3 + div {
-        grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
-      }
-
-      #${FULL_MAP_ID} .mobile-family-full-map-clone button[data-family-map-mobile-card="true"],
-      #${FULL_MAP_ID} .mobile-family-full-map-clone button[data-family-map-color-key] {
+        gap: 0.36rem !important;
         width: 100% !important;
-        min-width: 0 !important;
-        height: 58px !important;
-        min-height: 58px !important;
-        gap: 0.34rem !important;
-        border-radius: 0.72rem !important;
-        padding: 0.3rem 0.36rem !important;
-        box-shadow: 0 5px 14px rgba(15,23,42,0.08) !important;
-        transform: none !important;
       }
 
-      #${FULL_MAP_ID} .mobile-family-full-map-group[data-full-map-kind="person"] .mobile-family-full-map-clone button[data-family-map-mobile-card="true"],
-      #${FULL_MAP_ID} .mobile-family-full-map-group[data-full-map-kind="person"] .mobile-family-full-map-clone button[data-family-map-color-key] {
-        height: 148px !important;
-        min-height: 148px !important;
+      #${FULL_MAP_ID} .mobile-family-full-map-card {
+        appearance: none !important;
+        position: relative !important;
+        display: flex !important;
+        min-width: 0 !important;
+        width: 100% !important;
+        align-items: center !important;
+        justify-content: flex-start !important;
+        gap: 0.42rem !important;
+        border: 1px solid rgba(103, 232, 249, 0.8) !important;
+        border-radius: 0.78rem !important;
+        background: linear-gradient(180deg, #10bca8 0%, #0789a2 100%) !important;
+        color: #fff !important;
+        box-shadow: 0 6px 16px rgba(15,23,42,0.1) !important;
+        padding: 0.34rem 0.42rem !important;
+        text-align: left !important;
+        overflow: hidden !important;
+        pointer-events: none !important;
+      }
+
+      #${FULL_MAP_ID} .mobile-family-full-map-card[data-variant="ancestor"] {
+        min-height: 62px !important;
+      }
+
+      #${FULL_MAP_ID} .mobile-family-full-map-card[data-variant="mini"] {
+        min-height: 76px !important;
+        flex-direction: column !important;
+        justify-content: center !important;
+        gap: 0.24rem !important;
+        padding: 0.34rem !important;
+        text-align: center !important;
+      }
+
+      #${FULL_MAP_ID} .mobile-family-full-map-card[data-variant="core"] {
+        min-height: 84px !important;
+      }
+
+      #${FULL_MAP_ID} .mobile-family-full-map-card[data-variant="parent"] {
+        min-height: 134px !important;
+        flex-direction: column !important;
+        justify-content: center !important;
+        gap: 0.42rem !important;
         border-radius: 1rem !important;
-        padding: 0.55rem !important;
+        padding: 0.58rem !important;
+        text-align: center !important;
       }
 
-      #${FULL_MAP_ID} .mobile-family-full-map-group[data-full-map-id="central"] .mobile-family-full-map-clone button[data-family-map-mobile-card="true"],
-      #${FULL_MAP_ID} .mobile-family-full-map-group[data-full-map-id="central"] .mobile-family-full-map-clone button[data-family-map-color-key] {
-        height: 170px !important;
-        min-height: 170px !important;
+      #${FULL_MAP_ID} .mobile-family-full-map-card[data-variant="central"] {
+        min-height: 176px !important;
+        flex-direction: column !important;
+        justify-content: center !important;
+        gap: 0.55rem !important;
+        border-color: rgba(103, 232, 249, 0.9) !important;
+        border-radius: 1.3rem !important;
+        background: linear-gradient(180deg, #0bbce1 0%, #1155e8 100%) !important;
+        box-shadow: 0 16px 34px rgba(37, 99, 235, 0.2) !important;
+        padding: 0.7rem !important;
+        text-align: center !important;
       }
 
-      #${FULL_MAP_ID} .mobile-family-full-map-clone button[data-family-map-mobile-card="true"] > :first-child,
-      #${FULL_MAP_ID} .mobile-family-full-map-clone button[data-family-map-color-key] [data-family-map-avatar="true"] {
+      #${FULL_MAP_ID} .mobile-family-full-map-card-label {
+        position: absolute !important;
+        left: 0.4rem !important;
+        right: 0.4rem !important;
+        top: -0.72rem !important;
+        display: flex !important;
+        min-height: 1.28rem !important;
+        align-items: center !important;
+        justify-content: center !important;
+        border-radius: 999px !important;
+        background: #081225 !important;
+        color: #fff !important;
+        font-size: 0.62rem !important;
+        font-weight: 950 !important;
+        letter-spacing: 0.14em !important;
+        text-transform: uppercase !important;
+      }
+
+      #${FULL_MAP_ID} .mobile-family-full-map-avatar {
+        display: flex !important;
+        flex: 0 0 auto !important;
+        width: 34px !important;
+        height: 34px !important;
+        align-items: center !important;
+        justify-content: center !important;
+        overflow: hidden !important;
+        border: 3px solid rgba(255,255,255,0.78) !important;
+        border-radius: 999px !important;
+        background: rgba(255,255,255,0.2) !important;
+        color: rgba(255,255,255,0.86) !important;
+      }
+
+      #${FULL_MAP_ID} .mobile-family-full-map-card[data-variant="mini"] .mobile-family-full-map-avatar {
         width: 36px !important;
-        min-width: 36px !important;
-        max-width: 36px !important;
         height: 36px !important;
-        min-height: 36px !important;
-        max-height: 36px !important;
-        flex: 0 0 36px !important;
       }
 
-      #${FULL_MAP_ID} .mobile-family-full-map-group[data-full-map-kind="person"] .mobile-family-full-map-clone button[data-family-map-mobile-card="true"] > :first-child,
-      #${FULL_MAP_ID} .mobile-family-full-map-group[data-full-map-kind="person"] .mobile-family-full-map-clone button[data-family-map-color-key] [data-family-map-avatar="true"] {
-        width: 70px !important;
-        min-width: 70px !important;
-        max-width: 70px !important;
-        height: 70px !important;
-        min-height: 70px !important;
-        max-height: 70px !important;
-        flex: 0 0 70px !important;
+      #${FULL_MAP_ID} .mobile-family-full-map-card[data-variant="parent"] .mobile-family-full-map-avatar {
+        width: 66px !important;
+        height: 66px !important;
       }
 
-      #${FULL_MAP_ID} .mobile-family-full-map-clone button[data-family-map-mobile-card="true"] > span,
-      #${FULL_MAP_ID} .mobile-family-full-map-clone button[data-family-map-color-key] > span {
+      #${FULL_MAP_ID} .mobile-family-full-map-card[data-variant="central"] .mobile-family-full-map-avatar {
+        width: 86px !important;
+        height: 86px !important;
+      }
+
+      #${FULL_MAP_ID} .mobile-family-full-map-avatar img,
+      #${FULL_MAP_ID} .mobile-family-full-map-avatar svg {
+        display: block !important;
+        width: 100% !important;
+        height: 100% !important;
+      }
+
+      #${FULL_MAP_ID} .mobile-family-full-map-avatar img {
+        object-fit: cover !important;
+      }
+
+      #${FULL_MAP_ID} .mobile-family-full-map-avatar svg {
+        width: 56% !important;
+        height: 56% !important;
+        fill: none !important;
+        stroke: currentColor !important;
+        stroke-width: 2 !important;
+        stroke-linecap: round !important;
+        stroke-linejoin: round !important;
+      }
+
+      #${FULL_MAP_ID} .mobile-family-full-map-card-body {
+        display: flex !important;
         min-width: 0 !important;
+        flex: 1 1 auto !important;
+        flex-direction: column !important;
+        justify-content: center !important;
       }
 
-      #${FULL_MAP_ID} .mobile-family-full-map-clone button[data-family-map-mobile-card="true"] > span > span:first-child,
-      #${FULL_MAP_ID} .mobile-family-full-map-clone button[data-family-map-color-key] span.block {
-        font-size: 0.46rem !important;
-        line-height: 1.02 !important;
-        letter-spacing: 0.02em !important;
+      #${FULL_MAP_ID} .mobile-family-full-map-card[data-variant="mini"] .mobile-family-full-map-card-body,
+      #${FULL_MAP_ID} .mobile-family-full-map-card[data-variant="parent"] .mobile-family-full-map-card-body,
+      #${FULL_MAP_ID} .mobile-family-full-map-card[data-variant="central"] .mobile-family-full-map-card-body {
+        width: 100% !important;
+        align-items: center !important;
+        text-align: center !important;
       }
 
-      #${FULL_MAP_ID} .mobile-family-full-map-group[data-full-map-kind="person"] .mobile-family-full-map-clone button[data-family-map-mobile-card="true"] > span > span:first-child,
-      #${FULL_MAP_ID} .mobile-family-full-map-group[data-full-map-kind="person"] .mobile-family-full-map-clone button[data-family-map-color-key] span.block {
-        font-size: 0.64rem !important;
+      #${FULL_MAP_ID} .mobile-family-full-map-name {
+        display: block !important;
+        width: 100% !important;
+        overflow: hidden !important;
+        color: #fff !important;
+        font-size: 0.58rem !important;
+        font-weight: 950 !important;
+        line-height: 1.08 !important;
+        letter-spacing: 0.06em !important;
+        text-transform: uppercase !important;
+        text-overflow: ellipsis !important;
+        white-space: nowrap !important;
       }
 
-      #${FULL_MAP_ID} .mobile-family-full-map-clone .family-map-status-icon {
-        width: 0.48rem !important;
-        height: 0.48rem !important;
+      #${FULL_MAP_ID} .mobile-family-full-map-card[data-variant="mini"] .mobile-family-full-map-name {
+        font-size: 0.55rem !important;
+        text-align: center !important;
+      }
+
+      #${FULL_MAP_ID} .mobile-family-full-map-card[data-variant="parent"] .mobile-family-full-map-name {
+        font-size: 0.78rem !important;
+        text-align: center !important;
+      }
+
+      #${FULL_MAP_ID} .mobile-family-full-map-card[data-variant="central"] .mobile-family-full-map-name {
+        font-size: 0.95rem !important;
+        text-align: center !important;
+      }
+
+      #${FULL_MAP_ID} .mobile-family-full-map-vitals {
+        display: flex !important;
+        flex-wrap: wrap !important;
+        gap: 0.18rem 0.34rem !important;
+        color: rgba(236, 254, 255, 0.95) !important;
+        font-size: 0.54rem !important;
+        font-weight: 800 !important;
+        line-height: 1 !important;
+      }
+
+      #${FULL_MAP_ID} .mobile-family-full-map-card[data-variant="mini"] .mobile-family-full-map-vitals,
+      #${FULL_MAP_ID} .mobile-family-full-map-card[data-variant="parent"] .mobile-family-full-map-vitals,
+      #${FULL_MAP_ID} .mobile-family-full-map-card[data-variant="central"] .mobile-family-full-map-vitals {
+        justify-content: center !important;
+      }
+
+      #${FULL_MAP_ID} .mobile-family-full-map-card[data-variant="central"] .mobile-family-full-map-vitals {
+        font-size: 0.7rem !important;
       }
 
       #${FULL_MAP_ID} .mobile-family-full-map-empty {
         display: flex !important;
-        min-height: 5rem !important;
+        min-height: 4.4rem !important;
         align-items: center !important;
         justify-content: center !important;
         border: 1px dashed rgb(203, 213, 225) !important;
@@ -422,30 +501,288 @@ function getScreen(screenName: string) {
   return getRoot()?.querySelector<HTMLElement>(`[data-mobile-family-tree-screen="${screenName}"]`) ?? null;
 }
 
+function getText(element: Element | null | undefined) {
+  return String(element?.textContent ?? '').replace(/\s+/g, ' ').trim();
+}
+
 function findSectionByTitle(screenName: string, terms: string[]) {
   const screen = getScreen(screenName);
   const normalizedTerms = terms.map(normalizeText);
   const sections = Array.from((screen ?? getRoot())?.querySelectorAll<HTMLElement>('section') ?? []);
 
   return sections.find((section) => {
-    const title = normalizeText(section.querySelector('h2, h3')?.textContent ?? '');
+    const title = normalizeText(section.querySelector('h2, h3, [data-family-map-group-title="true"]')?.textContent ?? '');
     return normalizedTerms.every((term) => title.includes(term));
   }) ?? null;
 }
 
-function findCardButton(screenName: string, matcher: (button: HTMLButtonElement) => boolean) {
-  const screen = getScreen(screenName);
-  const buttons = Array.from((screen ?? getRoot())?.querySelectorAll<HTMLButtonElement>('button[data-family-map-mobile-card="true"]') ?? []);
-  return buttons.find(matcher) ?? null;
+function findButtonsInSection(section: HTMLElement | null) {
+  return Array.from(section?.querySelectorAll<HTMLButtonElement>('button[data-family-map-mobile-card="true"], button[data-family-map-color-key]') ?? []);
 }
 
-function findCardByText(screenName: string, text: string) {
+function findCoreCardByColor(colorKey: string) {
+  return getScreen('core')?.querySelector<HTMLButtonElement>(`button[data-family-map-color-key="${colorKey}"]`) ?? null;
+}
+
+function findCoreCardByText(text: string) {
   const expected = normalizeText(text);
-  return findCardButton(screenName, (button) => normalizeText(button.textContent ?? '').includes(expected));
+  const buttons = Array.from(getScreen('core')?.querySelectorAll<HTMLButtonElement>('button[data-family-map-mobile-card="true"], button[data-family-map-color-key]') ?? []);
+  return buttons.find((button) => normalizeText(button.textContent).includes(expected)) ?? null;
 }
 
-function findCentralCard() {
-  return findCardButton('core', (button) => button.getAttribute('data-family-map-color-key') === 'central');
+function findLikelyName(button: HTMLButtonElement) {
+  const ignored = new Set(['pai', 'mae', 'mãe', 'conjuge', 'cônjuge', 'filhos', 'netos', 'pets', 'irmaos', 'irmãos', 'sobrinhos']);
+  const spans = Array.from(button.querySelectorAll<HTMLElement>('span'));
+  const candidates = spans
+    .map((span) => getText(span))
+    .filter((text) => {
+      const normalized = normalizeText(text);
+      if (!text || text.length < 3) return false;
+      if (ignored.has(normalized)) return false;
+      if (/^[★✚+\s\d]+$/.test(text)) return false;
+      if (/\b(18|19|20|21)\d{2}\b/.test(text) && text.replace(/\b(18|19|20|21)\d{2}\b/g, '').trim().length < 3) return false;
+      return /[A-Za-zÀ-ÿ]{3,}/.test(text);
+    })
+    .sort((left, right) => {
+      const leftWords = left.split(/\s+/).length;
+      const rightWords = right.split(/\s+/).length;
+      return rightWords - leftWords || right.length - left.length;
+    });
+
+  if (candidates[0]) return candidates[0];
+
+  return getText(button)
+    .replace(/\b(PAI|MÃE|MAE|CÔNJUGE|CONJUGE|FILHOS|NETOS|PETS|IRMÃOS|IRMAOS|SOBRINHOS)\b/gi, ' ')
+    .replace(/[★✚+]/g, ' ')
+    .replace(/\b(18|19|20|21)\d{2}\b/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function extractPersonFromButton(button: HTMLButtonElement | null, fallbackName: string, index = 0): FullMapPerson | null {
+  if (!button) return fallbackName ? { id: `${normalizeText(fallbackName)}-${index}`, name: fallbackName } : null;
+
+  const rawText = getText(button);
+  const years = Array.from(rawText.matchAll(/\b(18|19|20|21)\d{2}\b/g)).map((match) => match[0]);
+  const name = findLikelyName(button) || fallbackName;
+  if (!name) return null;
+
+  const photo = button.querySelector<HTMLImageElement>('img[data-family-map-photo-avatar="true"], img');
+  const pet = Boolean(button.querySelector('.family-map-pet-icon')) || normalizeText(rawText).includes(' pet');
+
+  return {
+    id: `${normalizeText(name)}-${years[0] ?? index}-${index}`,
+    name,
+    birthYear: years[0],
+    deathYear: years.length > 1 ? years[1] : undefined,
+    photoSrc: photo?.src,
+    colorKey: button.getAttribute('data-family-map-color-key') ?? undefined,
+    pet,
+  };
+}
+
+function extractPeopleFromSection(section: HTMLElement | null, fallbackTitle: string) {
+  const buttons = findButtonsInSection(section);
+  return buttons
+    .map((button, index) => extractPersonFromButton(button, `${fallbackTitle} ${index + 1}`, index))
+    .filter(Boolean) as FullMapPerson[];
+}
+
+function extractSinglePerson(button: HTMLButtonElement | null, fallbackName: string) {
+  const person = extractPersonFromButton(button, fallbackName, 0);
+  return person ? [person] : [];
+}
+
+function personIconSvg(pet?: boolean) {
+  if (pet) {
+    return `
+      <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+        <circle cx="8" cy="8" r="2" />
+        <circle cx="16" cy="8" r="2" />
+        <circle cx="6.5" cy="13" r="1.8" />
+        <circle cx="17.5" cy="13" r="1.8" />
+        <path d="M9 15.5c1.2-1.4 4.8-1.4 6 0 1.5 1.8.2 4-3 4s-4.5-2.2-3-4Z" />
+      </svg>
+    `;
+  }
+
+  return `
+    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+      <circle cx="12" cy="8" r="3.2" />
+      <path d="M5.8 19c1-4 3.1-6 6.2-6s5.2 2 6.2 6" />
+    </svg>
+  `;
+}
+
+function renderPersonCard(person: FullMapPerson, variant: FullMapCardVariant, label?: string) {
+  const card = document.createElement('article');
+  card.className = 'mobile-family-full-map-card';
+  card.dataset.variant = variant;
+  card.dataset.colorKey = person.colorKey ?? '';
+
+  const labelMarkup = label ? `<span class="mobile-family-full-map-card-label">${escapeHtml(label)}</span>` : '';
+  const avatarMarkup = person.photoSrc
+    ? `<img src="${escapeHtml(person.photoSrc)}" alt="" />`
+    : personIconSvg(person.pet);
+  const birthMarkup = person.birthYear ? `<span>★ ${escapeHtml(person.birthYear)}</span>` : '';
+  const deathMarkup = person.deathYear ? `<span>✚ ${escapeHtml(person.deathYear)}</span>` : '';
+
+  card.innerHTML = `
+    ${labelMarkup}
+    <span class="mobile-family-full-map-avatar">${avatarMarkup}</span>
+    <span class="mobile-family-full-map-card-body">
+      <span class="mobile-family-full-map-name">${escapeHtml(person.name)}</span>
+      <span class="mobile-family-full-map-vitals">${birthMarkup}${deathMarkup}</span>
+    </span>
+  `;
+
+  return card;
+}
+
+function buildGroupNode(node: FullMapNode) {
+  const group = document.createElement('article');
+  group.className = 'mobile-family-full-map-node';
+  group.dataset.fullMapId = node.id;
+  group.dataset.fullMapKind = node.kind;
+  group.style.setProperty('left', `${node.left}px`);
+  group.style.setProperty('top', `${node.top}px`);
+  group.style.setProperty('width', `${node.width}px`);
+  group.style.setProperty('min-height', `${node.minHeight}px`);
+
+  const shell = document.createElement('div');
+  shell.className = 'mobile-family-full-map-group-shell';
+
+  if (node.kind !== 'person') {
+    const title = document.createElement('h3');
+    title.className = 'mobile-family-full-map-group-title';
+    title.textContent = node.label;
+    shell.appendChild(title);
+  }
+
+  if (node.people.length > 0) {
+    const grid = document.createElement('div');
+    grid.className = 'mobile-family-full-map-card-grid';
+    grid.style.setProperty('--full-map-columns', String(node.columns));
+    node.people.forEach((person) => grid.appendChild(renderPersonCard(
+      person,
+      node.variant,
+      node.variant === 'parent' ? node.label : undefined,
+    )));
+    shell.appendChild(grid);
+  } else {
+    const empty = document.createElement('div');
+    empty.className = 'mobile-family-full-map-empty';
+    empty.textContent = node.label;
+    shell.appendChild(empty);
+  }
+
+  group.appendChild(shell);
+  return group;
+}
+
+function anchorPoint(node: FullMapNode, anchor: Anchor) {
+  const x = node.left;
+  const y = node.top;
+  const w = node.width;
+  const h = node.minHeight;
+
+  if (anchor === 'top') return { x: x + w / 2, y };
+  if (anchor === 'right') return { x: x + w, y: y + h / 2 };
+  if (anchor === 'bottom') return { x: x + w / 2, y: y + h };
+  return { x, y: y + h / 2 };
+}
+
+function edgePath(from: { x: number; y: number }, to: { x: number; y: number }, via: FullMapEdge['via']) {
+  if (via === 'horizontal') {
+    const midX = (from.x + to.x) / 2;
+    return `M ${from.x} ${from.y} L ${midX} ${from.y} L ${midX} ${to.y} L ${to.x} ${to.y}`;
+  }
+
+  if (via === 'elbow') {
+    return `M ${from.x} ${from.y} L ${to.x} ${from.y} L ${to.x} ${to.y}`;
+  }
+
+  const midY = (from.y + to.y) / 2;
+  return `M ${from.x} ${from.y} L ${from.x} ${midY} L ${to.x} ${midY} L ${to.x} ${to.y}`;
+}
+
+function buildConnectorSvg(nodes: FullMapNode[], edges: FullMapEdge[]) {
+  const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  svg.setAttribute('class', 'mobile-family-full-map-connectors');
+  svg.setAttribute('viewBox', `0 0 ${STAGE_WIDTH} ${STAGE_HEIGHT}`);
+  svg.setAttribute('aria-hidden', 'true');
+
+  const nodeMap = new Map(nodes.map((node) => [node.id, node]));
+
+  edges.forEach((edge) => {
+    const fromNode = nodeMap.get(edge.from);
+    const toNode = nodeMap.get(edge.to);
+    if (!fromNode || !toNode) return;
+
+    const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    path.setAttribute('d', edgePath(anchorPoint(fromNode, edge.fromAnchor), anchorPoint(toNode, edge.toAnchor), edge.via));
+    svg.appendChild(path);
+  });
+
+  return svg;
+}
+
+function buildFullMapModel() {
+  const avosPaternos = extractPeopleFromSection(findSectionByTitle('ancestors', ['avos', 'paternos']), 'Avós paternos');
+  const avosMaternos = extractPeopleFromSection(findSectionByTitle('ancestors', ['avos', 'maternos']), 'Avós maternos');
+  const bisavosPaternos = extractPeopleFromSection(findSectionByTitle('ancestors', ['bisavos', 'paternos']), 'Bisavós paternos');
+  const bisavosMaternos = extractPeopleFromSection(findSectionByTitle('ancestors', ['bisavos', 'maternos']), 'Bisavós maternos');
+  const tiosPaternos = extractPeopleFromSection(findSectionByTitle('paternal-uncles', ['tios', 'paternos']), 'Tios paternos');
+  const tiosMaternos = extractPeopleFromSection(findSectionByTitle('maternal-uncles', ['tios', 'maternos']), 'Tios maternos');
+  const primosPaternos = extractPeopleFromSection(findSectionByTitle('paternal-cousins', ['primos', 'paternos']), 'Primos paternos');
+  const primosMaternos = extractPeopleFromSection(findSectionByTitle('maternal-cousins', ['primos', 'maternos']), 'Primos maternos');
+  const irmaos = extractPeopleFromSection(findSectionByTitle('core', ['irmaos']), 'Irmãos');
+  const conjuge = extractPeopleFromSection(findSectionByTitle('core', ['conjuge']), 'Cônjuge');
+  const filhos = extractPeopleFromSection(findSectionByTitle('core', ['filhos']), 'Filhos');
+  const sobrinhos = extractPeopleFromSection(findSectionByTitle('core', ['sobrinhos']), 'Sobrinhos');
+  const pets = extractPeopleFromSection(findSectionByTitle('core', ['pets']), 'Pets');
+  const netos = extractPeopleFromSection(findSectionByTitle('core', ['netos']), 'Netos');
+
+  const nodes: FullMapNode[] = [
+    { id: 'bisavos-paternos', kind: 'ancestor', label: 'Bisavós paternos', left: 58, top: 42, width: 250, minHeight: 170, columns: 1, variant: 'ancestor', people: bisavosPaternos },
+    { id: 'avos-paternos', kind: 'ancestor', label: 'Avós paternos', left: 405, top: 112, width: 230, minHeight: 190, columns: 1, variant: 'ancestor', people: avosPaternos },
+    { id: 'avos-maternos', kind: 'ancestor', label: 'Avós maternos', left: 650, top: 112, width: 230, minHeight: 190, columns: 1, variant: 'ancestor', people: avosMaternos },
+    { id: 'bisavos-maternos', kind: 'ancestor', label: 'Bisavós maternos', left: 940, top: 42, width: 250, minHeight: 170, columns: 1, variant: 'ancestor', people: bisavosMaternos },
+    { id: 'tios-paternos', kind: 'uncles', label: 'Tios paternos', left: 40, top: 420, width: 390, minHeight: 440, columns: 2, variant: 'ancestor', people: tiosPaternos },
+    { id: 'pai', kind: 'person', label: 'Pai', left: 488, top: 455, width: 170, minHeight: 156, columns: 1, variant: 'parent', people: extractSinglePerson(findCoreCardByText('pai'), 'Pai') },
+    { id: 'mae', kind: 'person', label: 'Mãe', left: 710, top: 455, width: 170, minHeight: 156, columns: 1, variant: 'parent', people: extractSinglePerson(findCoreCardByText('mae'), 'Mãe') },
+    { id: 'tios-maternos', kind: 'uncles', label: 'Tios maternos', left: 845, top: 420, width: 355, minHeight: 330, columns: 2, variant: 'ancestor', people: tiosMaternos },
+    { id: 'central', kind: 'person', label: 'Pessoa central', left: 550, top: 735, width: 250, minHeight: 200, columns: 1, variant: 'central', people: extractSinglePerson(findCoreCardByColor('central'), 'Pessoa central') },
+    { id: 'primos-paternos', kind: 'cousins', label: 'Primos paternos', left: 40, top: 875, width: 410, minHeight: 430, columns: 3, variant: 'mini', people: primosPaternos },
+    { id: 'irmaos', kind: 'core-group', label: 'Irmãos', left: 468, top: 1010, width: 190, minHeight: 210, columns: 1, variant: 'core', people: irmaos },
+    { id: 'conjuge', kind: 'core-group', label: 'Cônjuge', left: 710, top: 1010, width: 190, minHeight: 145, columns: 1, variant: 'core', people: conjuge },
+    { id: 'filhos', kind: 'core-group', label: 'Filhos', left: 930, top: 1010, width: 180, minHeight: 145, columns: 1, variant: 'core', people: filhos },
+    { id: 'sobrinhos', kind: 'core-group', label: 'Sobrinhos', left: 468, top: 1280, width: 190, minHeight: 145, columns: 1, variant: 'core', people: sobrinhos },
+    { id: 'pets', kind: 'core-group', label: 'Pets', left: 710, top: 1280, width: 190, minHeight: 145, columns: 1, variant: 'core', people: pets },
+    { id: 'netos', kind: 'core-group', label: 'Netos', left: 930, top: 1280, width: 180, minHeight: 145, columns: 1, variant: 'core', people: netos },
+    { id: 'primos-maternos', kind: 'cousins', label: 'Primos maternos', left: 900, top: 795, width: 260, minHeight: 190, columns: 1, variant: 'mini', people: primosMaternos },
+  ];
+
+  const edges: FullMapEdge[] = [
+    { from: 'bisavos-paternos', to: 'avos-paternos', fromAnchor: 'right', toAnchor: 'left', via: 'horizontal' },
+    { from: 'bisavos-maternos', to: 'avos-maternos', fromAnchor: 'left', toAnchor: 'right', via: 'horizontal' },
+    { from: 'avos-paternos', to: 'pai', fromAnchor: 'bottom', toAnchor: 'top', via: 'vertical' },
+    { from: 'avos-maternos', to: 'mae', fromAnchor: 'bottom', toAnchor: 'top', via: 'vertical' },
+    { from: 'pai', to: 'central', fromAnchor: 'bottom', toAnchor: 'top', via: 'vertical' },
+    { from: 'mae', to: 'central', fromAnchor: 'bottom', toAnchor: 'top', via: 'vertical' },
+    { from: 'tios-paternos', to: 'primos-paternos', fromAnchor: 'bottom', toAnchor: 'top', via: 'vertical' },
+    { from: 'tios-maternos', to: 'primos-maternos', fromAnchor: 'bottom', toAnchor: 'top', via: 'vertical' },
+    { from: 'pai', to: 'tios-paternos', fromAnchor: 'left', toAnchor: 'right', via: 'horizontal' },
+    { from: 'mae', to: 'tios-maternos', fromAnchor: 'right', toAnchor: 'left', via: 'horizontal' },
+    { from: 'central', to: 'irmaos', fromAnchor: 'bottom', toAnchor: 'top', via: 'vertical' },
+    { from: 'central', to: 'conjuge', fromAnchor: 'right', toAnchor: 'left', via: 'horizontal' },
+    { from: 'central', to: 'filhos', fromAnchor: 'right', toAnchor: 'left', via: 'horizontal' },
+    { from: 'irmaos', to: 'sobrinhos', fromAnchor: 'bottom', toAnchor: 'top', via: 'vertical' },
+    { from: 'central', to: 'pets', fromAnchor: 'bottom', toAnchor: 'top', via: 'vertical' },
+    { from: 'filhos', to: 'netos', fromAnchor: 'bottom', toAnchor: 'top', via: 'vertical' },
+  ];
+
+  return { nodes, edges };
 }
 
 function distance(first: Touch, second: Touch) {
@@ -484,242 +821,12 @@ function resetTransform() {
   applyTransform();
 }
 
-function cleanupClone(clone: HTMLElement) {
-  clone.classList.add('mobile-family-full-map-clone');
-  clone.querySelectorAll<HTMLElement>([
-    '[data-tree-export-ignore="true"]',
-    '.pointer-events-none.absolute',
-    '[data-mobile-uncle-branch-connector]',
-    '[data-mobile-maternal-uncle-down-connector]',
-    '[data-mobile-uncle-native-connector]',
-    '[data-mobile-core-center-descendant-line]',
-    '[data-mobile-family-tree-descendant-source]',
-    '[data-mobile-family-tree-descendant-connector]',
-    '[data-mobile-family-overview-current-label="true"]',
-  ].join(',')).forEach((element) => element.remove());
-
-  clone.querySelectorAll<HTMLButtonElement>('button').forEach((button) => {
-    button.setAttribute('type', 'button');
-    button.setAttribute('tabindex', '-1');
-    button.addEventListener('click', (event) => {
-      event.preventDefault();
-      event.stopPropagation();
-    });
-  });
-
-  clone.querySelectorAll<HTMLElement>('[style]').forEach((element) => {
-    element.style.removeProperty('transform');
-    element.style.removeProperty('transition');
-    element.style.removeProperty('top');
-    element.style.removeProperty('left');
-    element.style.removeProperty('right');
-    element.style.removeProperty('bottom');
-    element.style.removeProperty('height');
-    element.style.removeProperty('width');
-    element.style.removeProperty('max-height');
-  });
-}
-
-function buildMosaicGroup(config: MosaicGroupConfig) {
-  const group = document.createElement('article');
-  group.className = 'mobile-family-full-map-group';
-  group.dataset.fullMapId = config.id;
-  group.dataset.fullMapKind = config.kind;
-  group.style.setProperty('left', `${config.left}px`);
-  group.style.setProperty('top', `${config.top}px`);
-  group.style.setProperty('width', `${config.width}px`);
-  if (config.height) group.style.setProperty('min-height', `${config.height}px`);
-
-  const shell = document.createElement('div');
-  shell.className = 'mobile-family-full-map-group-shell';
-  const source = config.source();
-
-  if (source) {
-    const clone = source.cloneNode(true) as HTMLElement;
-    cleanupClone(clone);
-    shell.appendChild(clone);
-  } else {
-    shell.innerHTML = `<div class="mobile-family-full-map-empty">${config.fallbackTitle ?? 'Sem registros neste grupo.'}</div>`;
-  }
-
-  group.appendChild(shell);
-  return group;
-}
-
-function buildConnectorSvg() {
-  const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-  svg.setAttribute('class', 'mobile-family-full-map-connectors');
-  svg.setAttribute('viewBox', `0 0 ${STAGE_WIDTH} ${STAGE_HEIGHT}`);
-  svg.setAttribute('aria-hidden', 'true');
-
-  const paths = [
-    'M 305 205 L 405 205',
-    'M 760 205 L 920 205',
-    'M 520 320 L 520 505',
-    'M 690 320 L 690 505',
-    'M 470 610 L 405 610',
-    'M 750 610 L 830 610',
-    'M 515 665 L 515 745 L 600 745',
-    'M 690 665 L 690 745 L 600 745',
-    'M 600 745 L 600 805',
-    'M 255 800 L 255 900',
-    'M 990 760 L 990 900',
-    'M 600 980 L 600 1060',
-  ];
-
-  paths.forEach((d) => {
-    const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-    path.setAttribute('d', d);
-    svg.appendChild(path);
-  });
-
-  return svg;
-}
-
 function buildFullMapStage() {
+  const { nodes, edges } = buildFullMapModel();
   const stage = document.createElement('div');
   stage.className = 'mobile-family-full-map-stage';
-  stage.appendChild(buildConnectorSvg());
-
-  const groups: MosaicGroupConfig[] = [
-    {
-      id: 'bisavos-paternos',
-      kind: 'ancestor',
-      left: 70,
-      top: 50,
-      width: 240,
-      source: () => findSectionByTitle('ancestors', ['bisavos', 'paternos']),
-      fallbackTitle: 'Bisavós paternos',
-    },
-    {
-      id: 'avos-paternos',
-      kind: 'ancestor',
-      left: 405,
-      top: 145,
-      width: 210,
-      source: () => findSectionByTitle('ancestors', ['avos', 'paternos']),
-      fallbackTitle: 'Avós paternos',
-    },
-    {
-      id: 'avos-maternos',
-      kind: 'ancestor',
-      left: 630,
-      top: 145,
-      width: 210,
-      source: () => findSectionByTitle('ancestors', ['avos', 'maternos']),
-      fallbackTitle: 'Avós maternos',
-    },
-    {
-      id: 'bisavos-maternos',
-      kind: 'ancestor',
-      left: 920,
-      top: 155,
-      width: 230,
-      source: () => findSectionByTitle('ancestors', ['bisavos', 'maternos']),
-      fallbackTitle: 'Bisavós maternos',
-    },
-    {
-      id: 'tios-paternos',
-      kind: 'uncles',
-      left: 40,
-      top: 520,
-      width: 390,
-      source: () => findSectionByTitle('paternal-uncles', ['tios', 'paternos']),
-      fallbackTitle: 'Tios paternos',
-    },
-    {
-      id: 'pai',
-      kind: 'person',
-      left: 465,
-      top: 520,
-      width: 155,
-      source: () => findCardByText('core', 'pai'),
-      fallbackTitle: 'Pai',
-    },
-    {
-      id: 'mae',
-      kind: 'person',
-      left: 650,
-      top: 520,
-      width: 155,
-      source: () => findCardByText('core', 'mae'),
-      fallbackTitle: 'Mãe',
-    },
-    {
-      id: 'tios-maternos',
-      kind: 'uncles',
-      left: 830,
-      top: 520,
-      width: 310,
-      source: () => findSectionByTitle('maternal-uncles', ['tios', 'maternos']),
-      fallbackTitle: 'Tios maternos',
-    },
-    {
-      id: 'central',
-      kind: 'person',
-      left: 510,
-      top: 805,
-      width: 220,
-      source: findCentralCard,
-      fallbackTitle: 'Pessoa central',
-    },
-    {
-      id: 'primos-paternos',
-      kind: 'cousins',
-      left: 30,
-      top: 900,
-      width: 420,
-      source: () => findSectionByTitle('paternal-cousins', ['primos', 'paternos']),
-      fallbackTitle: 'Primos paternos',
-    },
-    {
-      id: 'irmaos',
-      kind: 'core-group',
-      left: 470,
-      top: 1060,
-      width: 170,
-      source: () => findSectionByTitle('core', ['irmaos']),
-      fallbackTitle: 'Irmãos',
-    },
-    {
-      id: 'conjuge',
-      kind: 'core-group',
-      left: 655,
-      top: 1060,
-      width: 170,
-      source: () => findSectionByTitle('core', ['conjuge']),
-      fallbackTitle: 'Cônjuge',
-    },
-    {
-      id: 'sobrinhos',
-      kind: 'core-group',
-      left: 470,
-      top: 1270,
-      width: 170,
-      source: () => findSectionByTitle('core', ['sobrinhos']),
-      fallbackTitle: 'Sobrinhos',
-    },
-    {
-      id: 'pets',
-      kind: 'core-group',
-      left: 655,
-      top: 1270,
-      width: 170,
-      source: () => findSectionByTitle('core', ['pets']),
-      fallbackTitle: 'Pets',
-    },
-    {
-      id: 'primos-maternos',
-      kind: 'cousins',
-      left: 900,
-      top: 900,
-      width: 240,
-      source: () => findSectionByTitle('maternal-cousins', ['primos', 'maternos']),
-      fallbackTitle: 'Primos maternos',
-    },
-  ];
-
-  groups.forEach((config) => stage.appendChild(buildMosaicGroup(config)));
+  stage.appendChild(buildConnectorSvg(nodes, edges));
+  nodes.forEach((node) => stage.appendChild(buildGroupNode(node)));
   return stage;
 }
 
@@ -843,6 +950,7 @@ function openFullMap() {
     resetTransform();
   });
 
+  document.getElementById(OVERVIEW_ID)?.remove();
   document.body.appendChild(overlay);
   document.body.style.setProperty('overflow', 'hidden');
   window.setTimeout(resetTransform, 40);
