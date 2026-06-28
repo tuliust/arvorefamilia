@@ -376,7 +376,7 @@ export function MemberPageHeader({
 
   return (
     <>
-      <header className={['relative z-[500] shrink-0 overflow-visible border-b border-gray-200 bg-white py-2 shadow-sm', className].filter(Boolean).join(' ')}>
+      <header className={['relative z-[1200] shrink-0 overflow-visible border-b border-gray-200 bg-white py-2 shadow-sm', className].filter(Boolean).join(' ')}>
         <div className="flex min-h-14 w-full min-w-0 flex-nowrap items-center justify-between gap-1.5 overflow-visible px-4 sm:gap-2 sm:px-6 lg:h-14 lg:gap-4 lg:px-8">
           <div className="flex min-w-0 flex-1 items-center gap-3 overflow-visible">
             {Icon && (
