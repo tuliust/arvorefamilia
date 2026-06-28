@@ -34,19 +34,35 @@ function isMobileViewport() {
   }
 }
 
-function shouldEnableInitialSpouseFilter() {
+function getTreePerspectiveState() {
   try {
     const isFamilyMap = window.location.pathname === '/mapa-familiar';
     const isHorizontalFamilyMap = window.location.pathname === '/mapa-familiar-horizontal';
-    const isViewingAnotherPerson = new URLSearchParams(window.location.search).has('pessoa');
-    return isFamilyMap || isHorizontalFamilyMap || isViewingAnotherPerson;
+    const hasPersonPerspective = new URLSearchParams(window.location.search).has('pessoa');
+
+    return {
+      isTreeMapRoute: isFamilyMap || isHorizontalFamilyMap,
+      hasPersonPerspective,
+    };
   } catch {
-    return false;
+    return {
+      isTreeMapRoute: false,
+      hasPersonPerspective: false,
+    };
   }
 }
 
 function withInitialFamilyMapDefaults(filters: DirectRelativeFilters): DirectRelativeFilters {
-  if (!shouldEnableInitialSpouseFilter()) return filters;
+  const { isTreeMapRoute, hasPersonPerspective } = getTreePerspectiveState();
+
+  if (hasPersonPerspective) {
+    return {
+      ...filters,
+      conjuge: false,
+    };
+  }
+
+  if (!isTreeMapRoute) return filters;
 
   return {
     ...filters,
@@ -55,7 +71,7 @@ function withInitialFamilyMapDefaults(filters: DirectRelativeFilters): DirectRel
 }
 
 export function readDirectRelativeFilters(userId?: string): DirectRelativeFilters {
-  if (isMobileViewport()) return MOBILE_INITIAL_DIRECT_RELATIVE_FILTERS;
+  if (isMobileViewport()) return withInitialFamilyMapDefaults(MOBILE_INITIAL_DIRECT_RELATIVE_FILTERS);
   if (!userId) return withInitialFamilyMapDefaults(DEFAULT_DIRECT_RELATIVE_FILTERS);
 
   try {
