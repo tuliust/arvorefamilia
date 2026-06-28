@@ -70,14 +70,16 @@ export function PublicLegalDocumentPage({ content }: { content: LegalDocumentCon
       <main className="relative z-10 mx-auto grid w-full max-w-6xl flex-1 grid-cols-1 gap-8 px-4 py-8 lg:grid-cols-[280px_minmax(0,1fr)] lg:py-12">
         <aside className="order-2 lg:order-1 lg:sticky lg:top-8 lg:self-start">
           <div className="rounded-lg border border-gray-200 p-5 shadow-sm" style={{ backgroundColor: settings.global_card_background_color, borderRadius: settings.global_card_radius }}>
-            <div
-              className="grid h-11 w-11 place-items-center rounded-lg"
-              style={{ backgroundColor: `${settings.global_primary_color}1A`, color: settings.global_primary_color }}
-            >
-              <ShieldCheck className="block h-5 w-5 shrink-0" />
+            <div className="text-center">
+              <div
+                className="mx-auto flex h-12 w-12 items-center justify-center rounded-lg leading-none"
+                style={{ backgroundColor: `${settings.global_primary_color}1A`, color: settings.global_primary_color }}
+              >
+                <ShieldCheck className="block h-5 w-5 flex-none" aria-hidden="true" />
+              </div>
+              <h2 className="mt-4 text-lg font-semibold" style={{ color: settings.global_text_color }}>{content.title}</h2>
+              <p className="mt-1 text-sm" style={{ color: settings.global_muted_text_color }}>{content.subtitle}</p>
             </div>
-            <h2 className="mt-4 text-lg font-semibold" style={{ color: settings.global_text_color }}>{content.title}</h2>
-            <p className="mt-1 text-sm" style={{ color: settings.global_muted_text_color }}>{content.subtitle}</p>
 
             <dl className="mt-5 space-y-4 text-sm">
               <div className="flex gap-3">
