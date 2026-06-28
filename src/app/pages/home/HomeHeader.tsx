@@ -255,7 +255,7 @@ export function HomeHeader({
   const mobileTitle = mobileHeaderFirstName ? `Família de ${mobileHeaderFirstName}` : 'Família';
 
   return (
-    <header className="relative z-[500] shrink-0 overflow-visible border-b border-gray-200 bg-white py-2 shadow-sm">
+    <header className="relative z-[1200] shrink-0 overflow-visible border-b border-gray-200 bg-white py-2 shadow-sm">
       <div className="relative z-[501] flex min-h-14 w-full min-w-0 flex-nowrap items-center justify-between gap-1.5 overflow-visible px-4 sm:gap-2 sm:px-6 lg:h-14 lg:gap-4 lg:px-8">
         {searchExpanded && (
           <div ref={mobileSearchRootRef} className="relative z-[505] flex w-full min-w-0 items-center gap-2 md:hidden">
