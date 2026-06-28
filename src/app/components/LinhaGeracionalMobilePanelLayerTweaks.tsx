@@ -330,6 +330,10 @@ function renderFamilyGroupDetails(
   people: FamilyGroupPersonOption[],
   navigateToPerson: (personId: string) => void
 ) {
+  const nextSignature = people.map((person) => `${person.id}:${person.label}`).join('|');
+  if (row.dataset.lineGenerationGroupPeople === nextSignature) return;
+
+  row.dataset.lineGenerationGroupPeople = nextSignature;
   Array.from(row.children).slice(1).forEach((child) => child.remove());
 
   if (people.length === 0) return;
