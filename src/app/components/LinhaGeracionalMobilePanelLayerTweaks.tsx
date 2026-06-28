@@ -37,13 +37,18 @@ const styles = `
 
   html.${LINE_PANEL_OPEN_CLASS} [role="dialog"][aria-label="Painel de visualização"] button[class*="border-blue-100"][class*="w-full"] > span {
     display: block !important;
+    width: 100% !important;
     min-width: 0 !important;
     max-width: 100% !important;
     overflow: visible !important;
+    text-align: center !important;
     text-overflow: clip !important;
-    white-space: normal !important;
-    overflow-wrap: anywhere !important;
+    white-space: nowrap !important;
+    overflow-wrap: normal !important;
+    word-break: normal !important;
     line-height: 1.15 !important;
+    font-size: clamp(0.82rem, 3.35vw, 0.95rem) !important;
+    letter-spacing: -0.02em !important;
   }
 
   html.${LINE_PANEL_OPEN_CLASS} .${LINE_PANEL_CLOSE_BUTTON_CLASS} {
