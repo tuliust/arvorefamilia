@@ -1,5 +1,5 @@
 import React from 'react';
-import { useLocation } from 'react-router';
+import { useLocation, type Location } from 'react-router';
 import { FileDown, ImageDown, Minus, Plus, Printer, Scan } from 'lucide-react';
 
 import type { FamilyTreeActions } from '../../components/FamilyTree/actions';
@@ -30,6 +30,8 @@ interface StateMessageProps {
   tone?: 'neutral' | 'error';
 }
 
+const EXPORT_PREVIEW_PNG_SCALE = 1.5;
+
 function getTreeTitleFirstName(value?: string | null) {
   const clean = value?.trim();
   if (!clean) return 'Família';
@@ -51,7 +53,7 @@ function getExportPreviewIntent(action: SidebarTreeAction) {
   return null;
 }
 
-function openTreeExportPreviewRoute(location: ReturnType<typeof useLocation>, action: SidebarTreeAction) {
+function openTreeExportPreviewRoute(location: Location, action: SidebarTreeAction) {
   const intent = getExportPreviewIntent(action);
   if (!intent) return false;
 
@@ -73,10 +75,119 @@ function openTreeExportPreviewRoute(location: ReturnType<typeof useLocation>, ac
 }
 
 function getExportIntentTitle(intent: string | null) {
-  if (intent === 'png') return 'Preview para salvar imagem';
-  if (intent === 'pdf') return 'Preview para exportar PDF';
-  if (intent === 'print') return 'Preview para impressão';
+  if (intent === 'png') return 'Salvar imagem da árvore';
+  if (intent === 'pdf') return 'Exportar PDF da árvore';
+  if (intent === 'print') return 'Imprimir árvore';
   return 'Preview de exportação';
+}
+
+function getPreviewExportRoot() {
+  return document.querySelector<HTMLElement>([
+    '[data-family-map-export-root="true"]',
+    '[data-family-map-horizontal-root="true"]',
+    '[data-export-root="family-tree"]',
+  ].join(','));
+}
+
+function buildPreviewPngFilename(viewMode: TreeViewMode, title: string) {
+  const now = new Date();
+  const timestamp = [
+    now.getFullYear(),
+    String(now.getMonth() + 1).padStart(2, '0'),
+    String(now.getDate()).padStart(2, '0'),
+    String(now.getHours()).padStart(2, '0'),
+    String(now.getMinutes()).padStart(2, '0'),
+  ].join('-');
+  const safeTitle = title
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+  const fallback = viewMode === 'mapa-familiar-horizontal' ? 'mapa-genealogico' : 'arvore-familiar';
+
+  return `${safeTitle || fallback}-${timestamp}.png`;
+}
+
+function waitForAnimationFrame() {
+  return new Promise<void>((resolve) => {
+    if (typeof window.requestAnimationFrame !== 'function') {
+      resolve();
+      return;
+    }
+
+    window.requestAnimationFrame(() => resolve());
+  });
+}
+
+async function waitForPreviewExportStability() {
+  const documentWithFonts = document as Document & { fonts?: { ready?: Promise<unknown> } };
+
+  try {
+    await Promise.race([
+      Promise.resolve(documentWithFonts.fonts?.ready),
+      new Promise((resolve) => window.setTimeout(resolve, 3000)),
+    ]);
+  } catch {
+    // Font readiness is best effort. The preview can still be saved with fallback rendering.
+  }
+
+  await waitForAnimationFrame();
+  await waitForAnimationFrame();
+}
+
+function canvasToPngBlob(canvas: HTMLCanvasElement) {
+  return new Promise<Blob>((resolve, reject) => {
+    canvas.toBlob((blob) => {
+      if (blob) {
+        resolve(blob);
+        return;
+      }
+
+      reject(new Error('Não foi possível preparar a imagem PNG para salvar.'));
+    }, 'image/png');
+  });
+}
+
+async function downloadPreviewTreeAsPng(filename: string) {
+  const root = getPreviewExportRoot();
+
+  if (!root) {
+    throw new Error('Área da árvore não encontrada no preview de exportação.');
+  }
+
+  await waitForPreviewExportStability();
+
+  const { default: html2canvas } = await import('html2canvas');
+  const rect = root.getBoundingClientRect();
+  const width = Math.ceil(Math.max(rect.width, root.offsetWidth, root.scrollWidth, 1));
+  const height = Math.ceil(Math.max(rect.height, root.offsetHeight, root.scrollHeight, 1));
+  const canvas = await html2canvas(root, {
+    backgroundColor: '#f7f1e8',
+    scale: EXPORT_PREVIEW_PNG_SCALE,
+    width,
+    height,
+    windowWidth: Math.max(window.innerWidth, document.documentElement.clientWidth, width),
+    windowHeight: Math.max(window.innerHeight, document.documentElement.clientHeight, height),
+    scrollX: -window.scrollX,
+    scrollY: -window.scrollY,
+    useCORS: true,
+    allowTaint: false,
+    imageTimeout: 15000,
+    logging: false,
+    removeContainer: true,
+    ignoreElements: (node) => Boolean((node as HTMLElement).closest?.('[data-tree-export-ignore="true"]')),
+  });
+
+  const blob = await canvasToPngBlob(canvas);
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  window.setTimeout(() => URL.revokeObjectURL(url), 30000);
 }
 
 interface HomeTreeSectionProps {
@@ -137,6 +248,7 @@ export function HomeTreeSection({
   const location = useLocation();
   const [familyMapHasScrolled, setFamilyMapHasScrolled] = React.useState(false);
   const [restoreViewRevision, setRestoreViewRevision] = React.useState(0);
+  const [exportPreviewBusy, setExportPreviewBusy] = React.useState(false);
   const effectiveTreeLayoutRevision = treeLayoutRevision + restoreViewRevision;
   const searchParams = React.useMemo(() => new URLSearchParams(location.search), [location.search]);
   const isExportPreview = searchParams.get('exportPreview') === '1';
@@ -157,12 +269,37 @@ export function HomeTreeSection({
 
   const effectiveVisiblePersonIds = visiblePersonIdsByLifeStatus;
 
+  const handleSavePreviewPng = React.useCallback(async () => {
+    if (exportPreviewBusy) return;
+
+    setExportPreviewBusy(true);
+
+    try {
+      await downloadPreviewTreeAsPng(buildPreviewPngFilename(treeViewMode, desktopTreeTitle));
+    } catch (error) {
+      console.error('Erro ao salvar PNG do preview da árvore:', error);
+      window.alert(error instanceof Error ? error.message : 'Não foi possível salvar a imagem da árvore.');
+    } finally {
+      setExportPreviewBusy(false);
+    }
+  }, [desktopTreeTitle, exportPreviewBusy, treeViewMode]);
+
   React.useEffect(() => {
     const handleSidebarTreeAction = (event: Event) => {
       const action = (event as CustomEvent<SidebarTreeAction>).detail;
 
       if (!isExportPreview && (action === 'save-image' || action === 'save-pdf' || action === 'print')) {
         openTreeExportPreviewRoute(location, action);
+        return;
+      }
+
+      if (isExportPreview && action === 'save-image') {
+        void handleSavePreviewPng();
+        return;
+      }
+
+      if (isExportPreview && (action === 'save-pdf' || action === 'print')) {
+        window.print();
         return;
       }
 
@@ -201,17 +338,17 @@ export function HomeTreeSection({
       }
 
       if (action === 'print') {
-        if (isExportPreview) {
-          window.print();
-          return;
-        }
         void treeActions.print();
       }
     };
 
     window.addEventListener(SIDEBAR_TREE_ACTION_EVENT, handleSidebarTreeAction);
     return () => window.removeEventListener(SIDEBAR_TREE_ACTION_EVENT, handleSidebarTreeAction);
-  }, [familyTreeRef, isExportPreview, location]);
+  }, [familyTreeRef, handleSavePreviewPng, isExportPreview, location]);
+
+  const showPngButton = !exportIntent || exportIntent === 'png';
+  const showPdfButton = !exportIntent || exportIntent === 'pdf';
+  const showPrintButton = !exportIntent || exportIntent === 'print';
 
   return (
     <section
@@ -305,31 +442,38 @@ export function HomeTreeSection({
           data-tree-export-ignore="true"
           aria-label={getExportIntentTitle(exportIntent)}
         >
-          <button
-            type="button"
-            className="inline-flex h-9 items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 text-sm font-bold text-slate-800 shadow-sm transition hover:bg-blue-50 hover:text-blue-800"
-            onClick={() => dispatchTreeAction('save-image')}
-          >
-            <ImageDown className="h-4 w-4" />
-            Salvar PNG
-          </button>
-          <button
-            type="button"
-            className="inline-flex h-9 items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 text-sm font-bold text-slate-800 shadow-sm transition hover:bg-blue-50 hover:text-blue-800"
-            onClick={() => window.print()}
-            title="Use a opção Salvar como PDF na janela de impressão do navegador."
-          >
-            <FileDown className="h-4 w-4" />
-            Exportar PDF
-          </button>
-          <button
-            type="button"
-            className="inline-flex h-9 items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 text-sm font-bold text-slate-800 shadow-sm transition hover:bg-blue-50 hover:text-blue-800"
-            onClick={() => window.print()}
-          >
-            <Printer className="h-4 w-4" />
-            Imprimir
-          </button>
+          {showPngButton && (
+            <button
+              type="button"
+              disabled={exportPreviewBusy}
+              className="inline-flex h-9 items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 text-sm font-bold text-slate-800 shadow-sm transition hover:bg-blue-50 hover:text-blue-800 disabled:cursor-not-allowed disabled:opacity-60"
+              onClick={handleSavePreviewPng}
+            >
+              <ImageDown className="h-4 w-4" />
+              {exportPreviewBusy ? 'Preparando PNG...' : 'Salvar PNG'}
+            </button>
+          )}
+          {showPdfButton && (
+            <button
+              type="button"
+              className="inline-flex h-9 items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 text-sm font-bold text-slate-800 shadow-sm transition hover:bg-blue-50 hover:text-blue-800"
+              onClick={() => window.print()}
+              title="Use a opção Salvar como PDF na janela de impressão do navegador."
+            >
+              <FileDown className="h-4 w-4" />
+              Exportar PDF
+            </button>
+          )}
+          {showPrintButton && (
+            <button
+              type="button"
+              className="inline-flex h-9 items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 text-sm font-bold text-slate-800 shadow-sm transition hover:bg-blue-50 hover:text-blue-800"
+              onClick={() => window.print()}
+            >
+              <Printer className="h-4 w-4" />
+              Imprimir
+            </button>
+          )}
         </div>
       )}
 
