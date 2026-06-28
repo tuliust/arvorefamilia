@@ -91,12 +91,14 @@ const styles = `
 
   html.${LINE_PANEL_OPEN_CLASS} [role="dialog"][aria-label="Painel de visualização"] button[class*="border-blue-100"][class*="w-full"] {
     min-height: 2.7rem !important;
-    justify-content: center !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
     padding-top: 0.38rem !important;
     padding-bottom: 0.38rem !important;
-    padding-left: 0.75rem !important;
-    padding-right: 0.75rem !important;
-    text-align: center !important;
+    padding-left: 1.25rem !important;
+    padding-right: 1rem !important;
+    text-align: left !important;
   }
 
   html.${LINE_PANEL_OPEN_CLASS} [role="dialog"][aria-label="Painel de visualização"] button[class*="border-blue-100"][class*="w-full"] > span {
@@ -105,12 +107,12 @@ const styles = `
     min-width: 0 !important;
     max-width: 100% !important;
     overflow: hidden !important;
-    text-align: center !important;
+    text-align: left !important;
     text-overflow: ellipsis !important;
     white-space: nowrap !important;
     overflow-wrap: normal !important;
     word-break: normal !important;
-    line-height: 1.05 !important;
+    line-height: 1.1 !important;
     font-size: clamp(0.78rem, 3.2vw, 0.92rem) !important;
     letter-spacing: -0.02em !important;
   }
@@ -348,7 +350,7 @@ function renderFamilyGroupDetails(
   people.forEach((person) => {
     const button = document.createElement('button');
     button.type = 'button';
-    button.className = 'flex min-h-10 w-full items-center justify-center rounded-xl border border-blue-100 bg-white px-3 py-1.5 text-center text-[13px] font-bold leading-none text-blue-950 shadow-sm transition active:scale-[0.98]';
+    button.className = 'flex min-h-10 w-full items-center justify-start rounded-xl border border-blue-100 bg-white px-5 py-1.5 text-left text-[13px] font-bold leading-none text-blue-950 shadow-sm transition active:scale-[0.98]';
     button.setAttribute('aria-label', `Visualizar ${person.label}`);
     button.addEventListener('click', (event) => {
       event.preventDefault();
