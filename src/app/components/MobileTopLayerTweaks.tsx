@@ -56,15 +56,41 @@ const mobileTopLayerStyles = `
   [data-mobile-family-tree-screen="paternal-cousins"],
   [data-mobile-family-tree-screen="maternal-cousins"] {
     overflow: hidden !important;
+    touch-action: pan-y !important;
   }
 
+  [data-mobile-family-tree-screen="paternal-cousins"] > [data-mobile-tree-scroll],
+  [data-mobile-family-tree-screen="maternal-cousins"] > [data-mobile-tree-scroll],
   [data-mobile-family-tree-screen="paternal-cousins"] [data-mobile-tree-scroll],
   [data-mobile-family-tree-screen="maternal-cousins"] [data-mobile-tree-scroll] {
-    overflow-y: auto !important;
+    position: relative !important;
+    height: 100% !important;
+    max-height: 100% !important;
+    min-height: 0 !important;
+    overflow-y: scroll !important;
     overflow-x: hidden !important;
     overscroll-behavior-y: contain !important;
     touch-action: pan-y !important;
     -webkit-overflow-scrolling: touch !important;
+  }
+
+  [data-mobile-family-tree-screen="paternal-cousins"] > [data-mobile-tree-scroll] > div,
+  [data-mobile-family-tree-screen="maternal-cousins"] > [data-mobile-tree-scroll] > div {
+    align-items: flex-start !important;
+    height: auto !important;
+    min-height: max-content !important;
+    padding-bottom: calc(8rem + env(safe-area-inset-bottom, 0px)) !important;
+  }
+
+  [data-mobile-family-tree-screen="paternal-cousins"] section,
+  [data-mobile-family-tree-screen="maternal-cousins"] section {
+    height: auto !important;
+    min-height: max-content !important;
+  }
+
+  [data-mobile-family-tree-screen="paternal-cousins"] section > div,
+  [data-mobile-family-tree-screen="maternal-cousins"] section > div {
+    overflow: visible !important;
   }
 }
 `;
@@ -126,6 +152,22 @@ function applyTopLayerInlineStyles() {
   setStyle(avatarPanel, '-webkit-overflow-scrolling', 'touch');
 }
 
+function findAdminSummaryLabel(button: HTMLButtonElement) {
+  return Array.from(button.querySelectorAll<HTMLElement>('span'))
+    .find((candidate) => {
+      if (candidate.children.length > 0) return false;
+      if (!candidate.className.includes('truncate')) return false;
+
+      const text = normalizeText(candidate.textContent);
+      return (
+        text === 'solicitacoes'
+        || text === 'solicitacoes de aprovacoes'
+        || text === 'responsaveis'
+        || text === 'responsaveis por usuarios'
+      );
+    }) ?? null;
+}
+
 function rewriteAdminSummaryLabels(pathname: string) {
   if (pathname !== '/admin') return;
 
@@ -149,13 +191,9 @@ function rewriteAdminSummaryLabels(pathname: string) {
 
     if (!button) return;
 
-    const label = Array.from(button.querySelectorAll<HTMLElement>('span'))
-      .find((candidate) => {
-        const text = normalizeText(candidate.textContent);
-        return text === normalizeText(shortLabel) || text === normalizeText(longLabel);
-      });
-
+    const label = findAdminSummaryLabel(button);
     if (!label) return;
+
     const nextText = compact ? shortLabel : longLabel;
     if (label.textContent !== nextText) label.textContent = nextText;
   });
@@ -169,6 +207,17 @@ function applyMobileTopLayerTweaks(pathname: string) {
 
   applyTopLayerInlineStyles();
   rewriteAdminSummaryLabels(pathname);
+}
+
+function findCousinsScrollElement(target: EventTarget | null) {
+  const element = getEventElement(target);
+  const cousinsScreen = element?.closest<HTMLElement>(
+    '[data-mobile-family-tree-screen="paternal-cousins"], [data-mobile-family-tree-screen="maternal-cousins"]'
+  );
+
+  if (!cousinsScreen) return null;
+  return element?.closest<HTMLElement>('[data-mobile-tree-scroll]')
+    ?? cousinsScreen.querySelector<HTMLElement>('[data-mobile-tree-scroll]');
 }
 
 export function MobileTopLayerTweaks() {
@@ -217,7 +266,7 @@ export function MobileTopLayerTweaks() {
     let start: {
       x: number;
       y: number;
-      scrollable: boolean;
+      scrollElement: HTMLElement;
     } | null = null;
 
     const handleTouchStart = (event: TouchEvent) => {
@@ -226,14 +275,10 @@ export function MobileTopLayerTweaks() {
         return;
       }
 
-      const target = getEventElement(event.target);
-      const cousinsScreen = target?.closest<HTMLElement>(
-        '[data-mobile-family-tree-screen="paternal-cousins"], [data-mobile-family-tree-screen="maternal-cousins"]'
-      );
-      const scrollElement = target?.closest<HTMLElement>('[data-mobile-tree-scroll]');
+      const scrollElement = findCousinsScrollElement(event.target);
       const touch = event.touches[0];
 
-      if (!cousinsScreen || !scrollElement || !touch) {
+      if (!scrollElement || !touch) {
         start = null;
         return;
       }
@@ -241,13 +286,13 @@ export function MobileTopLayerTweaks() {
       start = {
         x: touch.clientX,
         y: touch.clientY,
-        scrollable: scrollElement.scrollHeight > scrollElement.clientHeight + 1,
+        scrollElement,
       };
     };
 
     const keepCousinsVerticalScrollInsideScreen = (event: TouchEvent) => {
       const touch = event.touches[0];
-      if (!start || !touch || !start.scrollable) return;
+      if (!start || !touch) return;
 
       const deltaX = touch.clientX - start.x;
       const deltaY = touch.clientY - start.y;
@@ -255,6 +300,15 @@ export function MobileTopLayerTweaks() {
       const absoluteY = Math.abs(deltaY);
 
       if (absoluteY < 10 || absoluteY <= absoluteX * 1.2) return;
+
+      const { scrollElement } = start;
+      const scrollsTowardBottom = deltaY < 0;
+      const canScrollVertically = scrollElement.scrollHeight > scrollElement.clientHeight + 1;
+      const canContinueScrolling = scrollsTowardBottom
+        ? scrollElement.scrollTop + scrollElement.clientHeight < scrollElement.scrollHeight - 1
+        : scrollElement.scrollTop > 1;
+
+      if (!canScrollVertically || !canContinueScrolling) return;
 
       event.stopPropagation();
       event.stopImmediatePropagation();
