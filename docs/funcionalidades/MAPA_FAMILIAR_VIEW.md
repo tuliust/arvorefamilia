@@ -108,11 +108,12 @@ As ações de exportação são disparadas pelo painel lateral e executadas pelo
 
 Comportamento atual:
 
-- `Imagem`, `PDF` e `Imprimir` exibem overlay global de preparação antes da operação pesada;
-- o overlay é mantido até sinal provável de abertura do diálogo do sistema por `blur`/`visibilitychange`, ou até fallback temporal quando o navegador não emite esses eventos;
-- o overlay deve cobrir canvas e painel para evitar impressão visual de travamento;
-- o overlay deve usar atributos de ignorar exportação, para não aparecer em capturas geradas por `html2canvas`;
-- quando o fluxo abrir janela/aba dedicada para salvar ou imprimir, a página principal do usuário deve permanecer preservada;
+- `Imagem`, `PDF` e `Imprimir` não exibem overlay global de preparação na página atual;
+- `Imagem` abre uma nova aba/janela com preview do PNG gerado, sem header do app e sem painel lateral, e o botão `Salvar` inicia o download com o nome de arquivo existente;
+- `PDF` abre uma nova aba/janela com preview do PDF gerado, sem header do app e sem painel lateral, e o botão `Exportar` inicia o download com o nome de arquivo existente;
+- `Imprimir` abre uma nova aba/janela com preview da área capturada, sem header do app e sem painel lateral, e o botão `Imprimir` chama a impressão do sistema;
+- o fluxo de impressão direta não chama `window.print()` automaticamente ao abrir a aba;
+- a página principal do usuário deve permanecer preservada durante os fluxos de preview;
 - `Área` continua usando o fluxo de seleção visível da árvore e seus estados próprios de loading;
 - a geração da imagem/PDF continua baseada no canvas capturado do elemento exportável.
 
@@ -133,4 +134,4 @@ No mobile:
 - Botões de exportação não devem cortar texto.
 - Mobile deve iniciar com painéis fechados quando aplicável.
 - A visualização horizontal não substitui a visualização principal; é rota própria.
-- Exportações longas devem manter feedback visual contínuo até que o navegador assuma o fluxo de salvar/imprimir ou o fallback finalize o overlay.
+- Exportações diretas longas devem preparar o preview em aba/janela dedicada, sem bloquear visualmente a página principal.

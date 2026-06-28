@@ -13,17 +13,14 @@ import type { DirectRelativeFilters, DirectRelativeGroup } from './types';
 import {
   buildTreeExportFilename,
   captureElementToCanvas,
-  downloadCanvasAsPng,
-  exportCanvasAsPdf,
-  openTreePrintWindow,
+  openTreeExportPreviewWindow,
   prependTitleToCanvas,
-  printCanvas,
-  waitForExportUiSettle,
+  previewCanvasAsPdf,
+  previewCanvasAsPng,
+  previewCanvasForPrint,
 } from './utils/treeExport';
 import {
   TreeAreaSelectionOverlay,
-  TreeExportLoadingOverlay,
-  waitForTreeExportPaint,
 } from './TreeAreaSelectionOverlay';
 
 interface DesktopFamilyMapViewProps {
@@ -330,12 +327,6 @@ function getOffsetLayout<T extends PositionedLayout>(layout: T, offsetX: number)
 
 function getOffsetConnectorPoints(points: Point[], offsetX: number): Point[] {
   return points.map(([x, y]) => [x + offsetX, y]);
-}
-
-function getExportLoadingMessage(action: 'image' | 'pdf' | 'print') {
-  if (action === 'image') return 'Preparando imagem...';
-  if (action === 'pdf') return 'Gerando PDF...';
-  return 'Preparando impressão...';
 }
 
 function getExportFirstName(person?: Pessoa) {
@@ -954,7 +945,7 @@ function DesktopFamilyMapViewComponent({
   const [responsiveScale, setResponsiveScale] = React.useState(1);
   const [manualZoom, setManualZoom] = React.useState(1);
   const [isAreaSelectionOpen, setIsAreaSelectionOpen] = React.useState(false);
-  const [exportLoadingMessage, setExportLoadingMessage] = React.useState<string | null>(null);
+  const exportInProgressRef = React.useRef(false);
   const [expandedGroups, handleExpandedChange] = useExpandedGroups();
   const hideGroupChrome = useTreeHighlightGroupsActive();
   const isWideLayout = Boolean(sidebarCollapsed);
@@ -1509,63 +1500,61 @@ nephews,
     ));
   }, [familyMapLayout.canvas]);
   const handleSaveImage = React.useCallback(async () => {
-    if (exportLoadingMessage) return;
-    setExportLoadingMessage(getExportLoadingMessage('image'));
+    if (exportInProgressRef.current) return;
+    exportInProgressRef.current = true;
+    let previewWindow: Window | null = null;
     try {
-      await waitForTreeExportPaint();
-      await waitForExportUiSettle(150);
+      previewWindow = openTreeExportPreviewWindow('Imagem da árvore');
       const canvas = prependTitleToCanvas(await captureFamilyMap(), exportTitle);
-      downloadCanvasAsPng(canvas, buildTreeExportFilename('mapa-familiar', 'png'));
-      await waitForExportUiSettle(700);
+      previewCanvasAsPng(canvas, buildTreeExportFilename('mapa-familiar', 'png'), 'Imagem da árvore', previewWindow);
     } catch (error) {
+      if (previewWindow && !previewWindow.closed) previewWindow.close();
       console.error('Erro ao exportar imagem do Árvore Familiar:', error);
       toast.error(error instanceof Error ? error.message : 'Não foi possível gerar a imagem do Árvore Familiar.');
     } finally {
-      setExportLoadingMessage(null);
+      exportInProgressRef.current = false;
     }
-  }, [captureFamilyMap, exportLoadingMessage, exportTitle]);
+  }, [captureFamilyMap, exportTitle]);
   const handleSavePdf = React.useCallback(async () => {
-    if (exportLoadingMessage) return;
-    setExportLoadingMessage(getExportLoadingMessage('pdf'));
+    if (exportInProgressRef.current) return;
+    exportInProgressRef.current = true;
+    let previewWindow: Window | null = null;
     try {
-      await waitForTreeExportPaint();
-      await waitForExportUiSettle(150);
+      previewWindow = openTreeExportPreviewWindow('PDF da árvore');
       const canvas = prependTitleToCanvas(await captureFamilyMap(), exportTitle);
-      await exportCanvasAsPdf(canvas, buildTreeExportFilename('mapa-familiar', 'pdf'), '');
-      await waitForExportUiSettle(700);
+      await previewCanvasAsPdf(canvas, buildTreeExportFilename('mapa-familiar', 'pdf'), '', previewWindow);
     } catch (error) {
+      if (previewWindow && !previewWindow.closed) previewWindow.close();
       console.error('Erro ao exportar PDF do Árvore Familiar:', error);
       toast.error(error instanceof Error ? error.message : 'Não foi possível gerar o PDF do Árvore Familiar.');
     } finally {
-      setExportLoadingMessage(null);
+      exportInProgressRef.current = false;
     }
-  }, [captureFamilyMap, exportLoadingMessage, exportTitle]);
+  }, [captureFamilyMap, exportTitle]);
   const handlePrint = React.useCallback(async () => {
-    if (exportLoadingMessage) return;
-    const printWindow = openTreePrintWindow();
-    setExportLoadingMessage(getExportLoadingMessage('print'));
+    if (exportInProgressRef.current) return;
+    exportInProgressRef.current = true;
+    let printWindow: Window | null = null;
     try {
-      await waitForTreeExportPaint();
-      await waitForExportUiSettle(150);
+      printWindow = openTreeExportPreviewWindow('Imprimir árvore');
       const canvas = prependTitleToCanvas(await captureFamilyMap(), exportTitle);
-      await printCanvas(canvas, exportTitle, printWindow);
-      await waitForExportUiSettle(700);
+      await previewCanvasForPrint(canvas, exportTitle, printWindow);
     } catch (error) {
-      if (!printWindow.closed) printWindow.close();
+      if (printWindow && !printWindow.closed) printWindow.close();
       console.error('Erro ao imprimir o Árvore Familiar:', error);
       toast.error(error instanceof Error ? error.message : 'Não foi possível imprimir o Árvore Familiar.');
     } finally {
-      setExportLoadingMessage(null);
+      exportInProgressRef.current = false;
     }
-  }, [captureFamilyMap, exportLoadingMessage, exportTitle]);
+  }, [captureFamilyMap, exportTitle]);
   const handleStartAreaSelection = React.useCallback(() => {
-    if (exportLoadingMessage) return;
+    if (exportInProgressRef.current) return;
     if (!viewportRef.current) {
       toast.error('Área visível do Árvore Familiar não encontrada para seleção.');
       return;
     }
     setIsAreaSelectionOpen((current) => !current);
-  }, [exportLoadingMessage]);
+  }, []);
   const handleCloseAreaSelection = React.useCallback(() => setIsAreaSelectionOpen(false), []);
 
   React.useImperativeHandle(ref, () => ({
@@ -1720,9 +1709,6 @@ nephews,
           />
         )}
       </div>
-      {exportLoadingMessage && (
-        <TreeExportLoadingOverlay title="Exportando Árvore Familiar" message={exportLoadingMessage} />
-      )}
     </div>
   );
 }

@@ -99,14 +99,26 @@ function openExportPreviewWindow(title: string) {
   return previewWindow;
 }
 
+export function openTreeExportPreviewWindow(title: string) {
+  const previewWindow = openExportPreviewWindow(title);
+
+  if (!previewWindow) {
+    throw new Error('O navegador bloqueou a janela de preview da exportação.');
+  }
+
+  return previewWindow;
+}
+
 function writeImagePreviewWindow(
   previewWindow: Window,
   imageUrl: string,
   title: string,
-  filename: string
+  filename: string,
+  actionLabel = 'Salvar'
 ) {
   const safeTitle = escapeHtml(title);
   const safeFilename = escapeHtml(filename);
+  const safeActionLabel = escapeHtml(actionLabel);
 
   previewWindow.document.open();
   previewWindow.document.write(`<!doctype html>
@@ -126,7 +138,7 @@ function writeImagePreviewWindow(
   <body>
     <header>
       <h1>${safeTitle}</h1>
-      <a href="${imageUrl}" download="${safeFilename}">Baixar imagem</a>
+      <a href="${imageUrl}" download="${safeFilename}">${safeActionLabel}</a>
     </header>
     <figure>
       <img src="${imageUrl}" alt="${safeTitle}" />
@@ -141,10 +153,12 @@ function writePdfPreviewWindow(
   previewWindow: Window,
   pdfUrl: string,
   title: string,
-  filename: string
+  filename: string,
+  actionLabel = 'Exportar'
 ) {
   const safeTitle = escapeHtml(title || 'PDF da árvore');
   const safeFilename = escapeHtml(filename);
+  const safeActionLabel = escapeHtml(actionLabel);
 
   previewWindow.document.open();
   previewWindow.document.write(`<!doctype html>
@@ -163,7 +177,7 @@ function writePdfPreviewWindow(
   <body>
     <header>
       <h1>${safeTitle}</h1>
-      <a href="${pdfUrl}" download="${safeFilename}">Baixar PDF</a>
+      <a href="${pdfUrl}" download="${safeFilename}">${safeActionLabel}</a>
     </header>
     <iframe src="${pdfUrl}" title="${safeTitle}"></iframe>
   </body>
@@ -242,6 +256,61 @@ export function waitForExportUiSettle(milliseconds = 450) {
   return new Promise<void>((resolve) => {
     window.setTimeout(resolve, milliseconds);
   });
+}
+
+export async function previewCanvasForPrint(
+  canvas: HTMLCanvasElement,
+  title = 'Imprimir árvore',
+  targetWindow?: Window | null
+) {
+  const printWindow = targetWindow && !targetWindow.closed
+    ? targetWindow
+    : openTreePrintWindow();
+
+  if (printWindow.closed) {
+    throw new Error('A janela de impressão foi fechada antes da conclusão.');
+  }
+
+  const imageUrl = canvasToDataUrl(canvas);
+  const safeTitle = escapeHtml(title);
+
+  printWindow.document.open();
+  printWindow.document.write(`<!doctype html>
+<html>
+  <head>
+    <title>${safeTitle}</title>
+    <style>
+      html, body { margin: 0; min-height: 100%; background: #f8fafc; color: #0f172a; font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+      body { min-height: 100vh; box-sizing: border-box; padding: 1.25rem; }
+      header { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.75rem; margin-bottom: 1rem; }
+      h1 { margin: 0; font-size: 1rem; line-height: 1.2; }
+      button { display: inline-flex; align-items: center; justify-content: center; min-height: 2.4rem; border: 0; border-radius: 0.75rem; background: #1d4ed8; color: #fff; padding: 0 1rem; font-size: 0.875rem; font-weight: 700; cursor: pointer; }
+      figure { margin: 0; border: 1px solid #e2e8f0; border-radius: 1rem; background: #fff; box-shadow: 0 16px 42px rgb(15 23 42 / 0.12); overflow: auto; }
+      img { display: block; max-width: 100%; height: auto; margin: 0 auto; }
+      @page { margin: 0; }
+      @media print {
+        html, body { width: 100%; height: 100%; padding: 0; background: #fff; }
+        header { display: none; }
+        figure { margin: 0; border: 0; border-radius: 0; box-shadow: none; overflow: visible; }
+        img { width: 100vw; height: 100vh; object-fit: contain; }
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>${safeTitle}</h1>
+      <button type="button" id="print-button">Imprimir</button>
+    </header>
+    <figure>
+      <img src="${imageUrl}" alt="Mapa familiar exportado" />
+    </figure>
+    <script>
+      document.getElementById('print-button')?.addEventListener('click', () => window.print());
+    </script>
+  </body>
+</html>`);
+  printWindow.document.close();
+  printWindow.focus();
 }
 
 function clampCanvasValue(value: number, min: number, max: number) {
@@ -518,6 +587,25 @@ export function downloadCanvasAsPng(canvas: HTMLCanvasElement, filename: string)
   writeImagePreviewWindow(previewWindow, imageUrl, 'Imagem da árvore', filename);
 }
 
+export function previewCanvasAsPng(
+  canvas: HTMLCanvasElement,
+  filename: string,
+  title = 'Imagem da árvore',
+  targetWindow?: Window | null
+) {
+  const imageUrl = canvasToDataUrl(canvas);
+  const previewWindow = targetWindow && !targetWindow.closed
+    ? targetWindow
+    : openExportPreviewWindow(title);
+
+  if (!previewWindow) {
+    fallbackDownload(imageUrl, filename);
+    return;
+  }
+
+  writeImagePreviewWindow(previewWindow, imageUrl, title, filename, 'Salvar');
+}
+
 export async function exportCanvasAsPdf(
   canvas: HTMLCanvasElement,
   filename: string,
@@ -563,6 +651,57 @@ export async function exportCanvasAsPdf(
   }
 
   writePdfPreviewWindow(previewWindow, pdfUrl, title || 'PDF da árvore', filename);
+  previewWindow.addEventListener('beforeunload', () => URL.revokeObjectURL(pdfUrl), { once: true });
+}
+
+export async function previewCanvasAsPdf(
+  canvas: HTMLCanvasElement,
+  filename: string,
+  title = 'Árvore genealógica',
+  targetWindow?: Window | null
+) {
+  const imageUrl = canvasToDataUrl(canvas);
+  const { jsPDF } = await import('jspdf');
+  const orientation = canvas.width > canvas.height ? 'landscape' : 'portrait';
+  const pdf = new jsPDF({
+    orientation,
+    unit: 'px',
+    format: 'a4',
+    compress: true,
+  });
+  const pageWidth = pdf.internal.pageSize.getWidth();
+  const pageHeight = pdf.internal.pageSize.getHeight();
+  const margin = 24;
+  const titleHeight = title ? 22 : 0;
+  const maxWidth = pageWidth - margin * 2;
+  const maxHeight = pageHeight - margin * 2 - titleHeight;
+  const imageRatio = canvas.width / canvas.height;
+  const fitRatio = Math.min(maxWidth / canvas.width, maxHeight / canvas.height);
+  const imageWidth = Math.max(1, canvas.width * fitRatio);
+  const imageHeight = Math.max(1, imageWidth / imageRatio);
+  const imageX = (pageWidth - imageWidth) / 2;
+  const imageY = margin + titleHeight + Math.max(0, (maxHeight - imageHeight) / 2);
+
+  if (title) {
+    pdf.setFontSize(12);
+    pdf.text(title, margin, margin + 10);
+  }
+
+  pdf.addImage(imageUrl, 'PNG', imageX, imageY, imageWidth, imageHeight);
+
+  const pdfBlob = pdf.output('blob') as Blob;
+  const pdfUrl = URL.createObjectURL(pdfBlob);
+  const previewWindow = targetWindow && !targetWindow.closed
+    ? targetWindow
+    : openExportPreviewWindow(title || 'PDF da árvore');
+
+  if (!previewWindow) {
+    fallbackDownload(pdfUrl, filename);
+    window.setTimeout(() => URL.revokeObjectURL(pdfUrl), 30000);
+    return;
+  }
+
+  writePdfPreviewWindow(previewWindow, pdfUrl, title || 'PDF da árvore', filename, 'Exportar');
   previewWindow.addEventListener('beforeunload', () => URL.revokeObjectURL(pdfUrl), { once: true });
 }
 

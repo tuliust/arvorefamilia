@@ -16,17 +16,14 @@ import {
 import {
   buildTreeExportFilename,
   captureElementToCanvas,
-  downloadCanvasAsPng,
-  exportCanvasAsPdf,
-  openTreePrintWindow,
+  openTreeExportPreviewWindow,
   prependTitleToCanvas,
-  printCanvas,
-  waitForExportUiSettle,
+  previewCanvasAsPdf,
+  previewCanvasAsPng,
+  previewCanvasForPrint,
 } from './utils/treeExport';
 import {
   TreeAreaSelectionOverlay,
-  TreeExportLoadingOverlay,
-  waitForTreeExportPaint,
 } from './TreeAreaSelectionOverlay';
 
 interface DesktopFamilyHorizontalMapViewProps {
@@ -95,12 +92,6 @@ function assertSafeDirectExportSize(element: HTMLElement, label: string) {
   throw new Error(
     `${label} está muito grande para exportar com segurança neste zoom. Reduza o zoom ou use a exportação por área.`
   );
-}
-
-function getExportLoadingMessage(action: 'image' | 'pdf' | 'print') {
-  if (action === 'image') return 'Preparando imagem...';
-  if (action === 'pdf') return 'Gerando PDF...';
-  return 'Preparando impressão...';
 }
 
 function getExportFirstName(person?: Pessoa) {
@@ -695,7 +686,7 @@ function DesktopFamilyHorizontalMapViewComponent({
   const [responsiveScale, setResponsiveScale] = React.useState(1);
   const [manualZoom, setManualZoom] = React.useState(1);
   const [isAreaSelectionOpen, setIsAreaSelectionOpen] = React.useState(false);
-  const [exportLoadingMessage, setExportLoadingMessage] = React.useState<string | null>(null);
+  const exportInProgressRef = React.useRef(false);
 
   const [highlightedConnectorFamilyKey, setHighlightedConnectorFamilyKey] = React.useState<string | null>(null);
   const hideGenerationHeaders = useTreeHighlightGroupsActive();
@@ -1044,70 +1035,66 @@ function DesktopFamilyHorizontalMapViewComponent({
   }, []);
 
   const handleSaveImage = React.useCallback(async () => {
-    if (exportLoadingMessage) return;
-
-    setExportLoadingMessage(getExportLoadingMessage('image'));
+    if (exportInProgressRef.current) return;
+    exportInProgressRef.current = true;
+    let previewWindow: Window | null = null;
 
     try {
-      await waitForTreeExportPaint();
-      await waitForExportUiSettle(150);
+      previewWindow = openTreeExportPreviewWindow('Imagem da árvore');
       const canvas = prependTitleToCanvas(await captureFamilyMap(), exportTitle);
-      downloadCanvasAsPng(canvas, buildTreeExportFilename('mapa-familiar-horizontal', 'png'));
-      await waitForExportUiSettle(700);
+      previewCanvasAsPng(canvas, buildTreeExportFilename('mapa-familiar-horizontal', 'png'), 'Imagem da árvore', previewWindow);
     } catch (error) {
+      if (previewWindow && !previewWindow.closed) previewWindow.close();
       console.error('Erro ao exportar imagem do Mapa Genealógico:', error);
       toast.error(error instanceof Error ? error.message : 'Não foi possível gerar a imagem do Mapa Genealógico.');
     } finally {
-      setExportLoadingMessage(null);
+      exportInProgressRef.current = false;
     }
-  }, [captureFamilyMap, exportLoadingMessage, exportTitle]);
+  }, [captureFamilyMap, exportTitle]);
 
   const handleSavePdf = React.useCallback(async () => {
-    if (exportLoadingMessage) return;
-
-    setExportLoadingMessage(getExportLoadingMessage('pdf'));
+    if (exportInProgressRef.current) return;
+    exportInProgressRef.current = true;
+    let previewWindow: Window | null = null;
 
     try {
-      await waitForTreeExportPaint();
-      await waitForExportUiSettle(150);
+      previewWindow = openTreeExportPreviewWindow('PDF da árvore');
       const canvas = prependTitleToCanvas(await captureFamilyMap(), exportTitle);
-      await exportCanvasAsPdf(
+      await previewCanvasAsPdf(
         canvas,
         buildTreeExportFilename('mapa-familiar-horizontal', 'pdf'),
         '',
+        previewWindow,
       );
-      await waitForExportUiSettle(700);
     } catch (error) {
+      if (previewWindow && !previewWindow.closed) previewWindow.close();
       console.error('Erro ao exportar PDF do Mapa Genealógico:', error);
       toast.error(error instanceof Error ? error.message : 'Não foi possível gerar o PDF do Mapa Genealógico.');
     } finally {
-      setExportLoadingMessage(null);
+      exportInProgressRef.current = false;
     }
-  }, [captureFamilyMap, exportLoadingMessage, exportTitle]);
+  }, [captureFamilyMap, exportTitle]);
 
   const handlePrint = React.useCallback(async () => {
-    if (exportLoadingMessage) return;
-
-    const printWindow = openTreePrintWindow();
-    setExportLoadingMessage(getExportLoadingMessage('print'));
+    if (exportInProgressRef.current) return;
+    exportInProgressRef.current = true;
+    let printWindow: Window | null = null;
 
     try {
-      await waitForTreeExportPaint();
-      await waitForExportUiSettle(150);
+      printWindow = openTreeExportPreviewWindow('Imprimir árvore');
       const canvas = prependTitleToCanvas(await captureFamilyMap(), exportTitle);
-      await printCanvas(canvas, exportTitle, printWindow);
-      await waitForExportUiSettle(700);
+      await previewCanvasForPrint(canvas, exportTitle, printWindow);
     } catch (error) {
-      if (!printWindow.closed) printWindow.close();
+      if (printWindow && !printWindow.closed) printWindow.close();
       console.error('Erro ao imprimir o Mapa Genealógico:', error);
       toast.error(error instanceof Error ? error.message : 'Não foi possível imprimir o Mapa Genealógico.');
     } finally {
-      setExportLoadingMessage(null);
+      exportInProgressRef.current = false;
     }
-  }, [captureFamilyMap, exportLoadingMessage, exportTitle]);
+  }, [captureFamilyMap, exportTitle]);
 
   const handleStartAreaSelection = React.useCallback(() => {
-    if (exportLoadingMessage) return;
+    if (exportInProgressRef.current) return;
 
     if (!viewportRef.current) {
       toast.error('Área visível do Mapa Genealógico não encontrada para seleção.');
@@ -1115,7 +1102,7 @@ function DesktopFamilyHorizontalMapViewComponent({
     }
 
     setIsAreaSelectionOpen((current) => !current);
-  }, [exportLoadingMessage]);
+  }, []);
 
   const handleCloseAreaSelection = React.useCallback(() => {
     setIsAreaSelectionOpen(false);
@@ -1242,12 +1229,6 @@ function DesktopFamilyHorizontalMapViewComponent({
           />
         )}
       </div>
-      {exportLoadingMessage && (
-        <TreeExportLoadingOverlay
-          title="Exportando Mapa Genealógico"
-          message={exportLoadingMessage}
-        />
-      )}
     </div>
   );
 }
