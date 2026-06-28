@@ -90,31 +90,35 @@ const styles = `
   }
 
   html.${LINE_PANEL_OPEN_CLASS} [role="dialog"][aria-label="Painel de visualização"] button[class*="border-blue-100"][class*="w-full"] {
+    height: 2.7rem !important;
     min-height: 2.7rem !important;
     display: flex !important;
     align-items: center !important;
     justify-content: flex-start !important;
-    padding-top: 0.38rem !important;
-    padding-bottom: 0.38rem !important;
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
     padding-left: 1.25rem !important;
     padding-right: 1rem !important;
     text-align: left !important;
   }
 
   html.${LINE_PANEL_OPEN_CLASS} [role="dialog"][aria-label="Painel de visualização"] button[class*="border-blue-100"][class*="w-full"] > span {
-    display: block !important;
+    display: flex !important;
+    height: 100% !important;
     width: 100% !important;
     min-width: 0 !important;
     max-width: 100% !important;
+    align-items: center !important;
     overflow: hidden !important;
     text-align: left !important;
     text-overflow: ellipsis !important;
     white-space: nowrap !important;
     overflow-wrap: normal !important;
     word-break: normal !important;
-    line-height: 1.1 !important;
+    line-height: 1.15 !important;
     font-size: clamp(0.78rem, 3.2vw, 0.92rem) !important;
     letter-spacing: -0.02em !important;
+    transform: translateY(0.04rem) !important;
   }
 
   html.${LINE_PANEL_OPEN_CLASS} .${LINE_PANEL_CLOSE_BUTTON_CLASS} {
@@ -350,7 +354,7 @@ function renderFamilyGroupDetails(
   people.forEach((person) => {
     const button = document.createElement('button');
     button.type = 'button';
-    button.className = 'flex min-h-10 w-full items-center justify-start rounded-xl border border-blue-100 bg-white px-5 py-1.5 text-left text-[13px] font-bold leading-none text-blue-950 shadow-sm transition active:scale-[0.98]';
+    button.className = 'flex h-10 min-h-10 w-full items-center justify-start rounded-xl border border-blue-100 bg-white px-5 py-0 text-left text-[13px] font-bold leading-none text-blue-950 shadow-sm transition active:scale-[0.98]';
     button.setAttribute('aria-label', `Visualizar ${person.label}`);
     button.addEventListener('click', (event) => {
       event.preventDefault();
@@ -359,6 +363,7 @@ function renderFamilyGroupDetails(
     });
 
     const label = document.createElement('span');
+    label.className = 'flex h-full min-w-0 flex-1 items-center truncate text-left leading-[1.15]';
     label.textContent = person.label;
     button.appendChild(label);
     list.appendChild(button);
