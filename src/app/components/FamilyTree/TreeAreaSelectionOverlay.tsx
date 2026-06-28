@@ -5,13 +5,12 @@ import {
   buildTreeExportFilename,
   captureElementToCanvas,
   cropCanvas,
-  downloadCanvasAsPng,
-  exportCanvasAsPdf,
   ExportRect,
-  openTreePrintWindow,
+  openTreeExportPreviewWindow,
   prependTitleToCanvas,
-  printCanvas,
-  waitForExportUiSettle,
+  previewCanvasAsPdf,
+  previewCanvasAsPng,
+  previewCanvasForPrint,
 } from './utils/treeExport';
 
 type ExportAction = 'png' | 'pdf' | 'print';
@@ -99,9 +98,15 @@ function getPointFromEvent(event: React.PointerEvent, target: HTMLElement): Sele
 }
 
 function getActionLabel(action: ExportAction) {
-  if (action === 'png') return 'Salvando PNG...';
-  if (action === 'pdf') return 'Gerando PDF...';
+  if (action === 'png') return 'Preparando PNG...';
+  if (action === 'pdf') return 'Preparando PDF...';
   return 'Preparando impressão...';
+}
+
+function getPreviewTitle(action: ExportAction) {
+  if (action === 'png') return 'Imagem da área selecionada';
+  if (action === 'pdf') return 'PDF da área selecionada';
+  return 'Imprimir área selecionada';
 }
 
 function getEstimatedExportPixels(selection: ExportRect) {
@@ -214,10 +219,10 @@ export function TreeAreaSelectionOverlay({
 
     setActiveAction(action);
     setError(null);
-    let printWindow: Window | null = null;
+    let previewWindow: Window | null = null;
 
     try {
-      printWindow = action === 'print' ? openTreePrintWindow() : null;
+      previewWindow = openTreeExportPreviewWindow(getPreviewTitle(action));
       await waitForTreeExportPaint();
 
       const targetRect = target.getBoundingClientRect();
@@ -234,27 +239,27 @@ export function TreeAreaSelectionOverlay({
       const titledCanvas = prependTitleToCanvas(croppedCanvas, title);
 
       if (action === 'png') {
-        downloadCanvasAsPng(
+        previewCanvasAsPng(
           titledCanvas,
-          buildTreeExportFilename(`${filenameLabel}-area`, 'png')
+          buildTreeExportFilename(`${filenameLabel}-area`, 'png'),
+          'Imagem da área selecionada',
+          previewWindow
         );
-        await waitForExportUiSettle();
       } else if (action === 'pdf') {
-        await exportCanvasAsPdf(
+        await previewCanvasAsPdf(
           titledCanvas,
           buildTreeExportFilename(`${filenameLabel}-area`, 'pdf'),
-          ''
+          'PDF da área selecionada',
+          previewWindow
         );
-        await waitForExportUiSettle();
       } else {
-        await printCanvas(titledCanvas, title, printWindow);
+        await previewCanvasForPrint(titledCanvas, title, previewWindow);
       }
 
-      await waitForExportUiSettle(250);
       onClose();
     } catch (exportError) {
-      if (printWindow && !printWindow.closed) {
-        printWindow.close();
+      if (previewWindow && !previewWindow.closed) {
+        previewWindow.close();
       }
       setError(
         exportError instanceof Error
@@ -382,13 +387,6 @@ export function TreeAreaSelectionOverlay({
             )}
           </div>
         </>
-      )}
-
-      {activeAction && (
-        <TreeExportLoadingOverlay
-          title="Exportando área selecionada"
-          message={getActionLabel(activeAction)}
-        />
       )}
 
       {!selection && (
