@@ -104,7 +104,12 @@ class RouteErrorBoundary extends React.Component<React.PropsWithChildren, RouteE
   }
 }
 
-function lazyRoute(element: React.ReactElement, options?: { disableMobileGlobalTweaks?: boolean }) {
+type LazyRouteOptions = {
+  disableMobileGlobalTweaks?: boolean;
+  enableLinhaGeracionalMobilePanelLayerTweaks?: boolean;
+};
+
+function lazyRoute(element: React.ReactElement, options?: LazyRouteOptions) {
   return (
     <RouteErrorBoundary>
       <Suspense fallback={<RouteFallback />}>
@@ -112,7 +117,7 @@ function lazyRoute(element: React.ReactElement, options?: { disableMobileGlobalT
         <PersonProfileRuntimeTweaks />
         {options?.disableMobileGlobalTweaks ? null : <MobileGlobalTweaks />}
         <MobileTopLayerTweaks />
-        <LinhaGeracionalMobilePanelLayerTweaks />
+        {options?.enableLinhaGeracionalMobilePanelLayerTweaks ? <LinhaGeracionalMobilePanelLayerTweaks /> : null}
         {element}
       </Suspense>
     </RouteErrorBoundary>
@@ -145,7 +150,10 @@ const adminMigrationPath = '/admin/migrar-dados';
 const treeHomeRouteElement = lazyRoute(<TreeAccessRoute><TreeHomeShell /></TreeAccessRoute>);
 const linhaGeracionalRouteElement = lazyRoute(
   <TreeAccessRoute><LinhaGeracionalLazy /></TreeAccessRoute>,
-  { disableMobileGlobalTweaks: true },
+  {
+    disableMobileGlobalTweaks: true,
+    enableLinhaGeracionalMobilePanelLayerTweaks: true,
+  },
 );
 
 export const router = createBrowserRouter([
