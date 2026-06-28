@@ -48,13 +48,13 @@ const viewOptions: Array<{
   {
     key: 'mapa-familiar',
     label: 'Árvore Familiar',
-    subtitle: 'Visão de parentes por grupos',
+    subtitle: 'Visão por grupos',
     icon: Tally3,
   },
   {
     key: 'mapa-familiar-horizontal',
     label: 'Linha Geracional',
-    subtitle: 'Visualização cronológica por gerações',
+    subtitle: 'Por gerações',
     icon: Network,
   },
 ];
