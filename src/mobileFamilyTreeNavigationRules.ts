@@ -23,6 +23,15 @@ type GestureStart = {
   x: number;
   y: number;
   screen: MobileTreeScreen | null;
+  scrollElement: HTMLElement | null;
+  scrollStartAtTop: boolean;
+  scrollStartAtBottom: boolean;
+};
+
+type ScrollBoundaries = {
+  hasScrollableContent: boolean;
+  atTop: boolean;
+  atBottom: boolean;
 };
 
 const SCREEN_POSITIONS: Record<MobileTreeScreen, { column: number; row: number }> = {
@@ -67,6 +76,10 @@ function isEnabled() {
 
 function isMobileTreeScreen(value: string | null | undefined): value is MobileTreeScreen {
   return Boolean(value && value in SCREEN_POSITIONS);
+}
+
+function isScrollableCousinsScreen(screenName: MobileTreeScreen | null) {
+  return screenName === 'paternal-cousins' || screenName === 'maternal-cousins';
 }
 
 function getRoot() {
@@ -188,6 +201,35 @@ function getGestureDirection(deltaX: number, deltaY: number, threshold: number):
   return null;
 }
 
+function getScrollableBoundaryState(scrollElement: HTMLElement | null): ScrollBoundaries {
+  if (!scrollElement) {
+    return { hasScrollableContent: false, atTop: true, atBottom: true };
+  }
+
+  const { scrollTop, scrollHeight, clientHeight } = scrollElement;
+  const hasScrollableContent = scrollHeight > clientHeight + 1;
+
+  return {
+    hasScrollableContent,
+    atTop: scrollTop <= 1,
+    atBottom: scrollTop + clientHeight >= scrollHeight - 1,
+  };
+}
+
+function shouldPreserveNativeScroll(start: GestureStart, direction: SwipeDirection) {
+  if (!isScrollableCousinsScreen(start.screen) || !start.scrollElement) return false;
+  if (direction !== 'up' && direction !== 'down') return false;
+
+  const boundaries = getScrollableBoundaryState(start.scrollElement);
+  if (!boundaries.hasScrollableContent) return false;
+
+  if (direction === 'up') {
+    return !start.scrollStartAtTop || !boundaries.atTop;
+  }
+
+  return !start.scrollStartAtBottom || !boundaries.atBottom;
+}
+
 function getDestination(screenName: MobileTreeScreen, direction: SwipeDirection, root: HTMLElement) {
   const destination = DESTINATIONS[screenName][direction];
   if (!destination || !screenHasContent(root, destination)) return null;
@@ -240,10 +282,16 @@ function handleTouchStart(event: TouchEvent) {
   const touch = event.touches[0];
   if (!root || !target?.closest(ROOT_SELECTOR) || !touch) return;
 
+  const scrollElement = target.closest<HTMLElement>('[data-mobile-tree-scroll]');
+  const scrollBoundaries = getScrollableBoundaryState(scrollElement);
+
   gestureStart = {
     x: touch.clientX,
     y: touch.clientY,
     screen: getCurrentScreen(root),
+    scrollElement,
+    scrollStartAtTop: scrollBoundaries.atTop,
+    scrollStartAtBottom: scrollBoundaries.atBottom,
   };
 }
 
@@ -259,6 +307,7 @@ function handleTouchMove(event: TouchEvent) {
   );
 
   if (!direction) return;
+  if (shouldPreserveNativeScroll(gestureStart, direction)) return;
   blockEvent(event);
 }
 
@@ -283,6 +332,7 @@ function handleTouchEnd(event: TouchEvent) {
   );
 
   if (!direction) return;
+  if (shouldPreserveNativeScroll(start, direction)) return;
 
   blockEvent(event);
   const destination = getDestination(start.screen, direction, root);
