@@ -8,6 +8,8 @@ const UNCLE_SCREEN_SELECTORS = [
   MATERNAL_UNCLES_SCREEN_SELECTOR,
 ];
 const STYLE_ID = 'mobile-family-map-core-connector-fix-style';
+const CONNECTOR_WIDTH = 2;
+const CONNECTOR_MIN_LENGTH = 36;
 let scheduled = false;
 
 type UncleBranchScreen = 'paternal-uncles' | 'maternal-uncles';
@@ -16,7 +18,18 @@ type UncleBranchConnectorKind = 'down' | 'horizontal';
 type UncleBranchConfig = {
   screenName: UncleBranchScreen;
   selector: string;
-  horizontalDirection?: 'left' | 'right';
+  horizontalDirection: 'left' | 'right';
+};
+
+type RelativeRect = {
+  top: number;
+  right: number;
+  bottom: number;
+  left: number;
+  width: number;
+  height: number;
+  centerX: number;
+  centerY: number;
 };
 
 const UNCLE_BRANCH_CONFIGS: UncleBranchConfig[] = [
@@ -41,6 +54,12 @@ function isEnabled() {
 
 function setAttributeIfNeeded(element: HTMLElement, name: string, value: string) {
   if (element.getAttribute(name) !== value) element.setAttribute(name, value);
+}
+
+function setStyleIfNeeded(element: HTMLElement, property: string, value: string) {
+  if (element.style.getPropertyValue(property) !== value) {
+    element.style.setProperty(property, value, 'important');
+  }
 }
 
 function ensureStyles() {
@@ -73,20 +92,19 @@ function ensureStyles() {
         opacity: 1 !important;
         visibility: visible !important;
         pointer-events: none !important;
+        border: 0 !important;
       }
 
       [data-mobile-uncle-branch-connector="down"] {
-        left: 50% !important;
-        bottom: 0 !important;
-        width: 2px !important;
-        height: auto !important;
-        min-height: 2.25rem !important;
+        width: ${CONNECTOR_WIDTH}px !important;
+        min-width: ${CONNECTOR_WIDTH}px !important;
         transform: translateX(-50%) !important;
       }
 
       [data-mobile-uncle-branch-connector="horizontal"] {
-        height: 2px !important;
-        min-height: 2px !important;
+        height: ${CONNECTOR_WIDTH}px !important;
+        min-height: ${CONNECTOR_WIDTH}px !important;
+        transform: translateY(-50%) !important;
       }
     }
   `;
@@ -179,6 +197,28 @@ function getUncleBranchGeometry(screen: HTMLElement) {
   return { section, hasCards };
 }
 
+function getRelativeRect(element: HTMLElement, root: HTMLElement): RelativeRect {
+  const elementRect = element.getBoundingClientRect();
+  const rootRect = root.getBoundingClientRect();
+  const top = Math.max(0, elementRect.top - rootRect.top);
+  const left = Math.max(0, elementRect.left - rootRect.left);
+  const width = Math.max(0, elementRect.width);
+  const height = Math.max(0, elementRect.height);
+  const right = left + width;
+  const bottom = top + height;
+
+  return {
+    top,
+    right,
+    bottom,
+    left,
+    width,
+    height,
+    centerX: left + width / 2,
+    centerY: top + height / 2,
+  };
+}
+
 function getUncleConnector(
   screen: HTMLElement,
   screenName: UncleBranchScreen,
@@ -224,6 +264,51 @@ function applyConnectorBackground(connector: HTMLElement, screen: HTMLElement) {
   if (standardBackground) connector.style.setProperty('background', standardBackground, 'important');
 }
 
+function applyDownConnector(
+  connector: HTMLElement,
+  screen: HTMLElement,
+  sectionRect: RelativeRect,
+) {
+  const top = Math.max(0, sectionRect.bottom);
+  const screenHeight = Math.max(screen.scrollHeight, screen.clientHeight);
+  const height = Math.max(CONNECTOR_MIN_LENGTH, screenHeight - top);
+
+  setStyleIfNeeded(connector, 'left', `${sectionRect.centerX}px`);
+  setStyleIfNeeded(connector, 'top', `${top}px`);
+  setStyleIfNeeded(connector, 'bottom', 'auto');
+  setStyleIfNeeded(connector, 'width', `${CONNECTOR_WIDTH}px`);
+  setStyleIfNeeded(connector, 'height', `${height}px`);
+}
+
+function applyHorizontalConnector(
+  connector: HTMLElement,
+  screen: HTMLElement,
+  sectionRect: RelativeRect,
+  direction: 'left' | 'right',
+) {
+  const top = Math.max(0, sectionRect.centerY);
+  const screenWidth = Math.max(screen.scrollWidth, screen.clientWidth);
+
+  setStyleIfNeeded(connector, 'top', `${top}px`);
+  setStyleIfNeeded(connector, 'height', `${CONNECTOR_WIDTH}px`);
+
+  if (direction === 'right') {
+    const left = Math.max(0, sectionRect.right);
+    const width = Math.max(CONNECTOR_MIN_LENGTH, screenWidth - left);
+
+    setStyleIfNeeded(connector, 'left', `${left}px`);
+    setStyleIfNeeded(connector, 'right', 'auto');
+    setStyleIfNeeded(connector, 'width', `${width}px`);
+    return;
+  }
+
+  const width = Math.max(CONNECTOR_MIN_LENGTH, sectionRect.left);
+
+  setStyleIfNeeded(connector, 'left', '0px');
+  setStyleIfNeeded(connector, 'right', 'auto');
+  setStyleIfNeeded(connector, 'width', `${width}px`);
+}
+
 function ensureUncleBranchConnectors() {
   UNCLE_BRANCH_CONFIGS.forEach((config) => {
     const screen = document.querySelector<HTMLElement>(config.selector);
@@ -238,26 +323,14 @@ function ensureUncleBranchConnectors() {
       return;
     }
 
-    const screenRect = screen.getBoundingClientRect();
-    const sectionRect = section.getBoundingClientRect();
+    const sectionRect = getRelativeRect(section, screen);
 
     const downConnector = ensureUncleConnector(screen, config.screenName, 'down');
-    downConnector.style.setProperty('top', `${Math.max(0, sectionRect.bottom - screenRect.top)}px`, 'important');
-    downConnector.style.setProperty('bottom', '0px', 'important');
-    downConnector.style.setProperty('height', 'auto', 'important');
+    applyDownConnector(downConnector, screen, sectionRect);
     applyConnectorBackground(downConnector, screen);
 
     const horizontalConnector = ensureUncleConnector(screen, config.screenName, 'horizontal');
-    horizontalConnector.style.setProperty('top', `${Math.max(0, sectionRect.top + (sectionRect.height / 2) - screenRect.top)}px`, 'important');
-
-    if (config.horizontalDirection === 'right') {
-      horizontalConnector.style.setProperty('left', `${Math.max(0, sectionRect.right - screenRect.left)}px`, 'important');
-      horizontalConnector.style.setProperty('right', '0px', 'important');
-    } else {
-      horizontalConnector.style.setProperty('left', '0px', 'important');
-      horizontalConnector.style.setProperty('right', `${Math.max(0, screenRect.right - sectionRect.left)}px`, 'important');
-    }
-
+    applyHorizontalConnector(horizontalConnector, screen, sectionRect, config.horizontalDirection);
     applyConnectorBackground(horizontalConnector, screen);
   });
 }
@@ -285,7 +358,12 @@ if (typeof window !== 'undefined' && typeof document !== 'undefined') {
   [80, 240, 520, 1000].forEach((delay) => window.setTimeout(applyConnectorFixes, delay));
 
   const observer = new MutationObserver(scheduleMark);
-  observer.observe(document.documentElement, { childList: true, subtree: true });
+  observer.observe(document.documentElement, {
+    childList: true,
+    subtree: true,
+    attributes: true,
+    attributeFilter: ['class', 'style'],
+  });
 
   window.addEventListener('resize', applyConnectorFixes, { passive: true });
   window.addEventListener('orientationchange', applyConnectorFixes, { passive: true });
