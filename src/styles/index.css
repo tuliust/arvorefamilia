@@ -27,3 +27,67 @@
 @import './desktop-tree-panel-frente-a.css';
 @import './desktop-tree-family-groups-density.css';
 @import './user-profile-menu-desktop-layer.css';
+
+/* Export-only refinements for the family map PNG/PDF/print previews. */
+html.is-exporting-family-tree [data-family-map-export-root="true"],
+html.is-exporting-family-tree [data-family-map-horizontal-root="true"],
+html.is-exporting-family-tree [data-export-root="family-tree"] {
+  -webkit-font-smoothing: antialiased !important;
+  -moz-osx-font-smoothing: grayscale !important;
+  text-rendering: geometricPrecision !important;
+  print-color-adjust: exact !important;
+  -webkit-print-color-adjust: exact !important;
+}
+
+html.is-exporting-family-tree [data-family-map-group-title="true"] {
+  box-sizing: border-box !important;
+  display: inline-flex !important;
+  min-height: 1.38rem !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding-top: 0.34rem !important;
+  padding-bottom: 0.34rem !important;
+  text-align: center !important;
+  line-height: 1 !important;
+  vertical-align: middle !important;
+}
+
+html.is-exporting-family-tree h3[data-family-map-group-title="true"] {
+  display: flex !important;
+  width: 100% !important;
+  min-height: auto !important;
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+}
+
+html.is-exporting-family-tree [data-family-map-vital-line="true"] {
+  box-sizing: border-box !important;
+  display: flex !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  gap: 0.16rem !important;
+  text-align: left !important;
+  line-height: 1 !important;
+}
+
+html.is-exporting-family-tree [data-family-map-vital-line="true"] .family-map-status-icon {
+  position: relative !important;
+  top: 0 !important;
+  display: inline-block !important;
+  flex: 0 0 auto !important;
+  align-self: center !important;
+  margin: 0 !important;
+  transform: none !important;
+  vertical-align: middle !important;
+}
+
+html.is-exporting-family-tree [data-family-map-vital-line="true"] .family-map-status-icon + span {
+  display: inline-block !important;
+  min-width: 0 !important;
+  padding-top: 0.02em !important;
+  text-align: left !important;
+  line-height: 1 !important;
+  vertical-align: middle !important;
+}
