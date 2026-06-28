@@ -25,8 +25,9 @@ export interface ElementCaptureMetrics {
   estimatedPixels: number;
 }
 
-export const DEFAULT_TREE_EXPORT_MAX_SCALE = 2;
-export const DEFAULT_TREE_EXPORT_MAX_PIXELS = 24_000_000;
+export const DEFAULT_TREE_EXPORT_MIN_SCALE = 2;
+export const DEFAULT_TREE_EXPORT_MAX_SCALE = 3;
+export const DEFAULT_TREE_EXPORT_MAX_PIXELS = 54_000_000;
 
 export function resolveTreeExportTarget(
   explicitTarget?: HTMLElement | null,
@@ -53,7 +54,7 @@ function getSafeErrorMessage(error: unknown, fallback: string) {
 function getBrowserExportScale(maxScale = DEFAULT_TREE_EXPORT_MAX_SCALE) {
   if (typeof window === 'undefined') return 1;
 
-  return Math.min(maxScale, window.devicePixelRatio || 1);
+  return Math.min(maxScale, Math.max(DEFAULT_TREE_EXPORT_MIN_SCALE, window.devicePixelRatio || 1));
 }
 
 function canvasToDataUrl(canvas: HTMLCanvasElement) {
@@ -132,7 +133,7 @@ function writeImagePreviewWindow(
       h1 { margin: 0; font-size: 1rem; line-height: 1.2; }
       a { display: inline-flex; align-items: center; justify-content: center; min-height: 2.4rem; border-radius: 0.75rem; background: #1d4ed8; color: #fff; padding: 0 1rem; font-size: 0.875rem; font-weight: 700; text-decoration: none; }
       figure { margin: 0; border: 1px solid #e2e8f0; border-radius: 1rem; background: #fff; box-shadow: 0 16px 42px rgb(15 23 42 / 0.12); overflow: auto; }
-      img { display: block; max-width: 100%; height: auto; margin: 0 auto; }
+      img { display: block; width: auto; max-width: none; height: auto; margin: 0 auto; }
     </style>
   </head>
   <body>
@@ -205,7 +206,7 @@ function writePrintPreviewWindow(
       h1 { margin: 0; font-size: 1rem; line-height: 1.2; }
       button { display: inline-flex; align-items: center; justify-content: center; min-height: 2.4rem; border: 0; border-radius: 0.75rem; background: #1d4ed8; color: #fff; padding: 0 1rem; font-size: 0.875rem; font-weight: 700; cursor: pointer; }
       figure { margin: 0; border: 1px solid #e2e8f0; border-radius: 1rem; background: #fff; box-shadow: 0 16px 42px rgb(15 23 42 / 0.12); overflow: auto; }
-      img { display: block; max-width: 100%; height: auto; margin: 0 auto; }
+      img { display: block; width: auto; max-width: none; height: auto; margin: 0 auto; }
       @page { margin: 0; }
       @media print {
         body { padding: 0; background: #fff; }
@@ -508,6 +509,46 @@ function injectTreeExportLayoutCss(clonedDocument: Document) {
     .is-exporting-family-tree h3 {
       line-height: 1.28 !important;
       overflow: visible !important;
+    }
+
+    .is-exporting-family-tree [data-family-map-group-title="true"] {
+      box-sizing: border-box !important;
+      display: inline-flex !important;
+      min-height: 1.28rem !important;
+      align-items: center !important;
+      justify-content: center !important;
+      padding-block: 0.3rem !important;
+      text-align: center !important;
+      line-height: 1 !important;
+      vertical-align: middle !important;
+    }
+
+    .is-exporting-family-tree [data-family-map-vital-line="true"] {
+      box-sizing: border-box !important;
+      display: flex !important;
+      width: 100% !important;
+      min-width: 0 !important;
+      align-items: center !important;
+      justify-content: flex-start !important;
+      gap: 0.18rem !important;
+      text-align: left !important;
+      line-height: 1.2 !important;
+    }
+
+    .is-exporting-family-tree [data-family-map-vital-line="true"] .family-map-status-icon {
+      display: block !important;
+      flex: 0 0 auto !important;
+      align-self: center !important;
+      margin: 0 !important;
+      transform: none !important;
+      vertical-align: middle !important;
+    }
+
+    .is-exporting-family-tree [data-family-map-vital-line="true"] .family-map-status-icon + span {
+      display: block !important;
+      min-width: 0 !important;
+      line-height: 1.2 !important;
+      text-align: left !important;
     }
   `;
   clonedDocument.head.appendChild(style);

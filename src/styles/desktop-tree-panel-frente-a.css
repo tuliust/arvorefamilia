@@ -265,12 +265,14 @@
 
 html.is-exporting-family-tree [data-family-map-group-title='true'] {
   display: inline-flex !important;
-  min-height: 1.18rem !important;
+  min-height: 1.28rem !important;
   align-items: center !important;
   justify-content: center !important;
+  box-sizing: border-box !important;
   text-align: center !important;
   line-height: 1 !important;
-  padding-block: 0.28rem !important;
+  padding-block: 0.3rem !important;
+  vertical-align: middle !important;
 }
 
 html.is-exporting-family-tree [data-family-map-export-root='true'] button[data-family-map-color-key] > span:not([data-family-map-avatar='true']) > span:first-child,
@@ -285,28 +287,36 @@ html.is-exporting-family-tree [data-family-map-horizontal-root='true'] button[da
   line-height: 1.2 !important;
 }
 
-html.is-exporting-family-tree [data-family-map-export-root='true'] span:has(> .family-map-status-icon),
-html.is-exporting-family-tree [data-family-map-horizontal-root='true'] span:has(> .family-map-status-icon) {
-  display: inline-flex !important;
+html.is-exporting-family-tree [data-family-map-export-root='true'] [data-family-map-vital-line='true'],
+html.is-exporting-family-tree [data-family-map-horizontal-root='true'] [data-family-map-vital-line='true'] {
+  box-sizing: border-box !important;
+  display: flex !important;
+  width: 100% !important;
+  min-width: 0 !important;
   align-items: center !important;
-  justify-content: center !important;
-  gap: 0.16rem !important;
-  line-height: 1.22 !important;
+  justify-content: flex-start !important;
+  gap: 0.18rem !important;
+  text-align: left !important;
+  line-height: 1.2 !important;
 }
 
 html.is-exporting-family-tree [data-family-map-export-root='true'] .family-map-status-icon,
 html.is-exporting-family-tree [data-family-map-horizontal-root='true'] .family-map-status-icon {
-  display: inline-block !important;
+  display: block !important;
+  flex: 0 0 auto !important;
   align-self: center !important;
+  margin: 0 !important;
   margin-top: 0 !important;
-  transform: translateY(0) !important;
+  transform: none !important;
   vertical-align: middle !important;
 }
 
 html.is-exporting-family-tree [data-family-map-export-root='true'] .family-map-status-icon + span,
 html.is-exporting-family-tree [data-family-map-horizontal-root='true'] .family-map-status-icon + span {
-  display: inline-block !important;
+  display: block !important;
+  min-width: 0 !important;
   line-height: 1.2 !important;
+  text-align: left !important;
   vertical-align: middle !important;
 }
 

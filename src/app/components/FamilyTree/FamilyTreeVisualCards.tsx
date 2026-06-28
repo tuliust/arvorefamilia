@@ -213,7 +213,10 @@ export function VisualVitalLines({
 
   return (
     <>
-      <span className={`mt-1 flex w-full min-w-0 items-center ${alignment} ${gap} ${textSize} font-semibold leading-tight text-cyan-50`}>
+      <span
+        data-family-map-vital-line="true"
+        className={`mt-1 flex w-full min-w-0 items-center ${alignment} ${gap} ${textSize} font-semibold leading-tight text-cyan-50`}
+      >
         <Star
           className={`family-map-status-icon family-map-birth-icon ${iconSize} shrink-0 fill-current`}
           fill="currentColor"
@@ -223,7 +226,10 @@ export function VisualVitalLines({
         {birthLine && <span className="truncate">{birthLine}</span>}
       </span>
       {showDeathLine && (
-        <span className={`mt-0.5 flex w-full min-w-0 items-center ${alignment} ${gap} ${textSize} font-semibold leading-tight text-cyan-50`}>
+        <span
+          data-family-map-vital-line="true"
+          className={`mt-0.5 flex w-full min-w-0 items-center ${alignment} ${gap} ${textSize} font-semibold leading-tight text-cyan-50`}
+        >
           <Cross
             className={`family-map-status-icon family-map-deceased-icon ${iconSize} shrink-0`}
             fill="none"
@@ -328,7 +334,10 @@ export function VisualPersonCard({
       ].join(' ')}
     >
       {label && (
-        <span className="absolute -top-3 left-1/2 z-10 -translate-x-1/2 whitespace-nowrap rounded-full bg-slate-600 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.08em] text-white shadow">
+        <span
+          data-family-map-group-title="true"
+          className="absolute -top-3 left-1/2 z-10 -translate-x-1/2 whitespace-nowrap rounded-full bg-slate-600 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.08em] text-white shadow"
+        >
           {label}
         </span>
       )}

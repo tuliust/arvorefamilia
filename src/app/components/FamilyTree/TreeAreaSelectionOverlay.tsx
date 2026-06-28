@@ -28,7 +28,7 @@ interface TreeAreaSelectionOverlayProps {
 }
 
 const MIN_SELECTION_SIZE = 80;
-const MAX_EXPORT_PIXELS = 12_000_000;
+const MAX_EXPORT_PIXELS = 27_000_000;
 
 export function waitForTreeExportPaint() {
   return new Promise<void>((resolve) => {
@@ -110,7 +110,7 @@ function getPreviewTitle(action: ExportAction) {
 }
 
 function getEstimatedExportPixels(selection: ExportRect) {
-  const scale = Math.min(2, window.devicePixelRatio || 1);
+  const scale = Math.min(3, Math.max(2, window.devicePixelRatio || 1));
   return selection.width * scale * selection.height * scale;
 }
 
