@@ -193,3 +193,119 @@
     height: clamp(1rem, 2vh, 1.14rem) !important;
   }
 }
+
+/* Frente 2026-06-28: título dos grupos, preservação do painel e ajustes de exportação. */
+@media (min-width: 768px) {
+  .desktop-tree-family-groups-header {
+    order: 10 !important;
+    display: flex !important;
+    min-width: 0;
+    flex-direction: column;
+    gap: clamp(0.08rem, 0.18vh, 0.14rem);
+  }
+
+  .desktop-tree-family-groups-title {
+    margin: 0;
+    color: #0f2348;
+    font-size: clamp(0.78rem, 1.52vh, 0.92rem);
+    font-weight: 800;
+    letter-spacing: -0.01em;
+    line-height: 1.1;
+  }
+
+  .desktop-tree-family-groups-subtitle {
+    margin: 0;
+    max-width: 19rem;
+    color: #64748b;
+    font-size: clamp(0.62rem, 1.2vh, 0.72rem);
+    font-weight: 650;
+    line-height: 1.18;
+  }
+
+  .desktop-tree-family-groups {
+    order: 11 !important;
+    min-height: clamp(7.3rem, 18vh, 12rem) !important;
+  }
+
+  .desktop-tree-export-panel {
+    order: 12 !important;
+  }
+
+  main aside .desktop-tree-visualization-panel-shell,
+  main aside .desktop-tree-visualization-panel {
+    display: flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+  }
+
+  html.is-exporting-family-tree main aside .desktop-tree-visualization-panel-shell,
+  html.is-exporting-family-tree main aside .desktop-tree-visualization-panel,
+  html.is-exporting-family-tree main aside .desktop-tree-family-groups,
+  html.is-exporting-family-tree main aside .desktop-tree-export-panel {
+    display: flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+  }
+}
+
+@media (max-height: 720px) and (min-width: 768px) {
+  .desktop-tree-family-groups-title {
+    font-size: 0.74rem;
+  }
+
+  .desktop-tree-family-groups-subtitle {
+    font-size: 0.58rem;
+    line-height: 1.12;
+  }
+
+  .desktop-tree-family-groups {
+    min-height: 6.55rem !important;
+  }
+}
+
+html.is-exporting-family-tree [data-family-map-group-title='true'] {
+  display: inline-flex !important;
+  min-height: 1.18rem !important;
+  align-items: center !important;
+  justify-content: center !important;
+  text-align: center !important;
+  line-height: 1 !important;
+  padding-block: 0.28rem !important;
+}
+
+html.is-exporting-family-tree [data-family-map-export-root='true'] button[data-family-map-color-key] > span:not([data-family-map-avatar='true']) > span:first-child,
+html.is-exporting-family-tree [data-family-map-horizontal-root='true'] button[data-family-map-color-key] > span:not([data-family-map-avatar='true']) > span:first-child {
+  margin-bottom: 0.18rem !important;
+}
+
+html.is-exporting-family-tree [data-family-map-export-root='true'] button[data-family-map-color-key] > span[class*='mt-1.5'],
+html.is-exporting-family-tree [data-family-map-horizontal-root='true'] button[data-family-map-color-key] > span[class*='mt-1.5'] {
+  margin-top: 0.42rem !important;
+  margin-bottom: 0.16rem !important;
+  line-height: 1.2 !important;
+}
+
+html.is-exporting-family-tree [data-family-map-export-root='true'] span:has(> .family-map-status-icon),
+html.is-exporting-family-tree [data-family-map-horizontal-root='true'] span:has(> .family-map-status-icon) {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 0.16rem !important;
+  line-height: 1.22 !important;
+}
+
+html.is-exporting-family-tree [data-family-map-export-root='true'] .family-map-status-icon,
+html.is-exporting-family-tree [data-family-map-horizontal-root='true'] .family-map-status-icon {
+  display: inline-block !important;
+  align-self: center !important;
+  margin-top: 0 !important;
+  transform: translateY(0) !important;
+  vertical-align: middle !important;
+}
+
+html.is-exporting-family-tree [data-family-map-export-root='true'] .family-map-status-icon + span,
+html.is-exporting-family-tree [data-family-map-horizontal-root='true'] .family-map-status-icon + span {
+  display: inline-block !important;
+  line-height: 1.2 !important;
+  vertical-align: middle !important;
+}
