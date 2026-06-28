@@ -314,6 +314,13 @@ export function DesktopTreeVisualizationPanel({
 
         <div className="desktop-tree-panel-divider desktop-tree-groups-divider" />
 
+        <div className="desktop-tree-family-groups-header">
+          <h3 className="desktop-tree-family-groups-title">Grupos de Familiares</h3>
+          <p className="desktop-tree-family-groups-subtitle">
+            Clique para exibir/ocultar grupos de parentes na árvore
+          </p>
+        </div>
+
         <div className="desktop-tree-family-groups">
           {groupSections.map((section) => (
             <section key={section.title} className="desktop-tree-family-group-card" aria-label={section.title}>
