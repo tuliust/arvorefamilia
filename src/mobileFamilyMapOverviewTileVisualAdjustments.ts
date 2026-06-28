@@ -123,7 +123,7 @@ function ensureStyles() {
         flex-direction: column !important;
         align-items: center !important;
         justify-content: center !important;
-        gap: 0.24rem !important;
+        gap: 0.16rem !important;
         padding: 8px !important;
         text-align: center !important;
         letter-spacing: 0 !important;
@@ -132,12 +132,12 @@ function ensureStyles() {
       #${OVERVIEW_ID} .mobile-family-overview-tile-title {
         display: flex !important;
         width: 100% !important;
-        min-height: 1.22rem !important;
+        min-height: 1.1rem !important;
         align-items: center !important;
         justify-content: center !important;
         text-align: center !important;
-        letter-spacing: 0 !important;
-        line-height: 0.96 !important;
+        letter-spacing: -0.035em !important;
+        line-height: 0.92 !important;
       }
 
       #${OVERVIEW_ID} .mobile-family-map-overview-tile-icon,
@@ -145,7 +145,7 @@ function ensureStyles() {
         display: flex !important;
         width: 100% !important;
         flex: 0 0 auto !important;
-        min-height: 2.05rem !important;
+        min-height: 3.6rem !important;
         align-items: center !important;
         justify-content: center !important;
         margin: auto 0 !important;
@@ -156,13 +156,17 @@ function ensureStyles() {
       #${OVERVIEW_ID} .mobile-family-map-overview-tile-icon svg,
       #${OVERVIEW_ID} .mobile-family-overview-tile-icon svg {
         display: block !important;
-        width: clamp(1.45rem, 7vw, 2.08rem) !important;
-        height: clamp(1.45rem, 7vw, 2.08rem) !important;
+        width: clamp(2.8rem, 13.8vw, 4.1rem) !important;
+        height: clamp(2.8rem, 13.8vw, 4.1rem) !important;
         fill: none !important;
         stroke: currentColor !important;
-        stroke-width: 1.9 !important;
+        stroke-width: 1.55 !important;
         stroke-linecap: round !important;
         stroke-linejoin: round !important;
+      }
+
+      #${OVERVIEW_ID} .mobile-family-overview-tile-icon:not([data-mobile-family-map-unique-icon]) {
+        display: none !important;
       }
 
       #${OVERVIEW_ID} .mobile-family-overview-tile-count {
@@ -183,6 +187,35 @@ function ensureStyles() {
   if (document.head.lastElementChild !== style) document.head.appendChild(style);
 }
 
+function makeIconElement(screenName: string, iconMarkup: string) {
+  const icon = document.createElement('span');
+  icon.className = 'mobile-family-overview-tile-icon mobile-family-map-overview-tile-icon';
+  icon.setAttribute('aria-hidden', 'true');
+  icon.dataset.mobileFamilyMapUniqueIcon = screenName;
+  icon.innerHTML = iconMarkup.trim();
+  return icon;
+}
+
+function ensureSingleUniqueIcon(tile: HTMLElement, screenName: string, iconMarkup: string) {
+  const title = tile.querySelector<HTMLElement>('.mobile-family-overview-tile-title');
+  const count = tile.querySelector<HTMLElement>('.mobile-family-overview-tile-count');
+  const icons = Array.from(tile.querySelectorAll<HTMLElement>('.mobile-family-map-overview-tile-icon, .mobile-family-overview-tile-icon'));
+  const retainedIcon = icons.find((icon) => icon.dataset.mobileFamilyMapUniqueIcon === screenName) ?? icons[0] ?? makeIconElement(screenName, iconMarkup);
+
+  retainedIcon.className = 'mobile-family-overview-tile-icon mobile-family-map-overview-tile-icon';
+  retainedIcon.setAttribute('aria-hidden', 'true');
+  retainedIcon.dataset.mobileFamilyMapUniqueIcon = screenName;
+  if (retainedIcon.innerHTML.trim() !== iconMarkup.trim()) retainedIcon.innerHTML = iconMarkup.trim();
+
+  icons.forEach((icon) => {
+    if (icon !== retainedIcon) icon.remove();
+  });
+
+  if (count) tile.insertBefore(retainedIcon, count);
+  else if (title?.nextSibling) tile.insertBefore(retainedIcon, title.nextSibling);
+  else tile.appendChild(retainedIcon);
+}
+
 function patchTileIcons() {
   if (!isEnabled()) return;
   ensureStyles();
@@ -195,13 +228,7 @@ function patchTileIcons() {
     const iconMarkup = ICONS_BY_SCREEN[screenName];
     if (!iconMarkup) return;
 
-    const icon = tile.querySelector<HTMLElement>('.mobile-family-map-overview-tile-icon, .mobile-family-overview-tile-icon');
-    if (!icon) return;
-    if (icon.dataset.mobileFamilyMapUniqueIcon === screenName) return;
-
-    icon.dataset.mobileFamilyMapUniqueIcon = screenName;
-    icon.classList.add('mobile-family-map-overview-tile-icon');
-    icon.innerHTML = iconMarkup.trim();
+    ensureSingleUniqueIcon(tile, screenName, iconMarkup);
   });
 }
 
