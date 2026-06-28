@@ -209,15 +209,37 @@ function applyMobileTopLayerTweaks(pathname: string) {
   rewriteAdminSummaryLabels(pathname);
 }
 
+function getIntersectionArea(left: DOMRect, right: DOMRect) {
+  const width = Math.max(0, Math.min(left.right, right.right) - Math.max(left.left, right.left));
+  const height = Math.max(0, Math.min(left.bottom, right.bottom) - Math.max(left.top, right.top));
+  return width * height;
+}
+
+function findVisibleCousinsScreen(root: HTMLElement) {
+  const rootRect = root.getBoundingClientRect();
+  const candidates = Array.from(root.querySelectorAll<HTMLElement>(
+    '[data-mobile-family-tree-screen="paternal-cousins"], [data-mobile-family-tree-screen="maternal-cousins"]'
+  ));
+
+  return candidates
+    .map((screen) => ({ screen, area: getIntersectionArea(screen.getBoundingClientRect(), rootRect) }))
+    .sort((left, right) => right.area - left.area)[0]?.screen ?? null;
+}
+
 function findCousinsScrollElement(target: EventTarget | null) {
   const element = getEventElement(target);
-  const cousinsScreen = element?.closest<HTMLElement>(
+  const explicitCousinsScreen = element?.closest<HTMLElement>(
     '[data-mobile-family-tree-screen="paternal-cousins"], [data-mobile-family-tree-screen="maternal-cousins"]'
   );
 
-  if (!cousinsScreen) return null;
-  return element?.closest<HTMLElement>('[data-mobile-tree-scroll]')
-    ?? cousinsScreen.querySelector<HTMLElement>('[data-mobile-tree-scroll]');
+  if (explicitCousinsScreen) {
+    return explicitCousinsScreen.querySelector<HTMLElement>('[data-mobile-tree-scroll]') ?? explicitCousinsScreen;
+  }
+
+  const root = element?.closest<HTMLElement>('[data-mobile-family-tree-root="true"]');
+  const visibleCousinsScreen = root ? findVisibleCousinsScreen(root) : null;
+
+  return visibleCousinsScreen?.querySelector<HTMLElement>('[data-mobile-tree-scroll]') ?? visibleCousinsScreen;
 }
 
 export function MobileTopLayerTweaks() {
@@ -266,6 +288,7 @@ export function MobileTopLayerTweaks() {
     let start: {
       x: number;
       y: number;
+      lastY: number;
       scrollElement: HTMLElement;
     } | null = null;
 
@@ -286,6 +309,7 @@ export function MobileTopLayerTweaks() {
       start = {
         x: touch.clientX,
         y: touch.clientY,
+        lastY: touch.clientY,
         scrollElement,
       };
     };
@@ -302,7 +326,7 @@ export function MobileTopLayerTweaks() {
       if (absoluteY < 10 || absoluteY <= absoluteX * 1.2) return;
 
       const { scrollElement } = start;
-      const scrollsTowardBottom = deltaY < 0;
+      const scrollsTowardBottom = touch.clientY < start.lastY;
       const canScrollVertically = scrollElement.scrollHeight > scrollElement.clientHeight + 1;
       const canContinueScrolling = scrollsTowardBottom
         ? scrollElement.scrollTop + scrollElement.clientHeight < scrollElement.scrollHeight - 1
@@ -310,8 +334,12 @@ export function MobileTopLayerTweaks() {
 
       if (!canScrollVertically || !canContinueScrolling) return;
 
+      event.preventDefault();
       event.stopPropagation();
       event.stopImmediatePropagation();
+
+      scrollElement.scrollTop += start.lastY - touch.clientY;
+      start.lastY = touch.clientY;
     };
 
     const clearTouchStart = () => {
@@ -319,7 +347,7 @@ export function MobileTopLayerTweaks() {
     };
 
     document.addEventListener('touchstart', handleTouchStart, { capture: true, passive: true });
-    document.addEventListener('touchmove', keepCousinsVerticalScrollInsideScreen, { capture: true, passive: true });
+    document.addEventListener('touchmove', keepCousinsVerticalScrollInsideScreen, { capture: true, passive: false });
     document.addEventListener('touchend', clearTouchStart, { capture: true, passive: true });
     document.addEventListener('touchcancel', clearTouchStart, { capture: true, passive: true });
 
