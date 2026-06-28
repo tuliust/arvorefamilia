@@ -28,6 +28,24 @@ const styles = `
     z-index: ${LINE_PANEL_CONTENT_Z_INDEX} !important;
   }
 
+  html.${LINE_PANEL_OPEN_CLASS} [role="dialog"][aria-label="Painel de visualização"] button[class*="border-blue-100"][class*="w-full"] {
+    min-height: 3.25rem !important;
+    padding-left: 0.75rem !important;
+    padding-right: 0.75rem !important;
+    text-align: center !important;
+  }
+
+  html.${LINE_PANEL_OPEN_CLASS} [role="dialog"][aria-label="Painel de visualização"] button[class*="border-blue-100"][class*="w-full"] > span {
+    display: block !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    overflow: visible !important;
+    text-overflow: clip !important;
+    white-space: normal !important;
+    overflow-wrap: anywhere !important;
+    line-height: 1.15 !important;
+  }
+
   html.${LINE_PANEL_OPEN_CLASS} .${LINE_PANEL_CLOSE_BUTTON_CLASS} {
     position: absolute !important;
     top: 0.75rem !important;
@@ -65,6 +83,28 @@ function findLineGenerationControlsPanel() {
   return document.querySelector<HTMLElement>(
     '[data-linha-geracional-mobile-root="true"] [role="dialog"][aria-label="Painel de visualização"]'
   );
+}
+
+function getFirstTwoNames(value: string) {
+  return value
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .join(' ');
+}
+
+function normalizeFamilyGroupPersonLabels(panel: HTMLElement) {
+  panel
+    .querySelectorAll<HTMLSpanElement>('button[class*="border-blue-100"][class*="w-full"] > span')
+    .forEach((label) => {
+      const sourceLabel = label.dataset.fullPersonName || label.textContent || '';
+      const nextLabel = getFirstTwoNames(sourceLabel);
+
+      if (!nextLabel) return;
+      label.dataset.fullPersonName = sourceLabel;
+      if (label.textContent !== nextLabel) label.textContent = nextLabel;
+    });
 }
 
 function closeLineGenerationControlsPanel(panel: HTMLElement) {
@@ -115,6 +155,7 @@ function applyLineGenerationPanelLayer() {
     setStyle(section, 'z-index', LINE_PANEL_CONTENT_Z_INDEX);
   });
 
+  normalizeFamilyGroupPersonLabels(panel);
   ensureLineGenerationCloseButton(panel);
 }
 
