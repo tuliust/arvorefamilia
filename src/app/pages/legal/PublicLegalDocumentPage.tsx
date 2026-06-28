@@ -71,10 +71,10 @@ export function PublicLegalDocumentPage({ content }: { content: LegalDocumentCon
         <aside className="order-2 lg:order-1 lg:sticky lg:top-8 lg:self-start">
           <div className="rounded-lg border border-gray-200 p-5 shadow-sm" style={{ backgroundColor: settings.global_card_background_color, borderRadius: settings.global_card_radius }}>
             <div
-              className="flex h-11 w-11 items-center justify-center rounded-lg"
+              className="grid h-11 w-11 place-items-center rounded-lg"
               style={{ backgroundColor: `${settings.global_primary_color}1A`, color: settings.global_primary_color }}
             >
-              <ShieldCheck className="h-5 w-5" />
+              <ShieldCheck className="block h-5 w-5 shrink-0" />
             </div>
             <h2 className="mt-4 text-lg font-semibold" style={{ color: settings.global_text_color }}>{content.title}</h2>
             <p className="mt-1 text-sm" style={{ color: settings.global_muted_text_color }}>{content.subtitle}</p>
