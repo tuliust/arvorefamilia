@@ -21,8 +21,10 @@ type SwipeDirection = 'up' | 'down' | 'left' | 'right';
 type GestureStart = {
   x: number;
   y: number;
+  lastY: number;
   screen: ScreenName | null;
   scrollArea: HTMLElement | null;
+  handledScroll: boolean;
 };
 
 const SCREEN_POSITIONS: Record<ScreenName, { column: number; row: number }> = {
@@ -64,6 +66,10 @@ function isEnabled() {
 
 function isScreenName(value: string | null | undefined): value is ScreenName {
   return Boolean(value && value in SCREEN_POSITIONS);
+}
+
+function isCousinScreen(screenName: ScreenName | null) {
+  return screenName === 'paternal-cousins' || screenName === 'maternal-cousins';
 }
 
 function getRoot() {
@@ -219,6 +225,20 @@ function canScrollVertically(scrollArea: HTMLElement | null, deltaY: number) {
   return false;
 }
 
+function clampScrollTop(value: number, scrollArea: HTMLElement) {
+  return Math.min(maxScrollTop(scrollArea), Math.max(0, value));
+}
+
+function scrollWithOneFinger(scrollArea: HTMLElement | null, touchDeltaY: number) {
+  if (!scrollArea || maxScrollTop(scrollArea) <= 1 || touchDeltaY === 0) return false;
+
+  const nextTop = clampScrollTop(scrollArea.scrollTop - touchDeltaY, scrollArea);
+  if (Math.abs(nextTop - scrollArea.scrollTop) < 0.5) return false;
+
+  scrollArea.scrollTop = nextTop;
+  return true;
+}
+
 function getGestureDirection(deltaX: number, deltaY: number, threshold: number): SwipeDirection | null {
   const absoluteX = Math.abs(deltaX);
   const absoluteY = Math.abs(deltaY);
@@ -261,8 +281,10 @@ function handleTouchStart(event: TouchEvent) {
   gestureStart = {
     x: touch.clientX,
     y: touch.clientY,
+    lastY: touch.clientY,
     screen: getScreenFromTarget(event.target) ?? getCurrentScreen(),
     scrollArea: getScrollArea(event.target),
+    handledScroll: false,
   };
 }
 
@@ -273,17 +295,32 @@ function handleTouchMove(event: TouchEvent) {
 
   const deltaX = touch.clientX - gestureStart.x;
   const deltaY = touch.clientY - gestureStart.y;
+  const stepY = touch.clientY - gestureStart.lastY;
   const direction = getGestureDirection(deltaX, deltaY, PREVIEW_THRESHOLD);
-  if (!direction) return;
+  if (!direction) {
+    gestureStart.lastY = touch.clientY;
+    return;
+  }
 
   const scrollArea = getScrollArea(event.target) ?? gestureStart.scrollArea;
   const destination = getDestination(gestureStart.screen, direction);
 
   if ((direction === 'up' || direction === 'down') && canScrollVertically(scrollArea, deltaY)) {
+    // Em iOS, o scroll nativo em telas transformadas pode exigir dois dedos.
+    // Nas telas de primos, fazemos o scroll vertical manualmente com um dedo.
+    if (isCousinScreen(gestureStart.screen)) {
+      gestureStart.handledScroll = scrollWithOneFinger(scrollArea, stepY) || gestureStart.handledScroll;
+      gestureStart.lastY = touch.clientY;
+      consumeGesture(event);
+      return;
+    }
+
     // Scroll interno ainda tem prioridade. A navegação só assume nos limites.
     keepNativeScroll(event);
     return;
   }
+
+  gestureStart.lastY = touch.clientY;
 
   // Captura direções permitidas e bloqueadas para impedir fallback do React/script antigo.
   consumeGesture(event);
@@ -302,6 +339,11 @@ function handleTouchEnd(event: TouchEvent) {
   const start = gestureStart;
   gestureStart = null;
   if (!touch) return;
+
+  if (start.handledScroll) {
+    consumeGesture(event);
+    return;
+  }
 
   const deltaX = touch.clientX - start.x;
   const deltaY = touch.clientY - start.y;
