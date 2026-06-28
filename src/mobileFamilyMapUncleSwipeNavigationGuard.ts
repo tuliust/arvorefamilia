@@ -5,17 +5,20 @@ const STAGE_SELECTOR = '[data-mobile-family-tree-stage="true"]';
 const NAVIGATION_THRESHOLD = 56;
 const PREVIEW_THRESHOLD = 8;
 
-type UncleScreen = 'paternal-uncles' | 'maternal-uncles' | 'paternal-cousins';
-type TargetScreen = 'core' | 'paternal-uncles' | 'paternal-cousins' | 'maternal-cousins';
+type UncleScreen = 'paternal-uncles' | 'maternal-uncles' | 'paternal-cousins' | 'maternal-cousins';
+type TargetScreen = 'core' | 'paternal-uncles' | 'paternal-cousins' | 'maternal-uncles' | 'maternal-cousins';
 type PhysicalSwipeDirection = 'left' | 'right' | 'up' | 'down';
 
 type GestureStart = {
   x: number;
   y: number;
+  lastY: number;
   screen: UncleScreen | null;
+  scrollArea: HTMLElement | null;
+  handledScroll: boolean;
 };
 
-const SCREEN_POSITIONS: Record<TargetScreen | 'maternal-uncles', { column: number; row: number }> = {
+const SCREEN_POSITIONS: Record<TargetScreen, { column: number; row: number }> = {
   'paternal-uncles': { column: 0, row: 1 },
   'maternal-uncles': { column: 2, row: 1 },
   core: { column: 1, row: 1 },
@@ -39,7 +42,14 @@ function isEnabled() {
 }
 
 function isUncleScreen(value: string | null | undefined): value is UncleScreen {
-  return value === 'paternal-uncles' || value === 'maternal-uncles' || value === 'paternal-cousins';
+  return value === 'paternal-uncles'
+    || value === 'maternal-uncles'
+    || value === 'paternal-cousins'
+    || value === 'maternal-cousins';
+}
+
+function isCousinScreen(value: UncleScreen | null) {
+  return value === 'paternal-cousins' || value === 'maternal-cousins';
 }
 
 function getRoot() {
@@ -64,6 +74,47 @@ function getScreenFromPoint(x: number, y: number): UncleScreen | null {
   return getScreenFromElement(document.elementFromPoint(x, y));
 }
 
+function getScrollArea(target: EventTarget | null) {
+  if (!(target instanceof Element)) return null;
+
+  return target.closest<HTMLElement>([
+    '[data-mobile-tree-scroll]',
+    '[data-mobile-family-tree-screen="paternal-cousins"] > div',
+    '[data-mobile-family-tree-screen="maternal-cousins"] > div',
+  ].join(','));
+}
+
+function maxScrollTop(scrollArea: HTMLElement | null) {
+  if (!scrollArea) return 0;
+  return Math.max(0, scrollArea.scrollHeight - scrollArea.clientHeight);
+}
+
+function canScrollVertically(scrollArea: HTMLElement | null, deltaY: number) {
+  const maxTop = maxScrollTop(scrollArea);
+  if (!scrollArea || maxTop <= 1) return false;
+
+  // deltaY < 0: dedo sobe, conteúdo desce.
+  if (deltaY < 0) return scrollArea.scrollTop < maxTop - 1;
+  // deltaY > 0: dedo desce, conteúdo sobe.
+  if (deltaY > 0) return scrollArea.scrollTop > 1;
+
+  return false;
+}
+
+function clampScrollTop(value: number, scrollArea: HTMLElement) {
+  return Math.min(maxScrollTop(scrollArea), Math.max(0, value));
+}
+
+function scrollWithOneFinger(scrollArea: HTMLElement | null, touchDeltaY: number) {
+  if (!scrollArea || maxScrollTop(scrollArea) <= 1 || touchDeltaY === 0) return false;
+
+  const nextTop = clampScrollTop(scrollArea.scrollTop - touchDeltaY, scrollArea);
+  if (Math.abs(nextTop - scrollArea.scrollTop) < 0.5) return false;
+
+  scrollArea.scrollTop = nextTop;
+  return true;
+}
+
 function parseTranslatePercent(value: string) {
   const match = value.match(/translate3d\(calc\((-?\d+(?:\.\d+)?)%[^,]*,\s*calc\((-?\d+(?:\.\d+)?)%/);
   if (!match) return null;
@@ -86,6 +137,7 @@ function parseTranslatePercent(value: string) {
   if (column === 0 && row === 1) return 'paternal-uncles';
   if (column === 2 && row === 1) return 'maternal-uncles';
   if (column === 0 && row === 2) return 'paternal-cousins';
+  if (column === 2 && row === 2) return 'maternal-cousins';
   return null;
 }
 
@@ -139,6 +191,13 @@ function getDestination(screen: UncleScreen, direction: PhysicalSwipeDirection):
     if (direction === 'down') return null;
   }
 
+  if (screen === 'maternal-cousins') {
+    if (direction === 'left') return null;
+    if (direction === 'right') return null;
+    if (direction === 'up') return null;
+    if (direction === 'down') return 'maternal-uncles';
+  }
+
   return null;
 }
 
@@ -170,7 +229,10 @@ function handleTouchStart(event: TouchEvent) {
   gestureStart = {
     x: touch.clientX,
     y: touch.clientY,
+    lastY: touch.clientY,
     screen,
+    scrollArea: getScrollArea(event.target),
+    handledScroll: false,
   };
 
   // Garante que handlers document/root do React não inicializem uma navegação concorrente.
@@ -184,8 +246,23 @@ function handleTouchMove(event: TouchEvent) {
 
   const deltaX = touch.clientX - gestureStart.x;
   const deltaY = touch.clientY - gestureStart.y;
+  const stepY = touch.clientY - gestureStart.lastY;
   const direction = getPhysicalDirection(deltaX, deltaY, PREVIEW_THRESHOLD);
-  if (!direction) return;
+  if (!direction) {
+    gestureStart.lastY = touch.clientY;
+    return;
+  }
+
+  const scrollArea = getScrollArea(event.target) ?? gestureStart.scrollArea;
+
+  if (isCousinScreen(gestureStart.screen) && canScrollVertically(scrollArea, deltaY)) {
+    gestureStart.handledScroll = scrollWithOneFinger(scrollArea, stepY) || gestureStart.handledScroll;
+    gestureStart.lastY = touch.clientY;
+    blockEvent(event);
+    return;
+  }
+
+  gestureStart.lastY = touch.clientY;
 
   // Captura tanto direções permitidas quanto bloqueadas antes dos handlers document/root.
   blockEvent(event);
@@ -201,6 +278,11 @@ function handleTouchEnd(event: TouchEvent) {
   const start = gestureStart;
   gestureStart = null;
   if (!touch) return;
+
+  if (start.handledScroll) {
+    blockEvent(event);
+    return;
+  }
 
   const deltaX = touch.clientX - start.x;
   const deltaY = touch.clientY - start.y;
