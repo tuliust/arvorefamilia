@@ -6,12 +6,17 @@ const MOBILE_USER_MENU_Z = '2147483620';
 const MOBILE_USER_MENU_BACKDROP_Z = '2147483610';
 const MOBILE_PANEL_Z = '2147483550';
 const MOBILE_LINE_PANEL_Z = '2147483650';
+const MOBILE_VISUALIZATION_PANEL_OPEN_CLASS = 'mobile-visualization-panel-open';
 
 const mobileTopLayerStyles = `
 @media (max-width: 767px) {
   header {
     z-index: 2147481000 !important;
     overflow: visible !important;
+  }
+
+  html.${MOBILE_VISUALIZATION_PANEL_OPEN_CLASS} header {
+    z-index: 0 !important;
   }
 
   header [role="menu"][aria-label="Últimas notificações"],
@@ -28,6 +33,8 @@ const mobileTopLayerStyles = `
   }
 
   [role="dialog"][aria-label="Painel de visualização"] {
+    position: fixed !important;
+    inset: 0 !important;
     z-index: 2147483550 !important;
   }
 
@@ -148,7 +155,12 @@ function applyTopLayerInlineStyles() {
     setStyle(panel, 'transform', 'none');
   });
 
-  document.querySelectorAll<HTMLElement>('[role="dialog"][aria-label="Painel de visualização"]').forEach((panel) => {
+  const visualizationPanels = document.querySelectorAll<HTMLElement>('[role="dialog"][aria-label="Painel de visualização"]');
+  document.documentElement.classList.toggle(MOBILE_VISUALIZATION_PANEL_OPEN_CLASS, visualizationPanels.length > 0);
+
+  visualizationPanels.forEach((panel) => {
+    setStyle(panel, 'position', 'fixed');
+    setStyle(panel, 'inset', '0');
     setStyle(panel, 'z-index', MOBILE_PANEL_Z);
   });
 
@@ -226,6 +238,7 @@ function rewriteAdminSummaryLabels(pathname: string) {
 
 function applyMobileTopLayerTweaks(pathname: string) {
   if (!isMobileViewport()) {
+    document.documentElement.classList.remove(MOBILE_VISUALIZATION_PANEL_OPEN_CLASS);
     rewriteAdminSummaryLabels(pathname);
     return;
   }
@@ -304,6 +317,7 @@ export function MobileTopLayerTweaks() {
       if (frameId !== null) window.cancelAnimationFrame(frameId);
       window.removeEventListener('resize', apply);
       timers.forEach((timer) => window.clearTimeout(timer));
+      document.documentElement.classList.remove(MOBILE_VISUALIZATION_PANEL_OPEN_CLASS);
     };
   }, [location.pathname]);
 
