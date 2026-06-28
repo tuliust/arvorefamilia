@@ -11,6 +11,7 @@ import {
   previewCanvasAsPdf,
   previewCanvasAsPng,
   previewCanvasForPrint,
+  writeTreeExportErrorWindow,
 } from './utils/treeExport';
 
 type ExportAction = 'png' | 'pdf' | 'print';
@@ -258,14 +259,11 @@ export function TreeAreaSelectionOverlay({
 
       onClose();
     } catch (exportError) {
-      if (previewWindow && !previewWindow.closed) {
-        previewWindow.close();
-      }
-      setError(
-        exportError instanceof Error
-          ? exportError.message
-          : 'Não foi possível exportar a área selecionada.'
-      );
+      const message = exportError instanceof Error
+        ? exportError.message
+        : 'Não foi possível exportar a área selecionada.';
+      writeTreeExportErrorWindow(previewWindow, message);
+      setError(message);
     } finally {
       setActiveAction(null);
     }
