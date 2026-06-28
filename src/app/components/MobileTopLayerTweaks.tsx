@@ -5,6 +5,7 @@ const MOBILE_TOP_LAYER_Z = '2147483600';
 const MOBILE_USER_MENU_Z = '2147483620';
 const MOBILE_USER_MENU_BACKDROP_Z = '2147483610';
 const MOBILE_PANEL_Z = '2147483550';
+const MOBILE_LINE_PANEL_Z = '2147483650';
 
 const mobileTopLayerStyles = `
 @media (max-width: 767px) {
@@ -32,6 +33,20 @@ const mobileTopLayerStyles = `
 
   [role="dialog"][aria-label="Painel de visualização"] section {
     z-index: 2147483551 !important;
+  }
+
+  [data-linha-geracional-mobile-root="true"] {
+    overflow: visible !important;
+  }
+
+  [data-linha-geracional-mobile-root="true"] [role="dialog"][aria-label="Painel de visualização"] {
+    position: fixed !important;
+    inset: 0 !important;
+    z-index: 2147483650 !important;
+  }
+
+  [data-linha-geracional-mobile-root="true"] [role="dialog"][aria-label="Painel de visualização"] section {
+    z-index: 2147483651 !important;
   }
 
   html.mobile-user-menu-open button.fixed.inset-0 {
@@ -135,6 +150,16 @@ function applyTopLayerInlineStyles() {
 
   document.querySelectorAll<HTMLElement>('[role="dialog"][aria-label="Painel de visualização"]').forEach((panel) => {
     setStyle(panel, 'z-index', MOBILE_PANEL_Z);
+  });
+
+  document.querySelectorAll<HTMLElement>('[data-linha-geracional-mobile-root="true"]').forEach((root) => {
+    setStyle(root, 'overflow', 'visible');
+  });
+
+  document.querySelectorAll<HTMLElement>('[data-linha-geracional-mobile-root="true"] [role="dialog"][aria-label="Painel de visualização"]').forEach((panel) => {
+    setStyle(panel, 'position', 'fixed');
+    setStyle(panel, 'inset', '0');
+    setStyle(panel, 'z-index', MOBILE_LINE_PANEL_Z);
   });
 
   const avatarBackdrop = document.querySelector<HTMLElement>('html.mobile-user-menu-open button.fixed.inset-0');
