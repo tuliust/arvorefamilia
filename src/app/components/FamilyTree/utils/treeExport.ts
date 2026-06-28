@@ -480,35 +480,26 @@ function injectTreeExportLayoutCss(clonedDocument: Document) {
     .is-exporting-family-tree [data-family-map-horizontal-root="true"],
     .is-exporting-family-tree [data-export-root="family-tree"],
     .is-exporting-family-tree .react-flow {
-      overflow: visible !important;
+      text-rendering: geometricPrecision !important;
     }
 
     .is-exporting-family-tree [data-family-map-export-root="true"] *,
     .is-exporting-family-tree [data-family-map-horizontal-root="true"] *,
     .is-exporting-family-tree [data-export-root="family-tree"] *,
     .is-exporting-family-tree .react-flow__node * {
-      text-rendering: geometricPrecision !important;
+      -webkit-backdrop-filter: none !important;
+      backdrop-filter: none !important;
+      filter: none !important;
     }
 
-    .is-exporting-family-tree .truncate,
-    .is-exporting-family-tree [class*="line-clamp"],
-    .is-exporting-family-tree [style*="-webkit-line-clamp"] {
-      overflow: visible !important;
-      text-overflow: clip !important;
-      white-space: normal !important;
-      -webkit-line-clamp: unset !important;
-      line-clamp: unset !important;
-      max-height: none !important;
-    }
-
-    .is-exporting-family-tree p,
-    .is-exporting-family-tree span,
-    .is-exporting-family-tree strong,
-    .is-exporting-family-tree h1,
-    .is-exporting-family-tree h2,
-    .is-exporting-family-tree h3 {
-      line-height: 1.28 !important;
-      overflow: visible !important;
+    .is-exporting-family-tree [data-family-map-export-root="true"] [data-family-map-color-key],
+    .is-exporting-family-tree [data-family-map-horizontal-root="true"] [data-family-map-color-key],
+    .is-exporting-family-tree [data-export-root="family-tree"] [data-family-map-color-key],
+    .is-exporting-family-tree [data-family-map-group="true"],
+    .is-exporting-family-tree [data-family-map-group-title="true"],
+    .is-exporting-family-tree [data-family-map-avatar="true"] {
+      box-shadow: none !important;
+      text-shadow: none !important;
     }
 
     .is-exporting-family-tree [data-family-map-group-title="true"] {
@@ -517,11 +508,17 @@ function injectTreeExportLayoutCss(clonedDocument: Document) {
       min-height: 1.34rem !important;
       align-items: center !important;
       justify-content: center !important;
-      padding-top: 0.32rem !important;
-      padding-bottom: 0.32rem !important;
+      padding-top: 0.18rem !important;
+      padding-bottom: 0.14rem !important;
       text-align: center !important;
       line-height: 1 !important;
+      overflow: visible !important;
+      transform: translateY(1px) !important;
       vertical-align: middle !important;
+    }
+
+    .is-exporting-family-tree span[data-family-map-group-title="true"] {
+      transform: translate(-50%, 1px) !important;
     }
 
     .is-exporting-family-tree h3[data-family-map-group-title="true"] {
@@ -530,11 +527,15 @@ function injectTreeExportLayoutCss(clonedDocument: Document) {
       min-height: auto !important;
       padding-top: 0 !important;
       padding-bottom: 0 !important;
+      transform: translateY(1px) !important;
     }
 
     .is-exporting-family-tree [data-family-map-person-name="true"] {
-      margin-bottom: 0.18rem !important;
+      margin-bottom: 0.2rem !important;
       line-height: 1.18 !important;
+      overflow: hidden !important;
+      text-overflow: ellipsis !important;
+      white-space: nowrap !important;
     }
 
     .is-exporting-family-tree [data-family-map-meta-row="true"] {
@@ -544,13 +545,16 @@ function injectTreeExportLayoutCss(clonedDocument: Document) {
       min-width: 0 !important;
       align-items: center !important;
       justify-content: flex-start !important;
-      gap: 0.16rem !important;
+      gap: 0.14rem !important;
       text-align: left !important;
       line-height: 1.15 !important;
+      overflow: hidden !important;
     }
 
     .is-exporting-family-tree [data-family-map-meta-icon="true"] {
       display: block !important;
+      width: 0.58rem !important;
+      height: 0.58rem !important;
       flex: 0 0 auto !important;
       align-self: center !important;
       margin: 0 !important;
@@ -559,8 +563,11 @@ function injectTreeExportLayoutCss(clonedDocument: Document) {
     }
 
     .is-exporting-family-tree [data-family-map-meta-text="true"] {
-      display: block !important;
+      display: inline-block !important;
       min-width: 0 !important;
+      overflow: hidden !important;
+      text-overflow: ellipsis !important;
+      white-space: nowrap !important;
       line-height: 1.15 !important;
       text-align: left !important;
     }

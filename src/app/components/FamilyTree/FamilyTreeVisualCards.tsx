@@ -226,7 +226,7 @@ export function VisualVitalLines({
           stroke="currentColor"
           aria-hidden="true"
         />
-        {birthLine && <span data-family-map-meta-text="true" className="truncate">{birthLine}</span>}
+        <span data-family-map-meta-text="true" className="truncate">{birthLine}</span>
       </span>
       {showDeathLine && (
         <span
@@ -242,7 +242,7 @@ export function VisualVitalLines({
             stroke="currentColor"
             aria-hidden="true"
           />
-          {deathLine && <span data-family-map-meta-text="true" className="truncate">{deathLine}</span>}
+          <span data-family-map-meta-text="true" className="truncate">{deathLine}</span>
         </span>
       )}
     </>
