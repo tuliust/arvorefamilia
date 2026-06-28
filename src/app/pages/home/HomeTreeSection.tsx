@@ -32,6 +32,13 @@ interface StateMessageProps {
 }
 
 const EXPORT_PREVIEW_PNG_SCALE = 1.5;
+const EXPORT_PREVIEW_SAFE_PADDING = 28;
+const EXPORT_PREVIEW_CAPTURE_CLASS = 'tree-export-preview-capture-mode';
+const TREE_EXPORT_ROOT_SELECTOR = [
+  '[data-family-map-export-root="true"]',
+  '[data-family-map-horizontal-root="true"]',
+  '[data-export-root="family-tree"]',
+].join(',');
 
 function getTreeTitleFirstName(value?: string | null) {
   const clean = value?.trim();
@@ -83,11 +90,7 @@ function getExportIntentTitle(intent: string | null) {
 }
 
 function getPreviewExportRoot() {
-  return document.querySelector<HTMLElement>([
-    '[data-family-map-export-root="true"]',
-    '[data-family-map-horizontal-root="true"]',
-    '[data-export-root="family-tree"]',
-  ].join(','));
+  return document.querySelector<HTMLElement>(TREE_EXPORT_ROOT_SELECTOR);
 }
 
 function escapeHtml(value: string) {
@@ -159,14 +162,144 @@ function canvasToPngBlob(canvas: HTMLCanvasElement) {
   });
 }
 
-function preparePreviewCloneForCapture(clonedDocument: Document) {
-  injectExportSafeCss(clonedDocument);
-  sanitizeUnsupportedExportColors(clonedDocument.body);
+function addSafePaddingToCanvas(sourceCanvas: HTMLCanvasElement) {
+  const padding = Math.max(0, Math.round(EXPORT_PREVIEW_SAFE_PADDING * EXPORT_PREVIEW_PNG_SCALE));
+  if (!padding) return sourceCanvas;
 
-  clonedDocument.querySelectorAll<HTMLElement>('[data-tree-export-ignore="true"]').forEach((node) => {
+  const outputCanvas = document.createElement('canvas');
+  outputCanvas.width = sourceCanvas.width + padding * 2;
+  outputCanvas.height = sourceCanvas.height + padding * 2;
+
+  const context = outputCanvas.getContext('2d');
+  if (!context) return sourceCanvas;
+
+  context.fillStyle = '#f7f1e8';
+  context.fillRect(0, 0, outputCanvas.width, outputCanvas.height);
+  context.drawImage(sourceCanvas, padding, padding);
+
+  return outputCanvas;
+}
+
+function injectPreviewCaptureCss(documentRef: Document) {
+  if (documentRef.getElementById('tree-export-preview-capture-mode-css')) return;
+
+  const style = documentRef.createElement('style');
+  style.id = 'tree-export-preview-capture-mode-css';
+  style.textContent = `
+    html.${EXPORT_PREVIEW_CAPTURE_CLASS} [data-family-map-export-root="true"],
+    html.${EXPORT_PREVIEW_CAPTURE_CLASS} [data-family-map-horizontal-root="true"],
+    html.${EXPORT_PREVIEW_CAPTURE_CLASS} [data-export-root="family-tree"] {
+      overflow: visible !important;
+      background: #f7f1e8 !important;
+      isolation: isolate !important;
+    }
+
+    html.${EXPORT_PREVIEW_CAPTURE_CLASS} [data-family-map-export-root="true"] *,
+    html.${EXPORT_PREVIEW_CAPTURE_CLASS} [data-family-map-horizontal-root="true"] *,
+    html.${EXPORT_PREVIEW_CAPTURE_CLASS} [data-export-root="family-tree"] * {
+      box-shadow: none !important;
+      text-shadow: none !important;
+      filter: none !important;
+      -webkit-filter: none !important;
+      backdrop-filter: none !important;
+      -webkit-backdrop-filter: none !important;
+    }
+
+    html.${EXPORT_PREVIEW_CAPTURE_CLASS} [data-family-map-export-root="true"] [class*="shadow"],
+    html.${EXPORT_PREVIEW_CAPTURE_CLASS} [data-family-map-horizontal-root="true"] [class*="shadow"],
+    html.${EXPORT_PREVIEW_CAPTURE_CLASS} [data-export-root="family-tree"] [class*="shadow"],
+    html.${EXPORT_PREVIEW_CAPTURE_CLASS} [data-family-map-export-root="true"] [class*="blur"],
+    html.${EXPORT_PREVIEW_CAPTURE_CLASS} [data-family-map-horizontal-root="true"] [class*="blur"],
+    html.${EXPORT_PREVIEW_CAPTURE_CLASS} [data-export-root="family-tree"] [class*="blur"] {
+      box-shadow: none !important;
+      filter: none !important;
+      -webkit-filter: none !important;
+      backdrop-filter: none !important;
+      -webkit-backdrop-filter: none !important;
+    }
+
+    html.${EXPORT_PREVIEW_CAPTURE_CLASS} [data-tree-export-ignore="true"] {
+      display: none !important;
+      visibility: hidden !important;
+    }
+
+    html.${EXPORT_PREVIEW_CAPTURE_CLASS} [data-family-map-group-title="true"] {
+      display: inline-flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      overflow: visible !important;
+      text-align: center !important;
+      white-space: nowrap !important;
+      line-height: 1 !important;
+      padding-top: 0.16rem !important;
+      padding-bottom: 0.12rem !important;
+    }
+
+    html.${EXPORT_PREVIEW_CAPTURE_CLASS} [data-family-map-person-name="true"] {
+      margin-bottom: 0.16rem !important;
+      line-height: 1.15 !important;
+    }
+
+    html.${EXPORT_PREVIEW_CAPTURE_CLASS} [data-family-map-meta-row="true"] {
+      display: flex !important;
+      align-items: center !important;
+      justify-content: flex-start !important;
+      gap: 0.14rem !important;
+      line-height: 1.15 !important;
+      text-align: left !important;
+    }
+
+    html.${EXPORT_PREVIEW_CAPTURE_CLASS} [data-family-map-meta-icon="true"] {
+      flex: 0 0 auto !important;
+      align-self: center !important;
+      margin: 0 !important;
+      vertical-align: middle !important;
+    }
+  `;
+  documentRef.head.appendChild(style);
+}
+
+function sanitizePreviewCaptureDom(documentRef: Document) {
+  documentRef.querySelectorAll<HTMLElement>(TREE_EXPORT_ROOT_SELECTOR).forEach((root) => {
+    root.style.setProperty('overflow', 'visible', 'important');
+    root.style.setProperty('background', '#f7f1e8', 'important');
+    root.style.setProperty('isolation', 'isolate', 'important');
+
+    root.querySelectorAll<HTMLElement>('*').forEach((node) => {
+      node.style.setProperty('box-shadow', 'none', 'important');
+      node.style.setProperty('text-shadow', 'none', 'important');
+      node.style.setProperty('filter', 'none', 'important');
+      node.style.setProperty('-webkit-filter', 'none', 'important');
+      node.style.setProperty('backdrop-filter', 'none', 'important');
+      node.style.setProperty('-webkit-backdrop-filter', 'none', 'important');
+    });
+  });
+
+  documentRef.querySelectorAll<HTMLElement>('[data-tree-export-ignore="true"]').forEach((node) => {
     node.style.setProperty('display', 'none', 'important');
     node.style.setProperty('visibility', 'hidden', 'important');
   });
+}
+
+async function withPreviewCaptureMode<T>(callback: () => Promise<T>) {
+  injectPreviewCaptureCss(document);
+  document.documentElement.classList.add(EXPORT_PREVIEW_CAPTURE_CLASS);
+
+  try {
+    await waitForAnimationFrame();
+    await waitForAnimationFrame();
+    return await callback();
+  } finally {
+    document.documentElement.classList.remove(EXPORT_PREVIEW_CAPTURE_CLASS);
+  }
+}
+
+function preparePreviewCloneForCapture(clonedDocument: Document) {
+  clonedDocument.documentElement.classList.add(EXPORT_PREVIEW_CAPTURE_CLASS);
+  injectExportSafeCss(clonedDocument);
+  injectPreviewCaptureCss(clonedDocument);
+  sanitizeUnsupportedExportColors(clonedDocument.body);
+  sanitizePreviewCaptureDom(clonedDocument);
 }
 
 async function capturePreviewTreeCanvas() {
@@ -176,29 +309,33 @@ async function capturePreviewTreeCanvas() {
     throw new Error('Área da árvore não encontrada no preview de exportação.');
   }
 
-  await waitForPreviewExportStability();
-
   const { default: html2canvas } = await import('html2canvas');
-  const rect = root.getBoundingClientRect();
-  const width = Math.ceil(Math.max(rect.width, root.offsetWidth, root.scrollWidth, 1));
-  const height = Math.ceil(Math.max(rect.height, root.offsetHeight, root.scrollHeight, 1));
 
-  return html2canvas(root, {
-    backgroundColor: '#f7f1e8',
-    scale: EXPORT_PREVIEW_PNG_SCALE,
-    width,
-    height,
-    windowWidth: Math.max(window.innerWidth, document.documentElement.clientWidth, width),
-    windowHeight: Math.max(window.innerHeight, document.documentElement.clientHeight, height),
-    scrollX: -window.scrollX,
-    scrollY: -window.scrollY,
-    useCORS: true,
-    allowTaint: false,
-    imageTimeout: 15000,
-    logging: false,
-    removeContainer: true,
-    ignoreElements: (node) => Boolean((node as HTMLElement).closest?.('[data-tree-export-ignore="true"]')),
-    onclone: preparePreviewCloneForCapture,
+  return withPreviewCaptureMode(async () => {
+    await waitForPreviewExportStability();
+
+    const rect = root.getBoundingClientRect();
+    const width = Math.ceil(Math.max(rect.width, root.offsetWidth, root.scrollWidth, 1));
+    const height = Math.ceil(Math.max(rect.height, root.offsetHeight, root.scrollHeight, 1));
+    const canvas = await html2canvas(root, {
+      backgroundColor: '#f7f1e8',
+      scale: EXPORT_PREVIEW_PNG_SCALE,
+      width,
+      height,
+      windowWidth: Math.max(window.innerWidth, document.documentElement.clientWidth, width),
+      windowHeight: Math.max(window.innerHeight, document.documentElement.clientHeight, height),
+      scrollX: -window.scrollX,
+      scrollY: -window.scrollY,
+      useCORS: true,
+      allowTaint: false,
+      imageTimeout: 15000,
+      logging: false,
+      removeContainer: true,
+      ignoreElements: (node) => Boolean((node as HTMLElement).closest?.('[data-tree-export-ignore="true"]')),
+      onclone: preparePreviewCloneForCapture,
+    });
+
+    return addSafePaddingToCanvas(canvas);
   });
 }
 
