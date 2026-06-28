@@ -123,8 +123,8 @@ const styles = `
 
   html.${LINE_PANEL_OPEN_CLASS} .${LINE_PANEL_CLOSE_BUTTON_CLASS} {
     position: absolute !important;
-    top: 0.75rem !important;
-    right: 0.75rem !important;
+    top: 1rem !important;
+    right: 1rem !important;
     z-index: ${LINE_PANEL_CLOSE_Z_INDEX} !important;
     display: inline-flex !important;
     height: 2.75rem !important;
@@ -138,7 +138,7 @@ const styles = `
     font-size: 2rem !important;
     font-weight: 500 !important;
     line-height: 1 !important;
-    box-shadow: 0 6px 14px rgba(15, 23, 42, 0.12) !important;
+    box-shadow: 0 4px 10px rgba(15, 23, 42, 0.10) !important;
     -webkit-tap-highlight-color: transparent !important;
   }
 }
@@ -391,25 +391,37 @@ function patchFamilyGroupRows(
   });
 }
 
+function configureLineGenerationCloseButton(button: HTMLButtonElement, panel: HTMLElement) {
+  button.type = 'button';
+  button.className = LINE_PANEL_CLOSE_BUTTON_CLASS;
+  button.setAttribute('aria-label', 'Fechar painel de visualização');
+  button.textContent = '×';
+  button.onclick = (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    closeLineGenerationControlsPanel(panel);
+  };
+}
+
 function ensureLineGenerationCloseButton(panel: HTMLElement) {
   const surface = panel.querySelector<HTMLElement>('section');
   if (!surface) return;
 
-  const existingButtons = Array.from(surface.querySelectorAll<HTMLButtonElement>(`.${LINE_PANEL_CLOSE_BUTTON_CLASS}`));
-  existingButtons.slice(1).forEach((button) => button.remove());
-  if (existingButtons[0]) return;
+  const allButtons = Array.from(document.querySelectorAll<HTMLButtonElement>(`.${LINE_PANEL_CLOSE_BUTTON_CLASS}`));
+  const retainedButton = allButtons.find((button) => surface.contains(button)) ?? allButtons[0] ?? null;
 
-  const closeButton = document.createElement('button');
-  closeButton.type = 'button';
-  closeButton.className = LINE_PANEL_CLOSE_BUTTON_CLASS;
-  closeButton.setAttribute('aria-label', 'Fechar painel de visualização');
-  closeButton.textContent = '×';
-  closeButton.addEventListener('click', (event) => {
-    event.preventDefault();
-    event.stopPropagation();
-    closeLineGenerationControlsPanel(panel);
+  allButtons.forEach((button) => {
+    if (button !== retainedButton) button.remove();
   });
 
+  if (retainedButton) {
+    configureLineGenerationCloseButton(retainedButton, panel);
+    if (retainedButton.parentElement !== surface) surface.appendChild(retainedButton);
+    return;
+  }
+
+  const closeButton = document.createElement('button');
+  configureLineGenerationCloseButton(closeButton, panel);
   surface.appendChild(closeButton);
 }
 
