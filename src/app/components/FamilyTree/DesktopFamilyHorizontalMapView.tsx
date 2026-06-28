@@ -79,9 +79,7 @@ const MAX_DIRECT_EXPORT_PIXELS = 54_000_000;
 
 function estimateElementExportPixels(element: HTMLElement) {
   const rect = element.getBoundingClientRect();
-  const scale = typeof window === 'undefined'
-    ? 1
-    : Math.min(3, Math.max(2, window.devicePixelRatio || 1));
+  const scale = 1.5;
 
   return rect.width * scale * rect.height * scale;
 }

@@ -215,28 +215,34 @@ export function VisualVitalLines({
     <>
       <span
         data-family-map-vital-line="true"
+        data-family-map-meta-row="true"
+        data-family-map-meta-kind="birth"
         className={`mt-1 flex w-full min-w-0 items-center ${alignment} ${gap} ${textSize} font-semibold leading-tight text-cyan-50`}
       >
         <Star
+          data-family-map-meta-icon="true"
           className={`family-map-status-icon family-map-birth-icon ${iconSize} shrink-0 fill-current`}
           fill="currentColor"
           stroke="currentColor"
           aria-hidden="true"
         />
-        {birthLine && <span className="truncate">{birthLine}</span>}
+        {birthLine && <span data-family-map-meta-text="true" className="truncate">{birthLine}</span>}
       </span>
       {showDeathLine && (
         <span
           data-family-map-vital-line="true"
+          data-family-map-meta-row="true"
+          data-family-map-meta-kind="death"
           className={`mt-0.5 flex w-full min-w-0 items-center ${alignment} ${gap} ${textSize} font-semibold leading-tight text-cyan-50`}
         >
           <Cross
+            data-family-map-meta-icon="true"
             className={`family-map-status-icon family-map-deceased-icon ${iconSize} shrink-0`}
             fill="none"
             stroke="currentColor"
             aria-hidden="true"
           />
-          {deathLine && <span className="truncate">{deathLine}</span>}
+          {deathLine && <span data-family-map-meta-text="true" className="truncate">{deathLine}</span>}
         </span>
       )}
     </>
@@ -294,7 +300,7 @@ export function VisualPersonCard({
       >
         <VisualPersonAvatar person={person} pet={pet} className={FAMILY_MAP_AVATAR_SIZES.horizontal.avatar} iconClassName={FAMILY_MAP_AVATAR_SIZES.horizontal.icon} />
         <span className="min-w-0 flex-1">
-          <span className="block truncate whitespace-nowrap text-[11px] font-extrabold uppercase leading-[1.18]">
+          <span data-family-map-person-name="true" className="block truncate whitespace-nowrap text-[11px] font-extrabold uppercase leading-[1.18]">
             {displayName}
           </span>
           <VisualVitalLines
@@ -342,7 +348,7 @@ export function VisualPersonCard({
         </span>
       )}
       <VisualPersonAvatar person={person} pet={pet} className={avatarSize} iconClassName={iconSize} />
-      <span className={`mt-1.5 w-full truncate whitespace-nowrap ${titleSize} font-extrabold uppercase leading-[1.18]`}>
+      <span data-family-map-person-name="true" className={`mt-1.5 w-full truncate whitespace-nowrap ${titleSize} font-extrabold uppercase leading-[1.18]`}>
         {displayName}
       </span>
       <VisualVitalLines

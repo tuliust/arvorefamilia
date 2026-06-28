@@ -25,8 +25,8 @@ export interface ElementCaptureMetrics {
   estimatedPixels: number;
 }
 
-export const DEFAULT_TREE_EXPORT_MIN_SCALE = 2;
-export const DEFAULT_TREE_EXPORT_MAX_SCALE = 3;
+export const DEFAULT_TREE_EXPORT_MIN_SCALE = 1.5;
+export const DEFAULT_TREE_EXPORT_MAX_SCALE = 1.5;
 export const DEFAULT_TREE_EXPORT_MAX_PIXELS = 54_000_000;
 
 export function resolveTreeExportTarget(
@@ -514,28 +514,42 @@ function injectTreeExportLayoutCss(clonedDocument: Document) {
     .is-exporting-family-tree [data-family-map-group-title="true"] {
       box-sizing: border-box !important;
       display: inline-flex !important;
-      min-height: 1.28rem !important;
+      min-height: 1.34rem !important;
       align-items: center !important;
       justify-content: center !important;
-      padding-block: 0.3rem !important;
+      padding-top: 0.32rem !important;
+      padding-bottom: 0.32rem !important;
       text-align: center !important;
       line-height: 1 !important;
       vertical-align: middle !important;
     }
 
-    .is-exporting-family-tree [data-family-map-vital-line="true"] {
+    .is-exporting-family-tree h3[data-family-map-group-title="true"] {
+      display: flex !important;
+      width: 100% !important;
+      min-height: auto !important;
+      padding-top: 0 !important;
+      padding-bottom: 0 !important;
+    }
+
+    .is-exporting-family-tree [data-family-map-person-name="true"] {
+      margin-bottom: 0.18rem !important;
+      line-height: 1.18 !important;
+    }
+
+    .is-exporting-family-tree [data-family-map-meta-row="true"] {
       box-sizing: border-box !important;
       display: flex !important;
       width: 100% !important;
       min-width: 0 !important;
       align-items: center !important;
       justify-content: flex-start !important;
-      gap: 0.18rem !important;
+      gap: 0.16rem !important;
       text-align: left !important;
-      line-height: 1.2 !important;
+      line-height: 1.15 !important;
     }
 
-    .is-exporting-family-tree [data-family-map-vital-line="true"] .family-map-status-icon {
+    .is-exporting-family-tree [data-family-map-meta-icon="true"] {
       display: block !important;
       flex: 0 0 auto !important;
       align-self: center !important;
@@ -544,10 +558,10 @@ function injectTreeExportLayoutCss(clonedDocument: Document) {
       vertical-align: middle !important;
     }
 
-    .is-exporting-family-tree [data-family-map-vital-line="true"] .family-map-status-icon + span {
+    .is-exporting-family-tree [data-family-map-meta-text="true"] {
       display: block !important;
       min-width: 0 !important;
-      line-height: 1.2 !important;
+      line-height: 1.15 !important;
       text-align: left !important;
     }
   `;
@@ -594,32 +608,26 @@ export async function captureElementToCanvas(
     ? '#ffffff'
     : options.backgroundColor;
 
-  document.documentElement.classList.add('is-exporting-family-tree');
+  await waitForTreeExportStability();
 
-  try {
-    await waitForTreeExportStability();
-
-    return await html2canvas(element, {
-      backgroundColor,
-      scale: metrics.scale,
-      width: metrics.width,
-      height: metrics.height,
-      windowWidth: Math.max(window.innerWidth, document.documentElement.clientWidth, metrics.width),
-      windowHeight: Math.max(window.innerHeight, document.documentElement.clientHeight, metrics.height),
-      scrollX: -window.scrollX,
-      scrollY: -window.scrollY,
-      useCORS: true,
-      allowTaint: false,
-      imageTimeout: 15000,
-      logging: false,
-      removeContainer: true,
-      ignoreElements: (node) =>
-        getDefaultTreeExportIgnoreElements(node) || Boolean(options.ignoreElements?.(node)),
-      onclone: prepareClonedDocumentForTreeExport,
-    });
-  } finally {
-    document.documentElement.classList.remove('is-exporting-family-tree');
-  }
+  return html2canvas(element, {
+    backgroundColor,
+    scale: metrics.scale,
+    width: metrics.width,
+    height: metrics.height,
+    windowWidth: Math.max(window.innerWidth, document.documentElement.clientWidth, metrics.width),
+    windowHeight: Math.max(window.innerHeight, document.documentElement.clientHeight, metrics.height),
+    scrollX: -window.scrollX,
+    scrollY: -window.scrollY,
+    useCORS: true,
+    allowTaint: false,
+    imageTimeout: 15000,
+    logging: false,
+    removeContainer: true,
+    ignoreElements: (node) =>
+      getDefaultTreeExportIgnoreElements(node) || Boolean(options.ignoreElements?.(node)),
+    onclone: prepareClonedDocumentForTreeExport,
+  });
 }
 
 export function cropCanvas(sourceCanvas: HTMLCanvasElement, rect: ExportRect) {

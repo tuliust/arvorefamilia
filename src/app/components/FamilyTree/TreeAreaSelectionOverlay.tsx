@@ -110,7 +110,7 @@ function getPreviewTitle(action: ExportAction) {
 }
 
 function getEstimatedExportPixels(selection: ExportRect) {
-  const scale = Math.min(3, Math.max(2, window.devicePixelRatio || 1));
+  const scale = 1.5;
   return selection.width * scale * selection.height * scale;
 }
 
