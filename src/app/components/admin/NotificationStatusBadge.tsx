@@ -4,7 +4,7 @@ import { NotificationDispatchStatus } from '../../types';
 const STATUS_LABELS: Record<NotificationDispatchStatus, string> = {
   pending: 'Pendente',
   sent: 'Enviado',
-  failed: 'Falhou',
+  failed: 'Falha',
   skipped: 'Ignorado',
   disabled_by_preferences: 'Desativado',
   missing_destination: 'Sem destino',

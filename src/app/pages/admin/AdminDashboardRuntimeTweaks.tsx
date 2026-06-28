@@ -3,7 +3,6 @@ import { useLocation, useNavigate } from 'react-router';
 
 const DASHBOARD_PATHS = new Set(['/admin', '/admin/dashboard']);
 const HIDDEN_STAT_SUBTITLES = new Set([
-  '23 casamentos',
   'vinculos aguardando revisao',
   'usuarios cadastrados na plataforma',
 ]);
@@ -33,7 +32,7 @@ function setReactTextareaValue(textarea: HTMLTextAreaElement, value: string) {
 function removeStatSubtitles() {
   document.querySelectorAll<HTMLElement>('[data-admin-dashboard-page="true"] span').forEach((element) => {
     const text = normalizeText(element.textContent);
-    if (HIDDEN_STAT_SUBTITLES.has(text) || /^\d+ casamentos$/.test(text)) {
+    if (HIDDEN_STAT_SUBTITLES.has(text)) {
       if (element.style.display !== 'none') element.style.display = 'none';
     }
   });

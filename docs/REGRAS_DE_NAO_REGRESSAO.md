@@ -117,7 +117,7 @@
 
 ## Perfil de pessoa
 
-- `Administração do perfil` deve ficar oculta quando o perfil for do próprio usuário ou administrado somente pelo usuário atual.
+- `Administração do perfil` não deve reaparecer em `/pessoa/:id`.
 - `Irmãos` deve ficar oculto quando não houver irmãos cadastrados.
 - `Discussões relacionadas` deve aparecer abaixo da linha do tempo.
 - O botão superior `Criar discussão sobre esta pessoa` não deve reaparecer quando o CTA interno já existir.
@@ -158,10 +158,13 @@
 - O botão `Principal` no header administrativo não deve exibir seta.
 - `/admin` deve exibir contagem do card `Relações`.
 - `/admin` deve direcionar `Solicitações de Aprovações` para `/aprovacoes` ou `/admin/aprovacoes`.
-- `/admin` não deve exibir subtítulos redundantes nos cards superiores quando o contrato pedir apenas contagem principal.
+- `/admin` deve exibir a contagem do card `Relações` com base em `obterTodosRelacionamentos()` e pode manter o subtítulo de casamentos quando couber.
 - Convite por WhatsApp no admin não deve envolver o código final com asteriscos.
 - A ação rápida deve usar `Textos automáticos`, não `Conteúdo de Pessoas`.
 - `/admin/home` deve permitir salvar alterações após carregamento das configurações.
+- `/admin/notificacoes` não deve exibir slugs crus em canais, tipos, status, disponibilidade, frequência ou categorias.
+- `/admin/relacionamentos` deve manter filtros por cards, busca por pessoa, sugestões por nome e deduplicação de casamentos.
+- `/admin/relacionamentos` e `/admin/aprovacoes` não devem exibir a classificação legada `sangue`/`adotivo`.
 - `/admin/atividades` não deve apagar registros do banco ao acionar `Limpar`; a limpeza é visual/local.
 - `/admin/atividades` deve usar label `Autor` no filtro de ator.
 - `/admin/gestao-conteudo-pessoas` deve manter acentuação correta em UTF-8.

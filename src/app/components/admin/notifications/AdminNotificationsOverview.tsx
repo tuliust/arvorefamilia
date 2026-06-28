@@ -1,6 +1,7 @@
 import { BellRing, Mail, MessageSquareMore, Send, Smartphone } from 'lucide-react';
 import { Badge } from '../../ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '../../ui/card';
+import { formatAdminNotificationLabel } from './adminNotificationFormatters';
 
 interface OverviewMetric {
   id: string;
@@ -30,7 +31,7 @@ function SummaryList({ title, items }: { title: string; items: Record<string, nu
           <div className="space-y-2">
             {entries.map(([label, count]) => (
               <div key={label} className="flex items-center justify-between gap-4 text-sm">
-                <span className="truncate text-gray-700">{label}</span>
+                <span className="truncate text-gray-700">{formatAdminNotificationLabel(label)}</span>
                 <Badge variant="secondary">{count}</Badge>
               </div>
             ))}
@@ -49,8 +50,9 @@ const CHANNEL_ICONS: Record<string, typeof BellRing> = {
 };
 
 function statusVariant(status: string): 'outline' | 'secondary' | 'destructive' {
-  if (status === 'ativo' || status === 'verificado') return 'outline';
-  if (status === 'não configurado') return 'destructive';
+  const label = formatAdminNotificationLabel(status);
+  if (label === 'Ativo' || label === 'Verificado') return 'outline';
+  if (label === 'Não configurado') return 'destructive';
   return 'secondary';
 }
 
@@ -69,7 +71,7 @@ export function AdminNotificationsOverview(props: {
               <CardTitle className="text-sm font-medium text-gray-600">{metric.label}</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold text-gray-900">{metric.value}</div>
+              <div className="min-w-0 break-words text-2xl font-bold leading-tight text-gray-900">{metric.value}</div>
               <p className="mt-1 text-xs text-gray-500">{metric.helper}</p>
             </CardContent>
           </Card>
@@ -98,11 +100,11 @@ export function AdminNotificationsOverview(props: {
                       <Icon className="h-4 w-4 text-gray-700" />
                     </span>
                     <div className="min-w-0">
-                      <p className="font-medium text-gray-900">{channelStatus.channel}</p>
+                      <p className="font-medium text-gray-900">{formatAdminNotificationLabel(channelStatus.channel)}</p>
                       <p className="text-sm text-gray-600">{channelStatus.detail}</p>
                     </div>
                   </div>
-                  <Badge variant={statusVariant(channelStatus.status)}>{channelStatus.status}</Badge>
+                  <Badge variant={statusVariant(channelStatus.status)}>{formatAdminNotificationLabel(channelStatus.status)}</Badge>
                 </div>
               );
             })}

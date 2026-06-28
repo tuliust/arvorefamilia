@@ -83,7 +83,7 @@ export const ADMIN_NOTIFICATION_FREQUENCY_OPTIONS: Array<{
   { id: 'diaria', label: 'Diária', description: 'Agrupa ou executa uma vez por dia.' },
   { id: 'semanal', label: 'Semanal', description: 'Usada para resumos e engajamento leve.' },
   { id: 'mensal', label: 'Mensal', description: 'Indicada para campanhas pouco frequentes.' },
-  { id: 'data_especifica', label: 'Datas específicas', description: 'Depende de calendário ou marco definido.' },
+  { id: 'data_especifica', label: 'Data específica', description: 'Depende de calendário ou marco definido.' },
   { id: 'manual', label: 'Manual', description: 'Executada apenas sob ação administrativa.' },
   { id: 'desativada', label: 'Desativada', description: 'Mantida no catálogo, sem disparo.' },
 ];

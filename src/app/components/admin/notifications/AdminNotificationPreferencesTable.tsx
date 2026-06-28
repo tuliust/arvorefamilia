@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '../../ui/card';
 import { Input } from '../../ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../../ui/table';
+import { formatAdminNotificationLabel } from './adminNotificationFormatters';
 
 export interface AdminNotificationPreferenceRow {
   id: string;
@@ -141,7 +142,7 @@ export function AdminNotificationPreferencesTable(props: {
                         <div className="flex flex-wrap gap-1">
                           {row.channels.map((channel) => (
                             <Badge key={channel} variant="secondary">
-                              {channel}
+                              {formatAdminNotificationLabel(channel)}
                             </Badge>
                           ))}
                         </div>

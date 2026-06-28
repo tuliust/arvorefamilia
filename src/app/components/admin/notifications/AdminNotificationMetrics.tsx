@@ -1,5 +1,6 @@
 import { Badge } from '../../ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '../../ui/card';
+import { formatAdminNotificationLabel } from './adminNotificationFormatters';
 
 export function AdminNotificationMetrics(props: {
   metrics: Array<{ label: string; value: string | number; helper: string }>;
@@ -29,7 +30,7 @@ export function AdminNotificationMetrics(props: {
           {props.channelPerformance.map((channel) => (
             <div key={channel.channel} className="flex items-start justify-between gap-4 rounded-lg border border-gray-200 p-4">
               <div>
-                <p className="font-medium text-gray-900">{channel.channel}</p>
+                <p className="font-medium text-gray-900">{formatAdminNotificationLabel(channel.channel)}</p>
                 <p className="text-sm text-gray-600">{channel.helper}</p>
               </div>
               <div className="flex flex-wrap gap-2">

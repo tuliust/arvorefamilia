@@ -104,7 +104,7 @@ Componentes relevantes:
 - `window.prompt` e `prompt` foram substituídos por modal controlado com campo de texto.
 - Ações administrativas de limpeza, exclusão, remoção de vínculo, envio de teste, execução de rotina, aprovação/rejeição e restauração de configuração usam UI própria.
 - O fluxo sensível de remoção do último vínculo `Sou esta pessoa` mantém dupla confirmação, mas sem API nativa do navegador.
-- Solicitação de administração de perfil em `/pessoa/:id` coleta justificativa em modal próprio, com validação mínima quando preenchida.
+- `/pessoa/:id` não exibe mais o card `Administração do perfil` nem o fluxo público de solicitação de administração; o botão de editar perfil continua respeitando permissões.
 
 A varredura técnica esperada em `src/` deve retornar apenas o falso positivo visual `src/app/components/ui/alert.tsx`.
 
@@ -173,7 +173,7 @@ A varredura técnica esperada em `src/` deve retornar apenas o falso positivo vi
 
 ## Perfil de pessoa
 
-- `/pessoa/:id` deve ocultar `Administração do perfil` quando a página for do próprio usuário ou quando o perfil for administrado somente pelo usuário atual.
+- `/pessoa/:id` não deve exibir `Administração do perfil`; administração de responsáveis fica fora da página pública do perfil.
 - O card `Irmãos` deve ficar oculto quando não houver irmãos cadastrados.
 - `Discussões relacionadas` deve ficar abaixo da linha do tempo.
 - O botão superior `Criar discussão sobre esta pessoa` não deve aparecer quando já houver CTA interno no estado vazio.
@@ -190,7 +190,10 @@ A varredura técnica esperada em `src/` deve retornar apenas o falso positivo vi
 - Na área de WhatsApp do admin, o código de convite não deve ser envolvido por asteriscos.
 - A ação rápida `Conteúdo de Pessoas` deve aparecer como `Textos automáticos`.
 - `/admin/home` deve permitir salvar configurações nas abas depois que as configurações carregarem.
+- `/admin/notificacoes` deve exibir labels, badges, canais, status, frequências, categorias e disponibilidade em linguagem humana, sem slugs crus na interface.
+- `/admin/relacionamentos` deve permitir filtrar por todos, casamentos ou filiações, buscar por pessoa de origem/destino e ocultar a classificação legada `sangue`/`adotivo` da UI.
 - `/admin/relacionamentos/novo` exibe status conjugal inferido, força inatividade quando há separação e bloqueia combinações contraditórias.
+- `/admin/aprovacoes` não deve exibir `Subtipo: sangue` nem `Subtipo: adotivo`, preservando tecnicamente o campo para valores futuros.
 - `/admin/responsaveis` usa `person_responsible_links` para o seletor inline de responsáveis em perfis legados e crianças.
 - `/admin/duvidas` usa `AdminDuvidasRefined`, com listagem sem slugs visíveis, filtros abaixo do título da seção e ações compactas por ícone.
 - `/admin/atividades` usa tabela com colunas `Data`, `Autor`, `Atividade` e `Resumo`; o botão `Limpar` zera apenas a lista local exibida, sem apagar banco.

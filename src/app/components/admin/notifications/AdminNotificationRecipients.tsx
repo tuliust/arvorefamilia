@@ -2,6 +2,7 @@ import { Badge } from '../../ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '../../ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../../ui/table';
+import { formatAdminNotificationLabel } from './adminNotificationFormatters';
 
 export interface AdminRecipientGroupRow {
   id: string;
@@ -79,10 +80,12 @@ export function AdminNotificationRecipients(props: {
                       <TableCell className="font-medium text-gray-900">{row.title}</TableCell>
                       <TableCell className="max-w-[320px] whitespace-normal text-sm text-gray-600">{row.description}</TableCell>
                       <TableCell>
-                        <Badge variant="outline">{row.kind}</Badge>
+                        <Badge variant="outline">{formatAdminNotificationLabel(row.kind)}</Badge>
                       </TableCell>
                       <TableCell>
-                        <Badge variant={row.availability === 'available' ? 'outline' : 'secondary'}>{row.availability}</Badge>
+                        <Badge variant={row.availability === 'available' ? 'outline' : 'secondary'}>
+                          {formatAdminNotificationLabel(row.availability)}
+                        </Badge>
                       </TableCell>
                       <TableCell>{row.countLabel}</TableCell>
                     </TableRow>

@@ -237,7 +237,7 @@ Validar em desktop e mobile quando aplicável:
 - Relacionamento atual deve agrupar vínculos conjugais com status `active`.
 - Relacionamentos anteriores devem agrupar vínculos `separated`, `divorced` e `inactive`.
 - Uniões históricas devem agrupar vínculos `widowed` e `historical`.
-- Card `Administração do perfil` deve ficar oculto para próprio usuário ou quando administrado somente pelo usuário atual.
+- Card `Administração do perfil` não deve aparecer em `/pessoa/:id`.
 - Card `Irmãos` deve ficar oculto quando não houver irmãos.
 - `Discussões relacionadas` deve ficar abaixo da linha do tempo.
 - Botão superior `Criar discussão sobre esta pessoa` não deve aparecer quando houver CTA interno.
@@ -255,7 +255,7 @@ Validar em desktop e mobile quando aplicável:
 
 - Cards superiores devem exibir contagens principais.
 - Card `Relações` deve exibir a contagem de relacionamentos.
-- Subtítulos redundantes dos cards superiores não devem aparecer quando o contrato pedir apenas número principal.
+- Card `Relações` pode manter o subtítulo com casamentos quando couber.
 - Card `Solicitações de Aprovações` deve redirecionar para `/aprovacoes` ou `/admin/aprovacoes`.
 - Convite por WhatsApp não deve envolver o código final com asteriscos.
 - Ação rápida deve aparecer como `Textos automáticos`.
@@ -266,6 +266,19 @@ Validar em desktop e mobile quando aplicável:
 - Toast `Aguarde o carregamento das configurações antes de salvar.` não deve bloquear salvamento depois do carregamento.
 - Alterações salvas devem persistir após recarregar.
 
+### `/admin/notificacoes`
+
+- Todas as abas devem exibir canais, tipos, status, disponibilidade, frequência e categorias humanizados, sem slugs crus.
+- Títulos, labels e badges devem iniciar com maiúscula quando aplicável.
+- Cards principais da primeira aba devem manter valores legíveis sem quebra exagerada em desktop e mobile.
+
+### `/admin/relacionamentos`
+
+- Cards `Total de Relacionamentos`, `Casamentos` e `Filiações` devem funcionar como filtros combináveis com busca por nome.
+- Sugestões de nomes devem aparecer durante a digitação e aplicar filtro ao clicar.
+- A listagem deve exibir `Casamento`, `Pai`, `Mãe` ou `Filho`, sem `Tipo: casamento`, `filho` minúsculo, `sangue` ou `adotivo`.
+- Edição/exclusão de casamento, exclusão de filiação e deduplicação de `conjugesUnicos` devem continuar funcionando.
+
 ### `/admin/relacionamentos/novo`
 
 - Tipo `Cônjuge` com subtipo `Casamento`, `União` ou `União estável`, sem separação e com relacionamento ativo, deve inferir `União ativa`.
@@ -274,6 +287,11 @@ Validar em desktop e mobile quando aplicável:
 - Local de separação sem data e sem subtipo `Separado` deve bloquear envio.
 - O formulário deve exibir status inferido antes de salvar.
 - Trocar de `Cônjuge` para outro tipo deve limpar campos conjugais.
+
+### `/admin/aprovacoes`
+
+- Solicitações não devem exibir `Subtipo: sangue` nem `Subtipo: adotivo`.
+- Aprovar e rejeitar solicitações devem continuar funcionando.
 
 ### `/admin/responsaveis`
 

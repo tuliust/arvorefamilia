@@ -67,6 +67,18 @@ function getRelationshipLabel(value: RelationshipChangeRequest['relationship_typ
   return labels[value] ?? value;
 }
 
+function getRelationshipSubtypeLabel(value?: string | null) {
+  if (!value || value === 'sangue' || value === 'adotivo') return null;
+
+  const labels: Record<string, string> = {
+    casamento: 'Casamento',
+    uniao: 'União',
+    separado: 'Separado',
+  };
+
+  return labels[value] ?? value.replace(/_/g, ' ').replace(/^./, (char) => char.toLocaleUpperCase('pt-BR'));
+}
+
 function getPersonName(peopleById: Map<string, Pessoa>, id?: string | null) {
   if (!id) return 'Pessoa não informada';
   return peopleById.get(id)?.nome_completo || id;
@@ -206,7 +218,10 @@ export function AdminAprovacoes() {
                 </div>
               ) : (
                 <div className="space-y-3">
-                  {relationshipRequests.map((request) => (
+                  {relationshipRequests.map((request) => {
+                    const subtypeLabel = getRelationshipSubtypeLabel(request.relationship_subtype);
+
+                    return (
                     <article key={request.id} className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
                       <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                         <div className="min-w-0">
@@ -224,9 +239,9 @@ export function AdminAprovacoes() {
                           <p className="mt-1 break-words text-sm text-gray-600">
                             Solicitante: {getPersonName(peopleById, request.requester_pessoa_id)} · {formatDate(request.created_at)}
                           </p>
-                          {request.relationship_subtype && (
+                          {subtypeLabel && (
                             <p className="mt-1 break-words text-xs text-gray-500">
-                              Subtipo: {request.relationship_subtype}
+                              Subtipo: {subtypeLabel}
                             </p>
                           )}
                         </div>
@@ -254,7 +269,8 @@ export function AdminAprovacoes() {
                         </div>
                       </div>
                     </article>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
             </CardContent>

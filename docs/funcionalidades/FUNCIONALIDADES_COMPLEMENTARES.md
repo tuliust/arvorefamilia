@@ -182,7 +182,7 @@ Regras:
 
 - o perfil deve respeitar privacidade e permissões de exibição;
 - o botão duplicado `Voltar para a árvore` não deve aparecer ao lado do avatar quando o header já fornece navegação;
-- o card `Administração do perfil` deve ficar oculto quando a página for do próprio usuário ou quando o perfil for administrado somente pelo usuário atual;
+- o card `Administração do perfil` não deve aparecer em `/pessoa/:id`;
 - o card `Irmãos` deve ficar oculto quando não houver irmãos cadastrados;
 - `Discussões relacionadas` deve aparecer abaixo da linha do tempo;
 - o botão superior `Criar discussão sobre esta pessoa` não deve aparecer quando houver CTA interno no estado vazio;

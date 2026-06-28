@@ -3,6 +3,7 @@ import { AdminNotificationAutomationDefinition } from '../../../constants/adminN
 import { Badge } from '../../ui/badge';
 import { Button } from '../../ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../../ui/card';
+import { formatAdminNotificationLabel } from './adminNotificationFormatters';
 
 export interface AdminNotificationAutomationRow extends AdminNotificationAutomationDefinition {
   statusLabel: string;
@@ -30,7 +31,7 @@ export function AdminNotificationAutomations(props: {
               <Badge variant={row.supportsManualRun ? 'outline' : 'secondary'}>{row.statusLabel}</Badge>
               {row.channels.map((channel) => (
                 <Badge key={channel} variant="secondary">
-                  {channel}
+                  {formatAdminNotificationLabel(channel)}
                 </Badge>
               ))}
             </div>
@@ -39,7 +40,7 @@ export function AdminNotificationAutomations(props: {
             <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-4">
               <div className="rounded-lg border border-gray-200 p-4">
                 <p className="text-xs text-gray-500">Frequência</p>
-                <p className="mt-1 font-medium text-gray-900">{row.frequency}</p>
+                <p className="mt-1 font-medium text-gray-900">{formatAdminNotificationLabel(row.frequency)}</p>
               </div>
               <div className="rounded-lg border border-gray-200 p-4">
                 <p className="text-xs text-gray-500">Próxima execução</p>

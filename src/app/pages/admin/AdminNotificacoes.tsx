@@ -74,7 +74,7 @@ const CHANNEL_OPTIONS = [
   { value: 'interna', label: 'Interna' },
   { value: 'email', label: 'E-mail' },
   { value: 'push', label: 'Push' },
-  { value: 'whatsapp', label: 'WhatsApp futuro' },
+  { value: 'whatsapp', label: 'WhatsApp' },
 ] as const;
 
 type NotificationConfirmAction =
@@ -473,13 +473,13 @@ export function AdminNotificacoes() {
 
     return [
       { id: 'created', label: 'Total de notificações criadas', value: summary.totalNotifications, helper: 'Registros acessíveis ao admin.' },
-      { id: 'sent', label: 'Total de envios confirmados', value: totalSent, helper: 'Baseado nos logs de dispatch.' },
+      { id: 'sent', label: 'Total de envios confirmados', value: totalSent, helper: 'Baseado nos logs com status Enviado.' },
       { id: 'internal', label: 'Notificações internas', value: summary.byChannel.interna || 0, helper: 'Canal persistido em notificações do usuário.' },
-      { id: 'email', label: 'E-mails enviados', value: emailSent, helper: 'Envios com status sent no log.' },
+      { id: 'email', label: 'E-mails enviados', value: emailSent, helper: 'Envios com status Enviado no log.' },
       { id: 'push', label: 'Push enviados', value: pushSent, helper: 'Sem provider ativo se permanecer zero.' },
       { id: 'whatsapp', label: 'WhatsApp', value: 'Em preparação', helper: 'Canal futuro, sem provedor real nesta etapa.' },
       { id: 'unread', label: 'Não lidas', value: summary.unreadNotifications, helper: 'Pendentes na caixa interna.' },
-      { id: 'failures', label: 'Falhas recentes', value: summary.recentDispatchErrors, helper: 'Logs recentes com status failed.' },
+      { id: 'failures', label: 'Falhas recentes', value: summary.recentDispatchErrors, helper: 'Logs recentes com status Falha.' },
       { id: 'open-rate', label: 'Taxa de abertura', value: internalReadRate, helper: 'Proxy atual via leitura interna.' },
       { id: 'click-rate', label: 'Taxa de cliques', value: 'Sem dados suficientes', helper: 'Tracking de clique ainda não persistido.' },
       { id: 'last-run', label: 'Última rotina automática', value: automationInfo.lastDispatchAt ? formatDate(automationInfo.lastDispatchAt) : 'Sem registro', helper: 'Última execução observada.' },
@@ -554,8 +554,8 @@ export function AdminNotificacoes() {
     const internalRead = notifications.filter((notification) => notification.canal === 'interna' && notification.lida).length;
     const clickTrackingAvailable = false;
     return [
-      { label: 'Envios com sucesso', value: totalSent, helper: 'Dispatch com status sent.' },
-      { label: 'Falhas', value: totalFailures, helper: 'Logs com status failed.' },
+      { label: 'Envios com sucesso', value: totalSent, helper: 'Dispatch com status Enviado.' },
+      { label: 'Falhas', value: totalFailures, helper: 'Logs com status Falha.' },
       { label: 'Leituras internas', value: internalRead, helper: 'Notificações internas marcadas como lidas.' },
       { label: 'Cliques', value: clickTrackingAvailable ? 0 : 'Sem dados suficientes', helper: 'Tracking ainda não persistido.' },
     ];
@@ -613,7 +613,7 @@ export function AdminNotificacoes() {
     if (pendingConfirmAction.type === 'email_test') {
       return {
         title: 'Enviar e-mail de teste',
-        description: 'Enviar um e-mail real de teste apenas para o seu usuário admin? A notificação interna tamb?m ser? criada.',
+        description: 'Enviar um e-mail real de teste apenas para o seu usuário admin? A notificação interna também será criada.',
         confirmText: 'Enviar teste',
         loading: sendingEmailTest,
       };
@@ -622,7 +622,7 @@ export function AdminNotificacoes() {
     if (pendingConfirmAction.type === 'manual_routine') {
       return {
         title: 'Executar rotina manual',
-        description: 'Executar a rotina manual de aniversários e memórias agora? Ela pode criar notificações internas reais para os destinat?rios eleg?veis.',
+        description: 'Executar a rotina manual de aniversários e memórias agora? Ela pode criar notificações internas reais para os destinatários elegíveis.',
         confirmText: 'Executar rotina',
         loading: runningManualRoutine,
       };

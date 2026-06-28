@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '../../ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../../ui/table';
 import { NotificationDispatchLog, NotificationDispatchResult, NotificacaoUsuario } from '../../../types';
 import { DailyNotificationRunSummary } from '../../../services/notificationScheduledService';
+import { formatAdminNotificationLabel } from './adminNotificationFormatters';
 
 export function AdminNotificationDiagnostics(props: {
   loading: boolean;
@@ -59,7 +60,7 @@ export function AdminNotificationDiagnostics(props: {
                   key={`${result.channel}-${result.status}-${result.notificationId || 'sem-id'}`}
                   className="flex flex-col gap-2 rounded-md border border-gray-200 px-3 py-2 text-sm sm:flex-row sm:items-center sm:justify-between"
                 >
-                  <span className="font-medium text-gray-800">{result.channel}</span>
+                  <span className="font-medium text-gray-800">{formatAdminNotificationLabel(result.channel)}</span>
                   <NotificationStatusBadge status={result.status} />
                   <span className="break-all text-xs text-gray-500">{result.errorMessage || result.provider || 'Sem erro'}</span>
                 </div>
@@ -172,8 +173,8 @@ export function AdminNotificationDiagnostics(props: {
                         <p className="font-medium text-gray-900">{notification.titulo}</p>
                         <p className="line-clamp-2 text-xs text-gray-500">{notification.mensagem}</p>
                       </TableCell>
-                      <TableCell>{notification.tipo}</TableCell>
-                      <TableCell>{notification.canal}</TableCell>
+                      <TableCell>{formatAdminNotificationLabel(notification.tipo)}</TableCell>
+                      <TableCell>{formatAdminNotificationLabel(notification.canal)}</TableCell>
                       <TableCell>
                         <Badge variant={notification.lida ? 'outline' : 'secondary'}>
                           {notification.lida ? 'Lida' : 'Não lida'}
@@ -218,8 +219,8 @@ export function AdminNotificationDiagnostics(props: {
                       <TableCell>
                         <NotificationStatusBadge status={log.status} />
                       </TableCell>
-                      <TableCell>{log.tipo}</TableCell>
-                      <TableCell>{log.canal}</TableCell>
+                      <TableCell>{formatAdminNotificationLabel(log.tipo)}</TableCell>
+                      <TableCell>{formatAdminNotificationLabel(log.canal)}</TableCell>
                       <TableCell>{log.provider || 'Não informado'}</TableCell>
                       <TableCell className="max-w-[280px] whitespace-normal text-xs text-gray-600">
                         {log.error_message || 'Sem erro registrado'}

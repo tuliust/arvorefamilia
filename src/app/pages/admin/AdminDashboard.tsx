@@ -260,7 +260,7 @@ export function AdminDashboard() {
               <Link2 className={dashboardCardIconClass} />
             </span>
             <span className="block px-1 pb-3 text-center sm:px-6 sm:pb-6">
-              <span className="block text-xl font-bold leading-none text-gray-900 sm:text-3xl">{stats.totalRelacionamentos}</span>
+              <span className="block min-w-0 break-words text-xl font-bold leading-tight text-gray-900 sm:text-3xl">{stats.totalRelacionamentos}</span>
               <span className="mt-1 hidden break-words text-xs text-gray-500 sm:block">{stats.totalCasamentos} casamentos</span>
             </span>
           </button>

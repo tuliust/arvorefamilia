@@ -7,6 +7,7 @@ import { Badge } from '../../ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '../../ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../../ui/table';
+import { formatAdminNotificationLabel, formatAdminNotificationVariable } from './adminNotificationFormatters';
 
 export function AdminNotificationTemplates(props: {
   items: AdminNotificationTemplateDefinition[];
@@ -45,7 +46,6 @@ export function AdminNotificationTemplates(props: {
                   <TableRow key={item.id}>
                     <TableCell className="min-w-[220px]">
                       <p className="font-medium text-gray-900">{item.title}</p>
-                      <p className="text-xs text-gray-500">{item.typeId}</p>
                     </TableCell>
                     <TableCell className="max-w-[220px] whitespace-normal text-sm text-gray-700">{item.shortMessage}</TableCell>
                     <TableCell className="max-w-[180px] whitespace-normal text-sm text-gray-700">{item.emailSubject || 'Não aplicável'}</TableCell>
@@ -55,7 +55,7 @@ export function AdminNotificationTemplates(props: {
                       <div className="flex max-w-[240px] flex-wrap gap-1">
                         {item.variables.map((variable) => (
                           <Badge key={variable} variant="outline">
-                            {variable}
+                            {formatAdminNotificationVariable(variable)}
                           </Badge>
                         ))}
                       </div>
@@ -64,7 +64,7 @@ export function AdminNotificationTemplates(props: {
                       <div className="flex flex-wrap gap-1">
                         {item.allowedChannels.map((channel) => (
                           <Badge key={channel} variant="secondary">
-                            {channel}
+                            {formatAdminNotificationLabel(channel)}
                           </Badge>
                         ))}
                       </div>

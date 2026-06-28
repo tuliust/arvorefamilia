@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '../../ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../ui/select';
 import { Switch } from '../../ui/switch';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../../ui/table';
+import { formatAdminNotificationLabel } from './adminNotificationFormatters';
 
 export function AdminNotificationTypesCatalog(props: {
   items: AdminNotificationTypeDefinition[];
@@ -50,14 +51,14 @@ export function AdminNotificationTypesCatalog(props: {
                     <TableCell className="max-w-[340px] whitespace-normal text-sm text-gray-600">{item.description}</TableCell>
                     <TableCell>
                       <Badge variant={item.priority === 'alta' ? 'destructive' : item.priority === 'media' ? 'secondary' : 'outline'}>
-                        {item.priority}
+                        {formatAdminNotificationLabel(item.priority)}
                       </Badge>
                     </TableCell>
                     <TableCell>
                       <div className="flex flex-wrap gap-1">
                         {item.allowedChannels.map((channel) => (
                           <Badge key={channel} variant="outline">
-                            {channel}
+                            {formatAdminNotificationLabel(channel)}
                           </Badge>
                         ))}
                       </div>
@@ -78,7 +79,7 @@ export function AdminNotificationTypesCatalog(props: {
                       </Select>
                     </TableCell>
                     <TableCell>
-                      <Badge variant="secondary">{item.automationMode}</Badge>
+                      <Badge variant="secondary">{formatAdminNotificationLabel(item.automationMode)}</Badge>
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">

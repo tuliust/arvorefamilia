@@ -109,7 +109,7 @@ Pessoa marcada como falecida em `/meus-dados` pula `/preferencias` e segue para 
 ## Perfil de pessoa
 
 - Cards vazios sem utilidade, como `Irmãos` sem irmãos, devem ser ocultados.
-- `Administração do perfil` não deve aparecer para o próprio usuário nem quando o perfil for administrado somente pelo usuário atual.
+- `Administração do perfil` não deve aparecer em `/pessoa/:id`; a administração de responsáveis fica fora da página pública do perfil.
 - `Discussões relacionadas` deve aparecer abaixo da linha do tempo.
 - O CTA superior duplicado de criar discussão deve ser removido quando já houver CTA interno.
 - No mobile, o conteúdo inferior deve ter respiro para não ficar sob a navegação inferior.
@@ -155,5 +155,5 @@ Pessoa marcada como falecida em `/meus-dados` pula `/preferencias` e segue para 
 - O botão `Principal` não deve exibir seta; o retorno ao painel administrativo usa `Painel Administrativo`.
 - Ações administrativas secundárias, como membros, conteúdo e responsáveis, devem permanecer nas páginas correspondentes ou em cards internos, não no header global.
 - Páginas administrativas devem manter acentuação correta em títulos, labels, botões e mensagens.
-- Cards superiores de `/admin` devem priorizar número principal e não subtítulos redundantes.
+- Cards superiores de `/admin` devem priorizar número principal; `Relações` deve exibir o total de relacionamentos e pode manter o subtítulo de casamentos quando couber.
 - `/admin/responsaveis` deve priorizar solicitação pendente quando houver e ocultar essa seção quando vazia.
