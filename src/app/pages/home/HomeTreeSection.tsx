@@ -1,5 +1,5 @@
 import React from 'react';
-import { useLocation, type Location } from 'react-router';
+import { useLocation } from 'react-router';
 import { FileDown, ImageDown, Minus, Plus, Printer, Scan } from 'lucide-react';
 
 import type { FamilyTreeActions } from '../../components/FamilyTree/actions';
@@ -15,6 +15,7 @@ import type {
   MarriageNodeDetails,
   VisualLineFilters,
 } from '../../components/FamilyTree/types';
+import { injectExportSafeCss, sanitizeUnsupportedExportColors } from '../../components/FamilyTree/utils/exportColorSanitizer';
 import type { TreeViewMode } from '../../components/FamilyTree/treeViewMode';
 import { PageFavoriteButton } from '../../components/favorites/PageFavoriteButton';
 import type { Pessoa, Relacionamento } from '../../types';
@@ -53,7 +54,7 @@ function getExportPreviewIntent(action: SidebarTreeAction) {
   return null;
 }
 
-function openTreeExportPreviewRoute(location: Location, action: SidebarTreeAction) {
+function openTreeExportPreviewRoute(location: ReturnType<typeof useLocation>, action: SidebarTreeAction) {
   const intent = getExportPreviewIntent(action);
   if (!intent) return false;
 
@@ -89,7 +90,16 @@ function getPreviewExportRoot() {
   ].join(','));
 }
 
-function buildPreviewPngFilename(viewMode: TreeViewMode, title: string) {
+function escapeHtml(value: string) {
+  return value
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
+function buildPreviewExportFilename(viewMode: TreeViewMode, title: string, extension: 'png' | 'pdf') {
   const now = new Date();
   const timestamp = [
     now.getFullYear(),
@@ -106,7 +116,7 @@ function buildPreviewPngFilename(viewMode: TreeViewMode, title: string) {
     .replace(/^-+|-+$/g, '');
   const fallback = viewMode === 'mapa-familiar-horizontal' ? 'mapa-genealogico' : 'arvore-familiar';
 
-  return `${safeTitle || fallback}-${timestamp}.png`;
+  return `${safeTitle || fallback}-${timestamp}.${extension}`;
 }
 
 function waitForAnimationFrame() {
@@ -149,7 +159,17 @@ function canvasToPngBlob(canvas: HTMLCanvasElement) {
   });
 }
 
-async function downloadPreviewTreeAsPng(filename: string) {
+function preparePreviewCloneForCapture(clonedDocument: Document) {
+  injectExportSafeCss(clonedDocument);
+  sanitizeUnsupportedExportColors(clonedDocument.body);
+
+  clonedDocument.querySelectorAll<HTMLElement>('[data-tree-export-ignore="true"]').forEach((node) => {
+    node.style.setProperty('display', 'none', 'important');
+    node.style.setProperty('visibility', 'hidden', 'important');
+  });
+}
+
+async function capturePreviewTreeCanvas() {
   const root = getPreviewExportRoot();
 
   if (!root) {
@@ -162,7 +182,8 @@ async function downloadPreviewTreeAsPng(filename: string) {
   const rect = root.getBoundingClientRect();
   const width = Math.ceil(Math.max(rect.width, root.offsetWidth, root.scrollWidth, 1));
   const height = Math.ceil(Math.max(rect.height, root.offsetHeight, root.scrollHeight, 1));
-  const canvas = await html2canvas(root, {
+
+  return html2canvas(root, {
     backgroundColor: '#f7f1e8',
     scale: EXPORT_PREVIEW_PNG_SCALE,
     width,
@@ -177,8 +198,12 @@ async function downloadPreviewTreeAsPng(filename: string) {
     logging: false,
     removeContainer: true,
     ignoreElements: (node) => Boolean((node as HTMLElement).closest?.('[data-tree-export-ignore="true"]')),
+    onclone: preparePreviewCloneForCapture,
   });
+}
 
+async function downloadPreviewTreeAsPng(filename: string) {
+  const canvas = await capturePreviewTreeCanvas();
   const blob = await canvasToPngBlob(canvas);
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');
@@ -188,6 +213,111 @@ async function downloadPreviewTreeAsPng(filename: string) {
   link.click();
   link.remove();
   window.setTimeout(() => URL.revokeObjectURL(url), 30000);
+}
+
+async function downloadPreviewTreeAsPdf(filename: string, title: string) {
+  const canvas = await capturePreviewTreeCanvas();
+  const { jsPDF } = await import('jspdf');
+  const orientation = canvas.width >= canvas.height ? 'landscape' : 'portrait';
+  const pdf = new jsPDF({
+    orientation,
+    unit: 'px',
+    format: 'a4',
+    compress: true,
+  });
+  const pageWidth = pdf.internal.pageSize.getWidth();
+  const pageHeight = pdf.internal.pageSize.getHeight();
+  const margin = 18;
+  const maxWidth = pageWidth - margin * 2;
+  const maxHeight = pageHeight - margin * 2;
+  const fitRatio = Math.min(maxWidth / canvas.width, maxHeight / canvas.height);
+  const imageWidth = canvas.width * fitRatio;
+  const imageHeight = canvas.height * fitRatio;
+  const imageX = (pageWidth - imageWidth) / 2;
+  const imageY = (pageHeight - imageHeight) / 2;
+
+  pdf.addImage(canvas.toDataURL('image/png'), 'PNG', imageX, imageY, imageWidth, imageHeight);
+  pdf.setProperties({ title });
+  pdf.save(filename);
+}
+
+async function printPreviewTreeOnOnePage(title: string) {
+  const canvas = await capturePreviewTreeCanvas();
+  const imageUrl = canvas.toDataURL('image/png');
+  const orientation = canvas.width >= canvas.height ? 'landscape' : 'portrait';
+  const iframe = document.createElement('iframe');
+
+  iframe.setAttribute('title', title);
+  iframe.style.position = 'fixed';
+  iframe.style.right = '0';
+  iframe.style.bottom = '0';
+  iframe.style.width = '0';
+  iframe.style.height = '0';
+  iframe.style.border = '0';
+  iframe.style.opacity = '0';
+  document.body.appendChild(iframe);
+
+  const printWindow = iframe.contentWindow;
+  const printDocument = iframe.contentDocument;
+
+  if (!printWindow || !printDocument) {
+    iframe.remove();
+    throw new Error('Não foi possível preparar a janela de impressão.');
+  }
+
+  printDocument.open();
+  printDocument.write(`<!doctype html>
+<html>
+  <head>
+    <title>${escapeHtml(title)}</title>
+    <style>
+      @page { size: ${orientation}; margin: 0; }
+      html, body { margin: 0; width: 100%; height: 100%; background: #f7f1e8; }
+      body { display: flex; align-items: center; justify-content: center; overflow: hidden; }
+      img { display: block; width: 100vw; height: 100vh; object-fit: contain; }
+      @media print {
+        html, body { width: 100%; height: 100%; }
+        img { width: 100vw; height: 100vh; object-fit: contain; }
+      }
+    </style>
+  </head>
+  <body>
+    <img src="${imageUrl}" alt="${escapeHtml(title)}" />
+  </body>
+</html>`);
+  printDocument.close();
+
+  await new Promise<void>((resolve, reject) => {
+    const image = printDocument.querySelector('img');
+    const cleanup = () => window.setTimeout(() => iframe.remove(), 1200);
+    const print = () => {
+      try {
+        printWindow.focus();
+        printWindow.print();
+        cleanup();
+        resolve();
+      } catch (error) {
+        cleanup();
+        reject(error);
+      }
+    };
+
+    if (!image) {
+      window.setTimeout(print, 100);
+      return;
+    }
+
+    if (image.complete) {
+      window.setTimeout(print, 100);
+      return;
+    }
+
+    image.addEventListener('load', () => window.setTimeout(print, 100), { once: true });
+    image.addEventListener('error', () => {
+      cleanup();
+      reject(new Error('Não foi possível carregar a imagem para impressão.'));
+    }, { once: true });
+  });
 }
 
 interface HomeTreeSectionProps {
@@ -269,16 +399,26 @@ export function HomeTreeSection({
 
   const effectiveVisiblePersonIds = visiblePersonIdsByLifeStatus;
 
-  const handleSavePreviewPng = React.useCallback(async () => {
+  const runPreviewExport = React.useCallback(async (action: 'png' | 'pdf' | 'print') => {
     if (exportPreviewBusy) return;
 
     setExportPreviewBusy(true);
 
     try {
-      await downloadPreviewTreeAsPng(buildPreviewPngFilename(treeViewMode, desktopTreeTitle));
+      if (action === 'png') {
+        await downloadPreviewTreeAsPng(buildPreviewExportFilename(treeViewMode, desktopTreeTitle, 'png'));
+        return;
+      }
+
+      if (action === 'pdf') {
+        await downloadPreviewTreeAsPdf(buildPreviewExportFilename(treeViewMode, desktopTreeTitle, 'pdf'), desktopTreeTitle);
+        return;
+      }
+
+      await printPreviewTreeOnOnePage(desktopTreeTitle);
     } catch (error) {
-      console.error('Erro ao salvar PNG do preview da árvore:', error);
-      window.alert(error instanceof Error ? error.message : 'Não foi possível salvar a imagem da árvore.');
+      console.error('Erro ao exportar preview da árvore:', error);
+      window.alert(error instanceof Error ? error.message : 'Não foi possível exportar a árvore.');
     } finally {
       setExportPreviewBusy(false);
     }
@@ -294,12 +434,17 @@ export function HomeTreeSection({
       }
 
       if (isExportPreview && action === 'save-image') {
-        void handleSavePreviewPng();
+        void runPreviewExport('png');
         return;
       }
 
-      if (isExportPreview && (action === 'save-pdf' || action === 'print')) {
-        window.print();
+      if (isExportPreview && action === 'save-pdf') {
+        void runPreviewExport('pdf');
+        return;
+      }
+
+      if (isExportPreview && action === 'print') {
+        void runPreviewExport('print');
         return;
       }
 
@@ -344,7 +489,7 @@ export function HomeTreeSection({
 
     window.addEventListener(SIDEBAR_TREE_ACTION_EVENT, handleSidebarTreeAction);
     return () => window.removeEventListener(SIDEBAR_TREE_ACTION_EVENT, handleSidebarTreeAction);
-  }, [familyTreeRef, handleSavePreviewPng, isExportPreview, location]);
+  }, [familyTreeRef, isExportPreview, location, runPreviewExport]);
 
   const showPngButton = !exportIntent || exportIntent === 'png';
   const showPdfButton = !exportIntent || exportIntent === 'pdf';
@@ -447,7 +592,7 @@ export function HomeTreeSection({
               type="button"
               disabled={exportPreviewBusy}
               className="inline-flex h-9 items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 text-sm font-bold text-slate-800 shadow-sm transition hover:bg-blue-50 hover:text-blue-800 disabled:cursor-not-allowed disabled:opacity-60"
-              onClick={handleSavePreviewPng}
+              onClick={() => runPreviewExport('png')}
             >
               <ImageDown className="h-4 w-4" />
               {exportPreviewBusy ? 'Preparando PNG...' : 'Salvar PNG'}
@@ -456,22 +601,23 @@ export function HomeTreeSection({
           {showPdfButton && (
             <button
               type="button"
-              className="inline-flex h-9 items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 text-sm font-bold text-slate-800 shadow-sm transition hover:bg-blue-50 hover:text-blue-800"
-              onClick={() => window.print()}
-              title="Use a opção Salvar como PDF na janela de impressão do navegador."
+              disabled={exportPreviewBusy}
+              className="inline-flex h-9 items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 text-sm font-bold text-slate-800 shadow-sm transition hover:bg-blue-50 hover:text-blue-800 disabled:cursor-not-allowed disabled:opacity-60"
+              onClick={() => runPreviewExport('pdf')}
             >
               <FileDown className="h-4 w-4" />
-              Exportar PDF
+              {exportPreviewBusy ? 'Preparando PDF...' : 'Exportar PDF'}
             </button>
           )}
           {showPrintButton && (
             <button
               type="button"
-              className="inline-flex h-9 items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 text-sm font-bold text-slate-800 shadow-sm transition hover:bg-blue-50 hover:text-blue-800"
-              onClick={() => window.print()}
+              disabled={exportPreviewBusy}
+              className="inline-flex h-9 items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 text-sm font-bold text-slate-800 shadow-sm transition hover:bg-blue-50 hover:text-blue-800 disabled:cursor-not-allowed disabled:opacity-60"
+              onClick={() => runPreviewExport('print')}
             >
               <Printer className="h-4 w-4" />
-              Imprimir
+              {exportPreviewBusy ? 'Preparando impressão...' : 'Imprimir'}
             </button>
           )}
         </div>
