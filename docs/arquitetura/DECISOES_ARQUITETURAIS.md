@@ -1,7 +1,7 @@
 # Decisões arquiteturais
 
-> Última revisão: 2026-06-29  
-> Escopo: arquitetura final documentada após consolidação dos documentos técnicos anteriores.  
+> Última revisão: 2026-06-29
+> Escopo: arquitetura final documentada após consolidação dos documentos técnicos anteriores.
 > Status: canônico.
 
 ## Camadas
