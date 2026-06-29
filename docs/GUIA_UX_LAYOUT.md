@@ -49,6 +49,26 @@
 - Se uma área inferior não tiver conteúdo, o gesto vertical para baixo deve ser bloqueado.
 - O modal de dica desktop/mobile deve respeitar chave de sessão e não reaparecer continuamente.
 
+#### Modal `Mapa da família`
+
+Os botões da visão geral mobile devem seguir contrato visual próprio:
+
+- padding lateral, superior e inferior de `8px`;
+- conteúdo centralizado no eixo horizontal e vertical;
+- apenas um ícone por botão;
+- ícone diferente para cada grupo;
+- ícones em tamanho ampliado, sem reaparecimento de ícone antigo;
+- títulos com `letter-spacing` reduzido para caber em cards estreitos;
+- contador centralizado e sem deslocamento vertical.
+
+#### Mapa completo mobile
+
+- A camada deve ocupar a tela inteira e ficar acima do modal `Mapa da família`.
+- O header interno deve ter título, subtítulo curto, botão `Reenquadrar` e botão `X`.
+- O palco do mapa deve permitir pan e zoom por pinça.
+- Cards e grupos devem seguir uma estrutura única para evitar diferenças visuais entre grupos clonados.
+- Conectores devem tocar as bordas dos grupos/cards e não podem atravessar badges ou títulos.
+
 ### `/linha-geracional`
 
 - A versão mobile deve ter leitura geracional equivalente à visualização horizontal.

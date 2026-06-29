@@ -101,6 +101,25 @@ Validar em todas as rotas mobile relevantes:
 - Se não houver conteúdo abaixo da tela central, arrasto vertical para baixo deve ser bloqueado.
 - Se não houver primos abaixo de tios, arrasto para baixo a partir de tios deve ser bloqueado.
 - Linhas abaixo de tios não devem aparecer quando não houver primos.
+
+#### QA mobile do botão `Mapa` e mapa completo
+
+Validar em viewport mobile real ou device mode equivalente:
+
+- tocar no botão `Mapa` na tela central de `/mapa-familiar`;
+- confirmar abertura do modal `Mapa da família` acima do header e da toolbar;
+- confirmar presença dos 9 botões de grupos;
+- confirmar que cada botão tem apenas um ícone e que os ícones são diferentes;
+- tocar em `Ancestrais paternos`, `Núcleo central`, `Tios maternos` e `Descendentes`;
+- confirmar que o toque navega dentro do mapa e não abre `/pessoa/:id`;
+- abrir `Exibir mapa completo`;
+- confirmar que o mapa completo aparece acima do modal anterior;
+- confirmar que `Reenquadrar` reposiciona o palco;
+- confirmar pan e zoom por pinça;
+- fechar pelo `X` e confirmar que a página volta ao estado anterior sem scroll travado;
+- validar conectores: bisavós para avós, tios para pai/mãe, pessoa central para pai/mãe, pessoa central para irmãos/cônjuge, irmãos para sobrinhos e tios maternos para primos maternos;
+- confirmar que rótulos `Pai` e `Mãe` não ficam cortados.
+
 ### `/mapa-familiar-horizontal`
 
 - Preserva query `pessoa` ao alternar visualização.
@@ -119,6 +138,20 @@ Validar em todas as rotas mobile relevantes:
 - Gerações vazias não devem aparecer como primeira tela quando houver geração seguinte com conteúdo.
 - Cards de cônjuges devem ficar empilhados quando o layout mobile exigir.
 - Linhas laterais devem conectar apenas relações reais, não todos os cards.
+
+#### QA mobile específico de `/linha-geracional`
+
+Além dos itens gerais:
+
+- abrir o painel de visualização;
+- confirmar que o painel fica acima do header;
+- confirmar que há apenas um botão `X`;
+- validar que o `X` fecha o painel;
+- validar nomes de pessoas com primeiro e segundo nome;
+- confirmar alinhamento à esquerda e centralização vertical dos botões de pessoas;
+- conferir grupos de pais, cônjuges, irmãos, filhos, pets, avós, bisavós, tataravós, tios, primos e sobrinhos;
+- tocar em uma pessoa listada e confirmar atualização da query `pessoa`;
+- confirmar que `/mapa-familiar` não carrega runtime específico da linha geracional.
 
 ## Onboarding de membro
 

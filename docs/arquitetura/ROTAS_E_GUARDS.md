@@ -1,6 +1,6 @@
 # Rotas e guards
 
-> Última revisão: 2026-06-27
+> Última revisão: 2026-06-29
 > Escopo: rotas principais, guards e fluxos de navegação.
 > Status: canônico.
 
@@ -76,6 +76,13 @@ Rotas de onboarding usam header simplificado. No mobile, a navegação inferior 
 | `/mapa-familiar-horizontal` | Visualização horizontal. |
 | `/linha-geracional` | Visualização geracional mobile/dedicada. |
 | `/` | Pode redirecionar para mapa preservando query. |
+
+### Montagem de runtimes mobile
+
+- `MobileTopLayerTweaks` pode ser montado globalmente em rotas renderizadas por `lazyRoute`, desde que suas regras internas sejam defensivas por rota/breakpoint.
+- `LinhaGeracionalMobilePanelLayerTweaks` deve ser montado somente na rota `/linha-geracional`.
+- `/mapa-familiar` não deve carregar runtime específico da linha geracional.
+- O isolamento entre `/mapa-familiar` e `/linha-geracional` é regra de não regressão para evitar travamentos, overlays indevidos ou mudança de layout entre rotas.
 
 ## Retorno seguro para árvore
 

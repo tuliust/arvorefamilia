@@ -1,6 +1,6 @@
 # Decisões arquiteturais
 
-> Última revisão: 2026-06-27  
+> Última revisão: 2026-06-29  
 > Escopo: arquitetura final documentada após consolidação dos documentos técnicos anteriores.  
 > Status: canônico.
 
@@ -87,6 +87,24 @@ A IA é funcionalidade de apoio e não substitui revisão humana dos dados.
 - `funcionalidades/ARVORE_LEGENDAS_CONECTORES_PAINEL.md`: painéis, conectores, legendas, seletor de visualização e edição da árvore.
 
 Documentos antigos de mobile, baseline e ajustes por rodada foram removidos porque o contrato vigente passou a estar nos documentos canônicos.
+
+### Mapa completo mobile por modelo de nós
+
+Decisão vigente:
+
+- o mapa completo mobile não deve ser mantido como clone visual de seções já renderizadas;
+- a renderização deve usar modelo próprio de pessoas, nós e arestas;
+- cards devem ser renderizados por estrutura comum, com variantes visuais declaradas;
+- conectores devem ser derivados de âncoras e bordas reais dos nós;
+- ajustes de conector por runtime são aceitos como etapa de estabilização, mas devem preservar rota e breakpoint;
+- a evolução desejável é mover a regra para componentes React definitivos quando o comportamento visual estiver validado.
+
+Motivação:
+
+- reduzir divergência entre grupos;
+- impedir conectores soltos ou duplicados;
+- evitar ghost clicks e vazamento de eventos para cards abaixo de overlays;
+- permitir pan/zoom estável sem depender do DOM de telas secundárias.
 
 ## Administração
 

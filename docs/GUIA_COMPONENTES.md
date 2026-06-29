@@ -52,6 +52,12 @@
 | `MobileGlobalTweaks.tsx` | ajustes mobile transversais de header, overlays, `/meus-dados`, `/meus-vinculos` e painel de mapa quando aplicável. |
 | `MobileTopLayerTweaks.tsx` | ajustes de camada mobile para manter painéis, busca, notificações e menu do avatar acima do canvas e de elementos sticky. |
 | `LinhaGeracionalMobilePanelLayerTweaks.tsx` | isolamento de camada e comportamento do painel mobile da linha geracional. |
+| `mobileFamilyMapOverviewTileVisualAdjustments.ts` | script defensivo do modal `Mapa da família`; padroniza cards, remove ícones duplicados e aplica ícones únicos por grupo no mobile. |
+| `mobileFamilyMapOverviewGhostClickGuard.ts` | bloqueia ghost click após toque em botões da visão geral mobile para impedir navegação indevida para `/pessoa/:id`. |
+| `mobileFamilyMapFullOverview.ts` | renderiza o `Mapa completo` mobile por modelo de nós, cards e conectores, com pan e zoom. |
+| `mobileFamilyMapFullOverviewButtonGuard.ts` | reforça a ativação do botão `Exibir mapa completo` e promove a camada correta. |
+| `mobileFamilyMapFullOverviewConnectorFix.ts` | normaliza conectores do mapa completo usando bordas reais de grupos/cards. |
+| `mobileFamilyMapCoreConnectorFix.ts` | estabiliza conectores do núcleo do mapa familiar mobile quando necessário. |
 | `PersonProfileRuntimeTweaks.tsx` | ocultações e reposicionamentos defensivos em `/pessoa/:id`. |
 | `AdminDashboardRuntimeTweaks.tsx` | ajustes defensivos do dashboard administrativo. |
 | `MeusVinculosEnhancements.tsx` | ajustes progressivos de `/meus-vinculos`, incluindo ordem de seções, seletor de cônjuge/filhos e modal de pet. |

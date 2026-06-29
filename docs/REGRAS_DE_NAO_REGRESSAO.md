@@ -45,6 +45,23 @@
 - Não permitir arrasto para primos quando não houver primos abaixo de tios.
 - Não exibir linha vertical abaixo de tios quando não houver primos no lado correspondente.
 - A visão geral/Mapa mobile não deve duplicar ícones, disparar ghost click ou deslocar conectores após abrir/fechar.
+
+### Mapa completo mobile
+
+- O botão `Exibir mapa completo` deve abrir uma camada própria acima do modal `Mapa da família`.
+- O modal anterior não pode permanecer por cima do mapa completo.
+- O mapa completo deve ter botão `X` e ação `Reenquadrar`.
+- Pan e zoom por pinça devem funcionar sem rolar a página por baixo.
+- O mapa completo deve ser renderizado por modelo próprio de nós/cards/conectores, não por clone visual frágil de seções.
+- Cada card de pessoa deve usar estrutura visual comum, com variantes controladas.
+- Conectores devem partir da borda real de grupos/cards.
+- `Bisavós paternos → Avós paternos` e `Bisavós maternos → Avós maternos` não podem gerar múltiplas linhas laterais.
+- `Tios paternos → Pai` e `Tios maternos → Mãe` devem permanecer conectados horizontalmente.
+- A ramificação superior da pessoa central para `Pai`/`Mãe` deve ser única antes de se dividir.
+- A ramificação inferior da pessoa central para `Irmãos`/`Cônjuge` deve ser única antes de se dividir.
+- `Irmãos → Sobrinhos` e `Tios maternos → Primos maternos` devem permanecer conectados quando houver conteúdo.
+- Rótulos `Pai` e `Mãe` não podem ficar cortados.
+
 ## Linha geracional mobile
 
 - `/linha-geracional` deve preservar o título `Árvore Familiar` no header mobile.

@@ -221,6 +221,12 @@ Fluxo atual:
 
 Estado de estabilização:
 
+Regras complementares mobile/header:
+
+- overlays de busca, notificações, avatar e painéis de árvore devem ficar acima do canvas e de elementos sticky;
+- ajustes de camada não devem afetar desktop;
+- o botão `+` e o modal `Mapa da família` devem ter prioridade visual quando abertos.
+
 - a arquitetura de preview real está implementada;
 - a captura final por `html2canvas` ainda exige QA visual específico porque sombras, filtros ou blur podem aparecer como blocos cinza na imagem exportada;
 - a documentação deve tratar a frente como em ajuste até que PNG, PDF e impressão passem sem blocos cinza, títulos cortados ou deformação de cards.
@@ -255,6 +261,16 @@ Regras:
 - refletir mudanças nas telas de membro após atualização.
 
 ## Header administrativo
+
+### Admin mobile
+
+No dashboard administrativo mobile:
+
+- os quatro cards superiores devem compartilhar a mesma estrutura visual;
+- `Membros` e `Relações` mantêm seus títulos;
+- `Solicitações de Aprovação` deve usar label compacto `Solicitações`;
+- `Responsáveis por Usuários` deve usar label compacto `Responsáveis`;
+- ícones, título, alinhamento e formatação desses cards devem permanecer equivalentes entre si.
 
 Nas rotas `/admin/*`, o header global deve ser reduzido para navegação essencial:
 

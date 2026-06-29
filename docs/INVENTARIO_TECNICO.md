@@ -1,6 +1,6 @@
 # Inventário técnico
 
-> Última revisão: 2026-06-27
+> Última revisão: 2026-06-29
 > Escopo: rotas, módulos, documentos finais e referências técnicas preservadas após limpeza documental.
 > Status: canônico.
 
@@ -132,6 +132,31 @@ Contrato funcional: `funcionalidades/STATUS_CONJUGAL.md`.
 - `src/app/components/FirstLoginTutorialRuntimeTweaks.tsx`: ajustes do tour inicial e compatibilidade visual de árvore.
 - `src/app/components/person/PersonProfileRuntimeTweaks.tsx`: regras defensivas de exibição no perfil.
 - Wrappers de páginas como `AdminDashboardWithTweaks`, `AdminHomeSettingsWithSaveBar`, `MeusDadosWithInlineProfileBio` e `MeusVinculosMobileShortcutsPage` representam composição atual da UI e devem ser conferidos antes de mover regras para componentes definitivos.
+
+## Scripts mobile defensivos relevantes
+
+Além dos componentes React, a branch usa scripts TypeScript carregados pelo `index.html` para ajustes mobile de transição.
+
+Scripts de mapa familiar mobile que devem ser conferidos antes de alterar `/mapa-familiar`:
+
+- `src/mobileFamilyMapOverviewTileVisualAdjustments.ts`;
+- `src/mobileFamilyMapOverviewGhostClickGuard.ts`;
+- `src/mobileFamilyMapFullOverview.ts`;
+- `src/mobileFamilyMapFullOverviewButtonGuard.ts`;
+- `src/mobileFamilyMapFullOverviewConnectorFix.ts`;
+- `src/mobileFamilyMapCoreConnectorFix.ts`;
+- `src/mobileFamilyMapUncleSwipeNavigationGuard.ts`;
+- `src/mobileFamilyMapStableMobileFix.ts`;
+- `src/mobileFamilyMapDirectionalNavigationFix.ts`;
+- `src/mobileFamilyMapFilterButtonsBehaviorFix.ts`.
+
+Componentes/runtimes React relevantes:
+
+- `src/app/components/MobileTopLayerTweaks.tsx`;
+- `src/app/components/LinhaGeracionalMobilePanelLayerTweaks.tsx`;
+- `src/app/components/MobileGlobalTweaks.tsx`.
+
+Esses arquivos devem permanecer isolados por rota e breakpoint. Qualquer regra estabilizada deve ser considerada para migração ao componente de origem.
 
 ## Arquivos removidos ou absorvidos
 

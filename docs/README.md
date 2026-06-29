@@ -1,6 +1,6 @@
 # Documentação do produto — arvorefamilia
 
-> Última revisão: 2026-06-27
+> Última revisão: 2026-06-29
 > Escopo: documentação canônica mantida em `docs/` após auditoria e limpeza final.
 > Status: canônico.
 
@@ -111,6 +111,19 @@ Arquivos residuais fora desse índice não devem ser usados como contrato operac
 - O arquivo `src/app/components/ui/alert.tsx` é componente visual e pode aparecer em varreduras textuais como falso positivo; ele não representa uso de API nativa do navegador.
 - Ajustes mobile devem ser isolados por rota/breakpoint e não podem alterar layout ou comportamento desktop sem decisão explícita.
 - Overlays mobile de busca, notificações, avatar e painel da árvore devem permanecer acima de toolbars sticky e canvas.
+
+## Atualizações recentes documentadas
+
+Esta revisão incorpora contratos recentes de mobile e exportação:
+
+- camada superior de notificações, busca, avatar, botão `+` e painéis de árvore no mobile;
+- isolamento do runtime específico de `/linha-geracional`;
+- visão geral `Mapa da família` em `/mapa-familiar` mobile;
+- botão `Exibir mapa completo`, mapa completo com pan/zoom, cards normalizados e conectores por bordas reais;
+- guard contra ghost click nos botões do mapa mobile;
+- scroll vertical das telas de primos paternos e maternos;
+- labels compactos dos cards superiores de `/admin` mobile;
+- continuidade do fluxo de preview/exportação em aba dedicada.
 
 ## Regra de manutenção
 

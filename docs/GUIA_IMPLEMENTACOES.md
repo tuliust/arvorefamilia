@@ -59,6 +59,47 @@ Componentes relevantes:
 - Nomes listados em grupos devem usar primeiro e segundo nome completos.
 - O mobile deve bloquear gesto vertical para áreas inferiores inexistentes, como descendentes ausentes ou primos inexistentes abaixo de tios.
 
+### Runtimes e scripts mobile do mapa
+
+Além dos componentes React, a frente mobile usa scripts defensivos em `src/*.ts` carregados em `index.html` para estabilizar interações específicas enquanto a lógica não é absorvida integralmente pelos componentes de origem.
+
+Scripts relevantes:
+
+- `mobileFamilyMapOverviewTileVisualAdjustments.ts`: padroniza cards do modal `Mapa da família`, remove ícones duplicados e aplica ícones únicos por grupo;
+- `mobileFamilyMapOverviewGhostClickGuard.ts`: bloqueia eventos fantasmas após toque em botões do modal `Mapa da família`;
+- `mobileFamilyMapFullOverview.ts`: monta o `Mapa completo` mobile com modelo próprio de nós, cards, conectores, pan e zoom;
+- `mobileFamilyMapFullOverviewButtonGuard.ts`: reforça a ativação do botão `Exibir mapa completo` e promove a camada correta;
+- `mobileFamilyMapFullOverviewConnectorFix.ts`: normaliza conectores do mapa completo a partir das bordas reais dos nós;
+- `mobileFamilyMapCoreConnectorFix.ts`: estabiliza conectores do núcleo mobile quando necessário;
+- `mobileFamilyMapUncleSwipeNavigationGuard.ts` e ajustes correlatos: preservam scroll em telas de tios/primos sem quebrar navegação por swipe.
+
+Regras:
+
+- esses scripts devem ser tratados como runtime defensivo de transição;
+- não devem alterar desktop;
+- devem checar rota e breakpoint antes de agir;
+- devem evitar loops de `MutationObserver`;
+- quando o comportamento estiver estável, a preferência é migrar a lógica para componentes React de origem.
+
+
+
+### Mapa completo mobile
+
+O mapa completo mobile não deve ser tratado como simples captura ou clone de DOM.
+
+Contrato de implementação:
+
+- a abertura parte do botão `Exibir mapa completo` no modal `Mapa da família`;
+- o mapa completo usa camada própria, com `z-index` superior ao modal anterior;
+- a estrutura é montada por modelo declarativo com pessoas, nós e arestas;
+- cada nó define grupo, posição, largura, altura mínima, variante visual e lista de pessoas;
+- os cards são renderizados por função única, com variantes para ancestrais, mini cards, pais, pessoa central e núcleo;
+- conectores são SVGs gerados por âncoras dos nós;
+- o cálculo dos conectores deve considerar a caixa real renderizada quando houver ajuste posterior de altura;
+- pan e zoom devem usar `touchstart`, `touchmove` e `touchend` sem permitir scroll da página por baixo;
+- a ação `Reenquadrar` deve recalcular escala e posição conforme o viewport;
+- fechar o mapa deve remover a camada e liberar o scroll quando não houver outro overlay ativo.
+
 ## Status conjugal
 
 - `src/app/utils/conjugalRelationshipStatus.ts` centraliza a inferência de status conjugal.

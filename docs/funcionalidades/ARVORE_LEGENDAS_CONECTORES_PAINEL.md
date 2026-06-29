@@ -1,6 +1,6 @@
 # Árvore, legendas, conectores e painel
 
-> Última revisão: 2026-06-26
+> Última revisão: 2026-06-29
 > Escopo: painéis do mapa familiar, conectores, legendas e seletor de visualização.
 > Status: canônico.
 
@@ -59,6 +59,23 @@ Regras gerais:
 - cônjuges e vínculos relacionais devem usar distinção visual sem competir com laços sanguíneos;
 - conectores conjugais devem refletir o status inferido do vínculo sem alterar a leitura geracional principal;
 - conectores mobile não devem depender de documentos antigos de rodada.
+
+### Conectores do mapa completo mobile
+
+Além das regras gerais, o mapa completo mobile possui contrato próprio:
+
+- conectores devem ser recalculados a partir das bordas reais dos grupos e cards renderizados;
+- as âncoras válidas são `top`, `right`, `bottom` e `left`;
+- linhas não devem iniciar no centro visual arbitrário quando a borda do card/grupo for a origem correta;
+- `Bisavós paternos → Avós paternos` deve usar uma única linha lateral;
+- `Bisavós maternos → Avós maternos` deve usar uma única linha lateral;
+- `Tios paternos → Pai` e `Tios maternos → Mãe` devem ser conexões horizontais claras;
+- `Tios paternos → Primos paternos` e `Tios maternos → Primos maternos` devem ser conexões verticais quando houver conteúdo real;
+- a pessoa central deve ter uma única ramificação superior para `Pai` e `Mãe`;
+- a pessoa central deve ter uma única ramificação inferior para `Irmãos` e `Cônjuge`;
+- `Irmãos → Sobrinhos`, `Cônjuge → Filhos`, `Cônjuge → Pets` e `Filhos → Netos` devem permanecer legíveis quando os grupos existirem;
+- rótulos como `Pai` e `Mãe` devem ficar com `overflow` visível para evitar corte do badge;
+- conectores duplicados, soltos, desalinhados ou que atravessem títulos são regressão.
 
 ## Edição de dados do usuário
 

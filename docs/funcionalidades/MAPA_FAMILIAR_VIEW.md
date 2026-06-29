@@ -67,6 +67,65 @@ Ao navegar para perfil, o retorno é preservado em `?voltar=` quando o fluxo de 
 - Linhas verticais abaixo de tios devem aparecer apenas quando houver primos reais naquele lado.
 - Avós paternos e maternos devem permanecer nos lados corretos para a pessoa de referência.
 - A visão geral/Mapa mobile deve evitar ícones duplicados, ghost click após toque e conectores desalinhados.
+
+### Visão geral/Mapa mobile
+
+O botão `Mapa` da tela central de `/mapa-familiar` abre um modal de visão geral com nove grupos navegáveis:
+
+- `Ancestrais paternos`;
+- `Avós`;
+- `Ancestrais maternos`;
+- `Tios paternos`;
+- `Núcleo central`;
+- `Tios maternos`;
+- `Primos paternos`;
+- `Descendentes`;
+- `Primos maternos`.
+
+Contrato visual e funcional:
+
+- cada botão deve ter padding uniforme de `8px`;
+- todo o conteúdo do botão deve ficar centralizado;
+- cada grupo deve exibir um único ícone, diferente dos demais, sem ícone legado duplicado;
+- os ícones devem permanecer maiores que o padrão inicial da visão geral, sem cortar título ou contador;
+- títulos em caixa alta podem usar `letter-spacing` reduzido para preservar legibilidade em telas estreitas;
+- tocar em um grupo deve navegar para a tela do grupo dentro de `/mapa-familiar`, sem abrir `/pessoa/:id`;
+- o guard contra ghost click deve impedir que o toque no modal vaze para cards posicionados por baixo;
+- o modal deve ficar acima do header, toolbar, canvas e painéis.
+
+### Mapa completo mobile
+
+O botão `Exibir mapa completo` abre uma camada própria do mapa completo no mobile.
+
+Contrato atual:
+
+- o mapa completo deve abrir acima do modal `Mapa da família`;
+- o modal anterior deve ser removido ou ficar inerte quando o mapa completo estiver ativo;
+- o body deve permanecer com scroll bloqueado enquanto o mapa completo estiver aberto;
+- a camada deve ter botão de fechar e ação de reenquadrar;
+- o usuário pode usar pan e zoom por gesto de pinça;
+- a implementação não deve depender de clone visual frágil de seções posicionadas na tela;
+- a renderização deve usar modelo próprio de nós, cards e conectores;
+- cards devem usar estrutura única com variantes como `ancestor`, `mini`, `parent`, `central` e `core`;
+- os dados podem ser extraídos das telas mobile existentes, mas devem ser normalizados antes da renderização;
+- conectores devem ser gerados a partir de âncoras dos nós, não de paths fixos desconectados da geometria real.
+
+### Conectores do mapa completo mobile
+
+Regras específicas:
+
+- linhas devem iniciar e terminar na borda real do grupo ou card;
+- `Bisavós paternos` deve conectar-se a `Avós paternos` por uma única linha saindo da lateral direita do grupo de bisavós;
+- `Bisavós maternos` deve conectar-se a `Avós maternos` por uma única linha saindo da lateral esquerda do grupo de bisavós;
+- `Tios paternos` deve conectar-se horizontalmente ao card `Pai`;
+- `Tios maternos` deve conectar-se horizontalmente ao card `Mãe`;
+- os títulos dos cards `Pai` e `Mãe` não podem ficar cortados;
+- acima do card da pessoa principal deve sair uma única linha vertical que se ramifica para `Pai` e `Mãe`;
+- abaixo do card da pessoa principal deve sair uma única linha vertical que se ramifica para `Irmãos` e `Cônjuge`;
+- `Irmãos` deve conectar-se verticalmente a `Sobrinhos`;
+- `Tios maternos` deve conectar-se verticalmente a `Primos maternos`;
+- conectores não podem ficar soltos, duplicados, atravessar títulos ou depender de offsets manuais sem relação com o box real.
+
 ## `/linha-geracional` mobile
 
 - A rota `/linha-geracional` deve manter o header `Árvore Familiar` no mobile.
@@ -76,6 +135,22 @@ Ao navegar para perfil, o retorno é preservado em `?voltar=` quando o fluxo de 
 - Gerações sem pessoas não devem ser exibidas como tela vazia inicial quando houver geração seguinte com conteúdo.
 - Cards de cônjuges devem ficar um acima do outro quando o layout mobile exigir empilhamento.
 - Linhas laterais devem conectar apenas os pares ou relações que justificam conexão visual; não devem conectar todos os cards indiscriminadamente.
+
+### Painel mobile da linha geracional
+
+O painel acionado por `Mapa`/visualização em `/linha-geracional` deve ser isolado da rota `/mapa-familiar`.
+
+Contrato:
+
+- o runtime específico da linha geracional só deve ser montado em `/linha-geracional`;
+- o painel deve ficar acima do header no mobile;
+- deve existir apenas um botão `X` visível para fechar;
+- o botão de fechar deve permanecer no canto superior direito, sem duplicação no DOM;
+- grupos devem ser calculados a partir dos dados reais de pessoas e relacionamentos;
+- a listagem deve contemplar pais, cônjuges, irmãos, filhos, pets, avós, bisavós, tataravós, tios, primos e sobrinhos;
+- nomes de pessoas devem exibir primeiro e segundo nome completos quando disponíveis;
+- botões de pessoas devem manter altura compacta, texto alinhado à esquerda e centralização vertical;
+- a navegação por pessoa deve preservar a query `pessoa` e não afetar desktop.
 
 ## Filtros
 
