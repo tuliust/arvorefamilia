@@ -101,6 +101,25 @@ Validar em todas as rotas mobile relevantes:
 - Se não houver conteúdo abaixo da tela central, arrasto vertical para baixo deve ser bloqueado.
 - Se não houver primos abaixo de tios, arrasto para baixo a partir de tios deve ser bloqueado.
 - Linhas abaixo de tios não devem aparecer quando não houver primos.
+- Em `Tios Paternos` e `Tios Maternos` no mobile, quando houver mais de 8 cards, devem aparecer inicialmente apenas 8 cards e um botão local `+`.
+- O botão local `+` dos tios deve revelar os demais cards, alternar para `−` e recolher novamente sem afetar o botão `+` global da toolbar.
+- Em `Primos Paternos` e `Primos Maternos`, o scroll vertical deve funcionar com um dedo em iPhone/Safari.
+- A navegação de primos para tios deve ocorrer apenas quando a lista estiver no topo e o usuário puxar para baixo.
+
+#### QA mobile de tios e primos
+
+Validar em iPhone/Safari real sempre que possível:
+
+- abrir `Tios Paternos` com mais de 8 pessoas e confirmar que apenas os 8 primeiros cards aparecem inicialmente;
+- confirmar que o botão local `+` aparece abaixo da lista de tios paternos;
+- tocar no `+` e confirmar que todos os cards de tios paternos aparecem;
+- confirmar que o botão muda para `−` e recolhe novamente para 8 cards;
+- repetir o fluxo em `Tios Maternos`;
+- confirmar que o botão local `+`/`−` dos tios não aciona o painel global da toolbar;
+- abrir `Primos Paternos` com lista suficiente para rolagem e confirmar scroll vertical com um dedo;
+- repetir em `Primos Maternos`;
+- em listas de primos, confirmar que puxar para baixo no meio da lista apenas rola o conteúdo;
+- confirmar que o retorno para `Tios Paternos`/`Tios Maternos` ocorre somente quando a lista de primos está no topo e o usuário puxa para baixo.
 
 #### QA mobile do botão `Mapa` e mapa completo
 
@@ -112,6 +131,8 @@ Validar em viewport mobile real ou device mode equivalente:
 - confirmar que cada botão tem apenas um ícone e que os ícones são diferentes;
 - tocar em `Ancestrais paternos`, `Núcleo central`, `Tios maternos` e `Descendentes`;
 - confirmar que o toque navega dentro do mapa e não abre `/pessoa/:id`;
+- repetir o teste do botão `Mapa` partindo de `Tios Paternos`, `Primos Paternos`, `Tios Maternos`, `Primos Maternos` e `Descendentes`;
+- confirmar que cada botão da visão geral navega para a tela correta independentemente da tela em que o usuário estava quando abriu o modal;
 - abrir `Exibir mapa completo`;
 - confirmar que o mapa completo aparece acima do modal anterior;
 - confirmar que `Reenquadrar` reposiciona o palco;

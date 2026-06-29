@@ -45,6 +45,14 @@
 - Não permitir arrasto para primos quando não houver primos abaixo de tios.
 - Não exibir linha vertical abaixo de tios quando não houver primos no lado correspondente.
 - A visão geral/Mapa mobile não deve duplicar ícones, disparar ghost click ou deslocar conectores após abrir/fechar.
+- O botão da toolbar mobile deve se chamar `Mapa`; `Zoom` não deve ser usado para abrir a visão geral de grupos.
+- O botão `Mapa` deve abrir a visão geral em `/mapa-familiar` e cada card deve navegar para sua tela correta, sem depender da tela atual do usuário.
+- O zoom real no mobile deve permanecer no fluxo `Exibir mapa completo`, com pan e pinça próprios.
+- `Tios Paternos` e `Tios Maternos` devem exibir inicialmente no máximo 8 cards no mobile quando houver muitos registros.
+- O botão local `+` dos tios deve revelar os demais cards e alternar para `−` para recolher; ele não pode acionar o painel global da toolbar.
+- `Primos Paternos` e `Primos Maternos` devem rolar com um dedo em iPhone/Safari.
+- Handlers em `window capture` ou `document capture` não podem bloquear `touchmove` antes de avaliar se há scroll interno vertical disponível.
+- O retorno de primos para tios deve ocorrer apenas no topo da lista de primos, quando o usuário puxar para baixo.
 
 ### Mapa completo mobile
 

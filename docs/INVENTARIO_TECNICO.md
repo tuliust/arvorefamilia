@@ -148,7 +148,12 @@ Scripts de mapa familiar mobile que devem ser conferidos antes de alterar `/mapa
 - `src/mobileFamilyMapUncleSwipeNavigationGuard.ts`;
 - `src/mobileFamilyMapStableMobileFix.ts`;
 - `src/mobileFamilyMapDirectionalNavigationFix.ts`;
-- `src/mobileFamilyMapFilterButtonsBehaviorFix.ts`.
+- `src/mobileFamilyMapFilterButtonsBehaviorFix.ts`;
+- `src/mobileFamilyMapUncleCardLimit.ts`;
+- `src/mobileFamilyMapOverviewButtonFix.ts`.
+
+
+`src/mobileFamilyMapUncleSwipeNavigationGuard.ts` é sensível porque registra handlers de gesto em `window` com capture phase; alterações em scroll ou swipe de tios/primos devem considerar essa prioridade antes de mexer em handlers de `document` ou componentes React. `src/mobileFamilyMapUncleCardLimit.ts` controla o limite visual de 8 cards em tios no mobile. `src/mobileFamilyMapOverviewButtonFix.ts` assume o botão `Mapa` de `/mapa-familiar` e direciona a visão geral por tela explícita.
 
 Componentes/runtimes React relevantes:
 

@@ -11,6 +11,7 @@
 | `Home.tsx` | orquestra carregamento de pessoas/relacionamentos, pessoa vinculada, filtros, busca, IA, curiosidades, navegação para perfil e recolhimento do painel desktop. |
 | `HomeHeader.tsx` | cabeçalho da experiência de mapa. No mobile deve exibir `Árvore Familiar`. |
 | `HomeMobileNav.tsx` | navegação e ações mobile da home, incluindo botão `+`, painel de visualização, filtros e ações de mapa. |
+| `MobileFamilyMapToolbar.tsx` | toolbar mobile do mapa familiar; no mobile o botão `Mapa` abre a visão geral de grupos e não representa zoom real. |
 | `HomeTreeSection.tsx` | área de renderização da árvore, roteamento de ações vindas do painel, preview de exportação por `exportPreview=1` e composição do toolbar de exportação em aba dedicada. |
 | `DesktopTreeVisualizationPanel.tsx` | painel desktop de visualização, temas, grupos, filtros, exportação, títulos `Grupos de Familiares`/`Exportar` e ação interna de recolher. |
 | `SidebarPanelTabs.tsx` | abas auxiliares do painel lateral. |
@@ -58,6 +59,11 @@
 | `mobileFamilyMapFullOverviewButtonGuard.ts` | reforça a ativação do botão `Exibir mapa completo` e promove a camada correta. |
 | `mobileFamilyMapFullOverviewConnectorFix.ts` | normaliza conectores do mapa completo usando bordas reais de grupos/cards. |
 | `mobileFamilyMapCoreConnectorFix.ts` | estabiliza conectores do núcleo do mapa familiar mobile quando necessário. |
+| `mobileFamilyMapUncleSwipeNavigationGuard.ts` | guard prioritário de swipe em `window capture`; controla navegação entre tios/primos e preserva scroll com um dedo nas telas de primos. |
+| `mobileFamilyMapDirectionalNavigationFix.ts` | reforça navegação direcional do mapa familiar mobile em handlers de documento. |
+| `mobileFamilyTreeNavigationRules.ts` | regras auxiliares de navegação e preservação de scroll entre telas mobile. |
+| `mobileFamilyMapUncleCardLimit.ts` | limita `Tios Paternos` e `Tios Maternos` a 8 cards iniciais no mobile e adiciona controle local `+`/`−`. |
+| `mobileFamilyMapOverviewButtonFix.ts` | renomeia/assume a ação `Mapa`, reestrutura a visão geral de `/mapa-familiar` e navega por destino explícito. |
 | `PersonProfileRuntimeTweaks.tsx` | ocultações e reposicionamentos defensivos em `/pessoa/:id`. |
 | `AdminDashboardRuntimeTweaks.tsx` | ajustes defensivos do dashboard administrativo. |
 | `MeusVinculosEnhancements.tsx` | ajustes progressivos de `/meus-vinculos`, incluindo ordem de seções, seletor de cônjuge/filhos e modal de pet. |

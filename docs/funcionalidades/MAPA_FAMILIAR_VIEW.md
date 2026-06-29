@@ -67,6 +67,11 @@ Ao navegar para perfil, o retorno é preservado em `?voltar=` quando o fluxo de 
 - Linhas verticais abaixo de tios devem aparecer apenas quando houver primos reais naquele lado.
 - Avós paternos e maternos devem permanecer nos lados corretos para a pessoa de referência.
 - A visão geral/Mapa mobile deve evitar ícones duplicados, ghost click após toque e conectores desalinhados.
+- As telas `paternal-uncles` e `maternal-uncles` devem exibir inicialmente até 8 cards no mobile; quando houver mais cards, um botão local `+` revela os demais e alterna para `−` para recolher.
+- A limitação de 8 cards é visual e local das telas de tios; contagens da visão geral, filtros e dados da árvore devem continuar usando o total real de pessoas do grupo.
+- As telas `paternal-cousins` e `maternal-cousins` devem permitir scroll vertical com um dedo em iPhone/Safari.
+- A navegação de retorno de `paternal-cousins` para `paternal-uncles` e de `maternal-cousins` para `maternal-uncles` só deve ocorrer quando a lista de primos estiver no topo e o usuário puxar para baixo.
+- Handlers de gesto em `window capture` devem priorizar scroll interno de listas antes de bloquear o evento ou disparar navegação por swipe.
 
 ### Visão geral/Mapa mobile
 
@@ -92,6 +97,11 @@ Contrato visual e funcional:
 - tocar em um grupo deve navegar para a tela do grupo dentro de `/mapa-familiar`, sem abrir `/pessoa/:id`;
 - o guard contra ghost click deve impedir que o toque no modal vaze para cards posicionados por baixo;
 - o modal deve ficar acima do header, toolbar, canvas e painéis.
+- o botão da toolbar mobile deve se chamar `Mapa`, não `Zoom`, porque sua função é abrir a visão geral de grupos;
+- o zoom real deve permanecer associado ao fluxo `Exibir mapa completo`;
+- a barra mobile deve manter botões compactos, arredondados, com estado ativo evidente e sem herdar visual desktop;
+- os botões da visão geral devem navegar por `data-screen`/tela de destino explícita, sem depender da tela atual ou de estado residual da rota;
+- abrir `Mapa` a partir de qualquer tela de `/mapa-familiar` deve sempre manter o usuário dentro de `/mapa-familiar`.
 
 ### Mapa completo mobile
 

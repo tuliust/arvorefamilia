@@ -58,6 +58,9 @@ Componentes relevantes:
 - O painel de visualização mobile deve exibir familiares reconhecidos por dados reais da árvore, não apenas labels estáticos.
 - Nomes listados em grupos devem usar primeiro e segundo nome completos.
 - O mobile deve bloquear gesto vertical para áreas inferiores inexistentes, como descendentes ausentes ou primos inexistentes abaixo de tios.
+- Em `paternal-uncles` e `maternal-uncles`, a visualização mobile deve limitar inicialmente a lista a 8 cards e expor controle local `+`/`−` quando houver excedentes.
+- Em `paternal-cousins` e `maternal-cousins`, o scroll vertical interno deve ter prioridade sobre a navegação por swipe e funcionar com um dedo no iPhone.
+- O botão mobile `Mapa` abre a visão geral de grupos; zoom real é reservado ao mapa completo.
 
 ### Runtimes e scripts mobile do mapa
 
@@ -71,7 +74,9 @@ Scripts relevantes:
 - `mobileFamilyMapFullOverviewButtonGuard.ts`: reforça a ativação do botão `Exibir mapa completo` e promove a camada correta;
 - `mobileFamilyMapFullOverviewConnectorFix.ts`: normaliza conectores do mapa completo a partir das bordas reais dos nós;
 - `mobileFamilyMapCoreConnectorFix.ts`: estabiliza conectores do núcleo mobile quando necessário;
-- `mobileFamilyMapUncleSwipeNavigationGuard.ts` e ajustes correlatos: preservam scroll em telas de tios/primos sem quebrar navegação por swipe.
+- `mobileFamilyMapUncleSwipeNavigationGuard.ts` e ajustes correlatos: preservam scroll em telas de tios/primos sem quebrar navegação por swipe;
+- `mobileFamilyMapUncleCardLimit.ts`: limita `paternal-uncles` e `maternal-uncles` a 8 cards iniciais no mobile e adiciona controle local `+`/`−`;
+- `mobileFamilyMapOverviewButtonFix.ts`: assume o botão `Mapa` em `/mapa-familiar`, reformata a visão geral e navega por tela explícita.
 
 Regras:
 
@@ -80,6 +85,8 @@ Regras:
 - devem checar rota e breakpoint antes de agir;
 - devem evitar loops de `MutationObserver`;
 - quando o comportamento estiver estável, a preferência é migrar a lógica para componentes React de origem.
+- handlers de `touchmove`/`touchend` devem mapear a ordem de captura (`window capture` antes de `document capture`) antes de chamar `preventDefault()` ou `stopImmediatePropagation()`;
+- scroll interno de listas deve ser avaliado antes de bloquear o gesto para navegação por swipe.
 
 
 

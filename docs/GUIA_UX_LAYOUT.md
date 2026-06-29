@@ -45,6 +45,10 @@
 - O modal/painel aberto pelo botão `+` deve ficar na camada mais alta, acima de header, toolbar, busca, notificações e canvas.
 - O painel de visualização deve mostrar contadores e familiares reais por grupo.
 - A visão geral/Mapa mobile deve evitar ghost click, ícones duplicados e conectores deslocados.
+- A toolbar mobile deve usar o rótulo `Mapa` para abrir a visão geral; `Zoom` não deve ser usado para essa função.
+- O zoom real deve estar no fluxo `Exibir mapa completo`, não no botão `Mapa`.
+- As telas de tios no mobile devem mostrar até 8 cards inicialmente e usar botão local `+`/`−` quando houver mais pessoas.
+- As telas de primos devem permitir scroll vertical com um dedo antes de qualquer navegação por swipe.
 - Nomes de familiares em listas mobile devem usar primeiro e segundo nome completos.
 - Se uma área inferior não tiver conteúdo, o gesto vertical para baixo deve ser bloqueado.
 - O modal de dica desktop/mobile deve respeitar chave de sessão e não reaparecer continuamente.
@@ -60,6 +64,10 @@ Os botões da visão geral mobile devem seguir contrato visual próprio:
 - ícones em tamanho ampliado, sem reaparecimento de ícone antigo;
 - títulos com `letter-spacing` reduzido para caber em cards estreitos;
 - contador centralizado e sem deslocamento vertical.
+- a barra mobile deve ter container branco, borda sutil, botões arredondados e estado ativo destacado;
+- o botão `Mapa` deve ter semântica de visão geral, com `aria-label` equivalente a abrir a visão geral do mapa familiar;
+- os cards da visão geral devem ter destino explícito por grupo e não depender da tela em que o usuário abriu o modal;
+- o controle local `+`/`−` de tios deve ser visualmente distinto do botão `+` global da toolbar.
 
 #### Mapa completo mobile
 
