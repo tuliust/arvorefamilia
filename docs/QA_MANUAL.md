@@ -1,6 +1,6 @@
 # QA manual
 
-> Última revisão: 2026-06-27  
+> Última revisão: 2026-06-29  
 > Escopo: validação manual das rotas e contratos documentados.  
 > Status: canônico.
 
@@ -79,12 +79,21 @@ Validar em todas as rotas mobile relevantes:
 - O header mobile deve exibir `Árvore Familiar`.
 - Permite alternar filtros de parentes diretos.
 - Permite alternar vivos, falecidos e pets.
+- Em perspectiva por `?pessoa=`, cônjuges colaterais devem iniciar ocultos e não devem reaparecer por herança de preferência antiga.
 - Cards `Núcleo`, `Ascendentes` e `Colaterais` devem manter labels e contadores legíveis.
+- O painel deve exibir `Grupos de Familiares` e o subtítulo `Clique para exibir/ocultar grupos de parentes na árvore`.
 - Abre perfil em `/pessoa/:id`.
 - Mantém painel desktop sem cortar exportação.
-- Ao acionar `Imagem`, `PDF` ou `Imprimir`, deve exibir loading global de exportação e mantê-lo até o diálogo do sistema assumir o fluxo ou até fallback.
-- Quando o fluxo abrir janela/aba dedicada para salvar ou imprimir, a página principal deve permanecer aberta e preservada.
-- O overlay de exportação não deve aparecer no arquivo exportado.
+- Ao acionar `Imagem`, deve abrir uma aba/janela de preview com `exportPreview=1&exportIntent=png`, sem header, painel lateral, botão flutuante `?` ou controles auxiliares.
+- No preview de imagem, deve aparecer apenas `Salvar PNG`; ao salvar, não deve abrir segunda aba.
+- Ao acionar `PDF`, deve abrir uma aba/janela de preview com `exportPreview=1&exportIntent=pdf`, exibindo apenas `Exportar PDF`.
+- Ao acionar `Imprimir`, deve abrir uma aba/janela de preview com `exportPreview=1&exportIntent=print`, exibindo apenas `Imprimir`.
+- A aba principal deve permanecer aberta e visualmente preservada durante todo o fluxo de preview/exportação.
+- A imagem/PDF/impressão não deve exibir blocos cinza, sombras artificiais, toolbar de preview, header, painel lateral, botão `?` ou títulos de grupos cortados.
+- Se a captura falhar, o preview deve exibir erro legível ou toast/modal de erro; não pode ficar indefinidamente em `Preparando exportação...`.
+- `Área` deve permitir selecionar uma região visível e exibir botões `Salvar PNG`, `Salvar PDF`, `Imprimir` e `Cancelar`.
+- Ações da seleção por área devem executar função equivalente ao painel e não podem ficar inertes.
+- O overlay de seleção/loading não deve aparecer no arquivo exportado.
 - Mobile não deve abrir painéis persistentes por padrão.
 - O painel aberto pelo botão `+` deve ficar acima de toolbar e canvas.
 - O painel mobile deve reconhecer familiares reais da pessoa ativa: pais, cônjuges, irmãos, filhos, pets, avós, bisavós, tataravós, tios, primos e sobrinhos.
@@ -92,15 +101,15 @@ Validar em todas as rotas mobile relevantes:
 - Se não houver conteúdo abaixo da tela central, arrasto vertical para baixo deve ser bloqueado.
 - Se não houver primos abaixo de tios, arrasto para baixo a partir de tios deve ser bloqueado.
 - Linhas abaixo de tios não devem aparecer quando não houver primos.
-
 ### `/mapa-familiar-horizontal`
 
 - Preserva query `pessoa` ao alternar visualização.
 - Renderiza linha geracional horizontal.
 - Mantém filtros aplicáveis e contadores coerentes.
 - Replica no painel desktop os critérios visuais de seletor, cabeçalho, grupos, paleta e exportação validados em `/mapa-familiar`.
-- Ao acionar `Imagem`, `PDF` ou `Imprimir`, deve exibir o mesmo feedback global de preparação da exportação.
-
+- Ao acionar `Imagem`, `PDF` ou `Imprimir`, deve abrir a mesma experiência de preview dedicada por `exportPreview=1`.
+- O preview horizontal deve manter colunas, conectores, cards e título equivalentes à visualização real, sem deformar cards.
+- A exportação horizontal deve caber em uma página ao imprimir ou gerar PDF, por retrato ou paisagem conforme a proporção.
 ### `/linha-geracional`
 
 - Header mobile deve exibir `Árvore Familiar`.
@@ -185,9 +194,12 @@ Validar em desktop e mobile quando aplicável:
 - Abaixo do nome, deve aparecer subtítulo `Editar perfil` com ícone.
 - A lista não deve exibir botão duplicado `Atualizar perfil`.
 - O botão `Dúvidas?` deve ter borda cinza.
-- A área `Seus responsáveis` deve aparecer quando houver perfis administráveis.
+- A área `Perfis gerenciados` deve aparecer quando houver perfis administráveis.
+- A área `Perfis gerenciados` deve exibir subtítulo `Familiares vinculados à sua conta`.
+- As opções do seletor devem usar primeiro e segundo nome quando houver nome disponível.
+- O seletor não deve exibir sufixo `— memorial`; restrições de memorial devem aparecer em texto funcional separado quando necessário.
 - A troca de visualização por perfil responsável deve preservar navegação do ponto de vista selecionado.
-
+- No desktop, o menu deve ter camada acima do botão flutuante `?` e altura suficiente para ações essenciais sem scroll excessivo.
 ### `/curiosidades`
 
 - A rota carrega pessoas, relacionamentos e badges sem bloquear a página quando a RPC de badges não estiver disponível.

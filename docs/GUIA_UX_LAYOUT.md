@@ -1,6 +1,6 @@
 # Guia de UX e layout
 
-> Última revisão: 2026-06-27
+> Última revisão: 2026-06-29
 > Escopo: experiência visual das rotas principais da branch `main`.
 > Status: canônico.
 
@@ -23,12 +23,19 @@
 - O seletor de visualização deve manter label fechado do tipo `Família de X` quando houver pessoa de referência.
 - O placeholder aberto é `Visualize a árvore como...`.
 - O cabeçalho do painel deve manter o título `Visualização`, ícone de olho sem borda visual e ação de recolher alinhada dentro da mesma linha do título.
-- Os cards `Núcleo`, `Ascendentes` e `Colaterais` devem preservar largura e gap gerais, com títulos e linhas legíveis em uma linha, sem reticências ou quebra forçada.
+- `Visualização` deve usar hierarquia menor que o header global, com `font-size` próximo de `1.1rem`.
+- Botões `Árvore Familiar` e `Linha Geracional` devem ter títulos com `font-size: clamp(0.8125rem, 1.6vh, 1.125rem)` e subtítulos curtos: `Visão por grupos` e `Por gerações`.
+- Títulos `Resumo`, `Grupos de Familiares` e `Exportar` devem compartilhar formatação compacta: `font-size: clamp(0.76rem, 1.5vh, 0.9rem)`, `font-weight: 720`, `letter-spacing: -0.005em`, `line-height: 1.05`.
+- Cards `Núcleo`, `Ascendentes` e `Colaterais` devem preservar largura e gap gerais, com títulos e linhas legíveis em uma linha, sem reticências ou quebra forçada.
+- Títulos `Núcleo`, `Ascendentes` e `Colaterais` devem usar peso moderado e tamanho compacto, sem competir com os títulos de seção.
+- Os itens internos desses cards podem aumentar ocupação vertical e espaçamento entre linhas desde que a altura geral do painel não gere corte da área `Exportar`.
+- A seção `Grupos de Familiares` deve exibir subtítulo `Clique para exibir/ocultar grupos de parentes na árvore`.
 - A área `Exportar` deve permanecer visível; quando houver sobra vertical, pode usar maior espaçamento interno e botões mais altos, desde que os quatro botões continuem no painel.
 - O painel compacto deve preservar acesso aos botões de exportação.
 - No mapa por grupos, o card `Pai` e o card `Mãe` são referências de alinhamento visual: `Irmãos` deve alinhar à esquerda com `Pai`, enquanto `Cônjuge` e `Pets` devem alinhar à direita com `Mãe`.
 - `Filhos` e `Netos` podem ocupar faixa mais à direita, desde que a leitura geracional e os conectores permaneçam claros.
 - Grupos com pares conjugais devem evitar terceira linha desnecessária quando houver espaço para manter solteiros e pares em duas colunas.
+- Em preview/exportação, a nova aba deve renderizar a árvore real sem header, painel lateral, botão flutuante `?` e controles auxiliares. A imagem/PDF/print não pode trazer blocos cinza, sombras artificiais ou títulos cortados.
 
 ### Mobile
 
@@ -37,6 +44,7 @@
 - Legenda e grupos devem poder ser abertos sem bloquear permanentemente a rolagem.
 - O modal/painel aberto pelo botão `+` deve ficar na camada mais alta, acima de header, toolbar, busca, notificações e canvas.
 - O painel de visualização deve mostrar contadores e familiares reais por grupo.
+- A visão geral/Mapa mobile deve evitar ghost click, ícones duplicados e conectores deslocados.
 - Nomes de familiares em listas mobile devem usar primeiro e segundo nome completos.
 - Se uma área inferior não tiver conteúdo, o gesto vertical para baixo deve ser bloqueado.
 - O modal de dica desktop/mobile deve respeitar chave de sessão e não reaparecer continuamente.
@@ -48,13 +56,13 @@
 - Títulos de geração devem ter fonte e peso moderados.
 - Cards conjugais devem empilhar quando necessário.
 - Conectores devem representar relações reais e não criar ligação lateral em todos os cards.
-
+- Ajustes de camada da linha geracional mobile devem ser isolados para não afetar `/mapa-familiar`.
 ## Overlays de header no mobile
 
 - Dropdown de notificações deve ficar acima de todo conteúdo, inclusive toolbars e painéis de árvore.
 - Sugestões de busca devem ficar acima de todo conteúdo, inclusive teclado/sugestões nativas quando possível.
 - Menu do avatar deve ficar alto o suficiente para exibir conteúdo sem scroll vertical excessivo.
-- A área `Seus responsáveis`, quando existir, deve ficar dentro do menu do avatar em bloco visual separado.
+- A área `Perfis gerenciados`, quando existir, deve ficar dentro do menu do avatar em bloco visual separado, com subtítulo `Familiares vinculados à sua conta`, e o menu deve aparecer acima do botão flutuante `?`.
 
 ## Fluxo de onboarding
 
@@ -157,3 +165,5 @@ Pessoa marcada como falecida em `/meus-dados` pula `/preferencias` e segue para 
 - Páginas administrativas devem manter acentuação correta em títulos, labels, botões e mensagens.
 - Cards superiores de `/admin` devem priorizar número principal; `Relações` deve exibir o total de relacionamentos e pode manter o subtítulo de casamentos quando couber.
 - `/admin/responsaveis` deve priorizar solicitação pendente quando houver e ocultar essa seção quando vazia.
+- `/admin/notificacoes` deve humanizar canais, tipos, status, disponibilidade, frequência e categorias em todas as abas, sem slugs crus.
+- `/admin/relacionamentos` deve permitir leitura por filtros de cards, busca por pessoa e sugestões de nomes, sem exibir a classificação legada `sangue`/`adotivo`.

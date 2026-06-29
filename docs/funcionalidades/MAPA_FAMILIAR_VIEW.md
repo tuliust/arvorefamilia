@@ -1,6 +1,6 @@
 # Mapa familiar
 
-> Última revisão: 2026-06-27
+> Última revisão: 2026-06-29
 > Escopo: `/mapa-familiar`, `/mapa-familiar-horizontal`, `/linha-geracional`, `Home.tsx` e componentes `FamilyTree`.
 > Status: canônico.
 
@@ -39,10 +39,10 @@ Ao navegar para perfil, o retorno é preservado em `?voltar=` quando o fluxo de 
 - `treeViewMode.ts` converte rota em modo.
 - A troca entre visualizações preserva a query string.
 - O painel desktop permite selecionar outra pessoa para visualizar a árvore.
+- Em visualização por `?pessoa=`, a árvore deve adotar a pessoa da query como perspectiva e ocultar cônjuges colaterais por padrão.
 - No mobile, o header das telas de mapa deve usar o título curto `Árvore Familiar`.
 - O título `Visualização` e labels como `Família de X` devem permanecer em UTF-8 válido.
 - Ajustes defensivos de runtime devem permanecer isolados por rota/breakpoint e não substituir a correção dos textos de origem.
-
 ## Layout desktop por grupos
 
 - `DesktopFamilyMapView.tsx` define coordenadas dos grupos no mapa vertical.
@@ -51,7 +51,10 @@ Ao navegar para perfil, o retorno é preservado em `?voltar=` quando o fluxo de 
 - `Cônjuge` e `Pets` devem alinhar a borda direita com `Mãe`.
 - `Filhos` e `Netos` podem ocupar faixa mais à direita para preservar leitura e evitar sobreposição.
 - `FamilyTreeVisualCards.tsx` pode reordenar visualmente singles e pares conjugais para evitar terceira linha desnecessária.
-
+- O painel desktop deve exibir `Grupos de Familiares` e subtítulo `Clique para exibir/ocultar grupos de parentes na árvore`.
+- Títulos `Resumo`, `Grupos de Familiares` e `Exportar` devem ter tratamento tipográfico equivalente.
+- Cards `Núcleo`, `Ascendentes` e `Colaterais` devem ocupar o espaço vertical disponível sem cortar a seção `Exportar`.
+- Em perspectiva por `?pessoa=`, o controle de cônjuges colaterais pode ficar indisponível para evitar exibir parentes por afinidade fora da perspectiva atual.
 ## Layout mobile de `/mapa-familiar`
 
 - A visualização mobile usa telas/grupos navegáveis por gesto, sem herdar o painel fixo desktop.
@@ -63,7 +66,7 @@ Ao navegar para perfil, o retorno é preservado em `?voltar=` quando o fluxo de 
 - Quando a tela de tios não tiver primos abaixo, o mobile não deve permitir arrasto para baixo a partir de tios paternos ou maternos.
 - Linhas verticais abaixo de tios devem aparecer apenas quando houver primos reais naquele lado.
 - Avós paternos e maternos devem permanecer nos lados corretos para a pessoa de referência.
-
+- A visão geral/Mapa mobile deve evitar ícones duplicados, ghost click após toque e conectores desalinhados.
 ## `/linha-geracional` mobile
 
 - A rota `/linha-geracional` deve manter o header `Árvore Familiar` no mobile.
@@ -104,19 +107,29 @@ Regras atuais:
 
 ## Exportação
 
-As ações de exportação são disparadas pelo painel lateral e executadas pelo componente de árvore ativo.
+As ações de exportação são disparadas pelo painel lateral e executadas pelo componente de árvore ativo ou pela aba de preview.
 
 Comportamento atual:
 
-- `Imagem`, `PDF` e `Imprimir` não exibem overlay global de preparação na página atual;
-- `Imagem` abre uma nova aba/janela com preview do PNG gerado, sem header do app e sem painel lateral, e o botão `Salvar` inicia o download com o nome de arquivo existente;
-- `PDF` abre uma nova aba/janela com preview do PDF gerado, sem header do app e sem painel lateral, e o botão `Exportar` inicia o download com o nome de arquivo existente;
-- `Imprimir` abre uma nova aba/janela com preview da área capturada, sem header do app e sem painel lateral, e o botão `Imprimir` chama a impressão do sistema;
-- o fluxo de impressão direta não chama `window.print()` automaticamente ao abrir a aba;
-- a página principal do usuário deve permanecer preservada durante os fluxos de preview;
 - `Área` continua usando o fluxo de seleção visível da árvore e seus estados próprios de loading;
-- a geração da imagem/PDF continua baseada no canvas capturado do elemento exportável.
+- no fluxo `Área`, os botões `Salvar PNG`, `Salvar PDF`, `Imprimir` e `Cancelar` devem executar a ação correspondente ou encerrar a seleção;
+- `Imagem`, `PDF` e `Imprimir` não devem substituir a página de trabalho atual do usuário;
+- `Imagem`, `PDF` e `Imprimir` abrem uma nova aba/janela usando a rota atual com `exportPreview=1`;
+- `exportIntent=png` exibe apenas a ação `Salvar PNG`;
+- `exportIntent=pdf` exibe apenas a ação `Exportar PDF`;
+- `exportIntent=print` exibe apenas a ação `Imprimir`;
+- a aba de preview deve renderizar a mesma visualização de `/mapa-familiar` ou `/mapa-familiar-horizontal`, sem header, painel lateral, botão flutuante `?`, favoritos, controles auxiliares ou toolbars de navegação;
+- `Salvar PNG` captura a árvore renderizada no próprio preview com escala `1.5`;
+- `Exportar PDF` deve gerar arquivo PDF a partir da captura do preview quando o fluxo estiver estável;
+- `Imprimir` deve organizar a árvore em página única, usando orientação retrato ou paisagem conforme a proporção;
+- `treeExport.ts` e `TreeAreaSelectionOverlay.tsx` devem tratar erros, timeouts e bloqueio de pop-up com mensagem legível;
+- a página principal do usuário deve permanecer preservada durante os fluxos de preview.
 
+Estado de QA:
+
+- o preview real está implementado, mas a captura final por `html2canvas` ainda exige validação visual;
+- o artefato exportado não pode exibir blocos cinza derivados de sombras/filtros, títulos de grupos cortados, texto ilegível ou cards deformados;
+- se esses artefatos aparecerem, a frente deve permanecer marcada como em ajuste, sem ser tratada como concluída.
 ## Busca e notificações no header
 
 As páginas de mapa usam busca no header com sugestões de pessoas e páginas. As páginas internas que usam `MemberPageHeader` devem manter comportamento equivalente por meio do componente compartilhado `HeaderGlobalSearch`.

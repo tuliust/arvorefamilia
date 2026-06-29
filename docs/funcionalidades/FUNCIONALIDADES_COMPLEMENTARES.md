@@ -1,6 +1,6 @@
 # Funcionalidades complementares
 
-> Última revisão: 2026-06-27  
+> Última revisão: 2026-06-29  
 > Escopo: calendário, dúvidas, fórum, favoritos, notificações, onboarding, exportação, busca global, timeline, perfil, aprovações e cadastros administrativos de pessoas.  
 > Status: canônico complementar.
 
@@ -43,11 +43,11 @@ Regras:
 - abaixo do nome deve aparecer subtítulo `Editar perfil` com ícone;
 - a ação de edição de perfil fica no bloco superior do menu, não como botão duplicado na lista de atalhos;
 - o botão `Dúvidas?` no rodapé do menu deve ter borda cinza;
-- o menu deve ficar em camada superior a barras sticky, botões superiores e demais controles da página;
-- quando o usuário for responsável por outros perfis, o menu pode exibir a área `Seus responsáveis` com dropdown de visualização;
+- o menu deve ficar em camada superior a barras sticky, botões superiores, botão flutuante `?` e demais controles da página;
+- quando o usuário for responsável por outros perfis, o menu deve exibir a área `Perfis gerenciados` com subtítulo `Familiares vinculados à sua conta`;
+- o seletor de perfis gerenciados deve listar nomes curtos, preferencialmente primeiro e segundo nome, sem sufixo visual `— memorial`;
 - ao selecionar perfil administrado, a navegação deve usar a perspectiva do perfil selecionado;
 - se o perfil administrado for de pessoa falecida, ações de criação social como fórum/mural devem respeitar as restrições do modo memorial.
-
 ## Notificações no header
 
 O botão de notificações/alertas no header deve abrir dropdown de notificações recentes quando a experiência da página usar header autenticado.
@@ -208,14 +208,31 @@ Função:
 - preservar consistência com a visualização atual;
 - não bloquear navegação caso exportação falhe.
 
+Fluxo atual:
+
+- `Área` mantém seleção visual da região exportável e expõe ações próprias de PNG, PDF, impressão e cancelamento;
+- `Imagem`, `PDF` e `Imprimir` abrem uma aba/janela dedicada de preview usando a própria rota da árvore com `exportPreview=1`;
+- o parâmetro `exportIntent` define a ação do preview: `png`, `pdf` ou `print`;
+- a aba de preview deve renderizar a árvore real, sem header, painel lateral, botão flutuante `?` e controles auxiliares;
+- no preview de imagem, o toolbar mostra apenas `Salvar PNG`;
+- no preview de PDF, o toolbar mostra apenas `Exportar PDF`;
+- no preview de impressão, o toolbar mostra apenas `Imprimir`;
+- o fluxo deve tratar erro de captura e não pode ficar preso em estado permanente de preparação.
+
+Estado de estabilização:
+
+- a arquitetura de preview real está implementada;
+- a captura final por `html2canvas` ainda exige QA visual específico porque sombras, filtros ou blur podem aparecer como blocos cinza na imagem exportada;
+- a documentação deve tratar a frente como em ajuste até que PNG, PDF e impressão passem sem blocos cinza, títulos cortados ou deformação de cards.
+
 Não regressão mínima:
 
 - botão ou fluxo de exportação existe quando aplicável;
 - erro é tratado;
 - exportação não altera dados;
-- fluxos de imagem, PDF e impressão devem preservar feedback visual de preparação e não travar a página em estado permanente;
-- quando exportação abrir nova aba ou janela, a página principal deve permanecer preservada.
-
+- fluxos de imagem, PDF e impressão preservam feedback visual de preparação e não travam a página em estado permanente;
+- quando exportação abrir nova aba ou janela, a página principal deve permanecer preservada;
+- o artefato exportado não deve incluir overlay, toolbar, header, painel lateral ou botão flutuante.
 ## Timeline
 
 Função:
@@ -327,6 +344,28 @@ Rota principal: `/admin/gestao-conteudo-pessoas`.
 A página de gestão de conteúdo de pessoas deve lidar de forma defensiva com a ausência da tabela `person_visibility_settings` no ambiente remoto, usando defaults locais para evitar quebra de carregamento. A criação ou aplicação da tabela no Supabase permanece pendência operacional quando o ambiente ainda não tiver a migration correspondente.
 
 Todos os textos visíveis da página devem preservar acentuação correta em UTF-8, incluindo `Gestão`, `Conteúdo`, `Geração`, `páginas`, `Árvore`, `históricos`, `Calendário`, `Fórum`, `sensíveis`, `automáticos`, `Título` e `básica`.
+
+## Admin notificações e relacionamentos
+
+Rotas principais:
+
+- `/admin/notificacoes`;
+- `/admin/relacionamentos`.
+
+Regras de notificações:
+
+- todas as abas de `/admin/notificacoes` devem exibir canais, tipos, status, disponibilidade, frequência e categorias em linguagem humana;
+- não exibir slugs crus como texto principal de leitura;
+- títulos, labels e badges devem iniciar com maiúscula quando aplicável;
+- cards principais da visão geral devem priorizar legibilidade dos números e reduzir excesso visual nos títulos.
+
+Regras de relacionamentos:
+
+- os cards `Total de Relacionamentos`, `Casamentos` e `Filiações` funcionam como filtros da listagem;
+- a busca abaixo dos cards deve aceitar nomes de pessoas e exibir sugestões conforme caracteres digitados;
+- cards de casamento devem exibir `Casamento`, não `Tipo: casamento`;
+- cards de filiação devem exibir `Pai`, `Mãe` ou `Filho` com capitalização correta;
+- classificações legadas `sangue` e `adotivo` não devem aparecer na interface de listagem nem em aprovações, embora o campo técnico possa continuar existindo para compatibilidade futura.
 
 ## Regra de manutenção
 

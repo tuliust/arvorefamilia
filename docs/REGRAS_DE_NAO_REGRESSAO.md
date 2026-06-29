@@ -1,6 +1,6 @@
 # Regras de não regressão
 
-> Última revisão: 2026-06-27  
+> Última revisão: 2026-06-29  
 > Escopo: contratos que não devem ser quebrados em novas alterações.  
 > Status: canônico.
 
@@ -23,10 +23,18 @@
 - A alternância entre mapa familiar e linha geracional deve preservar query string.
 - A pessoa de referência não pode ser perdida ao trocar de rota.
 - Filtros de parentes diretos devem persistir por usuário.
+- Em perspectiva por `?pessoa=`, cônjuges colaterais não podem reaparecer por preferência persistida ou herança de estado.
 - Mobile não deve herdar layout desktop de painel fixo.
 - Exportação não pode ser removida do painel desktop sem substituto documentado.
+- `Imagem`, `PDF` e `Imprimir` devem preservar a página principal e abrir preview dedicado quando esse fluxo estiver ativo.
+- O preview de exportação não pode exibir header do app, painel lateral, botão flutuante `?`, toolbar auxiliar ou controles de zoom.
+- O artefato exportado não pode conter blocos cinza, sombras artificiais, blur residual, títulos cortados ou texto ilegível.
+- A captura por `html2canvas` deve sanitizar cores modernas não suportadas, como `oklch`, antes de gerar PNG/PDF.
+- Falhas de exportação devem encerrar estado de loading e informar erro; não pode haver tela presa em `Preparando exportação...`.
+- A exportação por área deve manter os botões `Salvar PNG`, `Salvar PDF`, `Imprimir` e `Cancelar` funcionais.
 - O cabeçalho do painel desktop deve manter título, ícone e ação de recolher na mesma linha.
 - Cards do painel desktop devem preservar legibilidade e não podem cortar labels ou botões de exportação.
+- A seção `Grupos de Familiares` e seu subtítulo não devem desaparecer do painel.
 - Em `/mapa-familiar` desktop, os alinhamentos de grupos inferiores devem preservar pai e mãe como referências visuais.
 - A ordenação visual de cards deve evitar linhas extras quando houver espaço para singles e pares conjugais.
 - No mobile, o header deve exibir `Árvore Familiar`, não `Família de X`.
@@ -36,7 +44,7 @@
 - Não permitir arrasto vertical para regiões sem conteúdo abaixo da tela central.
 - Não permitir arrasto para primos quando não houver primos abaixo de tios.
 - Não exibir linha vertical abaixo de tios quando não houver primos no lado correspondente.
-
+- A visão geral/Mapa mobile não deve duplicar ícones, disparar ghost click ou deslocar conectores após abrir/fechar.
 ## Linha geracional mobile
 
 - `/linha-geracional` deve preservar o título `Árvore Familiar` no header mobile.
@@ -50,7 +58,7 @@
 
 - Dropdown de notificações deve aparecer acima de header, toolbar, canvas, painéis e conteúdo.
 - Sugestões de busca devem aparecer acima de header, toolbar, canvas, painéis e conteúdo.
-- Menu de avatar deve aparecer acima de elementos sticky e não deve exigir scroll vertical excessivo para mostrar ações essenciais.
+- Menu de avatar deve aparecer acima de elementos sticky e do botão flutuante `?`, e não deve exigir scroll vertical excessivo para mostrar ações essenciais.
 - Nenhum ajuste de `z-index` mobile deve afetar desktop.
 
 ## Feedback, confirmação e diálogos

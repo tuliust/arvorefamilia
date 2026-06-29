@@ -1,6 +1,6 @@
 # Guia de implementações
 
-> Última revisão: 2026-06-27
+> Última revisão: 2026-06-29
 > Escopo: comportamento implementado na branch `main`.
 > Status: canônico.
 
@@ -41,12 +41,14 @@ Componentes relevantes:
 - A pessoa de referência usa, em ordem, query string, foco atual, pessoa vinculada ou primeira pessoa disponível.
 - Filtros de parentes diretos são persistidos por usuário.
 - Filtros de vida/pet afetam a visibilidade e os contadores.
+- Quando a rota está em perspectiva de pessoa por `?pessoa=`, cônjuges colaterais devem iniciar ocultos e a ação equivalente no painel pode ficar bloqueada/indicada como indisponível para preservar a leitura da perspectiva.
 - O painel desktop usa `DesktopTreeVisualizationPanel` para visualização, tema, filtros e exportação.
-- Ajustes visuais específicos do painel desktop ficam centralizados em `src/styles/desktop-tree-panel-frente-a.css` e devem ser conferidos em conjunto com `src/styles/index.css`.
+- O painel desktop deve exibir a seção `Grupos de Familiares` com subtítulo `Clique para exibir/ocultar grupos de parentes na árvore`.
+- Títulos estruturais do painel, como `Resumo`, `Grupos de Familiares` e `Exportar`, compartilham formatação compacta e consistente.
+- Ajustes visuais específicos do painel desktop ficam centralizados em `src/styles/desktop-tree-panel-frente-a.css`, `src/styles/desktop-tree-family-groups-density.css` e `src/styles/index.css`, e devem ser conferidos em conjunto.
 - O mapa desktop por grupos usa `DesktopFamilyMapView`; alterações de alinhamento dos grupos devem preservar a posição de pai/mãe e a leitura geracional.
 - A renderização de cards em grupos usa `FamilyTreeVisualCards`; a ordenação visual deve evitar linhas desnecessárias quando houver pares conjugais no grupo.
-- O subtipo legado `sangue` não deve ser reintroduzido nos formulários de relacionamento.
-
+- O subtipo legado `sangue`/`adotivo` não deve ser reintroduzido como texto visível em formulários, cards ou aprovações de relacionamento.
 ## Mapa e linha geracional no mobile
 
 - O header mobile das experiências de árvore deve usar `Árvore Familiar`.
@@ -80,10 +82,17 @@ Componentes relevantes:
 
 - A paleta laranja da árvore foi redesenhada para se diferenciar da branca, com aparência mais quente, terracota e solar.
 - A paleta marrom deve permanecer mais documental/sépia; a laranja não deve voltar ao bege-pastel da paleta branca.
-- `Imagem`, `PDF` e `Imprimir` mantêm feedback visual de preparação durante operações pesadas.
-- Quando o fluxo de exportação abrir janela/aba dedicada para salvar ou imprimir, ele não deve substituir a página de trabalho atual do usuário.
+- `Área` mantém o fluxo de seleção visível da árvore e exibe botões próprios para `Salvar PNG`, `Salvar PDF`, `Imprimir` e `Cancelar`.
+- `Imagem`, `PDF` e `Imprimir` abrem aba/janela dedicada de preview por query string, preservando a página principal do usuário.
+- O preview usa a rota real com `exportPreview=1` e `exportIntent=png`, `pdf` ou `print`, ocultando header, painel lateral, controles auxiliares e botão flutuante.
+- O toolbar do preview deve exibir apenas a ação escolhida no painel principal: `Salvar PNG`, `Exportar PDF` ou `Imprimir`.
+- `Salvar PNG` captura a árvore renderizada no próprio preview com `html2canvas` e escala configurada em `1.5`.
+- `Exportar PDF` usa captura do preview e geração via `jsPDF` quando o fluxo estiver estável; não deve abrir a janela de impressão como substituto silencioso.
+- `Imprimir` deve preparar composição em página única, escolhendo retrato ou paisagem conforme proporção da árvore e evitando corte do conteúdo.
+- `treeExport.ts` concentra timeout, fallback, abertura de preview, sanitização de cores e escrita de erro em aba de preview.
+- `exportColorSanitizer.ts` deve ser usado em capturas que passem por `html2canvas`, para evitar erro com cores modernas como `oklch`.
 - Overlays e mensagens de exportação devem permanecer em UTF-8 válido e não devem aparecer no artefato exportado.
-
+- Estado atual da frente: o fluxo de preview está implementado, mas a captura por `html2canvas` ainda exige QA visual específico porque sombras/filtros podem aparecer como blocos cinza e etiquetas podem ser cortadas em alguns cenários. Não documentar essa frente como visualmente estabilizada sem nova validação manual.
 ## IA
 
 `api/ai.ts` implementa:
@@ -152,7 +161,7 @@ A varredura técnica esperada em `src/` deve retornar apenas o falso positivo vi
 - A busca global do header usa `HeaderGlobalSearch`, combinando resultados de pessoas e páginas via `globalSearchService`.
 - Páginas internas que usam `MemberPageHeader` devem exibir as mesmas sugestões de busca de pessoas e páginas disponíveis na experiência de mapa.
 - No mobile, dropdowns de busca e notificações devem ter camada superior a toolbars sticky, canvas da árvore, painéis e cards.
-- O menu de avatar deve exibir primeiro e segundo nome no topo, subtítulo `Editar perfil`, seletor `Seus responsáveis` quando aplicável e atalhos de dúvidas e saída sem sobrepor elementos sticky da página.
+- O menu de avatar deve exibir primeiro e segundo nome no topo, subtítulo `Editar perfil`, área `Perfis gerenciados` quando aplicável e atalhos de dúvidas e saída sem sobrepor elementos sticky ou o botão flutuante `?`.
 - As buscas/filtros dessas áreas devem ser documentadas como comportamento de UI, não como regra de banco, salvo quando o serviço correspondente existir.
 
 ## Meus dados

@@ -1,6 +1,6 @@
 # Guia de componentes
 
-> Última revisão: 2026-06-27
+> Última revisão: 2026-06-29
 > Escopo: componentes relevantes para rotas e fluxos funcionais da branch `main`.
 > Status: canônico.
 
@@ -11,8 +11,8 @@
 | `Home.tsx` | orquestra carregamento de pessoas/relacionamentos, pessoa vinculada, filtros, busca, IA, curiosidades, navegação para perfil e recolhimento do painel desktop. |
 | `HomeHeader.tsx` | cabeçalho da experiência de mapa. No mobile deve exibir `Árvore Familiar`. |
 | `HomeMobileNav.tsx` | navegação e ações mobile da home, incluindo botão `+`, painel de visualização, filtros e ações de mapa. |
-| `HomeTreeSection.tsx` | área de renderização da árvore. |
-| `DesktopTreeVisualizationPanel.tsx` | painel desktop de visualização, temas, grupos, filtros, exportação e ação interna de recolher. |
+| `HomeTreeSection.tsx` | área de renderização da árvore, roteamento de ações vindas do painel, preview de exportação por `exportPreview=1` e composição do toolbar de exportação em aba dedicada. |
+| `DesktopTreeVisualizationPanel.tsx` | painel desktop de visualização, temas, grupos, filtros, exportação, títulos `Grupos de Familiares`/`Exportar` e ação interna de recolher. |
 | `SidebarPanelTabs.tsx` | abas auxiliares do painel lateral. |
 | `HomeCuriositiesDialog.tsx` | diálogo de curiosidades e perguntas assistidas na home. |
 | `FirstLoginTutorial.tsx` | tutorial de primeiro acesso. |
@@ -38,7 +38,10 @@
 | `TreeConjugalStatusLegend.tsx` | legenda de status conjugais por símbolo e padrão de linha. |
 | `TreeLegend.tsx` | legenda consolidada da árvore, incluindo status conjugais. |
 | `treeViewMode.ts` | conversão entre rota e modo de visualização. |
-| `utils/treePreferences.ts` | leitura, persistência e migração de preferências visuais. |
+| `utils/treePreferences.ts` | leitura, persistência e migração de preferências visuais; em perspectiva por `?pessoa=`, força a ocultação inicial de cônjuges colaterais. |
+| `utils/treeExport.ts` | utilitários de captura, sanitização, preview, PNG, PDF, impressão e tratamento de erro da exportação da árvore. |
+| `utils/exportColorSanitizer.ts` | sanitização de cores modernas não suportadas pelo `html2canvas`, incluindo fallback para funções como `oklch`. |
+| `TreeAreaSelectionOverlay.tsx` | overlay de seleção de área visível da árvore, com ações de PNG, PDF, impressão, cancelamento e erro no preview. |
 | `modals/AddConnectionModal.tsx` | modal de nova conexão. |
 | `modals/ViewMarriageModal.tsx` | modal de detalhes de casamento, com badge, narrativa e tooltip baseados no status conjugal inferido. |
 
@@ -47,6 +50,8 @@
 | Componente / módulo | Papel |
 |---|---|
 | `MobileGlobalTweaks.tsx` | ajustes mobile transversais de header, overlays, `/meus-dados`, `/meus-vinculos` e painel de mapa quando aplicável. |
+| `MobileTopLayerTweaks.tsx` | ajustes de camada mobile para manter painéis, busca, notificações e menu do avatar acima do canvas e de elementos sticky. |
+| `LinhaGeracionalMobilePanelLayerTweaks.tsx` | isolamento de camada e comportamento do painel mobile da linha geracional. |
 | `PersonProfileRuntimeTweaks.tsx` | ocultações e reposicionamentos defensivos em `/pessoa/:id`. |
 | `AdminDashboardRuntimeTweaks.tsx` | ajustes defensivos do dashboard administrativo. |
 | `MeusVinculosEnhancements.tsx` | ajustes progressivos de `/meus-vinculos`, incluindo ordem de seções, seletor de cônjuge/filhos e modal de pet. |
@@ -129,7 +134,7 @@ Regras de uso:
 - `MemberPageHeader`: cabeçalho das páginas de membro, com atalhos de navegação, busca compartilhada e menu de notificações no desktop; em `/admin/*`, usa navegação administrativa reduzida.
 - `HeaderGlobalSearch`: busca compartilhada do header, com sugestões de pessoas e páginas e fallback para `/busca?q=...`.
 - `HeaderNotificationsDropdown`: dropdown reutilizado por headers para listar notificações recentes, ações rápidas e atalhos para páginas de notificações e preferências.
-- `UserProfileMenu`: menu de avatar e ações do usuário, com primeiro e segundo nome, subtítulo de edição de perfil, responsáveis quando aplicável, atalhos de navegação, dúvidas e saída.
+- `UserProfileMenu`: menu de avatar e ações do usuário, com primeiro e segundo nome, subtítulo de edição de perfil, área `Perfis gerenciados` quando aplicável, atalhos de navegação, dúvidas e saída.
 - Componentes de UI em `src/app/components/ui` devem permanecer genéricos e reutilizáveis.
 
 ## Componentes administrativos
@@ -138,6 +143,9 @@ Regras de uso:
 |---|---|
 | `AdminDashboardWithTweaks.tsx` | composição atual do dashboard administrativo com ajustes de cards, aprovações e ações rápidas. |
 | `AdminDashboardRuntimeTweaks.tsx` | runtime defensivo do dashboard. |
+| `AdminNotificacoes.tsx` | página administrativa de notificações, com abas de visão geral, preferências, destinatários, tipos, templates, frequência, automações, métricas e diagnóstico. |
+| `adminNotificationFormatters.ts` | formatadores de labels, status, canais, tipos e categorias de notificações para evitar slugs crus na UI. |
+| `AdminRelacionamentos.tsx` | listagem administrativa de casamentos e filiações, com filtros por cards, busca por pessoa e sugestões por nome. |
 | `AdminAprovacoes.tsx` | página de aprovações administrativas. |
 | `AdminHomeSettingsWithSaveBar.tsx` | composição atual de `/admin/home`, com salvamento das configurações. |
 | `AdminRelacionamentoForm.tsx` | cadastro de vínculos com status conjugal inferido e validações de separação/inatividade. |
