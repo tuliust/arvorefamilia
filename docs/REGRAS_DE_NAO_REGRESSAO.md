@@ -1,7 +1,7 @@
 # Regras de não regressão
 
-> Última revisão: 2026-06-29  
-> Escopo: contratos que não devem ser quebrados em novas alterações.  
+> Última revisão: 2026-06-29
+> Escopo: contratos que não devem ser quebrados em novas alterações.
 > Status: canônico.
 
 ## Escopo de alteração documental

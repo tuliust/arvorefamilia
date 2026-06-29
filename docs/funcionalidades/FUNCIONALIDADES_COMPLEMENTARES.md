@@ -1,7 +1,7 @@
 # Funcionalidades complementares
 
-> Última revisão: 2026-06-29  
-> Escopo: calendário, dúvidas, fórum, favoritos, notificações, onboarding, exportação, busca global, timeline, perfil, aprovações e cadastros administrativos de pessoas.  
+> Última revisão: 2026-06-29
+> Escopo: calendário, dúvidas, fórum, favoritos, notificações, onboarding, exportação, busca global, timeline, perfil, aprovações e cadastros administrativos de pessoas.
 > Status: canônico complementar.
 
 ## Objetivo

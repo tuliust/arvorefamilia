@@ -1,7 +1,7 @@
 # QA manual
 
-> Última revisão: 2026-06-29  
-> Escopo: validação manual das rotas e contratos documentados.  
+> Última revisão: 2026-06-29
+> Escopo: validação manual das rotas e contratos documentados.
 > Status: canônico.
 
 ## Pré-condições
