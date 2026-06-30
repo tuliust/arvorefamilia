@@ -87,15 +87,18 @@ function openTreeExportPreviewRoute(location: ReturnType<typeof useLocation>, ac
 function printCurrentTreePage(title: string) {
   const root = document.documentElement;
   const exportRoot = document.querySelector<HTMLElement>(TREE_EXPORT_ROOT_SELECTOR);
+  const existingHost = document.getElementById('tree-direct-print-host');
   let fallbackCleanupTimer: number | undefined;
+
+  existingHost?.remove();
 
   const cleanup = () => {
     delete root.dataset.treeDirectPrint;
-    root.style.removeProperty('--tree-direct-print-scale');
     root.style.removeProperty('--tree-direct-print-width');
     root.style.removeProperty('--tree-direct-print-height');
-    root.style.removeProperty('--tree-direct-print-left');
-    root.style.removeProperty('--tree-direct-print-top');
+    root.style.removeProperty('--tree-direct-print-scale-portrait');
+    root.style.removeProperty('--tree-direct-print-scale-landscape');
+    document.getElementById('tree-direct-print-host')?.remove();
     window.removeEventListener('afterprint', cleanup);
 
     if (fallbackCleanupTimer !== undefined) {
@@ -103,45 +106,67 @@ function printCurrentTreePage(title: string) {
     }
   };
 
-  if (exportRoot) {
-    const rect = exportRoot.getBoundingClientRect();
-    const treeWidth = Math.ceil(Math.max(rect.width, exportRoot.offsetWidth, exportRoot.scrollWidth, 1));
-    const treeHeight = Math.ceil(Math.max(rect.height, exportRoot.offsetHeight, exportRoot.scrollHeight, 1));
-
-    /*
-     * Mantém a impressão fiel ao DOM real da tela. Não usa html2canvas aqui:
-     * captura em canvas deixa o clique lento e pode desformatar cards/conectores.
-     *
-     * Como o browser não informa previamente o tamanho físico escolhido na janela
-     * de impressão, usamos uma área segura conservadora e centralizamos o resultado.
-     */
-    const pageWidth = Math.max(window.innerWidth, document.documentElement.clientWidth, 1);
-    const pageHeight = Math.max(window.innerHeight, document.documentElement.clientHeight, 1);
-    const titleReservedHeight = 72;
-    const horizontalPadding = 32;
-    const bottomPadding = 28;
-    const availableWidth = Math.max(pageWidth - horizontalPadding * 2, 1);
-    const availableHeight = Math.max(pageHeight - titleReservedHeight - bottomPadding, 1);
-    const scale = Math.min(1, availableWidth / treeWidth, availableHeight / treeHeight);
-    const safeScale = Math.max(scale, 0.1);
-    const scaledWidth = treeWidth * safeScale;
-    const scaledHeight = treeHeight * safeScale;
-    const left = Math.max(horizontalPadding, (pageWidth - scaledWidth) / 2);
-    const top = Math.max(titleReservedHeight, titleReservedHeight + (availableHeight - scaledHeight) / 2);
-
-    root.style.setProperty('--tree-direct-print-scale', String(safeScale));
-    root.style.setProperty('--tree-direct-print-width', `${treeWidth}px`);
-    root.style.setProperty('--tree-direct-print-height', `${treeHeight}px`);
-    root.style.setProperty('--tree-direct-print-left', `${left}px`);
-    root.style.setProperty('--tree-direct-print-top', `${top}px`);
+  if (!exportRoot) {
+    toast.error('Área da árvore não encontrada para impressão.');
+    return;
   }
+
+  const sourceCanvas = exportRoot.firstElementChild instanceof HTMLElement
+    ? exportRoot.firstElementChild
+    : exportRoot;
+  const treeWidth = Math.ceil(Math.max(sourceCanvas.offsetWidth, sourceCanvas.scrollWidth, exportRoot.scrollWidth, 1));
+  const treeHeight = Math.ceil(Math.max(sourceCanvas.offsetHeight, sourceCanvas.scrollHeight, exportRoot.scrollHeight, 1));
+  const portraitScale = Math.min(1, 720 / treeWidth, 930 / treeHeight);
+  const landscapeScale = Math.min(1, 980 / treeWidth, 650 / treeHeight);
+
+  root.style.setProperty('--tree-direct-print-width', `${treeWidth}px`);
+  root.style.setProperty('--tree-direct-print-height', `${treeHeight}px`);
+  root.style.setProperty('--tree-direct-print-scale-portrait', String(Math.max(portraitScale, 0.08)));
+  root.style.setProperty('--tree-direct-print-scale-landscape', String(Math.max(landscapeScale, 0.08)));
+
+  const host = document.createElement('div');
+  host.id = 'tree-direct-print-host';
+  host.setAttribute('aria-hidden', 'true');
+
+  const titleElement = document.createElement('div');
+  titleElement.className = 'tree-direct-print-title';
+  titleElement.textContent = title;
+
+  const shell = document.createElement('div');
+  shell.className = 'tree-direct-print-shell';
+
+  const frame = document.createElement('div');
+  frame.className = 'tree-direct-print-frame';
+
+  const clone = exportRoot.cloneNode(true) as HTMLElement;
+  clone.classList.add('tree-direct-print-clone');
+  clone.removeAttribute('style');
+  clone.style.setProperty('width', `${treeWidth}px`, 'important');
+  clone.style.setProperty('height', `${treeHeight}px`, 'important');
+
+  const cloneCanvas = clone.firstElementChild;
+  if (cloneCanvas instanceof HTMLElement) {
+    cloneCanvas.style.setProperty('width', `${treeWidth}px`, 'important');
+    cloneCanvas.style.setProperty('height', `${treeHeight}px`, 'important');
+    cloneCanvas.style.setProperty('transform', 'none', 'important');
+    cloneCanvas.style.setProperty('transform-origin', 'top left', 'important');
+  }
+
+  clone.querySelectorAll<HTMLElement>('button, a').forEach((element) => {
+    element.style.setProperty('pointer-events', 'none', 'important');
+  });
+
+  frame.appendChild(clone);
+  shell.appendChild(frame);
+  host.appendChild(titleElement);
+  host.appendChild(shell);
+  document.body.appendChild(host);
 
   root.dataset.treeDirectPrint = 'true';
   window.addEventListener('afterprint', cleanup, { once: true });
 
   window.setTimeout(() => {
     window.print();
-
     fallbackCleanupTimer = window.setTimeout(cleanup, 1600);
   }, 80);
 }
@@ -1014,10 +1039,6 @@ export function HomeTreeSection({
     >
       <style>
         {`
-          .tree-direct-print-title {
-            display: none;
-          }
-
           @media print {
             @page {
               margin: 0;
@@ -1041,6 +1062,90 @@ export function HomeTreeSection({
               visibility: hidden !important;
             }
 
+            html[data-tree-direct-print="true"] #tree-direct-print-host,
+            html[data-tree-direct-print="true"] #tree-direct-print-host * {
+              visibility: visible !important;
+            }
+
+            html[data-tree-direct-print="true"] #tree-direct-print-host {
+              position: fixed !important;
+              inset: 0 !important;
+              z-index: 2147483000 !important;
+              box-sizing: border-box !important;
+              display: grid !important;
+              grid-template-rows: auto minmax(0, 1fr) !important;
+              width: 100vw !important;
+              height: 100vh !important;
+              overflow: hidden !important;
+              padding: 14px 18px 18px !important;
+              background: #f7f1e8 !important;
+              -webkit-print-color-adjust: exact !important;
+              print-color-adjust: exact !important;
+            }
+
+            html[data-tree-direct-print="true"] #tree-direct-print-host .tree-direct-print-title {
+              box-sizing: border-box !important;
+              display: inline-flex !important;
+              justify-self: center !important;
+              align-items: center !important;
+              justify-content: center !important;
+              max-width: calc(100vw - 36px) !important;
+              margin: 0 0 10px !important;
+              padding: 4px 16px 5px !important;
+              border: 1px solid #ead4c5 !important;
+              border-radius: 999px !important;
+              background: rgba(255, 250, 244, 0.96) !important;
+              color: #6b5346 !important;
+              font: 700 18px/1.15 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif !important;
+              letter-spacing: -0.02em !important;
+              text-align: center !important;
+              white-space: nowrap !important;
+            }
+
+            html[data-tree-direct-print="true"] #tree-direct-print-host .tree-direct-print-shell {
+              box-sizing: border-box !important;
+              display: flex !important;
+              align-items: center !important;
+              justify-content: center !important;
+              width: 100% !important;
+              height: 100% !important;
+              min-width: 0 !important;
+              min-height: 0 !important;
+              overflow: hidden !important;
+            }
+
+            html[data-tree-direct-print="true"] #tree-direct-print-host .tree-direct-print-frame {
+              width: var(--tree-direct-print-width) !important;
+              height: var(--tree-direct-print-height) !important;
+              max-width: none !important;
+              max-height: none !important;
+              transform: scale(var(--tree-direct-print-scale-portrait, 1)) !important;
+              transform-origin: center center !important;
+            }
+
+            @media print and (orientation: landscape) {
+              html[data-tree-direct-print="true"] #tree-direct-print-host .tree-direct-print-frame {
+                transform: scale(var(--tree-direct-print-scale-landscape, var(--tree-direct-print-scale-portrait, 1))) !important;
+              }
+            }
+
+            html[data-tree-direct-print="true"] #tree-direct-print-host .tree-direct-print-clone,
+            html[data-tree-direct-print="true"] #tree-direct-print-host .tree-direct-print-clone * {
+              visibility: visible !important;
+            }
+
+            html[data-tree-direct-print="true"] #tree-direct-print-host .tree-direct-print-clone {
+              position: relative !important;
+              left: auto !important;
+              top: auto !important;
+              overflow: visible !important;
+              background: #f7f1e8 !important;
+              isolation: isolate !important;
+              transform: none !important;
+              transform-origin: top left !important;
+              margin: 0 !important;
+            }
+
             html[data-tree-direct-print="true"] header,
             html[data-tree-direct-print="true"] aside,
             html[data-tree-direct-print="true"] nav,
@@ -1051,68 +1156,12 @@ export function HomeTreeSection({
               display: none !important;
               visibility: hidden !important;
             }
-
-            html[data-tree-direct-print="true"] .tree-direct-print-title {
-              position: fixed !important;
-              top: 14px !important;
-              left: 50% !important;
-              z-index: 2147483000 !important;
-              box-sizing: border-box !important;
-              display: inline-flex !important;
-              align-items: center !important;
-              justify-content: center !important;
-              max-width: calc(100vw - 36px) !important;
-              padding: 4px 16px 5px !important;
-              border: 1px solid #ead4c5 !important;
-              border-radius: 999px !important;
-              background: rgba(255, 250, 244, 0.96) !important;
-              color: #6b5346 !important;
-              font: 700 18px/1.15 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif !important;
-              letter-spacing: -0.02em !important;
-              text-align: center !important;
-              white-space: nowrap !important;
-              transform: translateX(-50%) !important;
-              visibility: visible !important;
-            }
-
-            html[data-tree-direct-print="true"] [data-family-map-export-root="true"],
-            html[data-tree-direct-print="true"] [data-family-map-horizontal-root="true"],
-            html[data-tree-direct-print="true"] [data-export-root="family-tree"] {
-              position: fixed !important;
-              left: var(--tree-direct-print-left, 0) !important;
-              top: var(--tree-direct-print-top, 72px) !important;
-              width: var(--tree-direct-print-width, auto) !important;
-              height: var(--tree-direct-print-height, auto) !important;
-              max-width: none !important;
-              max-height: none !important;
-              overflow: visible !important;
-              background: #f7f1e8 !important;
-              isolation: isolate !important;
-              transform: scale(var(--tree-direct-print-scale, 1)) !important;
-              transform-origin: top left !important;
-              margin: 0 !important;
-              visibility: visible !important;
-            }
-
-            html[data-tree-direct-print="true"] [data-family-map-export-root="true"] *,
-            html[data-tree-direct-print="true"] [data-family-map-horizontal-root="true"] *,
-            html[data-tree-direct-print="true"] [data-export-root="family-tree"] * {
-              visibility: visible !important;
-            }
-
-            html[data-tree-direct-print="true"] [data-export-root="family-tree"] > div.absolute.left-0.right-0 {
-              top: 82px !important;
-            }
           }
         `}
       </style>
 
-      <div className="tree-direct-print-title" aria-hidden="true">
-        {printTreeTitle}
-      </div>
-
-            <AreaCaptureInstructionsDialog
-        open={areaCaptureInstructionsOpen}
+      <AreaCaptureInstructionsDialog
+open={areaCaptureInstructionsOpen}
         onCancel={closeAreaCaptureInstructions}
         onContinue={continueAreaCapture}
       />
