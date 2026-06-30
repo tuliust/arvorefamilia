@@ -4,7 +4,7 @@
 > Escopo: documentação canônica mantida em `docs/` após auditoria e limpeza final.
 > Status: canônico.
 
-Este diretório concentra a documentação fundamental do produto. A fonte de verdade para comportamento continua sendo o código da branch `main`, especialmente `src/app/routes.tsx`, `src/app/pages`, `src/app/components`, `src/app/services`, `src/app/types`, `api/ai.ts` e os arquivos SQL/Supabase versionados.
+Este diretório concentra a documentação fundamental do produto. A fonte de verdade para comportamento continua sendo o código da branch `main`, especialmente `src/app/routes.tsx`, `src/app/pages`, `src/app/components`, `src/app/components/FamilyTree`, `src/app/services`, `src/app/types`, `src/app/utils`, `index.html`, `api/ai.ts` e os arquivos SQL/Supabase versionados.
 
 ## Estrutura canônica
 
@@ -51,7 +51,7 @@ docs/
     LIMPEZA_DOCUMENTACAO_FINAL_20260623.md
 ```
 
-Arquivos residuais fora desse índice não devem ser usados como contrato operacional. Se ainda existirem na branch, devem ser removidos em rodada local de `git rm` conforme `historico/LIMPEZA_DOCUMENTACAO_FINAL_20260623.md`.
+Arquivos residuais fora desse índice não devem ser usados como contrato operacional. Checklists datados, baselines antigos ou documentos de rodada devem ser removidos ou absorvidos pelos documentos canônicos, preservando histórico apenas quando houver valor real de manutenção.
 
 ## Índice canônico
 
@@ -87,20 +87,68 @@ Arquivos residuais fora desse índice não devem ser usados como contrato operac
 
 ## Rotas funcionais cobertas
 
+As rotas abaixo refletem `src/app/routes.tsx` na branch `main`.
+
+### Públicas e acesso
+
+- `/entrar`;
+- `/termos`;
+- `/privacidade`;
+- `/duvidas`.
+
+### Árvore, busca e perfil
+
+- `/` redireciona para `/mapa-familiar`;
 - `/mapa-familiar`, `/mapa-familiar-horizontal` e `/linha-geracional`;
+- `/busca`;
+- `/pessoa/:id` e `/pessoas/:id`.
+
+### Membro e onboarding
+
+- `/minha-arvore/editar` redireciona para `/meus-dados`;
 - `/meus-dados`;
 - `/meus-vinculos`;
 - `/arquivos-historicos`;
-- `/revisao-dados`;
-- `/curiosidades`;
-- `/forum`, `/forum/novo`, `/forum/topico/:id` e `/forum/topico/:id/editar`;
-- `/meus-favoritos`;
-- `/notificacoes` e `/ajustar-notificacoes`;
 - `/preferencias`;
-- `/pessoa/:id` e `/pessoas/:id`;
+- `/revisao-dados`;
+- `/vincular-perfil`;
 - `/calendario-familiar`;
-- `/entrar`, `/termos`, `/privacidade` e `/duvidas`;
-- área administrativa em `/admin` e subrotas, incluindo `/admin/home`, `/admin/responsaveis`, `/admin/gestao-conteudo-pessoas`, `/aprovacoes` e `/admin/aprovacoes`.
+- `/curiosidades`;
+- `/meus-favoritos`;
+- `/notificacoes`;
+- `/ajustar-notificacoes`.
+
+### Fórum
+
+- `/forum`;
+- `/forum/novo`;
+- `/forum/topico/:id`;
+- `/forum/topico/:id/editar`.
+
+### Administração
+
+- `/admin`;
+- `/admin/login`;
+- `/admin/dashboard`;
+- `/aprovacoes`;
+- `/admin/aprovacoes`;
+- `/admin/home`;
+- `/admin/pessoas`;
+- `/admin/pessoas/novas`;
+- `/admin/pessoas/nova`;
+- `/admin/pessoas/:id`;
+- `/admin/pessoas/:id/editar`;
+- `/admin/relacionamentos`;
+- `/admin/relacionamentos/novo`;
+- `/admin/importacao`;
+- `/admin/migrar-dados`;
+- `/admin/diagnostico`;
+- `/admin/integridade`;
+- `/admin/atividades`;
+- `/admin/responsaveis`;
+- `/admin/notificacoes`;
+- `/admin/gestao-conteudo-pessoas`;
+- `/admin/duvidas`.
 
 ## Contratos transversais recentes
 
@@ -114,20 +162,22 @@ Arquivos residuais fora desse índice não devem ser usados como contrato operac
 
 ## Atualizações recentes documentadas
 
-Esta revisão incorpora contratos recentes de mobile e exportação:
+Esta revisão incorpora contratos recentes de mobile, exportação e limpeza documental:
 
 - camada superior de notificações, busca, avatar, botão `+` e painéis de árvore no mobile;
 - isolamento do runtime específico de `/linha-geracional`;
 - visão geral `Mapa da família` em `/mapa-familiar` mobile;
-- botão `Exibir mapa completo`, mapa completo com pan/zoom, cards normalizados e conectores por bordas reais;
+- botão `Mapa`, mapa completo com pan/zoom, cards normalizados e conectores por bordas reais;
 - guard contra ghost click nos botões do mapa mobile;
 - scroll vertical das telas de primos paternos e maternos;
+- limite visual inicial de 8 cards em tios paternos e maternos no mobile;
 - labels compactos dos cards superiores de `/admin` mobile;
-- continuidade do fluxo de preview/exportação em aba dedicada.
+- continuidade do fluxo de preview/exportação em aba dedicada;
+- remoção de checklist datado de QA mobile após consolidação em `QA_MANUAL.md`.
 
 ## Regra de manutenção
 
-1. Antes de alterar documentação, comparar com `src/app/routes.tsx`.
+1. Antes de alterar documentação, comparar com `src/app/routes.tsx`, `index.html` e módulos citados no documento afetado.
 2. Não recriar arquivos de rodada, baseline antigo ou QA datado quando o conteúdo couber nos documentos canônicos.
 3. Manter histórico apenas em documentos consolidados.
 4. Ao remover, mesclar ou mover arquivos, atualizar este índice e `INVENTARIO_TECNICO.md`.

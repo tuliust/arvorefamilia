@@ -4,15 +4,49 @@
 > Escopo: rotas principais, guards e fluxos de navegação.
 > Status: canônico.
 
+## Fonte de verdade
+
+As rotas são declaradas em `src/app/routes.tsx`. Este documento deve citar apenas rotas existentes na branch `main`.
+
+## Rotas públicas
+
+| Rota | Uso |
+|---|---|
+| `/entrar` | Tela pública de entrada. |
+| `/termos` | Termos de uso. |
+| `/privacidade` | Política de privacidade. |
+| `/duvidas` | Página pública de dúvidas. |
+
+## Rotas de árvore, busca e perfil
+
+| Rota | Uso | Guard |
+|---|---|---|
+| `/` | Redireciona para `/mapa-familiar`. | `TreeAccessRoute` |
+| `/mapa-familiar` | Mapa vertical e principal. | `TreeAccessRoute` |
+| `/mapa-familiar-horizontal` | Visualização horizontal. | `TreeAccessRoute` |
+| `/linha-geracional` | Visualização geracional mobile/dedicada. | `TreeAccessRoute` |
+| `/busca` | Resultados da busca global. | `TreeAccessRoute` |
+| `/pessoa/:id` | Perfil individual com dados, vínculos, fórum, arquivos e timeline. | `MemberRoute` |
+| `/pessoas/:id` | Alias de perfil individual. | `MemberRoute` |
+
+### Montagem de runtimes mobile
+
+- `MobileTopLayerTweaks` pode ser montado globalmente em rotas renderizadas por `lazyRoute`, desde que suas regras internas sejam defensivas por rota/breakpoint.
+- `LinhaGeracionalMobilePanelLayerTweaks` deve ser montado somente na rota `/linha-geracional`.
+- `/mapa-familiar` não deve carregar runtime específico da linha geracional.
+- O isolamento entre `/mapa-familiar` e `/linha-geracional` é regra de não regressão para evitar travamentos, overlays indevidos ou mudança de layout entre rotas.
+
 ## Rotas de onboarding
 
 | Rota | Etapa | Observações |
 |---|---:|---|
+| `/minha-arvore/editar` | Alias | Redireciona para `/meus-dados`. |
 | `/meus-dados` | 1 | Dados pessoais, status vivo/falecido, redes sociais e questionário IA com tela final `Seu Perfil`. |
 | `/meus-vinculos` | 2 | Vínculos familiares, cônjuges, filhos, irmãos e pets. Mini Bio/Curiosidades não ficam mais nesta página. |
 | `/arquivos-historicos` | 3 | Fatos e arquivos históricos. |
 | `/preferencias` | 4 | Apenas pessoa viva. |
 | `/revisao-dados` | 5 | Revisão final e eventuais pendências de edição/responsabilidade. |
+| `/vincular-perfil` | Apoio | Vinculação de usuário a perfil. |
 | `/mapa-familiar` | Pós-onboarding | Visualização da árvore. |
 
 ## Fluxo para pessoa viva
@@ -39,6 +73,20 @@
 `/preferencias` deve redirecionar pessoa falecida para `/revisao-dados` após aplicar defaults seguros.
 
 Antes de finalizar `/revisao-dados`, se o usuário logado for responsável por outros perfis, o fluxo pode exibir modal de escolha para editar essas páginas agora ou seguir para a árvore.
+
+## Rotas de membro autônomas
+
+| Rota | Uso | Guard |
+|---|---|---|
+| `/calendario-familiar` | Calendário familiar. | `MemberRoute` |
+| `/curiosidades` | Curiosidades, IA e exploração dos dados familiares. | `MemberRoute` |
+| `/meus-favoritos` | Favoritos do usuário. | `MemberRoute` |
+| `/notificacoes` | Central de notificações. | `MemberRoute` |
+| `/ajustar-notificacoes` | Preferências de notificação. | `MemberRoute` |
+| `/forum` | Home do fórum. | `MemberRoute` |
+| `/forum/novo` | Criação de tópico. | `MemberRoute` |
+| `/forum/topico/:id` | Tópico individual. | `MemberRoute` |
+| `/forum/topico/:id/editar` | Edição de tópico. | `MemberRoute` |
 
 ## Header nessas rotas
 
@@ -68,22 +116,6 @@ Rotas de onboarding usam header simplificado. No mobile, a navegação inferior 
 - IA deve gerar memorial quando toggle for marcado.
 - Pessoa falecida administrada por responsável não deve criar conteúdo social em nome próprio quando a regra do fluxo proibir.
 
-## Rotas de mapa
-
-| Rota | Uso |
-|---|---|
-| `/mapa-familiar` | Mapa vertical e principal. |
-| `/mapa-familiar-horizontal` | Visualização horizontal. |
-| `/linha-geracional` | Visualização geracional mobile/dedicada. |
-| `/` | Pode redirecionar para mapa preservando query. |
-
-### Montagem de runtimes mobile
-
-- `MobileTopLayerTweaks` pode ser montado globalmente em rotas renderizadas por `lazyRoute`, desde que suas regras internas sejam defensivas por rota/breakpoint.
-- `LinhaGeracionalMobilePanelLayerTweaks` deve ser montado somente na rota `/linha-geracional`.
-- `/mapa-familiar` não deve carregar runtime específico da linha geracional.
-- O isolamento entre `/mapa-familiar` e `/linha-geracional` é regra de não regressão para evitar travamentos, overlays indevidos ou mudança de layout entre rotas.
-
 ## Retorno seguro para árvore
 
 Parâmetros de retorno devem aceitar apenas paths internos permitidos, como:
@@ -95,13 +127,6 @@ Parâmetros de retorno devem aceitar apenas paths internos permitidos, como:
 
 Não aceitar URL externa.
 
-## Rotas de perfil
-
-| Rota | Uso |
-|---|---|
-| `/pessoa/:id` | Perfil individual com dados, vínculos, fórum, arquivos e timeline. |
-| `/pessoas/:id` | Alias de perfil individual. |
-
 ## Rotas administrativas
 
 | Rota | Uso | Guard |
@@ -112,10 +137,22 @@ Não aceitar URL externa.
 | `/aprovacoes` | Aprovações administrativas. | `ProtectedRoute` |
 | `/admin/aprovacoes` | Alias administrativo de aprovações. | `ProtectedRoute` |
 | `/admin/home` | Configurações públicas/home. | `ProtectedRoute` |
+| `/admin/pessoas` | Listagem/gestão administrativa de pessoas. | `ProtectedRoute` |
+| `/admin/pessoas/novas` | Alias/listagem de pessoas novas. | `ProtectedRoute` |
+| `/admin/pessoas/nova` | Criação administrativa de pessoa. | `ProtectedRoute` |
+| `/admin/pessoas/:id` | Workspace de edição de pessoa. | `ProtectedRoute` |
+| `/admin/pessoas/:id/editar` | Workspace de edição de pessoa. | `ProtectedRoute` |
+| `/admin/relacionamentos` | Listagem administrativa de relacionamentos. | `ProtectedRoute` |
+| `/admin/relacionamentos/novo` | Cadastro de relacionamento. | `ProtectedRoute` |
+| `/admin/importacao` | Importação administrativa. | `ProtectedRoute` |
+| `/admin/migrar-dados` | Ferramenta administrativa de migração. | `ProtectedRoute` |
+| `/admin/diagnostico` | Diagnóstico administrativo. | `ProtectedRoute` |
+| `/admin/integridade` | Integridade de dados. | `ProtectedRoute` |
+| `/admin/atividades` | Histórico de atividades administrativas. | `ProtectedRoute` |
 | `/admin/responsaveis` | Responsáveis por perfis legados e crianças. | `ProtectedRoute` |
+| `/admin/notificacoes` | Administração de notificações. | `ProtectedRoute` |
 | `/admin/gestao-conteudo-pessoas` | Textos automáticos e visibilidade de pessoas. | `ProtectedRoute` |
-
-Demais subrotas administrativas declaradas em `src/app/routes.tsx` também devem permanecer protegidas por `ProtectedRoute`.
+| `/admin/duvidas` | Administração de dúvidas. | `ProtectedRoute` |
 
 ## Não regressões
 
