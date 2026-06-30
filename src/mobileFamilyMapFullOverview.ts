@@ -252,20 +252,33 @@ function ensureStyles() {
       }
 
       #${FULL_MAP_ID} .mobile-family-full-map-card[data-variant="ancestor"] {
-        min-height: 62px !important;
+        min-height: 78px !important;
+        flex-direction: column !important;
+        align-items: center !important;
+        justify-content: center !important;
+        gap: 0.22rem !important;
+        padding: 0.34rem !important;
+        text-align: center !important;
       }
 
       #${FULL_MAP_ID} .mobile-family-full-map-card[data-variant="mini"] {
-        min-height: 76px !important;
+        min-height: 78px !important;
         flex-direction: column !important;
+        align-items: center !important;
         justify-content: center !important;
-        gap: 0.24rem !important;
+        gap: 0.22rem !important;
         padding: 0.34rem !important;
         text-align: center !important;
       }
 
       #${FULL_MAP_ID} .mobile-family-full-map-card[data-variant="core"] {
-        min-height: 84px !important;
+        min-height: 86px !important;
+        flex-direction: column !important;
+        align-items: center !important;
+        justify-content: center !important;
+        gap: 0.22rem !important;
+        padding: 0.34rem !important;
+        text-align: center !important;
       }
 
       #${FULL_MAP_ID} .mobile-family-full-map-card[data-variant="parent"] {
@@ -323,9 +336,11 @@ function ensureStyles() {
         color: rgba(255,255,255,0.86) !important;
       }
 
-      #${FULL_MAP_ID} .mobile-family-full-map-card[data-variant="mini"] .mobile-family-full-map-avatar {
-        width: 36px !important;
-        height: 36px !important;
+      #${FULL_MAP_ID} .mobile-family-full-map-card[data-variant="ancestor"] .mobile-family-full-map-avatar,
+      #${FULL_MAP_ID} .mobile-family-full-map-card[data-variant="mini"] .mobile-family-full-map-avatar,
+      #${FULL_MAP_ID} .mobile-family-full-map-card[data-variant="core"] .mobile-family-full-map-avatar {
+        width: 30px !important;
+        height: 30px !important;
       }
 
       #${FULL_MAP_ID} .mobile-family-full-map-card[data-variant="parent"] .mobile-family-full-map-avatar {
@@ -367,7 +382,9 @@ function ensureStyles() {
         justify-content: center !important;
       }
 
+      #${FULL_MAP_ID} .mobile-family-full-map-card[data-variant="ancestor"] .mobile-family-full-map-card-body,
       #${FULL_MAP_ID} .mobile-family-full-map-card[data-variant="mini"] .mobile-family-full-map-card-body,
+      #${FULL_MAP_ID} .mobile-family-full-map-card[data-variant="core"] .mobile-family-full-map-card-body,
       #${FULL_MAP_ID} .mobile-family-full-map-card[data-variant="parent"] .mobile-family-full-map-card-body,
       #${FULL_MAP_ID} .mobile-family-full-map-card[data-variant="central"] .mobile-family-full-map-card-body {
         width: 100% !important;
@@ -380,28 +397,52 @@ function ensureStyles() {
         width: 100% !important;
         overflow: hidden !important;
         color: #fff !important;
-        font-size: 0.58rem !important;
+        font-size: 0.54rem !important;
         font-weight: 950 !important;
         line-height: 1.08 !important;
-        letter-spacing: 0.06em !important;
+        letter-spacing: 0.03em !important;
         text-transform: uppercase !important;
-        text-overflow: ellipsis !important;
+        text-overflow: clip !important;
         white-space: nowrap !important;
       }
 
+      #${FULL_MAP_ID} .mobile-family-full-map-card[data-variant="ancestor"] .mobile-family-full-map-name,
       #${FULL_MAP_ID} .mobile-family-full-map-card[data-variant="mini"] .mobile-family-full-map-name {
-        font-size: 0.55rem !important;
+        min-height: 2.16em !important;
+        overflow: visible !important;
+        overflow-wrap: anywhere !important;
         text-align: center !important;
+        text-overflow: clip !important;
+        white-space: normal !important;
+        word-break: normal !important;
+      }
+
+      #${FULL_MAP_ID} .mobile-family-full-map-card[data-variant="core"] .mobile-family-full-map-name {
+        min-height: 2.16em !important;
+        overflow: visible !important;
+        overflow-wrap: anywhere !important;
+        text-align: center !important;
+        text-overflow: clip !important;
+        white-space: normal !important;
+        word-break: normal !important;
       }
 
       #${FULL_MAP_ID} .mobile-family-full-map-card[data-variant="parent"] .mobile-family-full-map-name {
-        font-size: 0.78rem !important;
+        font-size: 0.76rem !important;
+        letter-spacing: 0.03em !important;
+        overflow: hidden !important;
         text-align: center !important;
+        text-overflow: clip !important;
+        white-space: nowrap !important;
       }
 
       #${FULL_MAP_ID} .mobile-family-full-map-card[data-variant="central"] .mobile-family-full-map-name {
-        font-size: 0.95rem !important;
+        font-size: 0.92rem !important;
+        letter-spacing: 0.03em !important;
+        overflow: hidden !important;
         text-align: center !important;
+        text-overflow: clip !important;
+        white-space: nowrap !important;
       }
 
       #${FULL_MAP_ID} .mobile-family-full-map-vitals {
@@ -414,7 +455,9 @@ function ensureStyles() {
         line-height: 1 !important;
       }
 
+      #${FULL_MAP_ID} .mobile-family-full-map-card[data-variant="ancestor"] .mobile-family-full-map-vitals,
       #${FULL_MAP_ID} .mobile-family-full-map-card[data-variant="mini"] .mobile-family-full-map-vitals,
+      #${FULL_MAP_ID} .mobile-family-full-map-card[data-variant="core"] .mobile-family-full-map-vitals,
       #${FULL_MAP_ID} .mobile-family-full-map-card[data-variant="parent"] .mobile-family-full-map-vitals,
       #${FULL_MAP_ID} .mobile-family-full-map-card[data-variant="central"] .mobile-family-full-map-vitals {
         justify-content: center !important;
@@ -657,7 +700,7 @@ function estimateGroupHeight(
 ) {
   if (kind === 'person') return floorHeight;
 
-  const cardHeight = variant === 'mini' ? 76 : variant === 'core' ? 84 : 62;
+  const cardHeight = variant === 'core' ? 86 : variant === 'mini' || variant === 'ancestor' ? 78 : 62;
   const rows = Math.max(1, Math.ceil(people.length / Math.max(1, columns)));
   const shellPadding = 18;
   const titleHeight = 18;
@@ -720,6 +763,7 @@ function buildFullMapModel() {
   const pets = extractPeopleFromSection(findSectionByTitle('core', ['pets']), 'Pets');
   const netos = extractPeopleFromSection(findSectionByTitle('core', ['netos']), 'Netos');
 
+  const CARD_GRID_GAP = 6;
   const columnGap = 45;
   const topMargin = 24;
   const verticalGroupGap = 42;
@@ -736,6 +780,16 @@ function buildFullMapModel() {
   const centerSingleWidth = 250;
   const centerSingleX = centerColumnX + ((centerColumnWidth - centerSingleWidth) / 2);
   const hasPeople = (people?: FullMapPerson[] | null) => Array.isArray(people) && people.length > 0;
+  const getAdaptiveColumns = (people: FullMapPerson[]) => (people.length <= 1 ? 1 : 2);
+  const getAdaptiveGroupWidth = (people: FullMapPerson[], fullWidth: number) => (
+    people.length <= 1 ? Math.round((fullWidth - CARD_GRID_GAP) / 2) : fullWidth
+  );
+  const getRightAlignedX = (columnX: number, fullWidth: number, adaptiveWidth: number) => (
+    columnX + (fullWidth - adaptiveWidth)
+  );
+  const getCenteredX = (columnX: number, fullWidth: number, adaptiveWidth: number) => (
+    columnX + ((fullWidth - adaptiveWidth) / 2)
+  );
 
   const nodes: FullMapNode[] = [
     { id: 'tataravos-paternos', kind: 'ancestor', label: 'Tataravós paternos', left: leftColumnX, top: 40, width: sideColumnWidth, minHeight: 135, columns: 1, variant: 'ancestor', people: tataravosPaternos },
@@ -776,26 +830,64 @@ function buildFullMapModel() {
     node.minHeight = estimateGroupHeight(node.people, node.columns, node.variant, minHeight, node.kind);
     return node.minHeight;
   };
+  const placeAdaptiveGroup = (
+    id: string,
+    columnX: number,
+    top: number,
+    fullWidth: number,
+    floorHeight: number,
+    align: 'left' | 'right' | 'center' = 'left'
+  ) => {
+    const node = nodeById.get(id);
+    if (!node) return 0;
+
+    const width = getAdaptiveGroupWidth(node.people, fullWidth);
+    const columns = getAdaptiveColumns(node.people);
+
+    node.left = align === 'right'
+      ? getRightAlignedX(columnX, fullWidth, width)
+      : align === 'center'
+        ? getCenteredX(columnX, fullWidth, width)
+        : columnX;
+    node.top = top;
+    node.width = width;
+    node.columns = columns;
+    node.minHeight = estimateGroupHeight(node.people, columns, node.variant, floorHeight, node.kind);
+
+    return node.minHeight;
+  };
 
   let leftY = topMargin;
-  const placedTataravosPaternos = placeNode('tataravos-paternos', leftColumnX, leftY, sideColumnWidth, 125, 1);
+  const placedTataravosPaternos = placeAdaptiveGroup('tataravos-paternos', leftColumnX, leftY, sideColumnWidth, 125);
   if (placedTataravosPaternos) leftY += placedTataravosPaternos + verticalGroupGap;
-  const placedBisavosPaternos = placeNode('bisavos-paternos', leftColumnX, leftY, sideColumnWidth, 155, 1);
+  const placedBisavosPaternos = placeAdaptiveGroup('bisavos-paternos', leftColumnX, leftY, sideColumnWidth, 155);
   if (placedBisavosPaternos) leftY += placedBisavosPaternos + ancestorUncleGap;
-  const placedTiosPaternos = placeNode('tios-paternos', leftColumnX, leftY, sideColumnWidth, 330, 2);
+  const placedTiosPaternos = placeAdaptiveGroup('tios-paternos', leftColumnX, leftY, sideColumnWidth, 330);
   if (placedTiosPaternos) leftY += placedTiosPaternos + uncleCousinGap;
-  placeNode('primos-paternos', leftColumnX, leftY, sideColumnWidth, 410, 2);
+  placeAdaptiveGroup('primos-paternos', leftColumnX, leftY, sideColumnWidth, 410);
 
   let centerY = topMargin + 18;
-  const placeCenterRow = (leftId: string, rightId: string | null, rowHeight: number, rowGap = verticalGroupGap) => {
-    const placedLeft = placeNode(leftId, centerColumnX, centerY, centerPairWidth, rowHeight);
-    const placedRight = rightId ? placeNode(rightId, centerPairRightX, centerY, centerPairWidth, rowHeight) : false;
+  const placeCenterRow = (
+    leftId: string,
+    rightId: string | null,
+    rowHeight: number,
+    rowGap = verticalGroupGap,
+    adaptive = true
+  ) => {
+    const placedLeft = adaptive
+      ? placeAdaptiveGroup(leftId, centerColumnX, centerY, centerPairWidth, rowHeight)
+      : placeNode(leftId, centerColumnX, centerY, centerPairWidth, rowHeight);
+    const placedRight = rightId
+      ? adaptive
+        ? placeAdaptiveGroup(rightId, centerPairRightX, centerY, centerPairWidth, rowHeight, 'right')
+        : placeNode(rightId, centerPairRightX, centerY, centerPairWidth, rowHeight)
+      : 0;
     const placedHeight = Math.max(placedLeft || 0, placedRight || 0);
     if (placedHeight) centerY += placedHeight + rowGap;
   };
 
   placeCenterRow('avos-paternos', 'avos-maternos', 165, 58);
-  placeCenterRow('pai', 'mae', 156, 50);
+  placeCenterRow('pai', 'mae', 156, 50, false);
   const placedCentral = placeNode('central', centerSingleX, centerY, centerSingleWidth, 195, 1);
   if (placedCentral) centerY += placedCentral + 72;
   placeCenterRow('irmaos', 'conjuge', 190, 70);
@@ -803,13 +895,13 @@ function buildFullMapModel() {
   placeCenterRow('filhos', 'netos', 145);
 
   let rightY = topMargin;
-  const placedTataravosMaternos = placeNode('tataravos-maternos', rightColumnX, rightY, sideColumnWidth, 125, 1);
+  const placedTataravosMaternos = placeAdaptiveGroup('tataravos-maternos', rightColumnX, rightY, sideColumnWidth, 125, 'right');
   if (placedTataravosMaternos) rightY += placedTataravosMaternos + verticalGroupGap;
-  const placedBisavosMaternos = placeNode('bisavos-maternos', rightColumnX, rightY, sideColumnWidth, 155, 1);
+  const placedBisavosMaternos = placeAdaptiveGroup('bisavos-maternos', rightColumnX, rightY, sideColumnWidth, 155, 'right');
   if (placedBisavosMaternos) rightY += placedBisavosMaternos + ancestorUncleGap;
-  const placedTiosMaternos = placeNode('tios-maternos', rightColumnX, rightY, sideColumnWidth, 330, 2);
+  const placedTiosMaternos = placeAdaptiveGroup('tios-maternos', rightColumnX, rightY, sideColumnWidth, 330, 'right');
   if (placedTiosMaternos) rightY += placedTiosMaternos + uncleCousinGap;
-  placeNode('primos-maternos', rightColumnX, rightY, sideColumnWidth, 410, 2);
+  placeAdaptiveGroup('primos-maternos', rightColumnX, rightY, sideColumnWidth, 410, 'right');
 
   const edges: FullMapEdge[] = [
     { from: 'tataravos-paternos', to: 'bisavos-paternos', fromAnchor: 'bottom', toAnchor: 'top', via: 'vertical' },
