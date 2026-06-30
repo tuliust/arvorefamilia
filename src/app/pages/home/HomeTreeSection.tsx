@@ -25,6 +25,7 @@ import {
   SIDEBAR_TREE_ACTION_EVENT,
   type SidebarTreeAction,
 } from './SidebarPanelTabs';
+import { captureVisibleScreenAreaAsPng } from '../../utils/screenAreaCapture';
 
 interface StateMessageProps {
   title: string;
@@ -556,7 +557,7 @@ export function HomeTreeSection({
       await printPreviewTreeOnOnePage(desktopTreeTitle);
     } catch (error) {
       console.error('Erro ao exportar preview da árvore:', error);
-      window.alert(error instanceof Error ? error.message : 'Não foi possível exportar a árvore.');
+      toast.error(error instanceof Error ? error.message : 'Não foi possível exportar a árvore.');
     } finally {
       setExportPreviewBusy(false);
     }
@@ -592,6 +593,13 @@ export function HomeTreeSection({
         return;
       }
 
+      if (action === 'select-area') {
+        void captureVisibleScreenAreaAsPng({
+          suggestedFilename: buildPreviewExportFilename(treeViewMode, desktopTreeTitle, 'png'),
+        });
+        return;
+      }
+
       const treeActions = familyTreeRef.current;
       if (!treeActions) return;
 
@@ -605,10 +613,6 @@ export function HomeTreeSection({
         return;
       }
 
-      if (action === 'select-area') {
-        treeActions.startAreaSelection();
-        return;
-      }
 
       if (action === 'save-image') {
         void treeActions.saveImage();
@@ -627,7 +631,7 @@ export function HomeTreeSection({
 
     window.addEventListener(SIDEBAR_TREE_ACTION_EVENT, handleSidebarTreeAction);
     return () => window.removeEventListener(SIDEBAR_TREE_ACTION_EVENT, handleSidebarTreeAction);
-  }, [familyTreeRef, isExportPreview, location, runPreviewExport]);
+  }, [desktopTreeTitle, familyTreeRef, isExportPreview, location, runPreviewExport, treeViewMode]);
 
   const showPngButton = !exportIntent || exportIntent === 'png';
   const showPdfButton = !exportIntent || exportIntent === 'pdf';
