@@ -7,10 +7,10 @@ const FULL_MAP_BUTTON_ATTR = 'data-mobile-family-full-map-button';
 const INLINE_OVERVIEW_SELECTOR = '[data-mobile-family-map-inline-overview="true"]';
 const FULL_MAP_OPEN_EVENT = 'arvorefamilia:mobile-full-map-open';
 
-const STAGE_WIDTH = 1360;
-const STAGE_HEIGHT = 1560;
-const STAGE_FOCUS_X = 655;
-const STAGE_FOCUS_Y = 760;
+const STAGE_WIDTH = 1250;
+const STAGE_HEIGHT = 1320;
+const STAGE_FOCUS_X = 625;
+const STAGE_FOCUS_Y = 660;
 
 type GestureState =
   | { mode: 'pan'; x: number; y: number; translateX: number; translateY: number }
@@ -695,15 +695,21 @@ function buildFullMapModel() {
   const pets = extractPeopleFromSection(findSectionByTitle('core', ['pets']), 'Pets');
   const netos = extractPeopleFromSection(findSectionByTitle('core', ['netos']), 'Netos');
 
-  const sideColumnWidth = 300;
-  const leftColumnX = 40;
-  const centerColumnX = 410;
-  const rightColumnX = 1000;
-  const centerPairWidth = 220;
-  const centerPairGap = 30;
+  const columnGap = 45;
+  const topMargin = 50;
+  const verticalGroupGap = 34;
+  const uncleCousinGap = 12;
+  const sideColumnWidth = 260;
+  const centerColumnWidth = 500;
+  const leftColumnX = 70;
+  const centerColumnX = leftColumnX + sideColumnWidth + columnGap;
+  const rightColumnX = centerColumnX + centerColumnWidth + columnGap;
+  const centerPairGap = 40;
+  const centerPairWidth = (centerColumnWidth - centerPairGap) / 2;
   const centerPairRightX = centerColumnX + centerPairWidth + centerPairGap;
-  const centerSingleX = centerColumnX + 125;
   const centerSingleWidth = 250;
+  const centerSingleX = centerColumnX + ((centerColumnWidth - centerSingleWidth) / 2);
+  const hasPeople = (people?: FullMapPerson[] | null) => Array.isArray(people) && people.length > 0;
 
   const nodes: FullMapNode[] = [
     { id: 'tataravos-paternos', kind: 'ancestor', label: 'Tataravós paternos', left: leftColumnX, top: 40, width: sideColumnWidth, minHeight: 135, columns: 1, variant: 'ancestor', people: tataravosPaternos },
@@ -726,6 +732,50 @@ function buildFullMapModel() {
     { id: 'tios-maternos', kind: 'uncles', label: 'Tios maternos', left: rightColumnX, top: 445, width: sideColumnWidth, minHeight: 340, columns: 2, variant: 'ancestor', people: tiosMaternos },
     { id: 'primos-maternos', kind: 'cousins', label: 'Primos maternos', left: rightColumnX, top: 860, width: sideColumnWidth, minHeight: 420, columns: 2, variant: 'mini', people: primosMaternos },
   ];
+
+  for (let index = nodes.length - 1; index >= 0; index -= 1) {
+    const node = nodes[index];
+    if (node && !hasPeople(node.people)) nodes.splice(index, 1);
+  }
+
+  const nodeById = new Map(nodes.map((node) => [node.id, node]));
+  const placeNode = (id: string, left: number, top: number, width: number, minHeight: number, columns?: number) => {
+    const node = nodeById.get(id);
+    if (!node) return false;
+
+    node.left = left;
+    node.top = top;
+    node.width = width;
+    node.minHeight = minHeight;
+    if (columns) node.columns = columns;
+    return true;
+  };
+
+  let leftY = topMargin;
+  if (placeNode('tataravos-paternos', leftColumnX, leftY, sideColumnWidth, 125, 1)) leftY += 125 + verticalGroupGap;
+  if (placeNode('bisavos-paternos', leftColumnX, leftY, sideColumnWidth, 155, 1)) leftY += 155 + verticalGroupGap;
+  if (placeNode('tios-paternos', leftColumnX, leftY, sideColumnWidth, 330, 2)) leftY += 330 + uncleCousinGap;
+  placeNode('primos-paternos', leftColumnX, leftY, sideColumnWidth, 410, 2);
+
+  let centerY = topMargin + 40;
+  const placeCenterRow = (leftId: string, rightId: string | null, rowHeight: number, rowGap = verticalGroupGap) => {
+    const placedLeft = placeNode(leftId, centerColumnX, centerY, centerPairWidth, rowHeight);
+    const placedRight = rightId ? placeNode(rightId, centerPairRightX, centerY, centerPairWidth, rowHeight) : false;
+    if (placedLeft || placedRight) centerY += rowHeight + rowGap;
+  };
+
+  placeCenterRow('avos-paternos', 'avos-maternos', 165, 44);
+  placeCenterRow('pai', 'mae', 156, 48);
+  if (placeNode('central', centerSingleX, centerY, centerSingleWidth, 195, 1)) centerY += 195 + 46;
+  placeCenterRow('irmaos', 'conjuge', 190);
+  placeCenterRow('sobrinhos', 'pets', 145);
+  placeCenterRow('filhos', 'netos', 145);
+
+  let rightY = topMargin;
+  if (placeNode('tataravos-maternos', rightColumnX, rightY, sideColumnWidth, 125, 1)) rightY += 125 + verticalGroupGap;
+  if (placeNode('bisavos-maternos', rightColumnX, rightY, sideColumnWidth, 155, 1)) rightY += 155 + verticalGroupGap;
+  if (placeNode('tios-maternos', rightColumnX, rightY, sideColumnWidth, 330, 2)) rightY += 330 + uncleCousinGap;
+  placeNode('primos-maternos', rightColumnX, rightY, sideColumnWidth, 410, 2);
 
   const edges: FullMapEdge[] = [
     { from: 'tataravos-paternos', to: 'bisavos-paternos', fromAnchor: 'bottom', toAnchor: 'top', via: 'vertical' },
@@ -787,7 +837,7 @@ function resetTransform() {
   const stageWidth = stage.offsetWidth || STAGE_WIDTH;
   const stageHeight = stage.offsetHeight || STAGE_HEIGHT;
   const fitScale = Math.min((viewportRect.width - 12) / stageWidth, (viewportRect.height - 12) / stageHeight);
-  scale = clamp(fitScale * 1.18, 0.24, 0.9);
+  scale = clamp(fitScale * 1.02, 0.2, 0.9);
   translateX = (viewportRect.width / 2) - (STAGE_FOCUS_X * scale);
   translateY = (viewportRect.height / 2) - (STAGE_FOCUS_Y * scale);
   applyTransform();
