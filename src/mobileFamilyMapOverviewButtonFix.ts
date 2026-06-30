@@ -8,6 +8,7 @@ const STYLE_ID = 'mobile-family-map-overview-button-fix-style';
 const MOBILE_MAP_SHELL_TOP_OFFSET = 'calc(env(safe-area-inset-top, 0px) + 9rem)';
 const MOBILE_MAP_SHELL_BOTTOM_OFFSET = 'calc(env(safe-area-inset-bottom, 0px) + 5.5rem)';
 const MOBILE_MAP_OVERLAY_Z_INDEX = '900';
+const DESCENDANTS_LOCK_ATTR = 'data-mobile-family-descendants-transform-lock';
 
 const DESCENDANT_KEYS = ['irmaos', 'sobrinhos', 'conjuge', 'pets', 'filhos', 'netos'];
 
@@ -22,36 +23,130 @@ type ScreenName =
   | 'descendants'
   | 'maternal-cousins';
 
-const SCREEN_CONFIG: Record<ScreenName, { column: number; row: number; title: string; subtitle: string }> = {
-  'paternal-ancestors': { column: 0, row: 0, title: 'Ancestrais paternos', subtitle: 'Bisavós e tataravós' },
-  ancestors: { column: 1, row: 0, title: 'Avós', subtitle: 'Avós paternos e maternos' },
-  'maternal-ancestors': { column: 2, row: 0, title: 'Ancestrais maternos', subtitle: 'Bisavós e tataravós' },
-  'paternal-uncles': { column: 0, row: 1, title: 'Tios paternos', subtitle: 'Ramo do pai' },
-  core: { column: 1, row: 1, title: 'Núcleo central', subtitle: 'Pais e pessoa principal' },
-  'maternal-uncles': { column: 2, row: 1, title: 'Tios maternos', subtitle: 'Ramo da mãe' },
-  'paternal-cousins': { column: 0, row: 2, title: 'Primos paternos', subtitle: 'Descendentes dos tios' },
-  descendants: { column: 1, row: 2, title: 'Descendentes', subtitle: 'Irmãos, filhos e netos' },
-  'maternal-cousins': { column: 2, row: 2, title: 'Primos maternos', subtitle: 'Descendentes dos tios' },
+type ScreenConfig = {
+  column: number;
+  row: number;
+  title: string;
+};
+
+const SCREEN_CONFIG: Record<ScreenName, ScreenConfig> = {
+  'paternal-ancestors': { column: 0, row: 0, title: 'Ancestrais paternos' },
+  ancestors: { column: 1, row: 0, title: 'Avós' },
+  'maternal-ancestors': { column: 2, row: 0, title: 'Ancestrais maternos' },
+  'paternal-uncles': { column: 0, row: 1, title: 'Tios paternos' },
+  core: { column: 1, row: 1, title: 'Núcleo central' },
+  'maternal-uncles': { column: 2, row: 1, title: 'Tios maternos' },
+  'paternal-cousins': { column: 0, row: 2, title: 'Primos paternos' },
+  descendants: { column: 1, row: 2, title: 'Descendentes' },
+  'maternal-cousins': { column: 2, row: 2, title: 'Primos maternos' },
+};
+
+const ICONS_BY_SCREEN: Record<ScreenName, string> = {
+  'paternal-ancestors': `
+    <svg viewBox="0 0 32 32" focusable="false" aria-hidden="true">
+      <path d="M16 5v6" />
+      <path d="M9 15h14" />
+      <path d="M9 15v5" />
+      <path d="M23 15v5" />
+      <circle cx="16" cy="5" r="3" />
+      <rect x="5.75" y="20" width="6.5" height="6" rx="2" />
+      <rect x="19.75" y="20" width="6.5" height="6" rx="2" />
+      <path d="M9 26h14" />
+    </svg>
+  `,
+  ancestors: `
+    <svg viewBox="0 0 32 32" focusable="false" aria-hidden="true">
+      <circle cx="11" cy="9" r="3.4" />
+      <circle cx="21" cy="9" r="3.4" />
+      <path d="M8.5 18c1.4-2 3.3-3 5.5-3" />
+      <path d="M23.5 18c-1.4-2-3.3-3-5.5-3" />
+      <path d="M16 15v8" />
+      <path d="M10 23h12" />
+      <circle cx="10" cy="25" r="2.4" />
+      <circle cx="22" cy="25" r="2.4" />
+    </svg>
+  `,
+  'maternal-ancestors': `
+    <svg viewBox="0 0 32 32" focusable="false" aria-hidden="true">
+      <path d="M16 5v5" />
+      <circle cx="16" cy="5" r="3" />
+      <path d="M16 10c-5 3-8 6.5-8 11" />
+      <path d="M16 10c5 3 8 6.5 8 11" />
+      <circle cx="8" cy="23" r="3" />
+      <circle cx="24" cy="23" r="3" />
+      <path d="M11 23h10" />
+    </svg>
+  `,
+  'paternal-uncles': `
+    <svg viewBox="0 0 32 32" focusable="false" aria-hidden="true">
+      <circle cx="11" cy="10" r="4" />
+      <circle cx="21" cy="10" r="4" />
+      <path d="M5.5 25c.8-4.4 3-6.7 6.5-6.7" />
+      <path d="M26.5 25c-.8-4.4-3-6.7-6.5-6.7" />
+      <path d="M13 20h6" />
+    </svg>
+  `,
+  core: `
+    <svg viewBox="0 0 32 32" focusable="false" aria-hidden="true">
+      <path d="M7 16l9-8 9 8" />
+      <path d="M10 15v10h12V15" />
+      <circle cx="16" cy="17" r="2.5" />
+      <path d="M11.5 24c.8-3 2.3-4.5 4.5-4.5s3.7 1.5 4.5 4.5" />
+    </svg>
+  `,
+  'maternal-uncles': `
+    <svg viewBox="0 0 32 32" focusable="false" aria-hidden="true">
+      <circle cx="16" cy="9" r="3.5" />
+      <path d="M10.5 21.5c.8-4.2 2.7-6.4 5.5-6.4s4.7 2.2 5.5 6.4" />
+      <path d="M7 24h18" />
+      <path d="M8.5 14.5l-3-3" />
+      <path d="M23.5 14.5l3-3" />
+      <circle cx="5" cy="10" r="2" />
+      <circle cx="27" cy="10" r="2" />
+    </svg>
+  `,
+  'paternal-cousins': `
+    <svg viewBox="0 0 32 32" focusable="false" aria-hidden="true">
+      <circle cx="9" cy="10" r="3" />
+      <circle cx="23" cy="10" r="3" />
+      <circle cx="9" cy="23" r="3" />
+      <circle cx="23" cy="23" r="3" />
+      <path d="M12 10h8" />
+      <path d="M9 13v7" />
+      <path d="M23 13v7" />
+      <path d="M12 23h8" />
+    </svg>
+  `,
+  descendants: `
+    <svg viewBox="0 0 32 32" focusable="false" aria-hidden="true">
+      <circle cx="16" cy="6" r="3" />
+      <path d="M16 9v5" />
+      <path d="M9 16h14" />
+      <path d="M9 16v4" />
+      <path d="M16 16v4" />
+      <path d="M23 16v4" />
+      <circle cx="9" cy="24" r="3" />
+      <circle cx="16" cy="24" r="3" />
+      <circle cx="23" cy="24" r="3" />
+    </svg>
+  `,
+  'maternal-cousins': `
+    <svg viewBox="0 0 32 32" focusable="false" aria-hidden="true">
+      <path d="M16 7v18" />
+      <path d="M7 16h18" />
+      <path d="M10 10l12 12" />
+      <path d="M22 10L10 22" />
+      <circle cx="16" cy="16" r="3.2" />
+      <circle cx="16" cy="7" r="2.2" />
+      <circle cx="25" cy="16" r="2.2" />
+      <circle cx="16" cy="25" r="2.2" />
+      <circle cx="7" cy="16" r="2.2" />
+    </svg>
+  `,
 };
 
 const SCREEN_ORDER = Object.keys(SCREEN_CONFIG) as ScreenName[];
 let lastHandledAt = 0;
-
-const TILE_ICON_HTML = `
-  <span class="mobile-family-map-overview-tile-icon" aria-hidden="true">
-    <svg viewBox="0 0 24 24" focusable="false">
-      <path d="M12 4.5v4.25" />
-      <path d="M7.5 13.25h9" />
-      <path d="M7.5 13.25v2.25" />
-      <path d="M16.5 13.25v2.25" />
-      <path d="M12 8.75v6.75" />
-      <circle cx="12" cy="4.5" r="2.25" />
-      <circle cx="7.5" cy="18" r="2.25" />
-      <circle cx="12" cy="18" r="2.25" />
-      <circle cx="16.5" cy="18" r="2.25" />
-    </svg>
-  </span>
-`;
 
 function isMobileViewport() {
   return typeof window !== 'undefined'
@@ -153,6 +248,13 @@ function screenHasContent(screenName: ScreenName) {
   return countCards(screenName) > 0;
 }
 
+function unlockDescendantLockForOverviewNavigation() {
+  const root = getRoot();
+  const stage = getStage(root);
+  root?.removeAttribute(DESCENDANTS_LOCK_ATTR);
+  stage?.style.setProperty('transition', 'none', 'important');
+}
+
 function ensureStyles() {
   const css = `
     @media (max-width: 767px) {
@@ -180,74 +282,22 @@ function ensureStyles() {
         z-index: ${MOBILE_MAP_OVERLAY_Z_INDEX} !important;
         display: flex !important;
         flex-direction: column !important;
+        min-height: 0 !important;
         background: linear-gradient(180deg, rgba(248, 250, 252, 0.99), rgba(239, 246, 255, 0.98)) !important;
         backdrop-filter: blur(10px) !important;
         padding: 0.75rem !important;
-      }
-
-      #${OVERVIEW_ID} .mobile-family-overview-header {
-        box-sizing: border-box !important;
-        display: flex !important;
-        align-items: center !important;
-        gap: 0.75rem !important;
-        width: min(100%, 28rem) !important;
-        margin: 0 auto 0.75rem !important;
-        border: 1px solid rgba(203, 213, 225, 0.92) !important;
-        border-radius: 1.55rem !important;
-        background: rgba(255, 255, 255, 0.98) !important;
-        box-shadow: 0 18px 44px rgba(15, 23, 42, 0.13) !important;
-        padding: 0.82rem !important;
-      }
-
-      #${OVERVIEW_ID} .mobile-family-overview-title-wrap {
-        min-width: 0 !important;
-        flex: 1 1 auto !important;
-      }
-
-      #${OVERVIEW_ID} .mobile-family-overview-title {
-        margin: 0 !important;
-        color: rgb(15, 23, 42) !important;
-        font-size: clamp(1.25rem, 6vw, 1.72rem) !important;
-        font-weight: 950 !important;
-        letter-spacing: -0.055em !important;
-        line-height: 1 !important;
-      }
-
-      #${OVERVIEW_ID} .mobile-family-overview-subtitle {
-        margin: 0.22rem 0 0 !important;
-        color: rgb(71, 85, 105) !important;
-        font-size: 0.82rem !important;
-        font-weight: 760 !important;
-        line-height: 1.18 !important;
-      }
-
-      #${OVERVIEW_ID} .mobile-family-overview-close {
-        appearance: none !important;
-        display: inline-flex !important;
-        width: 2.75rem !important;
-        height: 2.75rem !important;
-        flex: 0 0 auto !important;
-        align-items: center !important;
-        justify-content: center !important;
-        border: 1px solid rgb(226, 232, 240) !important;
-        border-radius: 999px !important;
-        background: #fff !important;
-        color: rgb(15, 23, 42) !important;
-        font: inherit !important;
-        font-size: 1.35rem !important;
-        font-weight: 950 !important;
-        box-shadow: 0 8px 18px rgba(15, 23, 42, 0.09) !important;
-        touch-action: manipulation !important;
       }
 
       #${OVERVIEW_ID} .mobile-family-overview-map {
         box-sizing: border-box !important;
         display: grid !important;
         grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
-        grid-auto-rows: minmax(5.95rem, 1fr) !important;
+        grid-template-rows: repeat(3, minmax(5.25rem, 1fr)) !important;
         gap: 0.52rem !important;
         width: min(100%, 28rem) !important;
-        min-height: min(63dvh, 38rem) !important;
+        height: 100% !important;
+        min-height: 0 !important;
+        max-height: 100% !important;
         flex: 1 1 auto !important;
         margin: 0 auto !important;
         border: 1px solid rgba(203, 213, 225, 0.95) !important;
@@ -256,6 +306,8 @@ function ensureStyles() {
         box-shadow: 0 20px 54px rgba(15, 23, 42, 0.13) !important;
         padding: 0.64rem !important;
         overflow: auto !important;
+        overscroll-behavior: contain !important;
+        -webkit-overflow-scrolling: touch !important;
       }
 
       #${OVERVIEW_ID} .mobile-family-overview-tile {
@@ -266,28 +318,25 @@ function ensureStyles() {
         min-width: 0 !important;
         min-height: 0 !important;
         flex-direction: column !important;
-        justify-content: space-between !important;
-        align-items: flex-start !important;
-        gap: 0.24rem !important;
+        justify-content: center !important;
+        align-items: center !important;
+        gap: 0.16rem !important;
         overflow: hidden !important;
         border: 1px solid rgb(203, 213, 225) !important;
         border-radius: 1.18rem !important;
         background: linear-gradient(180deg, rgba(255,255,255,0.99), rgba(248,250,252,0.98)) !important;
         color: rgb(15, 23, 42) !important;
         font: inherit !important;
-        text-align: left !important;
+        text-align: center !important;
         box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08) !important;
-        padding: 0.52rem 0.42rem !important;
+        padding: 8px !important;
         touch-action: manipulation !important;
+        letter-spacing: 0 !important;
       }
 
       #${OVERVIEW_ID} .mobile-family-overview-tile::after {
-        content: '';
-        position: absolute;
-        inset: auto 0 0 0;
-        height: 2.25rem;
-        background: linear-gradient(180deg, rgba(255,255,255,0), rgba(239,246,255,0.72));
-        pointer-events: none;
+        display: none !important;
+        content: none !important;
       }
 
       #${OVERVIEW_ID} .mobile-family-overview-tile[aria-current="location"] {
@@ -299,36 +348,44 @@ function ensureStyles() {
       #${OVERVIEW_ID} .mobile-family-overview-tile-title {
         position: relative !important;
         z-index: 1 !important;
-        display: block !important;
+        display: flex !important;
         width: 100% !important;
+        min-height: 1.1rem !important;
+        align-items: center !important;
+        justify-content: center !important;
         color: rgb(15, 23, 42) !important;
         font-size: clamp(0.52rem, 2.32vw, 0.66rem) !important;
         font-weight: 950 !important;
-        letter-spacing: 0.045em !important;
-        line-height: 0.98 !important;
+        letter-spacing: -0.035em !important;
+        line-height: 0.92 !important;
+        text-align: center !important;
         text-transform: uppercase !important;
       }
 
-      #${OVERVIEW_ID} .mobile-family-map-overview-tile-icon {
+      #${OVERVIEW_ID} .mobile-family-map-overview-tile-icon,
+      #${OVERVIEW_ID} .mobile-family-overview-tile-icon {
         position: relative !important;
         z-index: 1 !important;
         display: flex !important;
         width: 100% !important;
-        flex: 1 1 auto !important;
-        min-height: 1.65rem !important;
+        flex: 0 0 auto !important;
+        min-height: 3.6rem !important;
         align-items: center !important;
         justify-content: center !important;
+        margin: auto 0 !important;
         color: rgb(37, 99, 235) !important;
         opacity: 0.9 !important;
+        letter-spacing: 0 !important;
       }
 
-      #${OVERVIEW_ID} .mobile-family-map-overview-tile-icon svg {
+      #${OVERVIEW_ID} .mobile-family-map-overview-tile-icon svg,
+      #${OVERVIEW_ID} .mobile-family-overview-tile-icon svg {
         display: block !important;
-        width: clamp(1.4rem, 6.8vw, 2rem) !important;
-        height: clamp(1.4rem, 6.8vw, 2rem) !important;
+        width: clamp(2.8rem, 13.8vw, 4.1rem) !important;
+        height: clamp(2.8rem, 13.8vw, 4.1rem) !important;
         fill: none !important;
         stroke: currentColor !important;
-        stroke-width: 1.9 !important;
+        stroke-width: 1.55 !important;
         stroke-linecap: round !important;
         stroke-linejoin: round !important;
       }
@@ -345,16 +402,22 @@ function ensureStyles() {
         border-radius: 999px !important;
         background: rgb(239, 246, 255) !important;
         color: rgb(30, 64, 175) !important;
+        margin: 0 auto !important;
         padding: 0.2rem 0.42rem !important;
         font-size: clamp(0.62rem, 2.55vw, 0.76rem) !important;
         font-weight: 900 !important;
         line-height: 1.05 !important;
         white-space: nowrap !important;
+        letter-spacing: 0 !important;
+        text-align: center !important;
       }
 
       #${OVERVIEW_ID} .mobile-family-overview-tile-subtitle,
-      #${OVERVIEW_ID} .mobile-family-overview-current-label {
+      #${OVERVIEW_ID} .mobile-family-overview-current-label,
+      #${OVERVIEW_ID} [data-mobile-family-overview-current-label="true"] {
         display: none !important;
+        visibility: hidden !important;
+        opacity: 0 !important;
       }
     }
   `;
@@ -431,6 +494,7 @@ function applyScreen(screenName: ScreenName, animate = true) {
 function navigateToScreen(screenName: ScreenName) {
   if (!screenHasContent(screenName)) return;
 
+  unlockDescendantLockForOverviewNavigation();
   closeOverview();
   clickBaseTab(screenName);
   applyScreen(screenName);
@@ -459,8 +523,10 @@ function buildTile(screenName: ScreenName, currentScreen: ScreenName) {
 
   tile.innerHTML = `
     <span class="mobile-family-overview-tile-title">${escapeHtml(config.title)}</span>
-    ${TILE_ICON_HTML}
-    <span class="mobile-family-overview-tile-count">${escapeHtml(peopleLabel(count))}</span>
+    <span class="mobile-family-overview-tile-icon mobile-family-map-overview-tile-icon" data-mobile-family-map-unique-icon="${screenName}" aria-hidden="true">
+      ${ICONS_BY_SCREEN[screenName].trim()}
+    </span>
+    <span class="mobile-family-overview-tile-count" data-mobile-family-overview-count-badge="true">${escapeHtml(peopleLabel(count))}</span>
   `;
 
   return tile;
@@ -480,17 +546,9 @@ function openOverview() {
   overlay.setAttribute('aria-label', 'Visão geral do mapa familiar');
   overlay.setAttribute('data-tree-export-ignore', 'true');
   overlay.setAttribute('data-mobile-family-map-overview-source', 'direct-map');
+  overlay.setAttribute('data-mobile-family-map-overview-stable', 'true');
 
-  overlay.innerHTML = `
-    <header class="mobile-family-overview-header">
-      <div class="mobile-family-overview-title-wrap">
-        <h2 class="mobile-family-overview-title">Mapa da família</h2>
-        <p class="mobile-family-overview-subtitle">Toque em um grupo para abrir a tela correspondente.</p>
-      </div>
-      <button type="button" class="mobile-family-overview-close" aria-label="Fechar visão geral">×</button>
-    </header>
-    <div class="mobile-family-overview-map" aria-label="Grupos do mapa familiar"></div>
-  `;
+  overlay.innerHTML = '<div class="mobile-family-overview-map" aria-label="Grupos do mapa familiar"></div>';
 
   const map = overlay.querySelector<HTMLElement>('.mobile-family-overview-map');
   SCREEN_ORDER.forEach((screenName) => {
@@ -531,13 +589,6 @@ function handleActivation(event: Event) {
 
   const overlay = document.getElementById(OVERVIEW_ID);
   if (!overlay || !overlay.contains(target)) return;
-
-  const closeButton = target.closest<HTMLElement>('.mobile-family-overview-close');
-  if (closeButton) {
-    consume(event);
-    closeOverview();
-    return;
-  }
 
   const tile = target.closest<HTMLElement>('.mobile-family-overview-tile[data-screen]');
   const screenName = tile?.dataset.screen;
