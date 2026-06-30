@@ -84,44 +84,13 @@ function openTreeExportPreviewRoute(location: ReturnType<typeof useLocation>, ac
   return true;
 }
 
-function printCurrentTreePage() {
-  const root = document.documentElement;
-  const exportRoot = document.querySelector<HTMLElement>(TREE_EXPORT_ROOT_SELECTOR);
-  let fallbackCleanupTimer: number | undefined;
-
-  const cleanup = () => {
-    delete root.dataset.treeDirectPrint;
-    root.style.removeProperty('--tree-direct-print-scale');
-    root.style.removeProperty('--tree-direct-print-width');
-    root.style.removeProperty('--tree-direct-print-height');
-    window.removeEventListener('afterprint', cleanup);
-
-    if (fallbackCleanupTimer !== undefined) {
-      window.clearTimeout(fallbackCleanupTimer);
-    }
-  };
-
-  if (exportRoot) {
-    const rect = exportRoot.getBoundingClientRect();
-    const treeWidth = Math.ceil(Math.max(rect.width, exportRoot.offsetWidth, exportRoot.scrollWidth, 1));
-    const treeHeight = Math.ceil(Math.max(rect.height, exportRoot.offsetHeight, exportRoot.scrollHeight, 1));
-    const safePageWidth = 720;
-    const safePageHeight = 940;
-    const scale = Math.min(1, safePageWidth / treeWidth, safePageHeight / treeHeight);
-
-    root.style.setProperty('--tree-direct-print-scale', String(Math.max(scale, 0.12)));
-    root.style.setProperty('--tree-direct-print-width', `${treeWidth}px`);
-    root.style.setProperty('--tree-direct-print-height', `${treeHeight}px`);
+async function printCurrentTreePage(title: string) {
+  try {
+    await printPreviewTreeOnOnePage(title);
+  } catch (error) {
+    console.error('Erro ao imprimir árvore:', error);
+    toast.error(error instanceof Error ? error.message : 'Não foi possível preparar a impressão da árvore.');
   }
-
-  root.dataset.treeDirectPrint = 'true';
-  window.addEventListener('afterprint', cleanup, { once: true });
-
-  window.setTimeout(() => {
-    window.print();
-
-    fallbackCleanupTimer = window.setTimeout(cleanup, 1600);
-  }, 120);
 }
 
 function getExportIntentTitle(intent: string | null) {
@@ -423,7 +392,6 @@ async function downloadPreviewTreeAsPdf(filename: string, title: string) {
 async function printPreviewTreeOnOnePage(title: string) {
   const canvas = await capturePreviewTreeCanvas();
   const imageUrl = canvas.toDataURL('image/png');
-  const orientation = canvas.width >= canvas.height ? 'landscape' : 'portrait';
   const iframe = document.createElement('iframe');
 
   iframe.setAttribute('title', title);
@@ -450,18 +418,102 @@ async function printPreviewTreeOnOnePage(title: string) {
   <head>
     <title>${escapeHtml(title)}</title>
     <style>
-      @page { size: ${orientation}; margin: 0; }
-      html, body { margin: 0; width: 100%; height: 100%; background: #f7f1e8; }
-      body { display: flex; align-items: center; justify-content: center; overflow: hidden; }
-      img { display: block; width: 100vw; height: 100vh; object-fit: contain; }
+      @page { size: auto; margin: 0; }
+
+      html,
+      body {
+        margin: 0;
+        width: 100%;
+        height: 100%;
+        background: #f7f1e8;
+      }
+
+      body {
+        box-sizing: border-box;
+        display: grid;
+        grid-template-rows: auto minmax(0, 1fr);
+        overflow: hidden;
+        padding: 14px 18px 18px;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+
+      .print-title {
+        box-sizing: border-box;
+        display: inline-flex;
+        justify-self: center;
+        align-items: center;
+        justify-content: center;
+        max-width: calc(100vw - 36px);
+        margin: 0 0 12px;
+        padding: 4px 16px 5px;
+        border: 1px solid #ead4c5;
+        border-radius: 999px;
+        background: rgba(255, 250, 244, 0.96);
+        color: #6b5346;
+        font: 700 18px/1.15 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        letter-spacing: -0.02em;
+        text-align: center;
+        white-space: nowrap;
+      }
+
+      .print-image-shell {
+        box-sizing: border-box;
+        display: flex;
+        width: 100%;
+        height: 100%;
+        min-width: 0;
+        min-height: 0;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+      }
+
+      img {
+        display: block;
+        width: auto;
+        height: auto;
+        max-width: 100%;
+        max-height: 100%;
+        object-fit: contain;
+      }
+
       @media print {
-        html, body { width: 100%; height: 100%; }
-        img { width: 100vw; height: 100vh; object-fit: contain; }
+        html,
+        body {
+          width: 100%;
+          height: 100%;
+          overflow: hidden;
+          background: #f7f1e8 !important;
+        }
+
+        body {
+          padding: 14px 18px 18px;
+        }
+
+        .print-title {
+          font-size: 18px;
+        }
+
+        .print-image-shell {
+          break-inside: avoid;
+          page-break-inside: avoid;
+        }
+
+        img {
+          max-width: 100%;
+          max-height: 100%;
+          break-inside: avoid;
+          page-break-inside: avoid;
+        }
       }
     </style>
   </head>
   <body>
-    <img src="${imageUrl}" alt="${escapeHtml(title)}" />
+    <div class="print-title">${escapeHtml(title)}</div>
+    <div class="print-image-shell">
+      <img src="${imageUrl}" alt="${escapeHtml(title)}" />
+    </div>
   </body>
 </html>`);
   printDocument.close();
@@ -773,6 +825,10 @@ export function HomeTreeSection({
     () => getDesktopTreeTitle(treeViewMode, desktopTitleFirstName),
     [desktopTitleFirstName, treeViewMode]
   );
+  const printTreeTitle = React.useMemo(
+    () => getDesktopTreeTitle('mapa-familiar', desktopTitleFirstName),
+    [desktopTitleFirstName]
+  );
   const desktopTreeViewportTop = 82;
 
   const closeAreaCaptureInstructions = React.useCallback(() => {
@@ -830,7 +886,7 @@ export function HomeTreeSection({
       }
 
       if (!isExportPreview && action === 'print') {
-        printCurrentTreePage();
+        void printCurrentTreePage(printTreeTitle);
         return;
       }
 
@@ -885,13 +941,13 @@ export function HomeTreeSection({
       }
 
       if (action === 'print') {
-        printCurrentTreePage();
+        void printCurrentTreePage(printTreeTitle);
       }
     };
 
     window.addEventListener(SIDEBAR_TREE_ACTION_EVENT, handleSidebarTreeAction);
     return () => window.removeEventListener(SIDEBAR_TREE_ACTION_EVENT, handleSidebarTreeAction);
-  }, [desktopTreeTitle, familyTreeRef, isExportPreview, location, runPreviewExport, treeViewMode]);
+  }, [desktopTreeTitle, familyTreeRef, isExportPreview, location, printTreeTitle, runPreviewExport, treeViewMode]);
 
   const showPngButton = !exportIntent || exportIntent === 'png';
   const showPdfButton = !exportIntent || exportIntent === 'pdf';
