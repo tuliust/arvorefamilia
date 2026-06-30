@@ -361,32 +361,37 @@ function getAdaptiveGroupColumns(config: GroupConfig, visiblePeople: Pessoa[]): 
   return config.columns;
 }
 
-function getAdaptiveGroupWidth(config: GroupConfig, peopleCount: number, columns: GroupColumns, layout: FamilyMapLayout) {
-  if (peopleCount === 1 && config.singleWidth) return Math.min(config.width, config.singleWidth);
-  if (ADAPTIVE_UNCLES_GROUP_IDS.has(config.id) && peopleCount === 2) {
-    const originalColumnCount = getColumnCount(config.columns);
-    const compactColumnCount = 2;
-    const originalGridWidth = config.width
-      - GROUP_HORIZONTAL_PADDING
-      - Math.max(0, originalColumnCount - 1) * layout.metrics.gridGap;
-    const cardWidth = originalGridWidth / originalColumnCount;
-
-    return GROUP_HORIZONTAL_PADDING
-      + compactColumnCount * cardWidth
-      + Math.max(0, compactColumnCount - 1) * layout.metrics.gridGap;
-  }
-  if (!ADAPTIVE_UNCLES_GROUP_IDS.has(config.id) || columns !== 'triple') return config.width;
-
+function getOriginalGroupCardWidth(config: GroupConfig, layout: FamilyMapLayout) {
   const originalColumnCount = getColumnCount(config.columns);
-  const adaptiveColumnCount = getColumnCount(columns);
   const originalGridWidth = config.width
     - GROUP_HORIZONTAL_PADDING
     - Math.max(0, originalColumnCount - 1) * layout.metrics.gridGap;
-  const cardWidth = originalGridWidth / originalColumnCount;
+
+  return originalGridWidth / originalColumnCount;
+}
+
+function getCompactGroupWidth(config: GroupConfig, columnCount: number, layout: FamilyMapLayout) {
+  const cardWidth = getOriginalGroupCardWidth(config, layout);
 
   return GROUP_HORIZONTAL_PADDING
-    + adaptiveColumnCount * cardWidth
-    + Math.max(0, adaptiveColumnCount - 1) * layout.metrics.gridGap;
+    + columnCount * cardWidth
+    + Math.max(0, columnCount - 1) * layout.metrics.gridGap;
+}
+
+function getAdaptiveGroupWidth(config: GroupConfig, peopleCount: number, columns: GroupColumns, layout: FamilyMapLayout) {
+  if (peopleCount === 1 && config.columns !== 'single') {
+    return Math.min(config.width, getCompactGroupWidth(config, 1, layout));
+  }
+
+  if (peopleCount === 1 && config.singleWidth) return Math.min(config.width, config.singleWidth);
+
+  if (ADAPTIVE_UNCLES_GROUP_IDS.has(config.id) && peopleCount === 2) {
+    return Math.min(config.width, getCompactGroupWidth(config, 2, layout));
+  }
+
+  if (!ADAPTIVE_UNCLES_GROUP_IDS.has(config.id) || columns !== 'triple') return config.width;
+
+  return Math.min(config.width, getCompactGroupWidth(config, getColumnCount(columns), layout));
 }
 
 function getPairAwareGridPeople(
@@ -588,10 +593,14 @@ function resolveGroup(
   const visiblePeople = getVisiblePeople(groupData, config, expandedGroups.has(config.id));
   const columns = getAdaptiveGroupColumns(config, visiblePeople);
   const width = getAdaptiveGroupWidth(config, visiblePeople.length, columns, layout);
+  const left = baseArea
+    ? centerWithin(baseArea.x, baseArea.width, width)
+    : centerWithin(config.x, config.width, width);
+
   return {
     ...config,
     ...groupData,
-    left: baseArea ? centerWithin(baseArea.x, baseArea.width, width) : config.x,
+    left,
     top,
     width,
     columns,
