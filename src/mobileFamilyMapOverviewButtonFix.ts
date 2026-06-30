@@ -534,27 +534,6 @@ function openOverview() {
   ensureStyles();
   relabelToolbarButton();
   closeOverview(false);
-
-  const currentScreen = getCurrentScreen();
-  const overlay = document.createElement('div');
-  overlay.id = OVERVIEW_ID;
-  overlay.setAttribute('role', 'dialog');
-  overlay.setAttribute('aria-modal', 'true');
-  overlay.setAttribute('aria-label', 'Visão geral do mapa familiar');
-  overlay.setAttribute('data-tree-export-ignore', 'true');
-  overlay.setAttribute('data-mobile-family-map-overview-source', 'direct-map');
-  overlay.setAttribute('data-mobile-family-map-overview-stable', 'true');
-
-  overlay.innerHTML = '<div class="mobile-family-overview-map" aria-label="Grupos do mapa familiar"></div>';
-
-  const map = overlay.querySelector<HTMLElement>('.mobile-family-overview-map');
-  SCREEN_ORDER.forEach((screenName) => {
-    map?.appendChild(buildTile(screenName, currentScreen));
-  });
-
-  document.body.appendChild(overlay);
-  document.body.style.setProperty('overflow', 'hidden');
-  setToolbarOverviewActive(true);
 }
 
 function toggleOverview() {
@@ -574,14 +553,7 @@ function handleActivation(event: Event) {
   if (!target) return;
 
   const zoomButton = target.closest<HTMLElement>(TOOLBAR_ZOOM_SELECTOR);
-  if (zoomButton) {
-    consume(event);
-    const now = Date.now();
-    if (now - lastHandledAt < 260) return;
-    lastHandledAt = now;
-    toggleOverview();
-    return;
-  }
+  if (zoomButton) return;
 
   const overlay = document.getElementById(OVERVIEW_ID);
   if (!overlay || !overlay.contains(target)) return;

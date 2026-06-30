@@ -958,6 +958,7 @@ function consumeEvent(event: Event) {
 
 function handleZoomActivation(event: Event) {
   if (!isEnabled()) return;
+  if (getRouteKind() === 'direct') return;
   const target = event.target instanceof Element ? event.target : null;
   const button = target?.closest<HTMLButtonElement>(TOOLBAR_ZOOM_SELECTOR);
   if (!button) return;
