@@ -7,8 +7,10 @@ const FULL_MAP_BUTTON_ATTR = 'data-mobile-family-full-map-button';
 const INLINE_OVERVIEW_SELECTOR = '[data-mobile-family-map-inline-overview="true"]';
 const FULL_MAP_OPEN_EVENT = 'arvorefamilia:mobile-full-map-open';
 
-const STAGE_WIDTH = 1240;
-const STAGE_HEIGHT = 1480;
+const STAGE_WIDTH = 1360;
+const STAGE_HEIGHT = 1560;
+const STAGE_FOCUS_X = 655;
+const STAGE_FOCUS_Y = 760;
 
 type GestureState =
   | { mode: 'pan'; x: number; y: number; translateX: number; translateY: number }
@@ -680,6 +682,8 @@ function buildFullMapModel() {
   const avosMaternos = extractPeopleFromSection(findSectionByTitle('ancestors', ['avos', 'maternos']), 'Avós maternos');
   const bisavosPaternos = extractPeopleFromSection(findSectionByTitle('ancestors', ['bisavos', 'paternos']), 'Bisavós paternos');
   const bisavosMaternos = extractPeopleFromSection(findSectionByTitle('ancestors', ['bisavos', 'maternos']), 'Bisavós maternos');
+  const tataravosPaternos = extractPeopleFromSection(findSectionByTitle('ancestors', ['tataravos', 'paternos']), 'Tataravós paternos');
+  const tataravosMaternos = extractPeopleFromSection(findSectionByTitle('ancestors', ['tataravos', 'maternos']), 'Tataravós maternos');
   const tiosPaternos = extractPeopleFromSection(findSectionByTitle('paternal-uncles', ['tios', 'paternos']), 'Tios paternos');
   const tiosMaternos = extractPeopleFromSection(findSectionByTitle('maternal-uncles', ['tios', 'maternos']), 'Tios maternos');
   const primosPaternos = extractPeopleFromSection(findSectionByTitle('paternal-cousins', ['primos', 'paternos']), 'Primos paternos');
@@ -691,31 +695,42 @@ function buildFullMapModel() {
   const pets = extractPeopleFromSection(findSectionByTitle('core', ['pets']), 'Pets');
   const netos = extractPeopleFromSection(findSectionByTitle('core', ['netos']), 'Netos');
 
-  const leftColumnX = 455;
-  const leftColumnWidth = 210;
+  const sideColumnWidth = 300;
+  const leftColumnX = 40;
+  const centerColumnX = 410;
+  const rightColumnX = 1000;
+  const centerPairWidth = 220;
+  const centerPairGap = 30;
+  const centerPairRightX = centerColumnX + centerPairWidth + centerPairGap;
+  const centerSingleX = centerColumnX + 125;
+  const centerSingleWidth = 250;
 
   const nodes: FullMapNode[] = [
-    { id: 'bisavos-paternos', kind: 'ancestor', label: 'Bisavós paternos', left: 58, top: 42, width: 250, minHeight: 170, columns: 1, variant: 'ancestor', people: bisavosPaternos },
-    { id: 'avos-paternos', kind: 'ancestor', label: 'Avós paternos', left: leftColumnX, top: 112, width: leftColumnWidth, minHeight: 190, columns: 1, variant: 'ancestor', people: avosPaternos },
-    { id: 'avos-maternos', kind: 'ancestor', label: 'Avós maternos', left: 650, top: 112, width: 230, minHeight: 190, columns: 1, variant: 'ancestor', people: avosMaternos },
-    { id: 'bisavos-maternos', kind: 'ancestor', label: 'Bisavós maternos', left: 940, top: 42, width: 250, minHeight: 170, columns: 1, variant: 'ancestor', people: bisavosMaternos },
-    { id: 'tios-paternos', kind: 'uncles', label: 'Tios paternos', left: 40, top: 420, width: 390, minHeight: 440, columns: 2, variant: 'ancestor', people: tiosPaternos },
-    { id: 'pai', kind: 'person', label: 'Pai', left: leftColumnX, top: 455, width: leftColumnWidth, minHeight: 156, columns: 1, variant: 'parent', people: extractSinglePerson(findCoreCardByText('pai'), 'Pai') },
-    { id: 'mae', kind: 'person', label: 'Mãe', left: 710, top: 455, width: 170, minHeight: 156, columns: 1, variant: 'parent', people: extractSinglePerson(findCoreCardByText('mae'), 'Mãe') },
-    { id: 'tios-maternos', kind: 'uncles', label: 'Tios maternos', left: 845, top: 420, width: 355, minHeight: 330, columns: 2, variant: 'ancestor', people: tiosMaternos },
-    { id: 'central', kind: 'person', label: 'Pessoa central', left: 550, top: 735, width: 250, minHeight: 200, columns: 1, variant: 'central', people: extractSinglePerson(findCoreCardByColor('central'), 'Pessoa central') },
-    { id: 'primos-paternos', kind: 'cousins', label: 'Primos paternos', left: 40, top: 875, width: 410, minHeight: 430, columns: 3, variant: 'mini', people: primosPaternos },
-    { id: 'irmaos', kind: 'core-group', label: 'Irmãos', left: leftColumnX, top: 1010, width: leftColumnWidth, minHeight: 210, columns: 1, variant: 'core', people: irmaos },
-    { id: 'conjuge', kind: 'core-group', label: 'Cônjuge', left: 710, top: 1010, width: 190, minHeight: 145, columns: 1, variant: 'core', people: conjuge },
-    { id: 'filhos', kind: 'core-group', label: 'Filhos', left: 930, top: 1010, width: 180, minHeight: 145, columns: 1, variant: 'core', people: filhos },
-    { id: 'sobrinhos', kind: 'core-group', label: 'Sobrinhos', left: leftColumnX, top: 1280, width: leftColumnWidth, minHeight: 145, columns: 1, variant: 'core', people: sobrinhos },
-    { id: 'pets', kind: 'core-group', label: 'Pets', left: 710, top: 1280, width: 190, minHeight: 145, columns: 1, variant: 'core', people: pets },
-    { id: 'netos', kind: 'core-group', label: 'Netos', left: 930, top: 1280, width: 180, minHeight: 145, columns: 1, variant: 'core', people: netos },
-    { id: 'primos-maternos', kind: 'cousins', label: 'Primos maternos', left: 900, top: 795, width: 260, minHeight: 190, columns: 1, variant: 'mini', people: primosMaternos },
+    { id: 'tataravos-paternos', kind: 'ancestor', label: 'Tataravós paternos', left: leftColumnX, top: 40, width: sideColumnWidth, minHeight: 135, columns: 1, variant: 'ancestor', people: tataravosPaternos },
+    { id: 'bisavos-paternos', kind: 'ancestor', label: 'Bisavós paternos', left: leftColumnX, top: 205, width: sideColumnWidth, minHeight: 165, columns: 1, variant: 'ancestor', people: bisavosPaternos },
+    { id: 'tios-paternos', kind: 'uncles', label: 'Tios paternos', left: leftColumnX, top: 445, width: sideColumnWidth, minHeight: 340, columns: 2, variant: 'ancestor', people: tiosPaternos },
+    { id: 'primos-paternos', kind: 'cousins', label: 'Primos paternos', left: leftColumnX, top: 860, width: sideColumnWidth, minHeight: 420, columns: 2, variant: 'mini', people: primosPaternos },
+    { id: 'avos-paternos', kind: 'ancestor', label: 'Avós paternos', left: centerColumnX, top: 105, width: centerPairWidth, minHeight: 175, columns: 1, variant: 'ancestor', people: avosPaternos },
+    { id: 'avos-maternos', kind: 'ancestor', label: 'Avós maternos', left: centerPairRightX, top: 105, width: centerPairWidth, minHeight: 175, columns: 1, variant: 'ancestor', people: avosMaternos },
+    { id: 'pai', kind: 'person', label: 'Pai', left: centerColumnX, top: 355, width: centerPairWidth, minHeight: 156, columns: 1, variant: 'parent', people: extractSinglePerson(findCoreCardByText('pai'), 'Pai') },
+    { id: 'mae', kind: 'person', label: 'Mãe', left: centerPairRightX, top: 355, width: centerPairWidth, minHeight: 156, columns: 1, variant: 'parent', people: extractSinglePerson(findCoreCardByText('mae'), 'Mãe') },
+    { id: 'central', kind: 'person', label: 'Pessoa principal', left: centerSingleX, top: 585, width: centerSingleWidth, minHeight: 200, columns: 1, variant: 'central', people: extractSinglePerson(findCoreCardByColor('central'), 'Pessoa principal') },
+    { id: 'irmaos', kind: 'core-group', label: 'Irmãos', left: centerColumnX, top: 860, width: centerPairWidth, minHeight: 210, columns: 1, variant: 'core', people: irmaos },
+    { id: 'conjuge', kind: 'core-group', label: 'Cônjuge', left: centerPairRightX, top: 860, width: centerPairWidth, minHeight: 145, columns: 1, variant: 'core', people: conjuge },
+    { id: 'sobrinhos', kind: 'core-group', label: 'Sobrinhos', left: centerColumnX, top: 1140, width: centerPairWidth, minHeight: 145, columns: 1, variant: 'core', people: sobrinhos },
+    { id: 'pets', kind: 'core-group', label: 'Pets', left: centerPairRightX, top: 1140, width: centerPairWidth, minHeight: 145, columns: 1, variant: 'core', people: pets },
+    { id: 'filhos', kind: 'core-group', label: 'Filhos', left: centerColumnX, top: 1330, width: centerPairWidth, minHeight: 145, columns: 1, variant: 'core', people: filhos },
+    { id: 'netos', kind: 'core-group', label: 'Netos', left: centerPairRightX, top: 1330, width: centerPairWidth, minHeight: 145, columns: 1, variant: 'core', people: netos },
+    { id: 'tataravos-maternos', kind: 'ancestor', label: 'Tataravós maternos', left: rightColumnX, top: 40, width: sideColumnWidth, minHeight: 135, columns: 1, variant: 'ancestor', people: tataravosMaternos },
+    { id: 'bisavos-maternos', kind: 'ancestor', label: 'Bisavós maternos', left: rightColumnX, top: 205, width: sideColumnWidth, minHeight: 165, columns: 1, variant: 'ancestor', people: bisavosMaternos },
+    { id: 'tios-maternos', kind: 'uncles', label: 'Tios maternos', left: rightColumnX, top: 445, width: sideColumnWidth, minHeight: 340, columns: 2, variant: 'ancestor', people: tiosMaternos },
+    { id: 'primos-maternos', kind: 'cousins', label: 'Primos maternos', left: rightColumnX, top: 860, width: sideColumnWidth, minHeight: 420, columns: 2, variant: 'mini', people: primosMaternos },
   ];
 
   const edges: FullMapEdge[] = [
+    { from: 'tataravos-paternos', to: 'bisavos-paternos', fromAnchor: 'bottom', toAnchor: 'top', via: 'vertical' },
     { from: 'bisavos-paternos', to: 'avos-paternos', fromAnchor: 'right', toAnchor: 'left', via: 'horizontal' },
+    { from: 'tataravos-maternos', to: 'bisavos-maternos', fromAnchor: 'bottom', toAnchor: 'top', via: 'vertical' },
     { from: 'bisavos-maternos', to: 'avos-maternos', fromAnchor: 'left', toAnchor: 'right', via: 'horizontal' },
     { from: 'avos-paternos', to: 'pai', fromAnchor: 'bottom', toAnchor: 'top', via: 'vertical' },
     { from: 'avos-maternos', to: 'mae', fromAnchor: 'bottom', toAnchor: 'top', via: 'vertical' },
@@ -727,10 +742,10 @@ function buildFullMapModel() {
     { from: 'mae', to: 'tios-maternos', fromAnchor: 'right', toAnchor: 'left', via: 'horizontal' },
     { from: 'central', to: 'irmaos', fromAnchor: 'bottom', toAnchor: 'top', via: 'vertical' },
     { from: 'central', to: 'conjuge', fromAnchor: 'right', toAnchor: 'left', via: 'horizontal' },
-    { from: 'central', to: 'filhos', fromAnchor: 'right', toAnchor: 'left', via: 'horizontal' },
+    { from: 'central', to: 'filhos', fromAnchor: 'bottom', toAnchor: 'top', via: 'vertical' },
     { from: 'irmaos', to: 'sobrinhos', fromAnchor: 'bottom', toAnchor: 'top', via: 'vertical' },
     { from: 'central', to: 'pets', fromAnchor: 'bottom', toAnchor: 'top', via: 'vertical' },
-    { from: 'filhos', to: 'netos', fromAnchor: 'bottom', toAnchor: 'top', via: 'vertical' },
+    { from: 'filhos', to: 'netos', fromAnchor: 'right', toAnchor: 'left', via: 'horizontal' },
   ];
 
   return { nodes, edges };
@@ -773,8 +788,8 @@ function resetTransform() {
   const stageHeight = stage.offsetHeight || STAGE_HEIGHT;
   const fitScale = Math.min((viewportRect.width - 12) / stageWidth, (viewportRect.height - 12) / stageHeight);
   scale = clamp(fitScale * 1.18, 0.24, 0.9);
-  translateX = Math.max(6, (viewportRect.width - (stageWidth * scale)) / 2);
-  translateY = Math.max(6, (viewportRect.height - (stageHeight * scale)) / 2);
+  translateX = (viewportRect.width / 2) - (STAGE_FOCUS_X * scale);
+  translateY = (viewportRect.height / 2) - (STAGE_FOCUS_Y * scale);
   applyTransform();
 }
 
