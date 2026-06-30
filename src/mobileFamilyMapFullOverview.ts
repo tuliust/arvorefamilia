@@ -186,7 +186,9 @@ function ensureStyles() {
       }
 
       #${FULL_MAP_ID} .mobile-family-full-map-group-shell {
+        box-sizing: border-box !important;
         width: 100% !important;
+        height: 100% !important;
         min-height: 100% !important;
         border: var(--tree-palette-group-border-width, 2px) solid var(--tree-palette-group-border, rgba(14, 116, 144, 0.58)) !important;
         border-radius: 1.1rem !important;
@@ -308,20 +310,24 @@ function ensureStyles() {
 
       #${FULL_MAP_ID} .mobile-family-full-map-card-label {
         position: absolute !important;
-        left: 0.4rem !important;
-        right: 0.4rem !important;
+        left: 50% !important;
+        right: auto !important;
         top: -0.72rem !important;
-        display: flex !important;
-        min-height: 1.28rem !important;
+        display: inline-flex !important;
+        width: auto !important;
+        min-width: 2.3rem !important;
+        min-height: 1.18rem !important;
         align-items: center !important;
         justify-content: center !important;
+        padding: 0.12rem 0.5rem !important;
         border-radius: 999px !important;
-        background: var(--tree-palette-text-primary, #081225) !important;
+        background: rgba(51, 65, 85, 0.88) !important;
         color: var(--tree-palette-canvas-bg, #fff) !important;
         font-size: 0.62rem !important;
         font-weight: 950 !important;
-        letter-spacing: 0.14em !important;
+        letter-spacing: 0.08em !important;
         text-transform: uppercase !important;
+        transform: translateX(-50%) !important;
       }
 
       #${FULL_MAP_ID} .mobile-family-full-map-avatar {
@@ -789,6 +795,8 @@ function estimateGroupHeight(
   const gridGap = 6;
   const estimatedHeight = shellPadding + titleHeight + (rows * cardHeight) + ((rows - 1) * gridGap);
 
+  if (people.length <= 1) return estimatedHeight;
+
   return Math.max(floorHeight, estimatedHeight);
 }
 
@@ -800,6 +808,10 @@ function edgePath(from: { x: number; y: number }, to: { x: number; y: number }, 
 
   if (via === 'elbow') {
     return `M ${from.x} ${from.y} L ${to.x} ${from.y} L ${to.x} ${to.y}`;
+  }
+
+  if (Math.abs(from.x - to.x) < 0.5) {
+    return `M ${from.x} ${from.y} L ${to.x} ${to.y}`;
   }
 
   const midY = (from.y + to.y) / 2;
@@ -872,6 +884,9 @@ function buildFullMapModel() {
   const getCenteredX = (columnX: number, fullWidth: number, adaptiveWidth: number) => (
     columnX + ((fullWidth - adaptiveWidth) / 2)
   );
+  const centerChildGroupUnderParent = (parent: FullMapNode, childWidth: number) => (
+    parent.left + ((parent.width - childWidth) / 2)
+  );
 
   const nodes: FullMapNode[] = [
     { id: 'tataravos-paternos', kind: 'ancestor', label: 'Tataravós paternos', left: leftColumnX, top: 40, width: sideColumnWidth, minHeight: 135, columns: 1, variant: 'ancestor', people: tataravosPaternos },
@@ -938,6 +953,13 @@ function buildFullMapModel() {
 
     return node.minHeight;
   };
+  const centerNodeUnderParent = (childId: string, parentId: string) => {
+    const child = nodeById.get(childId);
+    const parent = nodeById.get(parentId);
+    if (!child || !parent) return;
+
+    child.left = centerChildGroupUnderParent(parent, child.width);
+  };
 
   let leftY = topMargin;
   const placedTataravosPaternos = placeAdaptiveGroup('tataravos-paternos', leftColumnX, leftY, sideColumnWidth, 125);
@@ -973,8 +995,20 @@ function buildFullMapModel() {
   placeCenterRow('pai', 'mae', 156, 50, false);
   const placedCentral = placeNode('central', centerSingleX, centerY, centerSingleWidth, 195, 1);
   if (placedCentral) centerY += placedCentral + 72;
-  placeCenterRow('irmaos', 'conjuge', 190, 70);
-  placeCenterRow('sobrinhos', 'pets', 145, 60);
+  const lowerRightColumnX = centerPairRightX - 46;
+  const lowerRightWidth = centerPairWidth;
+  const coreTop = centerY;
+  const placedIrmaos = placeAdaptiveGroup('irmaos', centerColumnX, coreTop, centerPairWidth, 190);
+  const placedConjuge = placeAdaptiveGroup('conjuge', lowerRightColumnX, coreTop, lowerRightWidth, 145);
+  const coreRowHeight = Math.max(placedIrmaos || 0, placedConjuge || 0);
+  if (coreRowHeight) centerY += coreRowHeight + 70;
+  const secondaryTop = centerY;
+  placeAdaptiveGroup('sobrinhos', centerColumnX, secondaryTop, centerPairWidth, 145);
+  placeAdaptiveGroup('pets', lowerRightColumnX, secondaryTop, lowerRightWidth, 145);
+  centerNodeUnderParent('sobrinhos', 'irmaos');
+  centerNodeUnderParent('pets', 'conjuge');
+  const secondaryRowHeight = Math.max(nodeById.get('sobrinhos')?.minHeight ?? 0, nodeById.get('pets')?.minHeight ?? 0);
+  if (secondaryRowHeight) centerY += secondaryRowHeight + 60;
   placeCenterRow('filhos', 'netos', 145);
 
   let rightY = topMargin;
@@ -985,6 +1019,7 @@ function buildFullMapModel() {
   const placedTiosMaternos = placeAdaptiveGroup('tios-maternos', rightColumnX, parentRowTop, sideColumnWidth, 330, 'right');
   if (placedTiosMaternos) rightY += placedTiosMaternos + uncleCousinGap;
   placeAdaptiveGroup('primos-maternos', rightColumnX, parentRowTop + placedTiosMaternos + uncleCousinGap, sideColumnWidth, 410, 'right');
+  centerNodeUnderParent('primos-maternos', 'tios-maternos');
 
   const edges: FullMapEdge[] = [
     { from: 'tataravos-paternos', to: 'bisavos-paternos', fromAnchor: 'bottom', toAnchor: 'top', via: 'vertical' },
