@@ -5,6 +5,7 @@ const FULL_MAP_ID = 'mobile-family-map-full-overview';
 const STYLE_ID = 'mobile-family-map-full-overview-style';
 const FULL_MAP_BUTTON_ATTR = 'data-mobile-family-full-map-button';
 const INLINE_OVERVIEW_SELECTOR = '[data-mobile-family-map-inline-overview="true"]';
+const FULL_MAP_OPEN_EVENT = 'arvorefamilia:mobile-full-map-open';
 
 const STAGE_WIDTH = 1240;
 const STAGE_HEIGHT = 1480;
@@ -845,53 +846,36 @@ function handleTouchEnd(event: TouchEvent) {
   }
 }
 
-function openFullMap(button: HTMLButtonElement) {
+function hydrateFullMap() {
   if (!isEnabled()) return;
 
-  const panel = button.closest<HTMLElement>(INLINE_OVERVIEW_SELECTOR);
-  if (!panel) return;
-
   ensureStyles();
-  document.getElementById(FULL_MAP_ID)?.remove();
-  panel.setAttribute('data-mobile-family-map-full-open', 'true');
+  const fullMap = document.getElementById(FULL_MAP_ID);
+  if (!fullMap?.closest(INLINE_OVERVIEW_SELECTOR)) return;
 
-  const overlay = document.createElement('div');
-  overlay.id = FULL_MAP_ID;
-  overlay.setAttribute('role', 'region');
-  overlay.setAttribute('aria-label', 'Mapa completo da família');
-  overlay.setAttribute('data-tree-export-ignore', 'true');
-  overlay.innerHTML = '<div class="mobile-family-full-map-viewport" aria-label="Mapa completo com zoom por toque"></div>';
-  const viewport = overlay.querySelector<HTMLElement>('.mobile-family-full-map-viewport');
-  viewport?.appendChild(buildFullMapStage());
-  viewport?.addEventListener('touchstart', handleTouchStart, { passive: false });
-  viewport?.addEventListener('touchmove', handleTouchMove, { passive: false });
-  viewport?.addEventListener('touchend', handleTouchEnd, { passive: false });
-  viewport?.addEventListener('touchcancel', handleTouchEnd, { passive: false });
+  const viewport = fullMap.querySelector<HTMLElement>('.mobile-family-full-map-viewport');
+  if (!viewport) return;
 
-  panel.replaceChildren(overlay);
+  const needsStage = viewport.dataset.mobileFamilyFullMapHydrated !== 'true'
+    || !viewport.querySelector('.mobile-family-full-map-stage');
+
+  if (needsStage) {
+    viewport.replaceChildren(buildFullMapStage());
+    viewport.dataset.mobileFamilyFullMapHydrated = 'true';
+    viewport.addEventListener('touchstart', handleTouchStart, { passive: false });
+    viewport.addEventListener('touchmove', handleTouchMove, { passive: false });
+    viewport.addEventListener('touchend', handleTouchEnd, { passive: false });
+    viewport.addEventListener('touchcancel', handleTouchEnd, { passive: false });
+  }
+
   window.requestAnimationFrame(resetTransform);
   window.setTimeout(resetTransform, 40);
-}
-
-function bindFullMapButton(button: HTMLButtonElement) {
-  if (button.dataset.mobileFamilyFullMapBound === 'true') return;
-
-  button.dataset.mobileFamilyFullMapBound = 'true';
-  button.addEventListener('click', (event) => {
-    event.preventDefault();
-    event.stopPropagation();
-    if ('stopImmediatePropagation' in event) event.stopImmediatePropagation();
-    openFullMap(button);
-  });
 }
 
 function ensureFullMapButton() {
   if (!isEnabled()) return;
   ensureStyles();
-
-  document
-    .querySelectorAll<HTMLButtonElement>(`${INLINE_OVERVIEW_SELECTOR} [${FULL_MAP_BUTTON_ATTR}="true"]`)
-    .forEach(bindFullMapButton);
+  hydrateFullMap();
 }
 
 function scheduleEnsureButton() {
@@ -919,6 +903,7 @@ if (typeof window !== 'undefined' && typeof document !== 'undefined') {
     ensureFullMapButton();
     if (document.getElementById(FULL_MAP_ID)) window.setTimeout(resetTransform, 220);
   }, { passive: true });
+  window.addEventListener(FULL_MAP_OPEN_EVENT, hydrateFullMap);
   window.addEventListener('popstate', () => { closeFullMap(); }, { passive: true });
   document.addEventListener('visibilitychange', ensureFullMapButton, { passive: true });
 }

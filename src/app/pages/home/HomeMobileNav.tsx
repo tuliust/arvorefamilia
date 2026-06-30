@@ -62,6 +62,7 @@ type MobileMapOverviewScreenName =
   | 'paternal-cousins'
   | 'descendants'
   | 'maternal-cousins';
+type MobileMapPanelMode = 'overview' | 'full';
 type MobileFamilyGroupCountKey =
   | 'pais'
   | 'conjuges'
@@ -696,6 +697,7 @@ export function HomeMobileNav({
   const { user } = useAuth();
   const [unreadNotificationsCount, setUnreadNotificationsCount] = useState(0);
   const [activeToolbarAction, setActiveToolbarAction] = useState<MobileFamilyMapToolbarAction | null>(null);
+  const [mobileMapPanelMode, setMobileMapPanelMode] = useState<MobileMapPanelMode>('overview');
   const [treeColorPalette, setTreeColorPalette] = useState<TreeColorPalette>(getStoredPalette);
   const [viewAsPersonOptions, setViewAsPersonOptions] = useState<ViewAsPersonOption[]>([]);
   const [mobilePeople, setMobilePeople] = useState<Pessoa[]>([]);
@@ -792,14 +794,23 @@ export function HomeMobileNav({
   useEffect(() => {
     if (!isDirectFamilyMap) {
       setActiveToolbarAction(null);
+      setMobileMapPanelMode('overview');
       setFullControlsOpen(false);
     }
   }, [isDirectFamilyMap, pathname]);
 
   useEffect(() => {
+    if (activeToolbarAction !== 'zoom') {
+      setMobileMapPanelMode('overview');
+    }
+  }, [activeToolbarAction]);
+
+  useEffect(() => {
     if (!isDirectFamilyMap) return;
 
     const updateOverviewState = () => {
+      if (mobileMapPanelMode === 'full') return;
+
       setMobileMapOverviewCounts(
         Object.fromEntries(MOBILE_MAP_OVERVIEW_SCREENS.map((screen) => [screen.key, countMobileMapCards(screen.key)])) as Record<MobileMapOverviewScreenName, number>
       );
@@ -817,7 +828,12 @@ export function HomeMobileNav({
       window.removeEventListener('resize', updateOverviewState);
       window.removeEventListener('orientationchange', updateOverviewState);
     };
-  }, [isDirectFamilyMap]);
+  }, [isDirectFamilyMap, mobileMapPanelMode]);
+
+  useEffect(() => {
+    if (activeToolbarAction !== 'zoom' || mobileMapPanelMode !== 'full') return;
+    window.dispatchEvent(new CustomEvent('arvorefamilia:mobile-full-map-open'));
+  }, [activeToolbarAction, mobileMapPanelMode]);
 
   useEffect(() => {
     const metadataName = String(
@@ -1187,7 +1203,10 @@ export function HomeMobileNav({
                 data-mobile-family-map-inline-overview="true"
                 data-mobile-family-map-overview-source="direct-map"
                 data-mobile-family-map-overview-stable="true"
+                data-mobile-family-map-panel-mode={mobileMapPanelMode}
               >
+                {mobileMapPanelMode === 'overview' ? (
+                  <>
                 <div className="grid min-h-0 flex-1 grid-cols-3 grid-rows-3 gap-1.5 overflow-visible">
                   {MOBILE_MAP_OVERVIEW_SCREENS.map((screen) => {
                     const Icon = screen.icon;
@@ -1229,10 +1248,24 @@ export function HomeMobileNav({
                 <button
                   type="button"
                   data-mobile-family-full-map-button="true"
+                  onClick={() => setMobileMapPanelMode('full')}
                   className="flex min-h-10 w-full shrink-0 items-center justify-center rounded-xl border border-blue-600 bg-blue-600 px-3 text-sm font-black leading-none tracking-[-0.015em] text-white shadow-[0_10px_24px_rgba(37,99,235,0.22)] transition active:scale-[0.99]"
                 >
                   Exibir mapa completo
                 </button>
+                  </>
+                ) : (
+                  <div
+                    id="mobile-family-map-full-overview"
+                    className="mobile-family-full-map-panel min-h-0 flex-1"
+                    role="region"
+                    aria-label="Mapa completo da famÃ­lia"
+                    data-tree-export-ignore="true"
+                    data-mobile-family-map-full-inline="true"
+                  >
+                    <div className="mobile-family-full-map-viewport" aria-label="Mapa completo com zoom por toque" />
+                  </div>
+                )}
               </div>
             </div>
           )}
