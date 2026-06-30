@@ -646,6 +646,7 @@ function buildGroupNode(node: FullMapNode) {
   group.style.setProperty('left', `${node.left}px`);
   group.style.setProperty('top', `${node.top}px`);
   group.style.setProperty('width', `${node.width}px`);
+  group.style.setProperty('height', `${node.minHeight}px`);
   group.style.setProperty('min-height', `${node.minHeight}px`);
 
   const shell = document.createElement('div');
@@ -887,6 +888,7 @@ function buildFullMapModel() {
   };
 
   placeCenterRow('avos-paternos', 'avos-maternos', 165, 58);
+  const parentRowTop = centerY;
   placeCenterRow('pai', 'mae', 156, 50, false);
   const placedCentral = placeNode('central', centerSingleX, centerY, centerSingleWidth, 195, 1);
   if (placedCentral) centerY += placedCentral + 72;
@@ -899,9 +901,9 @@ function buildFullMapModel() {
   if (placedTataravosMaternos) rightY += placedTataravosMaternos + verticalGroupGap;
   const placedBisavosMaternos = placeAdaptiveGroup('bisavos-maternos', rightColumnX, rightY, sideColumnWidth, 155, 'right');
   if (placedBisavosMaternos) rightY += placedBisavosMaternos + ancestorUncleGap;
-  const placedTiosMaternos = placeAdaptiveGroup('tios-maternos', rightColumnX, rightY, sideColumnWidth, 330, 'right');
+  const placedTiosMaternos = placeAdaptiveGroup('tios-maternos', rightColumnX, parentRowTop, sideColumnWidth, 330, 'right');
   if (placedTiosMaternos) rightY += placedTiosMaternos + uncleCousinGap;
-  placeAdaptiveGroup('primos-maternos', rightColumnX, rightY, sideColumnWidth, 410, 'right');
+  placeAdaptiveGroup('primos-maternos', rightColumnX, parentRowTop + placedTiosMaternos + uncleCousinGap, sideColumnWidth, 410, 'right');
 
   const edges: FullMapEdge[] = [
     { from: 'tataravos-paternos', to: 'bisavos-paternos', fromAnchor: 'bottom', toAnchor: 'top', via: 'vertical' },
@@ -920,7 +922,7 @@ function buildFullMapModel() {
     { from: 'central', to: 'conjuge', fromAnchor: 'right', toAnchor: 'left', via: 'horizontal' },
     { from: 'central', to: 'filhos', fromAnchor: 'bottom', toAnchor: 'top', via: 'vertical' },
     { from: 'irmaos', to: 'sobrinhos', fromAnchor: 'bottom', toAnchor: 'top', via: 'vertical' },
-    { from: 'central', to: 'pets', fromAnchor: 'bottom', toAnchor: 'top', via: 'vertical' },
+    { from: nodeById.has('conjuge') ? 'conjuge' : 'central', to: 'pets', fromAnchor: 'bottom', toAnchor: 'top', via: 'vertical' },
     { from: 'filhos', to: 'netos', fromAnchor: 'right', toAnchor: 'left', via: 'horizontal' },
   ];
 
