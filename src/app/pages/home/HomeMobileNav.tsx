@@ -1135,6 +1135,24 @@ export function HomeMobileNav({
               [data-family-map-horizontal-mobile-root="true"] > nav[aria-label="Gerações do Mapa Genealógico"] {
                 display: none !important;
               }
+
+              [data-mobile-family-tree-screen="paternal-uncles"],
+              [data-mobile-family-tree-screen="maternal-uncles"] {
+                overflow: hidden !important;
+                overscroll-behavior: contain !important;
+              }
+
+              [data-mobile-family-tree-screen="paternal-uncles"] > div,
+              [data-mobile-family-tree-screen="maternal-uncles"] > div {
+                box-sizing: border-box !important;
+                height: 100% !important;
+                max-height: 100% !important;
+                overflow-x: visible !important;
+                overflow-y: auto !important;
+                overscroll-behavior-y: contain !important;
+                -webkit-overflow-scrolling: touch !important;
+                padding-bottom: calc(env(safe-area-inset-bottom,0px) + 6.5rem) !important;
+              }
             `}
           </style>
           <MobileFamilyMapToolbar

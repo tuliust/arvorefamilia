@@ -789,12 +789,13 @@ function estimateGroupHeight(
 ) {
   if (kind === 'person') return floorHeight;
 
-  const cardHeight = variant === 'core' ? 72 : variant === 'mini' || variant === 'ancestor' ? 66 : 62;
+  const cardHeight = variant === 'core' ? 74 : variant === 'mini' || variant === 'ancestor' ? 70 : 62;
   const rows = Math.max(1, Math.ceil(people.length / Math.max(1, columns)));
-  const shellPadding = 18;
-  const titleHeight = 18;
+  const shellPadding = 20;
+  const titleHeight = 20;
   const gridGap = 6;
-  const estimatedHeight = shellPadding + titleHeight + (rows * cardHeight) + ((rows - 1) * gridGap);
+  const bottomBreathingRoom = 8;
+  const estimatedHeight = shellPadding + titleHeight + (rows * cardHeight) + ((rows - 1) * gridGap) + bottomBreathingRoom;
 
   if (people.length <= 1) return estimatedHeight;
 
@@ -874,7 +875,7 @@ function buildFullMapModel() {
   const centerPairRightX = centerColumnX + centerPairWidth + centerPairGap;
   const centerSingleWidth = 250;
   const centerSingleX = centerColumnX + ((centerColumnWidth - centerSingleWidth) / 2);
-  const lowerColumnOffset = 172;
+  const lowerColumnOffset = 148;
   const hasPeople = (people?: FullMapPerson[] | null) => Array.isArray(people) && people.length > 0;
   const getAdaptiveColumns = (people: FullMapPerson[]) => (people.length <= 1 ? 1 : 2);
   const getAdaptiveGroupWidth = (people: FullMapPerson[], fullWidth: number) => (
@@ -966,9 +967,9 @@ function buildFullMapModel() {
   let leftY = topMargin;
   const placedTataravosPaternos = placeAdaptiveGroup('tataravos-paternos', leftColumnX, leftY, sideColumnWidth, 125);
   if (placedTataravosPaternos) leftY += placedTataravosPaternos + verticalGroupGap;
-  const placedBisavosPaternos = placeAdaptiveGroup('bisavos-paternos', leftColumnX, leftY, sideColumnWidth, 172);
+  const placedBisavosPaternos = placeAdaptiveGroup('bisavos-paternos', leftColumnX, leftY, sideColumnWidth, 188);
   if (placedBisavosPaternos) leftY += placedBisavosPaternos + ancestorUncleGap;
-  const placedTiosPaternos = placeAdaptiveGroup('tios-paternos', leftColumnX, leftY, sideColumnWidth, 330);
+  const placedTiosPaternos = placeAdaptiveGroup('tios-paternos', leftColumnX, leftY, sideColumnWidth, 356);
   if (placedTiosPaternos) leftY += placedTiosPaternos + uncleCousinGap;
   placeAdaptiveGroup('primos-paternos', leftColumnX, leftY, sideColumnWidth, 410);
 
@@ -993,13 +994,13 @@ function buildFullMapModel() {
   };
 
   const placedAvosPaternos = placeAdaptiveGroup('avos-paternos', centerColumnX, centerY, centerPairWidth, 184);
-  const placedAvosMaternos = placeAdaptiveGroup('avos-maternos', centerPairRightX, centerY, centerPairWidth, 132, 'right');
+  const placedAvosMaternos = placeAdaptiveGroup('avos-maternos', centerPairRightX, centerY, centerPairWidth, 122, 'right');
   const placedAvosHeight = Math.max(placedAvosPaternos || 0, placedAvosMaternos || 0);
   if (placedAvosHeight) centerY += placedAvosHeight + 58;
   const parentRowTop = centerY;
   placeCenterRow('pai', 'mae', 156, 50, false);
   const placedCentral = placeNode('central', centerSingleX, centerY, centerSingleWidth, 195, 1);
-  if (placedCentral) centerY += placedCentral + 72;
+  if (placedCentral) centerY += placedCentral + 90;
   const centralNode = nodeById.get('central');
   const centralCenterX = centralNode
     ? centralNode.left + (centralNode.width / 2)
@@ -1024,11 +1025,11 @@ function buildFullMapModel() {
   let rightY = topMargin;
   const placedTataravosMaternos = placeAdaptiveGroup('tataravos-maternos', rightColumnX, rightY, sideColumnWidth, 125, 'right');
   if (placedTataravosMaternos) rightY += placedTataravosMaternos + verticalGroupGap;
-  const placedBisavosMaternos = placeAdaptiveGroup('bisavos-maternos', rightColumnX, rightY, sideColumnWidth, 132, 'right');
+  const placedBisavosMaternos = placeAdaptiveGroup('bisavos-maternos', rightColumnX, rightY, sideColumnWidth, 124, 'right');
   if (placedBisavosMaternos) rightY += placedBisavosMaternos + ancestorUncleGap;
-  const placedTiosMaternos = placeAdaptiveGroup('tios-maternos', rightColumnX, parentRowTop, sideColumnWidth, 292, 'right');
+  const placedTiosMaternos = placeAdaptiveGroup('tios-maternos', rightColumnX, parentRowTop, sideColumnWidth, 276, 'right');
   if (placedTiosMaternos) rightY += placedTiosMaternos + uncleCousinGap;
-  placeAdaptiveGroup('primos-maternos', rightColumnX, parentRowTop + placedTiosMaternos + uncleCousinGap, sideColumnWidth, 410, 'right');
+  placeAdaptiveGroup('primos-maternos', rightColumnX, parentRowTop + placedTiosMaternos + uncleCousinGap, sideColumnWidth, 430, 'right');
   centerNodeUnderParent('primos-maternos', 'tios-maternos');
 
   const edges: FullMapEdge[] = [
