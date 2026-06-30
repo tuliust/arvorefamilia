@@ -5,6 +5,9 @@ const OVERVIEW_ID = 'mobile-family-tree-overview-mode';
 const FULL_MAP_ID = 'mobile-family-map-full-overview';
 const STYLE_ID = 'mobile-family-map-full-overview-style';
 const FULL_MAP_BUTTON_ATTR = 'data-mobile-family-full-map-button';
+const MOBILE_MAP_SHELL_TOP_OFFSET = 'calc(env(safe-area-inset-top, 0px) + 9rem)';
+const MOBILE_MAP_SHELL_BOTTOM_OFFSET = 'calc(env(safe-area-inset-bottom, 0px) + 5.5rem)';
+const MOBILE_MAP_FULL_OVERLAY_Z_INDEX = '900';
 
 const STAGE_WIDTH = 1240;
 const STAGE_HEIGHT = 1480;
@@ -112,13 +115,16 @@ function ensureStyles() {
 
       #${FULL_MAP_ID} {
         position: fixed !important;
-        inset: 0 !important;
-        z-index: 2147483900 !important;
+        top: ${MOBILE_MAP_SHELL_TOP_OFFSET} !important;
+        right: 0 !important;
+        bottom: ${MOBILE_MAP_SHELL_BOTTOM_OFFSET} !important;
+        left: 0 !important;
+        z-index: ${MOBILE_MAP_FULL_OVERLAY_Z_INDEX} !important;
         display: flex !important;
         flex-direction: column !important;
         background: rgba(248, 250, 252, 0.985) !important;
         backdrop-filter: blur(8px) !important;
-        padding: calc(env(safe-area-inset-top, 0px) + 0.75rem) 0.75rem calc(env(safe-area-inset-bottom, 0px) + 5.4rem) !important;
+        padding: 0.75rem !important;
       }
 
       #${FULL_MAP_ID} .mobile-family-full-map-header {

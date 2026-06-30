@@ -3,7 +3,7 @@ const DIRECT_MAP_PATH = '/mapa-familiar';
 const OVERVIEW_ID = 'mobile-family-tree-overview-mode';
 const FULL_MAP_ID = 'mobile-family-map-full-overview';
 const FULL_MAP_BUTTON_SELECTOR = '[data-mobile-family-full-map-button="true"]';
-const FULL_MAP_Z_INDEX = '2147483900';
+const FULL_MAP_Z_INDEX = '900';
 
 let lastHandledAt = 0;
 let forwardingClick = false;

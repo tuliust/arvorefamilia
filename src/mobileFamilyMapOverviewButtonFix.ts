@@ -5,6 +5,9 @@ const STAGE_SELECTOR = '[data-mobile-family-tree-stage="true"]';
 const TOOLBAR_ZOOM_SELECTOR = '[data-mobile-family-map-toolbar-action="zoom"]';
 const OVERVIEW_ID = 'mobile-family-tree-overview-mode';
 const STYLE_ID = 'mobile-family-map-overview-button-fix-style';
+const MOBILE_MAP_SHELL_TOP_OFFSET = 'calc(env(safe-area-inset-top, 0px) + 9rem)';
+const MOBILE_MAP_SHELL_BOTTOM_OFFSET = 'calc(env(safe-area-inset-bottom, 0px) + 5.5rem)';
+const MOBILE_MAP_OVERLAY_Z_INDEX = '900';
 
 const DESCENDANT_KEYS = ['irmaos', 'sobrinhos', 'conjuge', 'pets', 'filhos', 'netos'];
 
@@ -170,13 +173,16 @@ function ensureStyles() {
 
       #${OVERVIEW_ID} {
         position: fixed !important;
-        inset: 0 !important;
-        z-index: 13090 !important;
+        top: ${MOBILE_MAP_SHELL_TOP_OFFSET} !important;
+        right: 0 !important;
+        bottom: ${MOBILE_MAP_SHELL_BOTTOM_OFFSET} !important;
+        left: 0 !important;
+        z-index: ${MOBILE_MAP_OVERLAY_Z_INDEX} !important;
         display: flex !important;
         flex-direction: column !important;
         background: linear-gradient(180deg, rgba(248, 250, 252, 0.99), rgba(239, 246, 255, 0.98)) !important;
         backdrop-filter: blur(10px) !important;
-        padding: calc(env(safe-area-inset-top, 0px) + 0.75rem) 0.75rem calc(env(safe-area-inset-bottom, 0px) + 5.4rem) !important;
+        padding: 0.75rem !important;
       }
 
       #${OVERVIEW_ID} .mobile-family-overview-header {
