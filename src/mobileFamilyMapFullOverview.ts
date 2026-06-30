@@ -1,13 +1,10 @@
 const MOBILE_QUERY = '(max-width: 767px)';
 const DIRECT_MAP_PATH = '/mapa-familiar';
 const ROOT_SELECTOR = '[data-mobile-family-tree-root="true"]';
-const OVERVIEW_ID = 'mobile-family-tree-overview-mode';
 const FULL_MAP_ID = 'mobile-family-map-full-overview';
 const STYLE_ID = 'mobile-family-map-full-overview-style';
 const FULL_MAP_BUTTON_ATTR = 'data-mobile-family-full-map-button';
-const MOBILE_MAP_SHELL_TOP_OFFSET = 'calc(env(safe-area-inset-top, 0px) + 9rem)';
-const MOBILE_MAP_SHELL_BOTTOM_OFFSET = 'calc(env(safe-area-inset-bottom, 0px) + 5.5rem)';
-const MOBILE_MAP_FULL_OVERLAY_Z_INDEX = '900';
+const INLINE_OVERVIEW_SELECTOR = '[data-mobile-family-map-inline-overview="true"]';
 
 const STAGE_WIDTH = 1240;
 const STAGE_HEIGHT = 1480;
@@ -114,80 +111,15 @@ function ensureStyles() {
       }
 
       #${FULL_MAP_ID} {
-        position: fixed !important;
-        top: ${MOBILE_MAP_SHELL_TOP_OFFSET} !important;
-        right: 0 !important;
-        bottom: ${MOBILE_MAP_SHELL_BOTTOM_OFFSET} !important;
-        left: 0 !important;
-        z-index: ${MOBILE_MAP_FULL_OVERLAY_Z_INDEX} !important;
+        position: relative !important;
+        z-index: 1 !important;
         display: flex !important;
         flex-direction: column !important;
-        background: rgba(248, 250, 252, 0.985) !important;
-        backdrop-filter: blur(8px) !important;
-        padding: 0.75rem !important;
-      }
-
-      #${FULL_MAP_ID} .mobile-family-full-map-header {
-        display: flex !important;
-        align-items: center !important;
-        gap: 0.65rem !important;
-        width: min(100%, 28rem) !important;
-        margin: 0 auto 0.75rem !important;
-        border: 1px solid rgb(226, 232, 240) !important;
-        border-radius: 1.35rem !important;
-        background: rgba(255, 255, 255, 0.97) !important;
-        box-shadow: 0 14px 34px rgba(15, 23, 42, 0.12) !important;
-        padding: 0.72rem !important;
-      }
-
-      #${FULL_MAP_ID} .mobile-family-full-map-title-wrap {
-        min-width: 0 !important;
-        flex: 1 1 auto !important;
-      }
-
-      #${FULL_MAP_ID} .mobile-family-full-map-title {
-        margin: 0 !important;
-        color: rgb(15, 23, 42) !important;
-        font-size: 1.12rem !important;
-        font-weight: 950 !important;
-        line-height: 1.05 !important;
-      }
-
-      #${FULL_MAP_ID} .mobile-family-full-map-subtitle {
-        margin: 0.2rem 0 0 !important;
-        color: rgb(71, 85, 105) !important;
-        font-size: 0.72rem !important;
-        font-weight: 750 !important;
-        line-height: 1.2 !important;
-      }
-
-      #${FULL_MAP_ID} .mobile-family-full-map-close,
-      #${FULL_MAP_ID} .mobile-family-full-map-reset {
-        appearance: none !important;
-        display: inline-flex !important;
-        flex: 0 0 auto !important;
-        align-items: center !important;
-        justify-content: center !important;
-        border: 1px solid rgb(226, 232, 240) !important;
-        background: #fff !important;
-        color: rgb(15, 23, 42) !important;
-        font: inherit !important;
-        font-weight: 900 !important;
-        box-shadow: 0 6px 16px rgba(15, 23, 42, 0.08) !important;
-      }
-
-      #${FULL_MAP_ID} .mobile-family-full-map-close {
-        width: 2.45rem !important;
-        height: 2.45rem !important;
-        border-radius: 999px !important;
-        font-size: 1.25rem !important;
-      }
-
-      #${FULL_MAP_ID} .mobile-family-full-map-reset {
-        min-height: 2.45rem !important;
-        border-radius: 999px !important;
-        padding: 0 0.72rem !important;
-        font-size: 0.72rem !important;
+        width: 100% !important;
+        height: 100% !important;
+        min-height: 0 !important;
+        background: transparent !important;
+        padding: 0 !important;
       }
 
       #${FULL_MAP_ID} .mobile-family-full-map-viewport {
@@ -197,9 +129,9 @@ function ensureStyles() {
         width: 100% !important;
         overflow: hidden !important;
         border: 1px solid rgb(226, 232, 240) !important;
-        border-radius: 1.5rem !important;
+        border-radius: 1.25rem !important;
         background: #ecfeff !important;
-        box-shadow: inset 0 0 0 1px rgba(255,255,255,0.7), 0 20px 54px rgba(15,23,42,0.12) !important;
+        box-shadow: inset 0 0 0 1px rgba(255,255,255,0.7), 0 12px 26px rgba(15,23,42,0.1) !important;
         touch-action: none !important;
       }
 
@@ -838,7 +770,6 @@ function buildFullMapStage() {
 
 function closeFullMap() {
   document.getElementById(FULL_MAP_ID)?.remove();
-  if (!document.getElementById(OVERVIEW_ID)) document.body.style.removeProperty('overflow');
 }
 
 function handleTouchStart(event: TouchEvent) {
@@ -914,29 +845,22 @@ function handleTouchEnd(event: TouchEvent) {
   }
 }
 
-function openFullMap() {
+function openFullMap(button: HTMLButtonElement) {
   if (!isEnabled()) return;
+
+  const panel = button.closest<HTMLElement>(INLINE_OVERVIEW_SELECTOR);
+  if (!panel) return;
+
   ensureStyles();
   document.getElementById(FULL_MAP_ID)?.remove();
+  panel.setAttribute('data-mobile-family-map-full-open', 'true');
 
   const overlay = document.createElement('div');
   overlay.id = FULL_MAP_ID;
-  overlay.setAttribute('role', 'dialog');
-  overlay.setAttribute('aria-modal', 'true');
+  overlay.setAttribute('role', 'region');
   overlay.setAttribute('aria-label', 'Mapa completo da família');
   overlay.setAttribute('data-tree-export-ignore', 'true');
-  overlay.innerHTML = `
-    <header class="mobile-family-full-map-header">
-      <div class="mobile-family-full-map-title-wrap">
-        <h2 class="mobile-family-full-map-title">Mapa completo</h2>
-        <p class="mobile-family-full-map-subtitle">Tela única. Use dois dedos para ampliar, reduzir e arrastar.</p>
-      </div>
-      <button type="button" class="mobile-family-full-map-reset" aria-label="Reenquadrar mapa completo">Reenquadrar</button>
-      <button type="button" class="mobile-family-full-map-close" aria-label="Fechar mapa completo">×</button>
-    </header>
-    <div class="mobile-family-full-map-viewport" aria-label="Mapa completo com zoom por pinça"></div>
-  `;
-
+  overlay.innerHTML = '<div class="mobile-family-full-map-viewport" aria-label="Mapa completo com zoom por toque"></div>';
   const viewport = overlay.querySelector<HTMLElement>('.mobile-family-full-map-viewport');
   viewport?.appendChild(buildFullMapStage());
   viewport?.addEventListener('touchstart', handleTouchStart, { passive: false });
@@ -944,21 +868,8 @@ function openFullMap() {
   viewport?.addEventListener('touchend', handleTouchEnd, { passive: false });
   viewport?.addEventListener('touchcancel', handleTouchEnd, { passive: false });
 
-  overlay.querySelector<HTMLButtonElement>('.mobile-family-full-map-close')?.addEventListener('click', (event) => {
-    event.preventDefault();
-    event.stopPropagation();
-    closeFullMap();
-  });
-
-  overlay.querySelector<HTMLButtonElement>('.mobile-family-full-map-reset')?.addEventListener('click', (event) => {
-    event.preventDefault();
-    event.stopPropagation();
-    resetTransform();
-  });
-
-  document.getElementById(OVERVIEW_ID)?.remove();
-  document.body.appendChild(overlay);
-  document.body.style.setProperty('overflow', 'hidden');
+  panel.replaceChildren(overlay);
+  window.requestAnimationFrame(resetTransform);
   window.setTimeout(resetTransform, 40);
 }
 
@@ -970,7 +881,7 @@ function bindFullMapButton(button: HTMLButtonElement) {
     event.preventDefault();
     event.stopPropagation();
     if ('stopImmediatePropagation' in event) event.stopImmediatePropagation();
-    openFullMap();
+    openFullMap(button);
   });
 }
 
@@ -979,23 +890,8 @@ function ensureFullMapButton() {
   ensureStyles();
 
   document
-    .querySelectorAll<HTMLButtonElement>(`[${FULL_MAP_BUTTON_ATTR}="true"]`)
+    .querySelectorAll<HTMLButtonElement>(`${INLINE_OVERVIEW_SELECTOR} [${FULL_MAP_BUTTON_ATTR}="true"]`)
     .forEach(bindFullMapButton);
-
-  const overview = document.getElementById(OVERVIEW_ID);
-  const map = overview?.querySelector<HTMLElement>('.mobile-family-overview-map');
-  if (!overview || !map) return;
-
-  let button = overview.querySelector<HTMLButtonElement>(`[${FULL_MAP_BUTTON_ATTR}="true"]`);
-  if (!button) {
-    button = document.createElement('button');
-    button.type = 'button';
-    button.setAttribute(FULL_MAP_BUTTON_ATTR, 'true');
-    button.textContent = 'Exibir mapa completo';
-    map.insertAdjacentElement('afterend', button);
-  }
-
-  bindFullMapButton(button);
 }
 
 function scheduleEnsureButton() {

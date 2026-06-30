@@ -3,6 +3,7 @@ const DIRECT_MAP_PATH = '/mapa-familiar';
 const OVERVIEW_ID = 'mobile-family-tree-overview-mode';
 const FULL_MAP_ID = 'mobile-family-map-full-overview';
 const FULL_MAP_BUTTON_SELECTOR = '[data-mobile-family-full-map-button="true"]';
+const INLINE_OVERVIEW_SELECTOR = '[data-mobile-family-map-inline-overview="true"]';
 const FULL_MAP_Z_INDEX = '900';
 
 let lastHandledAt = 0;
@@ -34,6 +35,7 @@ function consume(event: Event) {
 function promoteFullMap() {
   const fullMap = document.getElementById(FULL_MAP_ID);
   if (!fullMap) return;
+  if (fullMap.closest(INLINE_OVERVIEW_SELECTOR)) return;
 
   fullMap.style.setProperty('z-index', FULL_MAP_Z_INDEX, 'important');
   document.getElementById(OVERVIEW_ID)?.remove();
@@ -61,6 +63,7 @@ function handleFullMapButtonActivation(event: Event) {
   const target = getEventTarget(event);
   const button = target?.closest<HTMLButtonElement>(FULL_MAP_BUTTON_SELECTOR);
   if (!button) return;
+  if (button.closest(INLINE_OVERVIEW_SELECTOR)) return;
 
   if (forwardingClick) return;
 
