@@ -136,8 +136,8 @@ function ensureStyles() {
         overflow: hidden !important;
         border: 0 !important;
         border-radius: 0.85rem !important;
-        background: #ecfeff !important;
-        box-shadow: inset 0 0 0 1px rgba(14, 116, 144, 0.16) !important;
+        background: var(--tree-palette-canvas-bg, #ecfeff) !important;
+        box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--tree-palette-group-border, #0891b2) 28%, transparent) !important;
         overscroll-behavior: contain !important;
         touch-action: none !important;
         user-select: none !important;
@@ -150,7 +150,7 @@ function ensureStyles() {
         top: 0 !important;
         width: ${STAGE_WIDTH}px !important;
         height: ${STAGE_HEIGHT}px !important;
-        background: #ecfeff !important;
+        background: var(--tree-palette-canvas-bg, #ecfeff) !important;
         transform-origin: 0 0 !important;
         will-change: transform !important;
         touch-action: none !important;
@@ -169,7 +169,7 @@ function ensureStyles() {
 
       #${FULL_MAP_ID} .mobile-family-full-map-connectors path {
         fill: none !important;
-        stroke: #d19006 !important;
+        stroke: var(--tree-palette-edge-child, #d19006) !important;
         stroke-width: 4 !important;
         stroke-linecap: round !important;
         stroke-linejoin: round !important;
@@ -188,9 +188,9 @@ function ensureStyles() {
       #${FULL_MAP_ID} .mobile-family-full-map-group-shell {
         width: 100% !important;
         min-height: 100% !important;
-        border: 2px solid rgba(14, 116, 144, 0.58) !important;
+        border: var(--tree-palette-group-border-width, 2px) solid var(--tree-palette-group-border, rgba(14, 116, 144, 0.58)) !important;
         border-radius: 1.1rem !important;
-        background: rgba(255, 255, 255, 0.98) !important;
+        background: var(--tree-palette-group-bg, rgba(255, 255, 255, 0.98)) !important;
         box-shadow: 0 12px 26px rgba(15, 23, 42, 0.1) !important;
         padding: 0.55rem !important;
         overflow: visible !important;
@@ -214,7 +214,7 @@ function ensureStyles() {
       #${FULL_MAP_ID} .mobile-family-full-map-group-title {
         display: block !important;
         margin: 0 0 0.45rem !important;
-        color: rgb(15, 23, 42) !important;
+        color: var(--tree-palette-text-primary, rgb(15, 23, 42)) !important;
         font-size: 0.66rem !important;
         font-weight: 950 !important;
         line-height: 1.05 !important;
@@ -239,11 +239,11 @@ function ensureStyles() {
         width: 100% !important;
         align-items: center !important;
         justify-content: flex-start !important;
-        gap: 0.42rem !important;
-        border: 1px solid rgba(103, 232, 249, 0.8) !important;
+        gap: 0.14rem !important;
+        border: 1px solid var(--tree-palette-border-tios, rgba(103, 232, 249, 0.8)) !important;
         border-radius: 0.78rem !important;
-        background: linear-gradient(180deg, #10bca8 0%, #0789a2 100%) !important;
-        color: #fff !important;
+        background: var(--tree-palette-card-tios, linear-gradient(180deg, #10bca8 0%, #0789a2 100%)) !important;
+        color: var(--tree-palette-text-primary, #0f172a) !important;
         box-shadow: 0 6px 16px rgba(15,23,42,0.1) !important;
         padding: 0.34rem 0.42rem !important;
         text-align: left !important;
@@ -252,53 +252,55 @@ function ensureStyles() {
       }
 
       #${FULL_MAP_ID} .mobile-family-full-map-card[data-variant="ancestor"] {
-        min-height: 78px !important;
+        min-height: 66px !important;
         flex-direction: column !important;
         align-items: center !important;
         justify-content: center !important;
-        gap: 0.22rem !important;
+        gap: 0.12rem !important;
         padding: 0.34rem !important;
         text-align: center !important;
       }
 
       #${FULL_MAP_ID} .mobile-family-full-map-card[data-variant="mini"] {
-        min-height: 78px !important;
+        min-height: 66px !important;
         flex-direction: column !important;
         align-items: center !important;
         justify-content: center !important;
-        gap: 0.22rem !important;
+        gap: 0.12rem !important;
         padding: 0.34rem !important;
         text-align: center !important;
       }
 
       #${FULL_MAP_ID} .mobile-family-full-map-card[data-variant="core"] {
-        min-height: 86px !important;
+        min-height: 72px !important;
         flex-direction: column !important;
         align-items: center !important;
         justify-content: center !important;
-        gap: 0.22rem !important;
+        gap: 0.12rem !important;
         padding: 0.34rem !important;
         text-align: center !important;
       }
 
       #${FULL_MAP_ID} .mobile-family-full-map-card[data-variant="parent"] {
-        min-height: 134px !important;
+        min-height: 124px !important;
         flex-direction: column !important;
         justify-content: center !important;
-        gap: 0.42rem !important;
+        gap: 0.22rem !important;
+        background: var(--tree-palette-card-pais, linear-gradient(180deg, #10bca8 0%, #0789a2 100%)) !important;
+        border-color: var(--tree-palette-border-pais, rgba(103, 232, 249, 0.9)) !important;
         border-radius: 1rem !important;
         padding: 0.58rem !important;
         text-align: center !important;
       }
 
       #${FULL_MAP_ID} .mobile-family-full-map-card[data-variant="central"] {
-        min-height: 176px !important;
+        min-height: 160px !important;
         flex-direction: column !important;
         justify-content: center !important;
-        gap: 0.55rem !important;
-        border-color: rgba(103, 232, 249, 0.9) !important;
+        gap: 0.26rem !important;
+        border-color: var(--tree-palette-border-central, rgba(103, 232, 249, 0.9)) !important;
         border-radius: 1.3rem !important;
-        background: linear-gradient(180deg, #0bbce1 0%, #1155e8 100%) !important;
+        background: var(--tree-palette-card-central, linear-gradient(180deg, #0bbce1 0%, #1155e8 100%)) !important;
         box-shadow: 0 16px 34px rgba(37, 99, 235, 0.2) !important;
         padding: 0.7rem !important;
         text-align: center !important;
@@ -314,8 +316,8 @@ function ensureStyles() {
         align-items: center !important;
         justify-content: center !important;
         border-radius: 999px !important;
-        background: #081225 !important;
-        color: #fff !important;
+        background: var(--tree-palette-text-primary, #081225) !important;
+        color: var(--tree-palette-canvas-bg, #fff) !important;
         font-size: 0.62rem !important;
         font-weight: 950 !important;
         letter-spacing: 0.14em !important;
@@ -333,7 +335,67 @@ function ensureStyles() {
         border: 3px solid rgba(255,255,255,0.78) !important;
         border-radius: 999px !important;
         background: rgba(255,255,255,0.2) !important;
-        color: rgba(255,255,255,0.86) !important;
+        color: var(--tree-palette-text-primary, rgba(255,255,255,0.86)) !important;
+      }
+
+      #${FULL_MAP_ID} .mobile-family-full-map-card[data-color-key="tataravos"] {
+        background: var(--tree-palette-card-tataravos, #B7AED6) !important;
+        border-color: var(--tree-palette-border-tataravos, #B7AED6) !important;
+      }
+
+      #${FULL_MAP_ID} .mobile-family-full-map-card[data-color-key="bisavos"] {
+        background: var(--tree-palette-card-bisavos, #D49BC5) !important;
+        border-color: var(--tree-palette-border-bisavos, #D49BC5) !important;
+      }
+
+      #${FULL_MAP_ID} .mobile-family-full-map-card[data-color-key="avos"] {
+        background: var(--tree-palette-card-avos, #E8A29B) !important;
+        border-color: var(--tree-palette-border-avos, #E8A29B) !important;
+      }
+
+      #${FULL_MAP_ID} .mobile-family-full-map-card[data-color-key="tios"] {
+        background: var(--tree-palette-card-tios, #EAB08F) !important;
+        border-color: var(--tree-palette-border-tios, #EAB08F) !important;
+      }
+
+      #${FULL_MAP_ID} .mobile-family-full-map-card[data-color-key="primos"] {
+        background: var(--tree-palette-card-primos, #E7B985) !important;
+        border-color: var(--tree-palette-border-primos, #E7B985) !important;
+      }
+
+      #${FULL_MAP_ID} .mobile-family-full-map-card[data-color-key="pai"],
+      #${FULL_MAP_ID} .mobile-family-full-map-card[data-color-key="mae"],
+      #${FULL_MAP_ID} .mobile-family-full-map-card[data-color-key="pais"],
+      #${FULL_MAP_ID} .mobile-family-full-map-card[data-color-key="conjuges"],
+      #${FULL_MAP_ID} .mobile-family-full-map-card[data-color-key="conjuge"] {
+        background: var(--tree-palette-card-pais, #E4C37A) !important;
+        border-color: var(--tree-palette-border-pais, #E4C37A) !important;
+      }
+
+      #${FULL_MAP_ID} .mobile-family-full-map-card[data-color-key="central"] {
+        background: var(--tree-palette-card-central, #E7E8E8) !important;
+        border-color: var(--tree-palette-border-central, #E7E8E8) !important;
+      }
+
+      #${FULL_MAP_ID} .mobile-family-full-map-card[data-color-key="irmaos"] {
+        background: var(--tree-palette-card-irmaos, #A9CB72) !important;
+        border-color: var(--tree-palette-border-irmaos, #A9CB72) !important;
+      }
+
+      #${FULL_MAP_ID} .mobile-family-full-map-card[data-color-key="sobrinhos"] {
+        background: var(--tree-palette-card-sobrinhos, #B8CEC2) !important;
+        border-color: var(--tree-palette-border-sobrinhos, #B8CEC2) !important;
+      }
+
+      #${FULL_MAP_ID} .mobile-family-full-map-card[data-color-key="filhos"],
+      #${FULL_MAP_ID} .mobile-family-full-map-card[data-color-key="netos"] {
+        background: var(--tree-palette-card-netos, #BDD8DC) !important;
+        border-color: var(--tree-palette-border-netos, #BDD8DC) !important;
+      }
+
+      #${FULL_MAP_ID} .mobile-family-full-map-card[data-color-key="pets"] {
+        background: var(--tree-palette-card-pets, #F4C7AB) !important;
+        border-color: var(--tree-palette-border-pets, #F4C7AB) !important;
       }
 
       #${FULL_MAP_ID} .mobile-family-full-map-card[data-variant="ancestor"] .mobile-family-full-map-avatar,
@@ -396,11 +458,11 @@ function ensureStyles() {
         display: block !important;
         width: 100% !important;
         overflow: hidden !important;
-        color: #fff !important;
+        color: var(--tree-palette-text-primary, #0f172a) !important;
         font-size: 0.54rem !important;
         font-weight: 950 !important;
-        line-height: 1.08 !important;
-        letter-spacing: 0.03em !important;
+        line-height: 1 !important;
+        letter-spacing: 0.01em !important;
         text-transform: uppercase !important;
         text-overflow: clip !important;
         white-space: nowrap !important;
@@ -429,7 +491,7 @@ function ensureStyles() {
 
       #${FULL_MAP_ID} .mobile-family-full-map-card[data-variant="parent"] .mobile-family-full-map-name {
         font-size: 0.76rem !important;
-        letter-spacing: 0.03em !important;
+        letter-spacing: 0.01em !important;
         overflow: hidden !important;
         text-align: center !important;
         text-overflow: clip !important;
@@ -438,7 +500,7 @@ function ensureStyles() {
 
       #${FULL_MAP_ID} .mobile-family-full-map-card[data-variant="central"] .mobile-family-full-map-name {
         font-size: 0.92rem !important;
-        letter-spacing: 0.03em !important;
+        letter-spacing: 0.01em !important;
         overflow: hidden !important;
         text-align: center !important;
         text-overflow: clip !important;
@@ -446,7 +508,7 @@ function ensureStyles() {
       }
 
       #${FULL_MAP_ID} .mobile-family-full-map-vitals {
-        display: flex !important;
+        display: none !important;
         flex-wrap: wrap !important;
         gap: 0.18rem 0.34rem !important;
         color: rgba(236, 254, 255, 0.95) !important;
@@ -613,25 +675,42 @@ function personIconSvg(pet?: boolean) {
   `;
 }
 
-function renderPersonCard(person: FullMapPerson, variant: FullMapCardVariant, label?: string) {
+function formatFullMapName(value: string) {
+  const parts = value.trim().split(/\s+/).filter(Boolean);
+  return parts.slice(0, 2).join(' ') || value;
+}
+
+function getNodeColorKey(node: FullMapNode) {
+  if (node.id.includes('tataravos')) return 'tataravos';
+  if (node.id.includes('bisavos')) return 'bisavos';
+  if (node.id.includes('avos')) return 'avos';
+  if (node.id.includes('tios')) return 'tios';
+  if (node.id.includes('primos')) return 'primos';
+  if (node.id === 'pai' || node.id === 'mae' || node.id === 'conjuge') return 'pais';
+  if (node.id === 'central') return 'central';
+  if (node.id === 'irmaos') return 'irmaos';
+  if (node.id === 'sobrinhos') return 'sobrinhos';
+  if (node.id === 'filhos' || node.id === 'netos') return 'netos';
+  if (node.id === 'pets') return 'pets';
+  return '';
+}
+
+function renderPersonCard(person: FullMapPerson, variant: FullMapCardVariant, label?: string, fallbackColorKey = '') {
   const card = document.createElement('article');
   card.className = 'mobile-family-full-map-card';
   card.dataset.variant = variant;
-  card.dataset.colorKey = person.colorKey ?? '';
+  card.dataset.colorKey = person.colorKey ?? fallbackColorKey;
 
   const labelMarkup = label ? `<span class="mobile-family-full-map-card-label">${escapeHtml(label)}</span>` : '';
   const avatarMarkup = person.photoSrc
     ? `<img src="${escapeHtml(person.photoSrc)}" alt="" />`
     : personIconSvg(person.pet);
-  const birthMarkup = person.birthYear ? `<span>★ ${escapeHtml(person.birthYear)}</span>` : '';
-  const deathMarkup = person.deathYear ? `<span>✚ ${escapeHtml(person.deathYear)}</span>` : '';
 
   card.innerHTML = `
     ${labelMarkup}
     <span class="mobile-family-full-map-avatar">${avatarMarkup}</span>
     <span class="mobile-family-full-map-card-body">
-      <span class="mobile-family-full-map-name">${escapeHtml(person.name)}</span>
-      <span class="mobile-family-full-map-vitals">${birthMarkup}${deathMarkup}</span>
+      <span class="mobile-family-full-map-name">${escapeHtml(formatFullMapName(person.name))}</span>
     </span>
   `;
 
@@ -663,10 +742,12 @@ function buildGroupNode(node: FullMapNode) {
     const grid = document.createElement('div');
     grid.className = 'mobile-family-full-map-card-grid';
     grid.style.setProperty('--full-map-columns', String(node.columns));
+    const fallbackColorKey = getNodeColorKey(node);
     node.people.forEach((person) => grid.appendChild(renderPersonCard(
       person,
       node.variant,
       node.variant === 'parent' ? node.label : undefined,
+      fallbackColorKey,
     )));
     shell.appendChild(grid);
   } else {
@@ -701,7 +782,7 @@ function estimateGroupHeight(
 ) {
   if (kind === 'person') return floorHeight;
 
-  const cardHeight = variant === 'core' ? 86 : variant === 'mini' || variant === 'ancestor' ? 78 : 62;
+  const cardHeight = variant === 'core' ? 72 : variant === 'mini' || variant === 'ancestor' ? 66 : 62;
   const rows = Math.max(1, Math.ceil(people.length / Math.max(1, columns)));
   const shellPadding = 18;
   const titleHeight = 18;
