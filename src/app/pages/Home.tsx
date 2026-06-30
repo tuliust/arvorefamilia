@@ -153,7 +153,7 @@ function normalizePersonNameKey(value: string) {
 }
 
 function getFamilyViewOptionLabel(pessoa?: Pessoa) {
-  return pessoa ? `FamÃ­lia de ${getFirstPersonName(pessoa.nome_completo || pessoa.id)}` : 'Sua view padrÃ£o';
+  return pessoa ? `Família de ${getFirstPersonName(pessoa.nome_completo || pessoa.id)}` : 'Sua view padrão';
 }
 
 function isVisibleByLifeStatusFilter(
