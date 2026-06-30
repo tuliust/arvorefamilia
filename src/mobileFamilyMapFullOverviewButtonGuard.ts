@@ -1,3 +1,5 @@
+import './mobileMapPanelRefinements';
+
 const MOBILE_QUERY = '(max-width: 767px)';
 const DIRECT_MAP_PATH = '/mapa-familiar';
 const OVERVIEW_ID = 'mobile-family-tree-overview-mode';
