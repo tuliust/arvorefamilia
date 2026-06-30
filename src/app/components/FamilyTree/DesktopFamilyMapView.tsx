@@ -354,9 +354,11 @@ function getVisiblePeople(group: ComposedGroup, config: GroupConfig, expanded: b
 }
 
 function getAdaptiveGroupColumns(config: GroupConfig, visiblePeople: Pessoa[]): GroupColumns {
-  return ADAPTIVE_UNCLES_GROUP_IDS.has(config.id) && (visiblePeople.length === 3 || visiblePeople.length === 6)
-    ? 'triple'
-    : config.columns;
+  if (!ADAPTIVE_UNCLES_GROUP_IDS.has(config.id)) return config.columns;
+  if (visiblePeople.length === 2) return 'double';
+  if (visiblePeople.length === 3 || visiblePeople.length === 6) return 'triple';
+
+  return config.columns;
 }
 
 function getAdaptiveGroupWidth(config: GroupConfig, peopleCount: number, columns: GroupColumns, layout: FamilyMapLayout) {

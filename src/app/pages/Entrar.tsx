@@ -83,7 +83,7 @@ function shouldQueueMobileDesktopTip() {
 export function Entrar() {
   const navigate = useNavigate();
   const { user, loading } = useAuth();
-  const { settings: siteVisualSettings } = useSiteVisualSettings();
+  const { settings: siteVisualSettings, loading: siteVisualSettingsLoading } = useSiteVisualSettings();
   const [mode, setMode] = useState<AuthMode>('login');
   const [firstAccessStep, setFirstAccessStep] = useState<FirstAccessStep>('code');
   const [accessCode, setAccessCode] = useState('');
@@ -104,6 +104,8 @@ export function Entrar() {
   const [acceptedLegalTerms, setAcceptedLegalTerms] = useState(false);
 
   useEffect(() => {
+    if (siteVisualSettingsLoading) return;
+
     document.title = siteVisualSettings.seo_title;
 
     let descriptionMeta = document.querySelector<HTMLMetaElement>('meta[name="description"]');
@@ -113,7 +115,7 @@ export function Entrar() {
       document.head.appendChild(descriptionMeta);
     }
     descriptionMeta.content = siteVisualSettings.seo_description;
-  }, [siteVisualSettings.seo_description, siteVisualSettings.seo_title]);
+  }, [siteVisualSettings.seo_description, siteVisualSettings.seo_title, siteVisualSettingsLoading]);
 
   useEffect(() => {
     let mounted = true;
@@ -494,14 +496,11 @@ export function Entrar() {
     setAcceptedLegalTerms(false);
   };
 
-  if (loading || checkingSession) {
+  if (loading || checkingSession || siteVisualSettingsLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600 mb-4" />
-          <p className="text-gray-600">Verificando sessão...</p>
-        </div>
-      </div>
+      <PublicEntranceLoading
+        label={siteVisualSettingsLoading ? 'Carregando configurações...' : 'Verificando sessão...'}
+      />
     );
   }
 
@@ -761,6 +760,18 @@ export function Entrar() {
       </main>
       <PublicFooterLinks settings={siteVisualSettings} />
     </PublicThemeFrame>
+  );
+}
+
+
+function PublicEntranceLoading({ label }: { label: string }) {
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="text-center">
+        <div className="inline-block animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600 mb-4" />
+        <p className="text-gray-600">{label}</p>
+      </div>
+    </div>
   );
 }
 

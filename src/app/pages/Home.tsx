@@ -136,6 +136,22 @@ function getFirstTwoNames(value?: string | null) {
   return names.slice(0, 2).join(' ') || 'Pessoa';
 }
 
+function getFirstSecondLastName(value?: string | null) {
+  const names = String(value ?? '').trim().split(/\s+/).filter(Boolean);
+  if (names.length <= 2) return names.join(' ') || 'Pessoa';
+
+  return [names[0], names[1], names[names.length - 1]].filter(Boolean).join(' ');
+}
+
+function normalizePersonNameKey(value: string) {
+  return value
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLocaleLowerCase('pt-BR')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
 function getFamilyViewOptionLabel(pessoa?: Pessoa) {
   return pessoa ? `FamÃ­lia de ${getFirstPersonName(pessoa.nome_completo || pessoa.id)}` : 'Sua view padrÃ£o';
 }
@@ -1205,13 +1221,31 @@ export function Home() {
   const debugViewPersonOptions = useMemo(() => {
     if (isMobile) return [];
 
-    return [...pessoas]
-      .filter((pessoa) => Boolean(pessoa.id))
-      .map((pessoa) => ({
-        id: pessoa.id,
-        label: getFirstTwoNames(pessoa.nome_completo || pessoa.id),
-      }))
-      .sort((a, b) => a.label.localeCompare(b.label, 'pt-BR', { sensitivity: 'base' }));
+    const firstTwoNameCounts = new Map<string, number>();
+    const peopleWithId = pessoas.filter((pessoa) => Boolean(pessoa.id));
+
+    peopleWithId.forEach((pessoa) => {
+      const firstTwoName = getFirstTwoNames(pessoa.nome_completo || pessoa.id);
+      const key = normalizePersonNameKey(firstTwoName);
+      firstTwoNameCounts.set(key, (firstTwoNameCounts.get(key) ?? 0) + 1);
+    });
+
+    return peopleWithId
+      .map((pessoa) => {
+        const firstTwoName = getFirstTwoNames(pessoa.nome_completo || pessoa.id);
+        const hasHomonym = (firstTwoNameCounts.get(normalizePersonNameKey(firstTwoName)) ?? 0) > 1;
+
+        return {
+          id: pessoa.id,
+          label: hasHomonym
+            ? getFirstSecondLastName(pessoa.nome_completo || pessoa.id)
+            : firstTwoName,
+        };
+      })
+      .sort((a, b) =>
+        a.label.localeCompare(b.label, 'pt-BR', { sensitivity: 'base' })
+        || a.id.localeCompare(b.id)
+      );
   }, [isMobile, pessoas]);
 
   const handleDebugViewPersonChange = useCallback((nextValue: string) => {

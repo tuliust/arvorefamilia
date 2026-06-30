@@ -468,6 +468,15 @@ export function VisualGroup({
   const effectiveColumns = visiblePeople.length === 1 ? 'single' : columns;
   const gridColumns = effectiveColumns === 'quad' ? 'grid-cols-4' : effectiveColumns === 'triple' ? 'grid-cols-3' : effectiveColumns === 'double' ? 'grid-cols-2' : 'grid-cols-1';
   const columnCount = effectiveColumns === 'quad' ? 4 : effectiveColumns === 'triple' ? 3 : effectiveColumns === 'double' ? 2 : 1;
+  const singleVisiblePersonCardWidth = visiblePeople.length === 1 && columns !== 'single'
+    ? variant === 'mini' ? '7rem' : '12.5rem'
+    : undefined;
+  const gridStyle: React.CSSProperties | undefined = singleVisiblePersonCardWidth
+    ? {
+      gridTemplateColumns: `minmax(0, min(100%, ${singleVisiblePersonCardWidth}))`,
+      justifyContent: 'center',
+    }
+    : undefined;
   const orderedVisiblePeople = React.useMemo(
     () => getPairAwareGridPeople(visiblePeople, columnCount, spousePartnerByPersonId),
     [columnCount, spousePartnerByPersonId, visiblePeople]
@@ -544,7 +553,7 @@ export function VisualGroup({
           Sem registros
         </p>
       ) : (
-        <div className={`grid min-h-0 ${gridColumns} gap-2 ${scrollClasses}`}>
+        <div className={`grid min-h-0 ${gridColumns} gap-2 ${scrollClasses}`} style={gridStyle}>
           {renderedItems.map((item, index) => {
             if (item.type === 'spacer') {
               return <div key={item.key} className="min-w-0" aria-hidden="true" />;
