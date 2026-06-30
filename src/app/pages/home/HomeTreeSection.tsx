@@ -78,7 +78,7 @@ function openTreeExportPreviewRoute(location: ReturnType<typeof useLocation>, ac
   const previewWindow = window.open(url, '_blank', 'noopener,noreferrer');
 
   if (!previewWindow) {
-    toast.warning('O navegador bloqueou a janela de preview da exporta��o. Libere pop-ups para este site e tente novamente.');
+    toast.warning('O navegador bloqueou a janela de preview da exportação. Libere pop-ups para este site e tente novamente.');
   }
 
   return true;
@@ -459,6 +459,206 @@ async function printPreviewTreeOnOnePage(title: string) {
   });
 }
 
+type AreaCaptureInstructionsDialogProps = {
+  open: boolean;
+  onCancel: () => void;
+  onContinue: () => void;
+};
+
+function AreaCaptureInstructionsDialog({
+  open,
+  onCancel,
+  onContinue,
+}: AreaCaptureInstructionsDialogProps) {
+  React.useEffect(() => {
+    if (!open) return;
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        onCancel();
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [onCancel, open]);
+
+  if (!open) return null;
+
+  return (
+    <div
+      className="fixed inset-0 z-[2147483000] flex items-center justify-center bg-slate-950/45 px-4 py-6 backdrop-blur-sm"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="area-capture-instructions-title"
+      data-tree-export-ignore="true"
+    >
+      <button
+        type="button"
+        className="absolute inset-0 cursor-default"
+        onClick={onCancel}
+        aria-label="Cancelar captura de área"
+        data-tree-export-ignore="true"
+      />
+
+      <section
+        className="relative flex max-h-[min(92vh,780px)] w-full max-w-4xl flex-col overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-2xl"
+        data-tree-export-ignore="true"
+      >
+        <div className="border-b border-slate-100 px-5 py-4 sm:px-6">
+          <p className="text-xs font-black uppercase tracking-[0.18em] text-blue-700">
+            Exportar área
+          </p>
+          <h2
+            id="area-capture-instructions-title"
+            className="mt-1 text-xl font-black text-slate-950 sm:text-2xl"
+          >
+            Salvar área da árvore
+          </h2>
+          <p className="mt-1 max-w-2xl text-sm font-medium leading-relaxed text-slate-600">
+            Antes de continuar, veja as etapas para capturar uma área real da tela e salvar a imagem.
+          </p>
+        </div>
+
+        <div className="min-h-0 flex-1 overflow-y-auto px-5 py-5 sm:px-6">
+          <div className="grid gap-4 lg:grid-cols-3">
+            <InstructionStepCard
+              number="1"
+              title="Permita o acesso à guia"
+              description="Na tela seguinte, permita o acesso à guia pela familiasouzabarros.com.br. Selecione “Esta aba” ou “Aba atual”."
+              illustration="permission"
+            />
+
+            <InstructionStepCard
+              number="2"
+              title="Selecione a área desejada"
+              description="Arraste na página para selecionar exatamente a área da árvore que deseja capturar."
+              illustration="selection"
+            />
+
+            <InstructionStepCard
+              number="3"
+              title="Salve o arquivo"
+              description="Dê um nome ao arquivo e salve na pasta desejada pela janela do sistema."
+              illustration="save"
+            />
+          </div>
+
+          <div className="mt-5 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm leading-relaxed text-amber-950">
+            <strong>Atenção:</strong> para expandir a área de visualização e captura da árvore,
+            retorne à página e utilize os botões de zoom na área superior esquerda da tela.
+          </div>
+        </div>
+
+        <div className="flex flex-col-reverse gap-2 border-t border-slate-100 bg-slate-50 px-5 py-4 sm:flex-row sm:justify-end sm:px-6">
+          <button
+            type="button"
+            className="inline-flex h-11 items-center justify-center rounded-xl border border-slate-200 bg-white px-5 text-sm font-bold text-slate-700 shadow-sm transition hover:bg-slate-100"
+            onClick={onCancel}
+          >
+            Cancelar
+          </button>
+
+          <button
+            type="button"
+            className="inline-flex h-11 items-center justify-center rounded-xl bg-blue-600 px-5 text-sm font-black text-white shadow-sm transition hover:bg-blue-700"
+            onClick={onContinue}
+          >
+            Continuar
+          </button>
+        </div>
+      </section>
+    </div>
+  );
+}
+
+function InstructionStepCard({
+  number,
+  title,
+  description,
+  illustration,
+}: {
+  number: string;
+  title: string;
+  description: string;
+  illustration: 'permission' | 'selection' | 'save';
+}) {
+  return (
+    <article className="flex min-h-[18rem] flex-col rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+      <div className="flex items-start gap-3">
+        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-blue-600 text-sm font-black text-white">
+          {number}
+        </span>
+        <div>
+          <h3 className="text-sm font-black text-slate-950">{title}</h3>
+          <p className="mt-1 text-xs font-medium leading-relaxed text-slate-600">{description}</p>
+        </div>
+      </div>
+
+      <div className="mt-4 flex flex-1 items-center justify-center rounded-2xl border border-slate-100 bg-slate-50 p-4">
+        {illustration === 'permission' && <PermissionIllustration />}
+        {illustration === 'selection' && <SelectionIllustration />}
+        {illustration === 'save' && <SaveIllustration />}
+      </div>
+    </article>
+  );
+}
+
+function PermissionIllustration() {
+  return (
+    <div className="w-full max-w-[15rem] rounded-2xl border border-slate-200 bg-white p-3 shadow-md">
+      <div className="h-2 w-20 rounded-full bg-slate-200" />
+      <div className="mt-3 rounded-xl border border-blue-200 bg-blue-50 p-3">
+        <div className="h-16 rounded-lg bg-gradient-to-br from-orange-100 via-white to-blue-100" />
+        <div className="mt-3 h-2 w-28 rounded-full bg-slate-300" />
+      </div>
+      <div className="mt-3 flex justify-end gap-2">
+        <span className="h-7 w-16 rounded-full bg-slate-100" />
+        <span className="h-7 w-16 rounded-full bg-blue-500" />
+      </div>
+    </div>
+  );
+}
+
+function SelectionIllustration() {
+  return (
+    <div className="relative h-36 w-full max-w-[15rem] overflow-hidden rounded-2xl border border-orange-200 bg-[#f7f1e8] shadow-inner">
+      <div className="absolute left-5 top-5 h-8 w-24 rounded-xl bg-pink-200" />
+      <div className="absolute right-5 top-7 h-8 w-24 rounded-xl bg-yellow-200" />
+      <div className="absolute bottom-5 left-1/2 h-12 w-16 -translate-x-1/2 rounded-xl bg-blue-100" />
+      <div className="absolute inset-x-8 top-12 h-16 rounded-xl border-2 border-blue-600 bg-blue-500/15 shadow-[0_0_0_999px_rgba(15,23,42,0.18)]" />
+    </div>
+  );
+}
+
+function SaveIllustration() {
+  return (
+    <div className="w-full max-w-[15rem] rounded-2xl border border-slate-200 bg-white p-4 shadow-md">
+      <div className="flex items-center gap-3">
+        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-100">
+          <ImageDown className="h-5 w-5 text-blue-700" />
+        </div>
+        <div className="min-w-0 flex-1">
+          <div className="h-2 w-24 rounded-full bg-slate-300" />
+          <div className="mt-2 h-2 w-16 rounded-full bg-slate-200" />
+        </div>
+      </div>
+      <div className="mt-4 h-9 rounded-xl border border-slate-200 bg-slate-50" />
+      <div className="mt-3 flex justify-end">
+        <span className="h-8 w-20 rounded-full bg-blue-500" />
+      </div>
+    </div>
+  );
+}
+
+
 interface HomeTreeSectionProps {
   isTreeResolving: boolean;
   loadError: string | null;
@@ -518,6 +718,7 @@ export function HomeTreeSection({
   const [familyMapHasScrolled, setFamilyMapHasScrolled] = React.useState(false);
   const [restoreViewRevision, setRestoreViewRevision] = React.useState(0);
   const [exportPreviewBusy, setExportPreviewBusy] = React.useState(false);
+  const [areaCaptureInstructionsOpen, setAreaCaptureInstructionsOpen] = React.useState(false);
   const effectiveTreeLayoutRevision = treeLayoutRevision + restoreViewRevision;
   const searchParams = React.useMemo(() => new URLSearchParams(location.search), [location.search]);
   const isExportPreview = searchParams.get('exportPreview') === '1';
@@ -531,6 +732,20 @@ export function HomeTreeSection({
     [desktopTitleFirstName, treeViewMode]
   );
   const desktopTreeViewportTop = 82;
+
+  const closeAreaCaptureInstructions = React.useCallback(() => {
+    setAreaCaptureInstructionsOpen(false);
+  }, []);
+
+  const continueAreaCapture = React.useCallback(() => {
+    setAreaCaptureInstructionsOpen(false);
+
+    window.setTimeout(() => {
+      void captureVisibleScreenAreaAsPng({
+        suggestedFilename: buildPreviewExportFilename(treeViewMode, desktopTreeTitle, 'png'),
+      });
+    }, 80);
+  }, [desktopTreeTitle, treeViewMode]);
 
   React.useEffect(() => {
     setFamilyMapHasScrolled(false);
@@ -594,9 +809,7 @@ export function HomeTreeSection({
       }
 
       if (action === 'select-area') {
-        void captureVisibleScreenAreaAsPng({
-          suggestedFilename: buildPreviewExportFilename(treeViewMode, desktopTreeTitle, 'png'),
-        });
+        setAreaCaptureInstructionsOpen(true);
         return;
       }
 
@@ -642,6 +855,12 @@ export function HomeTreeSection({
       className={["relative min-w-0 w-0 flex-1 overflow-hidden overscroll-none", isExportPreview ? 'bg-[#f7f1e8]' : 'bg-gray-100'].join(' ')}
       data-tree-export-preview-page={isExportPreview ? 'true' : undefined}
     >
+      <AreaCaptureInstructionsDialog
+        open={areaCaptureInstructionsOpen}
+        onCancel={closeAreaCaptureInstructions}
+        onContinue={continueAreaCapture}
+      />
+
       {isExportPreview && (
         <style>
           {`
