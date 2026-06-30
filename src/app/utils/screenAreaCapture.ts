@@ -39,6 +39,33 @@ type ViewportCaptureMapper = {
 
 const MIN_SELECTION_SIZE = 24;
 const AREA_CAPTURE_OVERLAY_ID = 'screen-area-capture-overlay';
+const AREA_CAPTURE_HIDDEN_CONTROLS_STYLE_ID = 'screen-area-capture-hidden-controls-style';
+
+function ensureAreaCaptureHiddenControlsStyle() {
+  if (document.getElementById(AREA_CAPTURE_HIDDEN_CONTROLS_STYLE_ID)) return;
+
+  const style = document.createElement('style');
+  style.id = AREA_CAPTURE_HIDDEN_CONTROLS_STYLE_ID;
+  style.textContent = `
+    html[data-screen-area-capture-active="true"] .tree-canvas-zoom-controls,
+    html[data-screen-area-capture-active="true"] [data-tour-target="tree-favorite"],
+    html[data-screen-area-capture-active="true"] a[href="/duvidas"].fixed.bottom-8.right-8 {
+      display: none !important;
+      visibility: hidden !important;
+    }
+  `;
+  document.head.appendChild(style);
+}
+
+function setAreaCaptureActive(active: boolean) {
+  if (active) {
+    ensureAreaCaptureHiddenControlsStyle();
+    document.documentElement.dataset.screenAreaCaptureActive = 'true';
+    return;
+  }
+
+  delete document.documentElement.dataset.screenAreaCaptureActive;
+}
 
 function isUserCancelledError(error: unknown) {
   return error instanceof DOMException
@@ -398,6 +425,10 @@ export async function captureVisibleScreenAreaAsPng({
   let stream: MediaStream | null = null;
 
   try {
+    setAreaCaptureActive(true);
+    await waitForAnimationFrame();
+    await waitForAnimationFrame();
+
     stream = await requestCurrentTabStream();
 
     const video = await createVideoElement(stream);
@@ -434,5 +465,6 @@ export async function captureVisibleScreenAreaAsPng({
   } finally {
     stream?.getTracks().forEach((track) => track.stop());
     removeExistingOverlay();
+    setAreaCaptureActive(false);
   }
 }

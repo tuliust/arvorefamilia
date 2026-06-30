@@ -2,7 +2,6 @@ import React from 'react';
 import { useLocation, useNavigate } from 'react-router';
 import {
   Brush,
-  FileDown,
   ImageDown,
   Layers,
   Map,
@@ -56,15 +55,15 @@ const viewOptions: Array<{
   {
     key: 'mapa-familiar',
     label: 'Linha Geracional',
-    subtitle: 'visualização cronológica por gerações',
+    subtitle: 'visualizaÃ§Ã£o cronolÃ³gica por geraÃ§Ãµes',
     ariaLabel: 'Alternar para Linha Geracional',
     icon: Map,
   },
   {
     key: 'mapa-familiar-horizontal',
-    label: 'Árvore Familiar',
-    subtitle: 'visão de parentesco',
-    ariaLabel: 'Alternar para Árvore Familiar',
+    label: 'Ãrvore Familiar',
+    subtitle: 'visÃ£o de parentesco',
+    ariaLabel: 'Alternar para Ãrvore Familiar',
     icon: Layers,
   },
 ];
@@ -76,9 +75,7 @@ const exportOptions: Array<{
   label: string;
   icon: React.ComponentType<{ className?: string }>;
 }> = [
-  { action: 'select-area', label: 'Área', icon: Scan },
-  { action: 'save-image', label: 'Imagem', icon: ImageDown },
-  { action: 'save-pdf', label: 'PDF', icon: FileDown },
+  { action: 'select-area', label: 'Salvar Imagem', icon: ImageDown },
   { action: 'print', label: 'Imprimir', icon: Printer },
 ];
 
@@ -244,11 +241,11 @@ export function SidebarPanelTabs({
         <div className="tree-external-zoom-actions flex w-full min-w-0 items-center gap-1.5 pr-[clamp(40px,5vh,44px)]">
           <TopIconButton icon={Plus} label="Aumentar zoom" visibleLabel="Zoom" onClick={() => dispatchTreeAction('zoom-in')} />
           <TopIconButton icon={Minus} label="Diminuir zoom" visibleLabel="Zoom" onClick={() => dispatchTreeAction('zoom-out')} />
-          <TopIconButton icon={Scan} label="Restaurar visualização" onClick={handleRestoreView} />
+          <TopIconButton icon={Scan} label="Restaurar visualizaÃ§Ã£o" onClick={handleRestoreView} />
         </div>
       )}
 
-      <section aria-label="Controles principais da árvore" className="tree-control-panel flex w-full min-w-0 self-stretch flex-col gap-[clamp(0.42rem,0.95vh,0.62rem)] rounded-lg border border-gray-200 bg-white p-[clamp(0.42rem,0.9vh,0.56rem)] shadow-sm">
+      <section aria-label="Controles principais da Ã¡rvore" className="tree-control-panel flex w-full min-w-0 self-stretch flex-col gap-[clamp(0.42rem,0.95vh,0.62rem)] rounded-lg border border-gray-200 bg-white p-[clamp(0.42rem,0.9vh,0.56rem)] shadow-sm">
         {shouldRenderViewAsSelector && (
           <label className="flex min-w-0 flex-col gap-1 rounded-lg border border-amber-100 bg-amber-50/60 px-2 py-1.5 shadow-sm" data-tree-export-ignore="true">
             <span className="text-[10px] font-extrabold uppercase tracking-wide text-amber-800">Visualizar como</span>
@@ -256,12 +253,12 @@ export function SidebarPanelTabs({
               value={effectiveViewAsPersonValue}
               onChange={(event) => handleViewAsPersonChange(event.target.value)}
               className="h-8 w-full rounded-md border border-amber-100 bg-white px-2 text-xs font-semibold text-slate-800 outline-none focus:ring-2 focus:ring-amber-200"
-              aria-label="Visualizar árvore como outra pessoa"
+              aria-label="Visualizar Ã¡rvore como outra pessoa"
             >
               <option value="__view_as_label__" disabled>
                 Visualizar como...
               </option>
-              <option value="">Sua view padrão</option>
+              <option value="">Sua view padrÃ£o</option>
               {effectiveViewAsPersonOptions.map((pessoa) => (
                 <option key={pessoa.id} value={pessoa.id}>
                   {pessoa.label}
@@ -297,7 +294,7 @@ export function SidebarPanelTabs({
         </div>
 
         {activeFlyout === 'colors' && (
-          <div className="tree-control-flyout grid min-w-0 grid-cols-4 gap-1" aria-label="Paletas de cores da árvore">
+          <div className="tree-control-flyout grid min-w-0 grid-cols-4 gap-1" aria-label="Paletas de cores da Ã¡rvore">
             {paletteOptions.map((paletteKey) => {
               const palette = TREE_COLOR_PALETTES[paletteKey];
               const isActive = paletteKey === treeColorPalette;

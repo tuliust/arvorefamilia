@@ -86,16 +86,33 @@ function openTreeExportPreviewRoute(location: ReturnType<typeof useLocation>, ac
 
 function printCurrentTreePage() {
   const root = document.documentElement;
+  const exportRoot = document.querySelector<HTMLElement>(TREE_EXPORT_ROOT_SELECTOR);
   let fallbackCleanupTimer: number | undefined;
 
   const cleanup = () => {
     delete root.dataset.treeDirectPrint;
+    root.style.removeProperty('--tree-direct-print-scale');
+    root.style.removeProperty('--tree-direct-print-width');
+    root.style.removeProperty('--tree-direct-print-height');
     window.removeEventListener('afterprint', cleanup);
 
     if (fallbackCleanupTimer !== undefined) {
       window.clearTimeout(fallbackCleanupTimer);
     }
   };
+
+  if (exportRoot) {
+    const rect = exportRoot.getBoundingClientRect();
+    const treeWidth = Math.ceil(Math.max(rect.width, exportRoot.offsetWidth, exportRoot.scrollWidth, 1));
+    const treeHeight = Math.ceil(Math.max(rect.height, exportRoot.offsetHeight, exportRoot.scrollHeight, 1));
+    const availableWidth = Math.max(window.innerWidth, document.documentElement.clientWidth, 1);
+    const availableHeight = Math.max(window.innerHeight, document.documentElement.clientHeight, 1);
+    const scale = Math.min(1, availableWidth / treeWidth, availableHeight / treeHeight);
+
+    root.style.setProperty('--tree-direct-print-scale', String(Math.max(scale, 0.2)));
+    root.style.setProperty('--tree-direct-print-width', `${treeWidth}px`);
+    root.style.setProperty('--tree-direct-print-height', `${treeHeight}px`);
+  }
 
   root.dataset.treeDirectPrint = 'true';
   window.addEventListener('afterprint', cleanup, { once: true });
@@ -882,7 +899,88 @@ export function HomeTreeSection({
     <section
       className={["relative min-w-0 w-0 flex-1 overflow-hidden overscroll-none", isExportPreview ? 'bg-[#f7f1e8]' : 'bg-gray-100'].join(' ')}
       data-tree-export-preview-page={isExportPreview ? 'true' : undefined}
+      data-tree-direct-print-page="true"
     >
+      <style>
+        {`
+          @media print {
+            @page {
+              margin: 0;
+              size: auto;
+            }
+
+            html[data-tree-direct-print="true"],
+            html[data-tree-direct-print="true"] body,
+            html[data-tree-direct-print="true"] #root {
+              width: 100% !important;
+              min-width: 100% !important;
+              height: auto !important;
+              min-height: 100% !important;
+              overflow: visible !important;
+              background: #f7f1e8 !important;
+              -webkit-print-color-adjust: exact !important;
+              print-color-adjust: exact !important;
+            }
+
+            html[data-tree-direct-print="true"] header,
+            html[data-tree-direct-print="true"] aside,
+            html[data-tree-direct-print="true"] nav,
+            html[data-tree-direct-print="true"] .tree-canvas-zoom-controls,
+            html[data-tree-direct-print="true"] [data-tour-target="tree-favorite"],
+            html[data-tree-direct-print="true"] [data-tree-export-ignore="true"],
+            html[data-tree-direct-print="true"] a[href="/duvidas"].fixed.bottom-8.right-8 {
+              display: none !important;
+              visibility: hidden !important;
+            }
+
+            html[data-tree-direct-print="true"] main {
+              position: static !important;
+              display: block !important;
+              width: 100vw !important;
+              min-width: 100vw !important;
+              height: auto !important;
+              min-height: 100vh !important;
+              overflow: visible !important;
+              background: #f7f1e8 !important;
+            }
+
+            html[data-tree-direct-print="true"] [data-tree-direct-print-page="true"] {
+              position: static !important;
+              display: flex !important;
+              width: 100vw !important;
+              min-width: 100vw !important;
+              max-width: 100vw !important;
+              height: 100vh !important;
+              min-height: 100vh !important;
+              overflow: hidden !important;
+              align-items: flex-start !important;
+              justify-content: center !important;
+              background: #f7f1e8 !important;
+              flex: none !important;
+            }
+
+            html[data-tree-direct-print="true"] [data-family-map-export-root="true"],
+            html[data-tree-direct-print="true"] [data-family-map-horizontal-root="true"],
+            html[data-tree-direct-print="true"] [data-export-root="family-tree"] {
+              width: var(--tree-direct-print-width, auto) !important;
+              height: var(--tree-direct-print-height, auto) !important;
+              max-width: none !important;
+              max-height: none !important;
+              overflow: visible !important;
+              background: #f7f1e8 !important;
+              isolation: isolate !important;
+              transform: scale(var(--tree-direct-print-scale, 1)) !important;
+              transform-origin: top center !important;
+              margin: 0 auto !important;
+            }
+
+            html[data-tree-direct-print="true"] [data-export-root="family-tree"] > div.absolute.left-0.right-0 {
+              top: 82px !important;
+            }
+          }
+        `}
+      </style>
+
       <AreaCaptureInstructionsDialog
         open={areaCaptureInstructionsOpen}
         onCancel={closeAreaCaptureInstructions}
