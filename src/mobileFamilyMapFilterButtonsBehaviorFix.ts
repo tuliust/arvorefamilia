@@ -3,6 +3,9 @@ const FAMILY_MAP_PATHS = new Set(['/mapa-familiar', '/mapa-familiar-horizontal']
 const STORAGE_KEY = 'arvorefamilia:mobile-family-map:show-extended-spouses';
 const STYLE_ID = 'mobile-family-map-filter-buttons-behavior-fix-style';
 
+let stateSyncFrame: number | null = null;
+let buttonStateFrame: number | null = null;
+
 function isMobileViewport() {
   return typeof window !== 'undefined'
     && typeof window.matchMedia === 'function'
@@ -42,10 +45,45 @@ function writeExtendedSpouseState(value: boolean) {
   }
 }
 
+function writeSpouseScopeDataset(value: boolean) {
+  const nextScope = value ? 'extended' : 'direct';
+
+  if (document.documentElement.dataset.mobileFamilySpouseScope !== nextScope) {
+    document.documentElement.dataset.mobileFamilySpouseScope = nextScope;
+  }
+}
+
+function scheduleButtonStateSync() {
+  if (!isFamilyMapMobile()) return;
+  if (buttonStateFrame !== null) return;
+
+  buttonStateFrame = window.requestAnimationFrame(() => {
+    buttonStateFrame = null;
+    applyButtonState();
+  });
+}
+
+function syncStoredSpouseState() {
+  if (!isFamilyMapMobile()) return;
+
+  writeSpouseScopeDataset(readExtendedSpouseState());
+  scheduleButtonStateSync();
+}
+
+function scheduleStoredSpouseStateSync() {
+  if (!isFamilyMapMobile()) return;
+  if (stateSyncFrame !== null) return;
+
+  stateSyncFrame = window.requestAnimationFrame(() => {
+    stateSyncFrame = null;
+    syncStoredSpouseState();
+  });
+}
+
 function setExtendedSpouseState(value: boolean) {
-  document.documentElement.dataset.mobileFamilySpouseScope = value ? 'extended' : 'direct';
   writeExtendedSpouseState(value);
-  applyButtonState();
+  writeSpouseScopeDataset(value);
+  scheduleButtonStateSync();
 
   window.dispatchEvent(new CustomEvent('arvorefamilia:mobile-spouse-filter-changed', {
     detail: { showExtended: value },
@@ -90,14 +128,6 @@ function applyButtonState() {
     button.setAttribute('aria-pressed', 'false');
     button.setAttribute('aria-disabled', 'true');
   });
-}
-
-function ensureInitialState() {
-  if (!isFamilyMapMobile()) return;
-
-  const storedValue = readExtendedSpouseState();
-  document.documentElement.dataset.mobileFamilySpouseScope = storedValue ? 'extended' : 'direct';
-  applyButtonState();
 }
 
 function handleFilterClick(event: Event) {
@@ -193,25 +223,31 @@ function ensureStyles() {
 
 if (typeof window !== 'undefined' && typeof document !== 'undefined') {
   ensureStyles();
-  ensureInitialState();
+  scheduleStoredSpouseStateSync();
 
   document.addEventListener('click', handleFilterClick, true);
 
+  const observerTarget = document.body ?? document.documentElement;
   const observer = new MutationObserver(() => {
-    ensureInitialState();
+    scheduleStoredSpouseStateSync();
   });
 
-  observer.observe(document.documentElement, {
+  observer.observe(observerTarget, {
     childList: true,
     subtree: true,
-    attributes: true,
-    attributeFilter: ['data-mobile-family-spouse-scope'],
   });
 
-  window.addEventListener('resize', ensureInitialState, { passive: true });
-  window.addEventListener('orientationchange', ensureInitialState, { passive: true });
-  window.addEventListener('popstate', ensureInitialState, { passive: true });
-  [120, 320, 720, 1400].forEach((delay) => window.setTimeout(ensureInitialState, delay));
+  window.addEventListener('resize', scheduleStoredSpouseStateSync, { passive: true });
+  window.addEventListener('orientationchange', scheduleStoredSpouseStateSync, { passive: true });
+  window.addEventListener('popstate', scheduleStoredSpouseStateSync, { passive: true });
+  window.addEventListener('arvorefamilia:mobile-spouse-filter-changed', scheduleButtonStateSync);
+  window.addEventListener('storage', (event) => {
+    if (event.key === STORAGE_KEY) {
+      scheduleStoredSpouseStateSync();
+    }
+  });
+
+  [120, 320, 720, 1400].forEach((delay) => window.setTimeout(scheduleStoredSpouseStateSync, delay));
 }
 
 export {};
