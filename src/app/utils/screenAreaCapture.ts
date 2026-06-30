@@ -28,12 +28,25 @@ type WindowWithSaveFilePicker = Window & {
   showSaveFilePicker?: (options?: SaveFilePickerOptions) => Promise<SaveFilePickerHandle>;
 };
 
+type DisplayMediaTrackSettings = MediaTrackSettings & {
+  displaySurface?: 'browser' | 'window' | 'monitor' | 'application';
+};
+
+type ViewportCaptureMapper = {
+  scaleX: number;
+  scaleY: number;
+};
+
 const MIN_SELECTION_SIZE = 24;
 const AREA_CAPTURE_OVERLAY_ID = 'screen-area-capture-overlay';
 
-function isAbortLikeError(error: unknown) {
+function isUserCancelledError(error: unknown) {
   return error instanceof DOMException
-    && ['AbortError', 'NotAllowedError', 'SecurityError'].includes(error.name);
+    && ['AbortError', 'NotAllowedError'].includes(error.name);
+}
+
+function isSavePickerCancelledError(error: unknown) {
+  return error instanceof DOMException && error.name === 'AbortError';
 }
 
 function waitForAnimationFrame() {
@@ -213,17 +226,52 @@ function selectVisibleScreenArea() {
   });
 }
 
-async function requestCurrentScreenStream() {
+async function requestCurrentTabStream() {
   if (!navigator.mediaDevices?.getDisplayMedia) {
     throw new Error('Este navegador não permite captura real da tela. Use a exportação por imagem como alternativa.');
   }
 
-  toast.message('Na janela do navegador, selecione esta aba ou janela atual para capturar a área visível.');
+  toast.message('Na janela do navegador, selecione "Esta aba" ou "Aba atual". Não selecione "Janela" nem "Tela inteira".');
 
-  return navigator.mediaDevices.getDisplayMedia({
-    video: true,
+  const options = {
+    video: {
+      displaySurface: 'browser',
+    },
     audio: false,
-  });
+    preferCurrentTab: true,
+    selfBrowserSurface: 'include',
+    surfaceSwitching: 'exclude',
+  } as unknown as DisplayMediaStreamOptions;
+
+  return navigator.mediaDevices.getDisplayMedia(options);
+}
+
+function assertCurrentTabCapture(stream: MediaStream, video: HTMLVideoElement) {
+  const track = stream.getVideoTracks()[0];
+  const settings = track?.getSettings?.() as DisplayMediaTrackSettings | undefined;
+
+  if (settings?.displaySurface && settings.displaySurface !== 'browser') {
+    throw new Error('Para salvar a área correta, selecione "Esta aba" ou "Aba atual" na permissão de captura. Captura de janela ou tela inteira inclui a barra do navegador e desloca o recorte.');
+  }
+
+  const videoWidth = Math.max(video.videoWidth, 1);
+  const videoHeight = Math.max(video.videoHeight, 1);
+  const viewportWidth = Math.max(window.innerWidth, 1);
+  const viewportHeight = Math.max(window.innerHeight, 1);
+  const scaleX = videoWidth / viewportWidth;
+  const scaleY = videoHeight / viewportHeight;
+  const scaleDelta = Math.abs(scaleX - scaleY) / Math.max(scaleX, scaleY, 1);
+  const topChromeLikeExcess = videoHeight - viewportHeight * scaleX;
+  const maxAllowedExcess = Math.max(28, viewportHeight * scaleX * 0.035);
+
+  if (scaleDelta > 0.04 || topChromeLikeExcess > maxAllowedExcess) {
+    throw new Error('A captura escolhida parece incluir a janela inteira do navegador. Selecione "Esta aba" ou "Aba atual" para que o recorte corresponda exatamente à área selecionada.');
+  }
+
+  return {
+    scaleX,
+    scaleY,
+  };
 }
 
 async function createVideoElement(stream: MediaStream) {
@@ -252,18 +300,11 @@ async function createVideoElement(stream: MediaStream) {
   return video;
 }
 
-async function captureSelectedAreaFromVideo(video: HTMLVideoElement, rect: SelectionRect) {
-  const videoWidth = Math.max(video.videoWidth, 1);
-  const videoHeight = Math.max(video.videoHeight, 1);
-  const viewportWidth = Math.max(window.innerWidth, 1);
-  const viewportHeight = Math.max(window.innerHeight, 1);
-  const scaleX = videoWidth / viewportWidth;
-  const scaleY = videoHeight / viewportHeight;
-
-  const sourceX = Math.round(rect.left * scaleX);
-  const sourceY = Math.round(rect.top * scaleY);
-  const sourceWidth = Math.round(rect.width * scaleX);
-  const sourceHeight = Math.round(rect.height * scaleY);
+async function captureSelectedAreaFromVideo(video: HTMLVideoElement, rect: SelectionRect, mapper: ViewportCaptureMapper) {
+  const sourceX = Math.round(rect.left * mapper.scaleX);
+  const sourceY = Math.round(rect.top * mapper.scaleY);
+  const sourceWidth = Math.round(rect.width * mapper.scaleX);
+  const sourceHeight = Math.round(rect.height * mapper.scaleY);
 
   const canvas = document.createElement('canvas');
   canvas.width = Math.max(sourceWidth, 1);
@@ -340,7 +381,7 @@ async function saveBlob(blob: Blob, suggestedFilename: string) {
 
     return 'picker';
   } catch (error) {
-    if (isAbortLikeError(error)) {
+    if (isSavePickerCancelledError(error)) {
       throw error;
     }
 
@@ -357,9 +398,10 @@ export async function captureVisibleScreenAreaAsPng({
   let stream: MediaStream | null = null;
 
   try {
-    stream = await requestCurrentScreenStream();
+    stream = await requestCurrentTabStream();
 
     const video = await createVideoElement(stream);
+    const mapper = assertCurrentTabCapture(stream, video);
 
     toast.message('Arraste na página para selecionar a área que deseja salvar.');
     const rect = await selectVisibleScreenArea();
@@ -368,7 +410,7 @@ export async function captureVisibleScreenAreaAsPng({
     await waitForAnimationFrame();
     await wait(160);
 
-    const canvas = await captureSelectedAreaFromVideo(video, rect);
+    const canvas = await captureSelectedAreaFromVideo(video, rect, mapper);
     const blob = await canvasToPngBlob(canvas);
     const mode = await saveBlob(blob, suggestedFilename);
 
@@ -378,7 +420,7 @@ export async function captureVisibleScreenAreaAsPng({
         : 'Imagem baixada como PNG.',
     );
   } catch (error) {
-    if (isAbortLikeError(error)) {
+    if (isUserCancelledError(error)) {
       toast.info('Captura de área cancelada.');
       return;
     }
