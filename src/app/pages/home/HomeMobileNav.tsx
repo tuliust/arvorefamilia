@@ -1205,12 +1205,29 @@ export function HomeMobileNav({
 
           {activeToolbarAction === 'zoom' && (
             <div
-              className={`fixed inset-x-2 ${mobileTreeViewPopoverTopClass} z-[10001] md:hidden`}
-              style={{ bottom: 'calc(env(safe-area-inset-bottom,0px)+5.65rem)' }}
+              className={[
+                'fixed z-[10001] md:hidden',
+                mobileMapPanelMode === 'full'
+                  ? 'inset-x-0'
+                  : `inset-x-2 ${mobileTreeViewPopoverTopClass}`,
+              ].join(' ')}
+              style={{
+                top: mobileMapPanelMode === 'full'
+                  ? 'calc(env(safe-area-inset-top,0px)+7.75rem)'
+                  : undefined,
+                bottom: mobileMapPanelMode === 'full'
+                  ? 'calc(env(safe-area-inset-bottom,0px)+5.3rem)'
+                  : 'calc(env(safe-area-inset-bottom,0px)+5.65rem)',
+              }}
               data-tree-export-ignore="true"
             >
               <div
-                className="mx-auto flex h-full max-w-md flex-col gap-2 rounded-2xl border border-slate-200 bg-white/95 p-2 shadow-[0_14px_34px_rgba(15,23,42,0.14)] backdrop-blur"
+                className={[
+                  'mx-auto flex h-full max-w-md flex-col',
+                  mobileMapPanelMode === 'full'
+                    ? 'gap-0 overflow-hidden rounded-none border-0 bg-white p-0 shadow-none'
+                    : 'gap-2 rounded-2xl border border-slate-200 bg-white/95 p-2 shadow-[0_14px_34px_rgba(15,23,42,0.14)] backdrop-blur',
+                ].join(' ')}
                 aria-label="Mapa da família"
                 data-mobile-family-map-inline-overview="true"
                 data-mobile-family-map-overview-source="direct-map"

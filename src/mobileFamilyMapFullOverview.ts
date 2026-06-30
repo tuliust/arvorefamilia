@@ -122,19 +122,24 @@ function ensureStyles() {
         flex: 1 1 auto !important;
         background: transparent !important;
         padding: 0 !important;
+        overflow: hidden !important;
       }
 
       #${FULL_MAP_ID} .mobile-family-full-map-viewport {
         position: relative !important;
         flex: 1 1 auto !important;
-        min-height: 18rem !important;
+        min-height: min(72vh, 32rem) !important;
+        height: 100% !important;
         width: 100% !important;
         overflow: hidden !important;
-        border: 1px solid rgb(226, 232, 240) !important;
-        border-radius: 1.25rem !important;
+        border: 0 !important;
+        border-radius: 0.85rem !important;
         background: #ecfeff !important;
-        box-shadow: inset 0 0 0 1px rgba(255,255,255,0.7), 0 12px 26px rgba(15,23,42,0.1) !important;
+        box-shadow: inset 0 0 0 1px rgba(14, 116, 144, 0.16) !important;
+        overscroll-behavior: contain !important;
         touch-action: none !important;
+        user-select: none !important;
+        -webkit-user-select: none !important;
       }
 
       #${FULL_MAP_ID} .mobile-family-full-map-stage {
@@ -146,6 +151,9 @@ function ensureStyles() {
         background: #ecfeff !important;
         transform-origin: 0 0 !important;
         will-change: transform !important;
+        touch-action: none !important;
+        user-select: none !important;
+        -webkit-user-select: none !important;
       }
 
       #${FULL_MAP_ID} .mobile-family-full-map-connectors {
@@ -683,21 +691,24 @@ function buildFullMapModel() {
   const pets = extractPeopleFromSection(findSectionByTitle('core', ['pets']), 'Pets');
   const netos = extractPeopleFromSection(findSectionByTitle('core', ['netos']), 'Netos');
 
+  const leftColumnX = 455;
+  const leftColumnWidth = 210;
+
   const nodes: FullMapNode[] = [
     { id: 'bisavos-paternos', kind: 'ancestor', label: 'Bisavós paternos', left: 58, top: 42, width: 250, minHeight: 170, columns: 1, variant: 'ancestor', people: bisavosPaternos },
-    { id: 'avos-paternos', kind: 'ancestor', label: 'Avós paternos', left: 405, top: 112, width: 230, minHeight: 190, columns: 1, variant: 'ancestor', people: avosPaternos },
+    { id: 'avos-paternos', kind: 'ancestor', label: 'Avós paternos', left: leftColumnX, top: 112, width: leftColumnWidth, minHeight: 190, columns: 1, variant: 'ancestor', people: avosPaternos },
     { id: 'avos-maternos', kind: 'ancestor', label: 'Avós maternos', left: 650, top: 112, width: 230, minHeight: 190, columns: 1, variant: 'ancestor', people: avosMaternos },
     { id: 'bisavos-maternos', kind: 'ancestor', label: 'Bisavós maternos', left: 940, top: 42, width: 250, minHeight: 170, columns: 1, variant: 'ancestor', people: bisavosMaternos },
     { id: 'tios-paternos', kind: 'uncles', label: 'Tios paternos', left: 40, top: 420, width: 390, minHeight: 440, columns: 2, variant: 'ancestor', people: tiosPaternos },
-    { id: 'pai', kind: 'person', label: 'Pai', left: 488, top: 455, width: 170, minHeight: 156, columns: 1, variant: 'parent', people: extractSinglePerson(findCoreCardByText('pai'), 'Pai') },
+    { id: 'pai', kind: 'person', label: 'Pai', left: leftColumnX, top: 455, width: leftColumnWidth, minHeight: 156, columns: 1, variant: 'parent', people: extractSinglePerson(findCoreCardByText('pai'), 'Pai') },
     { id: 'mae', kind: 'person', label: 'Mãe', left: 710, top: 455, width: 170, minHeight: 156, columns: 1, variant: 'parent', people: extractSinglePerson(findCoreCardByText('mae'), 'Mãe') },
     { id: 'tios-maternos', kind: 'uncles', label: 'Tios maternos', left: 845, top: 420, width: 355, minHeight: 330, columns: 2, variant: 'ancestor', people: tiosMaternos },
     { id: 'central', kind: 'person', label: 'Pessoa central', left: 550, top: 735, width: 250, minHeight: 200, columns: 1, variant: 'central', people: extractSinglePerson(findCoreCardByColor('central'), 'Pessoa central') },
     { id: 'primos-paternos', kind: 'cousins', label: 'Primos paternos', left: 40, top: 875, width: 410, minHeight: 430, columns: 3, variant: 'mini', people: primosPaternos },
-    { id: 'irmaos', kind: 'core-group', label: 'Irmãos', left: 468, top: 1010, width: 190, minHeight: 210, columns: 1, variant: 'core', people: irmaos },
+    { id: 'irmaos', kind: 'core-group', label: 'Irmãos', left: leftColumnX, top: 1010, width: leftColumnWidth, minHeight: 210, columns: 1, variant: 'core', people: irmaos },
     { id: 'conjuge', kind: 'core-group', label: 'Cônjuge', left: 710, top: 1010, width: 190, minHeight: 145, columns: 1, variant: 'core', people: conjuge },
     { id: 'filhos', kind: 'core-group', label: 'Filhos', left: 930, top: 1010, width: 180, minHeight: 145, columns: 1, variant: 'core', people: filhos },
-    { id: 'sobrinhos', kind: 'core-group', label: 'Sobrinhos', left: 468, top: 1280, width: 190, minHeight: 145, columns: 1, variant: 'core', people: sobrinhos },
+    { id: 'sobrinhos', kind: 'core-group', label: 'Sobrinhos', left: leftColumnX, top: 1280, width: leftColumnWidth, minHeight: 145, columns: 1, variant: 'core', people: sobrinhos },
     { id: 'pets', kind: 'core-group', label: 'Pets', left: 710, top: 1280, width: 190, minHeight: 145, columns: 1, variant: 'core', people: pets },
     { id: 'netos', kind: 'core-group', label: 'Netos', left: 930, top: 1280, width: 180, minHeight: 145, columns: 1, variant: 'core', people: netos },
     { id: 'primos-maternos', kind: 'cousins', label: 'Primos maternos', left: 900, top: 795, width: 260, minHeight: 190, columns: 1, variant: 'mini', people: primosMaternos },
@@ -753,11 +764,17 @@ function resetTransform() {
   if (!viewport || !stage) return;
 
   const viewportRect = viewport.getBoundingClientRect();
+  if (viewportRect.width < 120 || viewportRect.height < 220) {
+    window.setTimeout(resetTransform, 80);
+    return;
+  }
+
   const stageWidth = stage.offsetWidth || STAGE_WIDTH;
   const stageHeight = stage.offsetHeight || STAGE_HEIGHT;
-  scale = clamp(Math.min((viewportRect.width - 20) / stageWidth, (viewportRect.height - 20) / stageHeight), 0.18, 0.9);
-  translateX = Math.max(10, (viewportRect.width - (stageWidth * scale)) / 2);
-  translateY = Math.max(10, (viewportRect.height - (stageHeight * scale)) / 2);
+  const fitScale = Math.min((viewportRect.width - 12) / stageWidth, (viewportRect.height - 12) / stageHeight);
+  scale = clamp(fitScale * 1.18, 0.24, 0.9);
+  translateX = Math.max(6, (viewportRect.width - (stageWidth * scale)) / 2);
+  translateY = Math.max(6, (viewportRect.height - (stageHeight * scale)) / 2);
   applyTransform();
 }
 
@@ -816,6 +833,7 @@ function handleTouchStart(event: TouchEvent) {
       translateX,
       translateY,
     };
+    event.preventDefault();
   }
 }
 
