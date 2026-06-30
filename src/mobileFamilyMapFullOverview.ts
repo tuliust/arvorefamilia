@@ -154,6 +154,7 @@ function ensureStyles() {
         transform-origin: 0 0 !important;
         will-change: transform !important;
         touch-action: none !important;
+        overscroll-behavior: contain !important;
         user-select: none !important;
         -webkit-user-select: none !important;
       }
@@ -873,6 +874,7 @@ function buildFullMapModel() {
   const centerPairRightX = centerColumnX + centerPairWidth + centerPairGap;
   const centerSingleWidth = 250;
   const centerSingleX = centerColumnX + ((centerColumnWidth - centerSingleWidth) / 2);
+  const lowerColumnOffset = 172;
   const hasPeople = (people?: FullMapPerson[] | null) => Array.isArray(people) && people.length > 0;
   const getAdaptiveColumns = (people: FullMapPerson[]) => (people.length <= 1 ? 1 : 2);
   const getAdaptiveGroupWidth = (people: FullMapPerson[], fullWidth: number) => (
@@ -964,7 +966,7 @@ function buildFullMapModel() {
   let leftY = topMargin;
   const placedTataravosPaternos = placeAdaptiveGroup('tataravos-paternos', leftColumnX, leftY, sideColumnWidth, 125);
   if (placedTataravosPaternos) leftY += placedTataravosPaternos + verticalGroupGap;
-  const placedBisavosPaternos = placeAdaptiveGroup('bisavos-paternos', leftColumnX, leftY, sideColumnWidth, 155);
+  const placedBisavosPaternos = placeAdaptiveGroup('bisavos-paternos', leftColumnX, leftY, sideColumnWidth, 172);
   if (placedBisavosPaternos) leftY += placedBisavosPaternos + ancestorUncleGap;
   const placedTiosPaternos = placeAdaptiveGroup('tios-paternos', leftColumnX, leftY, sideColumnWidth, 330);
   if (placedTiosPaternos) leftY += placedTiosPaternos + uncleCousinGap;
@@ -990,21 +992,29 @@ function buildFullMapModel() {
     if (placedHeight) centerY += placedHeight + rowGap;
   };
 
-  placeCenterRow('avos-paternos', 'avos-maternos', 165, 58);
+  const placedAvosPaternos = placeAdaptiveGroup('avos-paternos', centerColumnX, centerY, centerPairWidth, 184);
+  const placedAvosMaternos = placeAdaptiveGroup('avos-maternos', centerPairRightX, centerY, centerPairWidth, 132, 'right');
+  const placedAvosHeight = Math.max(placedAvosPaternos || 0, placedAvosMaternos || 0);
+  if (placedAvosHeight) centerY += placedAvosHeight + 58;
   const parentRowTop = centerY;
   placeCenterRow('pai', 'mae', 156, 50, false);
   const placedCentral = placeNode('central', centerSingleX, centerY, centerSingleWidth, 195, 1);
   if (placedCentral) centerY += placedCentral + 72;
-  const lowerRightColumnX = centerPairRightX - 46;
+  const centralNode = nodeById.get('central');
+  const centralCenterX = centralNode
+    ? centralNode.left + (centralNode.width / 2)
+    : centerSingleX + (centerSingleWidth / 2);
+  const lowerLeftColumnX = centralCenterX - lowerColumnOffset - (centerPairWidth / 2);
+  const lowerRightColumnX = centralCenterX + lowerColumnOffset - (centerPairWidth / 2);
   const lowerRightWidth = centerPairWidth;
   const coreTop = centerY;
-  const placedIrmaos = placeAdaptiveGroup('irmaos', centerColumnX, coreTop, centerPairWidth, 190);
-  const placedConjuge = placeAdaptiveGroup('conjuge', lowerRightColumnX, coreTop, lowerRightWidth, 145);
+  const placedIrmaos = placeAdaptiveGroup('irmaos', lowerLeftColumnX, coreTop, centerPairWidth, 190);
+  const placedConjuge = placeAdaptiveGroup('conjuge', lowerRightColumnX, coreTop, lowerRightWidth, 145, 'center');
   const coreRowHeight = Math.max(placedIrmaos || 0, placedConjuge || 0);
   if (coreRowHeight) centerY += coreRowHeight + 70;
   const secondaryTop = centerY;
-  placeAdaptiveGroup('sobrinhos', centerColumnX, secondaryTop, centerPairWidth, 145);
-  placeAdaptiveGroup('pets', lowerRightColumnX, secondaryTop, lowerRightWidth, 145);
+  placeAdaptiveGroup('sobrinhos', lowerLeftColumnX, secondaryTop, centerPairWidth, 145);
+  placeAdaptiveGroup('pets', lowerRightColumnX, secondaryTop, lowerRightWidth, 145, 'center');
   centerNodeUnderParent('sobrinhos', 'irmaos');
   centerNodeUnderParent('pets', 'conjuge');
   const secondaryRowHeight = Math.max(nodeById.get('sobrinhos')?.minHeight ?? 0, nodeById.get('pets')?.minHeight ?? 0);
@@ -1014,9 +1024,9 @@ function buildFullMapModel() {
   let rightY = topMargin;
   const placedTataravosMaternos = placeAdaptiveGroup('tataravos-maternos', rightColumnX, rightY, sideColumnWidth, 125, 'right');
   if (placedTataravosMaternos) rightY += placedTataravosMaternos + verticalGroupGap;
-  const placedBisavosMaternos = placeAdaptiveGroup('bisavos-maternos', rightColumnX, rightY, sideColumnWidth, 155, 'right');
+  const placedBisavosMaternos = placeAdaptiveGroup('bisavos-maternos', rightColumnX, rightY, sideColumnWidth, 132, 'right');
   if (placedBisavosMaternos) rightY += placedBisavosMaternos + ancestorUncleGap;
-  const placedTiosMaternos = placeAdaptiveGroup('tios-maternos', rightColumnX, parentRowTop, sideColumnWidth, 330, 'right');
+  const placedTiosMaternos = placeAdaptiveGroup('tios-maternos', rightColumnX, parentRowTop, sideColumnWidth, 292, 'right');
   if (placedTiosMaternos) rightY += placedTiosMaternos + uncleCousinGap;
   placeAdaptiveGroup('primos-maternos', rightColumnX, parentRowTop + placedTiosMaternos + uncleCousinGap, sideColumnWidth, 410, 'right');
   centerNodeUnderParent('primos-maternos', 'tios-maternos');
