@@ -345,7 +345,7 @@ export function AdminManagedProfilesPanel() {
           title: 'Aprovar solicitação',
           description: `Aprovar solicitação e vincular ${pendingReviewAction.request.requester_label} como ${getRoleLabel(pendingReviewAction.defaultRole)} de ${pendingReviewAction.request.target_label}?`,
           confirmText: 'Aprovar',
-          variant: 'default' as const,
+          variant: 'warning' as const,
         }
       : {
           title: 'Rejeitar solicitação',

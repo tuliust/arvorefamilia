@@ -236,9 +236,10 @@ function findExactTextElement(text: string) {
     .find((element) => normalizeText(element.textContent) === normalizedTarget) ?? null;
 }
 
-function setStyleValue(element: HTMLElement, property: keyof CSSStyleDeclaration, value: string) {
-  if (element.style[property] === value) return;
-  element.style[property] = value as never;
+function setStyleValue(element: HTMLElement, property: string, value: string) {
+  const cssProperty = property.replace(/[A-Z]/g, (match) => '-' + match.toLowerCase());
+  if (element.style.getPropertyValue(cssProperty) === value) return;
+  element.style.setProperty(cssProperty, value);
 }
 
 function uniquePeople(people: Array<Pessoa | undefined | null>) {

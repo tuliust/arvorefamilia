@@ -425,7 +425,7 @@ export async function getSiteVisualSettings(): Promise<SiteVisualSettings> {
     return DEFAULT_SITE_VISUAL_SETTINGS;
   }
 
-  return normalizeSiteVisualSettings(data);
+  return normalizeSiteVisualSettings(data as Partial<SiteVisualSettings> | null);
 }
 
 export async function saveSiteVisualSettings(payload: SiteVisualSettingsPayload): Promise<SiteVisualSettings> {
@@ -454,7 +454,7 @@ export async function saveSiteVisualSettings(payload: SiteVisualSettingsPayload)
     throw new Error(error.message);
   }
 
-  return normalizeSiteVisualSettings(data);
+  return normalizeSiteVisualSettings(data as Partial<SiteVisualSettings> | null);
 }
 
 export async function saveSiteVisualSettingsDraft(payload: SiteVisualSettingsPayload): Promise<SiteVisualSettings> {
@@ -472,7 +472,7 @@ export async function saveSiteVisualSettingsDraft(payload: SiteVisualSettingsPay
     .single();
 
   if (error) throw new Error(error.message);
-  return normalizeSiteVisualSettings(data);
+  return normalizeSiteVisualSettings(data as Partial<SiteVisualSettings> | null);
 }
 
 export async function scheduleSiteVisualSettingsPublication(payload: SiteVisualSettingsPayload, scheduledPublishAt: string): Promise<SiteVisualSettings> {
@@ -495,7 +495,7 @@ export async function scheduleSiteVisualSettingsPublication(payload: SiteVisualS
     .single();
 
   if (error) throw new Error(error.message);
-  return normalizeSiteVisualSettings(data);
+  return normalizeSiteVisualSettings(data as Partial<SiteVisualSettings> | null);
 }
 
 export async function publishSiteVisualSettingsDraft(): Promise<SiteVisualSettings> {

@@ -100,7 +100,7 @@ function buildDraftQuestionnaire(draft: MeusDadosDraft | null) {
   });
 }
 
-function hasQuestionnaireSource(questionnaire: PersonProfileQuestionnaireAnswers | null) {
+function hasQuestionnaireSource(questionnaire: Pick<PersonProfileQuestionnaireAnswers, 'selectedBadges' | 'customTraits' | 'generatedQuestions'> | null) {
   if (!questionnaire) return false;
   return (
     questionnaire.selectedBadges.length > 0 ||
