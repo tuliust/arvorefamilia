@@ -1,6 +1,6 @@
 # Funcionalidades complementares
 
-> Última revisão: 2026-06-29
+> Última revisão: 2026-06-30
 > Escopo: calendário, dúvidas, fórum, favoritos, notificações, onboarding, exportação, busca global, timeline, perfil, aprovações e cadastros administrativos de pessoas.
 > Status: canônico complementar.
 
@@ -204,41 +204,73 @@ O onboarding deve respeitar sessão, perfil e vínculo familiar disponível.
 
 Função:
 
-- permitir geração de artefato visual ou arquivo derivado da árvore quando disponível;
-- preservar consistência com a visualização atual;
-- não bloquear navegação caso exportação falhe.
+- permitir que o usuário gere artefato visual da árvore sem alterar dados;
+- preservar a visualização atual da pessoa de referência;
+- evitar que elementos auxiliares da interface apareçam em arquivos ou impressão;
+- tratar erros por `toast` e nunca por diálogo nativo do navegador.
 
-Fluxo atual:
+Fluxo atual do painel desktop:
 
-- `Área` mantém seleção visual da região exportável e expõe ações próprias de PNG, PDF, impressão e cancelamento;
-- `Imagem`, `PDF` e `Imprimir` abrem uma aba/janela dedicada de preview usando a própria rota da árvore com `exportPreview=1`;
-- o parâmetro `exportIntent` define a ação do preview: `png`, `pdf` ou `print`;
-- a aba de preview deve renderizar a árvore real, sem header, painel lateral, botão flutuante `?` e controles auxiliares;
-- no preview de imagem, o toolbar mostra apenas `Salvar PNG`;
-- no preview de PDF, o toolbar mostra apenas `Exportar PDF`;
-- no preview de impressão, o toolbar mostra apenas `Imprimir`;
-- o fluxo deve tratar erro de captura e não pode ficar preso em estado permanente de preparação.
+- a seção `Exportar` exibe apenas dois botões: `Salvar Imagem` e `Imprimir`;
+- `Salvar Imagem` corresponde à ação interna `select-area`;
+- `Imagem` e `PDF` não ficam mais expostos como botões diretos do painel;
+- os dois botões devem ficar em uma linha com duas colunas, com visual compacto e sem extrapolar o painel;
+- o mesmo contrato de ações deve ser preservado no painel compacto/flyout quando aplicável.
 
-Estado de estabilização:
+### Salvar Imagem
 
-Regras complementares mobile/header:
+O fluxo de `Salvar Imagem` é guiado por modal próprio antes de iniciar a captura real da tela.
 
-- overlays de busca, notificações, avatar e painéis de árvore devem ficar acima do canvas e de elementos sticky;
-- ajustes de camada não devem afetar desktop;
-- o botão `+` e o modal `Mapa da família` devem ter prioridade visual quando abertos.
+Regras:
 
-- a arquitetura de preview real está implementada;
-- a captura final por `html2canvas` ainda exige QA visual específico porque sombras, filtros ou blur podem aparecer como blocos cinza na imagem exportada;
-- a documentação deve tratar a frente como em ajuste até que PNG, PDF e impressão passem sem blocos cinza, títulos cortados ou deformação de cards.
+- clicar em `Salvar Imagem` abre o modal `Salvar área da árvore`;
+- o modal deve explicar três etapas: permitir acesso à guia, selecionar a área desejada e salvar o arquivo;
+- o botão `Continuar` fecha o modal e inicia a captura;
+- a captura usa `navigator.mediaDevices.getDisplayMedia`;
+- a permissão deve orientar o usuário a selecionar `Esta aba` ou `Aba atual`;
+- capturas de `Janela`, `Tela inteira`, `monitor` ou superfícies equivalentes podem deslocar o recorte e devem ser bloqueadas ou tratadas com erro claro;
+- a seleção da área usa overlay próprio com ponteiro/arraste;
+- a seleção mínima deve impedir recortes acidentais muito pequenos;
+- o arquivo gerado é PNG;
+- quando `showSaveFilePicker` estiver disponível, o navegador pode abrir janela nativa para nome e destino do arquivo;
+- quando `showSaveFilePicker` não estiver disponível, o fluxo deve cair para download por link temporário;
+- durante a seleção de área, os controles de zoom, o botão de favorito/estrela e o botão flutuante `?`/`/duvidas` devem ficar ocultos;
+- o toast instrucional `Na janela do navegador...` não deve aparecer depois do modal, porque o modal é a instrução principal.
+
+### Imprimir
+
+O fluxo de `Imprimir` deve abrir a janela nativa de impressão do navegador.
+
+Regras:
+
+- clicar em `Imprimir` não deve abrir diálogo nativo intermediário próprio da aplicação;
+- a impressão usa uma página limpa montada para impressão a partir da árvore capturada internamente;
+- a página de impressão deve incluir o título superior da árvore, por exemplo `Árvore Familiar de Tulius`;
+- a árvore deve ficar centralizada horizontalmente;
+- a árvore deve caber em uma única página usando dimensionamento proporcional;
+- o usuário ainda pode escolher `Retrato` ou `Paisagem` na janela do navegador;
+- em ambas as orientações, a impressão não deve exibir header, painel lateral, controles de zoom, botão de favorito/estrela, botão flutuante `?` ou overlays;
+- `/mapa-familiar` e `/mapa-familiar-horizontal` devem seguir o mesmo contrato visual de impressão.
+
+### Fluxos internos legados
+
+O código ainda pode manter helpers internos de preview, PNG, PDF ou `html2canvas` para compatibilidade técnica, fallback ou usos internos. Esses fluxos não devem ser tratados como ações principais do painel desktop enquanto não estiverem expostos ao usuário.
 
 Não regressão mínima:
 
-- botão ou fluxo de exportação existe quando aplicável;
-- erro é tratado;
-- exportação não altera dados;
-- fluxos de imagem, PDF e impressão preservam feedback visual de preparação e não travam a página em estado permanente;
-- quando exportação abrir nova aba ou janela, a página principal deve permanecer preservada;
-- o artefato exportado não deve incluir overlay, toolbar, header, painel lateral ou botão flutuante.
+- `Exportar` mostra somente `Salvar Imagem` e `Imprimir`;
+- botões de exportação não cortam nem saem do painel;
+- textos do painel permanecem em UTF-8 válido;
+- `Salvar Imagem` abre modal antes da captura;
+- o modal aparece com fundo opaco em `/mapa-familiar` e `/mapa-familiar-horizontal`;
+- a seleção de área não exibe zoom, favorito ou botão `?`;
+- a captura não inclui overlay, modal, toast, toolbar, header, painel lateral ou botão flutuante;
+- `Imprimir` abre a janela nativa do navegador;
+- impressão contém o título superior e a árvore centralizada;
+- impressão cabe em uma página;
+- falhas usam `toast` e encerram estados transitórios de preparação/captura;
+- `window.alert`, `alert`, `window.confirm`, `confirm`, `window.prompt` e `prompt` não devem ser reintroduzidos.
+
 ## Timeline
 
 Função:

@@ -1,6 +1,6 @@
 # Regras de não regressão
 
-> Última revisão: 2026-06-29
+> Última revisão: 2026-06-30
 > Escopo: contratos que não devem ser quebrados em novas alterações.
 > Status: canônico.
 
@@ -26,12 +26,20 @@
 - Em perspectiva por `?pessoa=`, cônjuges colaterais não podem reaparecer por preferência persistida ou herança de estado.
 - Mobile não deve herdar layout desktop de painel fixo.
 - Exportação não pode ser removida do painel desktop sem substituto documentado.
-- `Imagem`, `PDF` e `Imprimir` devem preservar a página principal e abrir preview dedicado quando esse fluxo estiver ativo.
-- O preview de exportação não pode exibir header do app, painel lateral, botão flutuante `?`, toolbar auxiliar ou controles de zoom.
-- O artefato exportado não pode conter blocos cinza, sombras artificiais, blur residual, títulos cortados ou texto ilegível.
-- A captura por `html2canvas` deve sanitizar cores modernas não suportadas, como `oklch`, antes de gerar PNG/PDF.
-- Falhas de exportação devem encerrar estado de loading e informar erro; não pode haver tela presa em `Preparando exportação...`.
-- A exportação por área deve manter os botões `Salvar PNG`, `Salvar PDF`, `Imprimir` e `Cancelar` funcionais.
+- A seção `Exportar` deve exibir somente `Salvar Imagem` e `Imprimir`.
+- `Imagem` e `PDF` não devem reaparecer como botões diretos no painel principal sem decisão explícita.
+- Os botões `Salvar Imagem` e `Imprimir` devem permanecer compactos, em duas colunas, sem cortar a área do painel.
+- Textos do painel devem permanecer em UTF-8 válido, sem mojibake.
+- `Salvar Imagem` deve abrir modal de instruções antes de iniciar captura real.
+- O modal de `Salvar Imagem` deve ter fundo opaco em `/mapa-familiar` e `/mapa-familiar-horizontal`.
+- Durante a seleção de área, controles de zoom, favorito e botão flutuante `?` devem ficar ocultos.
+- A captura não pode incluir modal, overlay, toast, toolbar, header, painel lateral, zoom, favorito ou botão `?`.
+- O toast instrucional redundante depois do modal não deve reaparecer.
+- `Imprimir` deve abrir a janela nativa do navegador.
+- A impressão deve incluir título superior, árvore centralizada e caber em uma página.
+- A impressão não pode exibir header, painel lateral, controles de zoom, favorito, botão `?`, overlays ou toolbars.
+- Falhas de exportação/captura/impressão devem encerrar estado transitório e informar erro por `toast`.
+- Capturas internas por `html2canvas` devem sanitizar cores modernas não suportadas, como `oklch`, antes de gerar artefatos.
 - O cabeçalho do painel desktop deve manter título, ícone e ação de recolher na mesma linha.
 - Cards do painel desktop devem preservar legibilidade e não podem cortar labels ou botões de exportação.
 - A seção `Grupos de Familiares` e seu subtítulo não devem desaparecer do painel.

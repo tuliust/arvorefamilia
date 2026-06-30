@@ -1,6 +1,6 @@
 # Guia de componentes
 
-> Última revisão: 2026-06-29
+> Última revisão: 2026-06-30
 > Escopo: componentes relevantes para rotas e fluxos funcionais da branch `main`.
 > Status: canônico.
 
@@ -12,8 +12,8 @@
 | `HomeHeader.tsx` | Cabeçalho da experiência de mapa. No mobile deve exibir `Árvore Familiar`. |
 | `HomeMobileNav.tsx` | Navegação e ações mobile da home, incluindo botão `+`, painel de visualização, filtros e ações de mapa. |
 | `MobileFamilyMapToolbar.tsx` | Toolbar mobile do mapa familiar; no mobile o botão `Mapa` abre a visão geral de grupos e não representa zoom real. |
-| `HomeTreeSection.tsx` | Área de renderização da árvore, roteamento de ações vindas do painel, preview de exportação por `exportPreview=1` e composição do toolbar de exportação em aba dedicada. |
-| `DesktopTreeVisualizationPanel.tsx` | Painel desktop de visualização, temas, grupos, filtros, exportação, títulos `Grupos de Familiares`/`Exportar` e ação interna de recolher. |
+| `HomeTreeSection.tsx` | Área de renderização da árvore, roteamento de ações vindas do painel, modal de instruções de `Salvar Imagem`, captura/impressão e helpers internos de preview quando necessários. |
+| `DesktopTreeVisualizationPanel.tsx` | Painel desktop de visualização, temas, grupos, filtros, seção `Exportar` com `Salvar Imagem` e `Imprimir`, títulos `Grupos de Familiares`/`Exportar` e ação interna de recolher. |
 | `SidebarPanelTabs.tsx` | Abas auxiliares do painel lateral. |
 | `HomeCuriositiesDialog.tsx` | Diálogo de curiosidades e perguntas assistidas na home. |
 | `FirstLoginTutorial.tsx` | Tutorial de primeiro acesso. |
@@ -37,9 +37,9 @@
 | `TreeLegend.tsx` | Legenda consolidada da árvore. |
 | `treeViewMode.ts` | Conversão entre rota e modo de visualização. |
 | `utils/treePreferences.ts` | Preferências visuais e ocultação inicial de cônjuges colaterais em perspectiva por `?pessoa=`. |
-| `utils/treeExport.ts` | Captura, sanitização, preview, PNG, PDF, impressão e tratamento de erro da exportação. |
+| `utils/treeExport.ts` | Helpers legados/compartilhados de captura e artefatos quando usados por fluxos internos da árvore. |
 | `utils/exportColorSanitizer.ts` | Sanitização de cores modernas não suportadas pelo `html2canvas`. |
-| `TreeAreaSelectionOverlay.tsx` | Seleção de área visível da árvore para exportação. |
+| `src/app/utils/screenAreaCapture.ts` | Captura real de área visível por `getDisplayMedia`, overlay de seleção, recorte, salvamento PNG e fallback de download. |
 | `modals/AddConnectionModal.tsx` | Modal de nova conexão. |
 | `modals/ViewMarriageModal.tsx` | Modal de detalhes de casamento. |
 
@@ -60,7 +60,6 @@
 Esses scripts devem ser conferidos antes de alterar mobile, mapa familiar, curiosidades, tutorial ou painel desktop:
 
 - `mobileFamilyTreeMutationPerformanceGuard.ts`
-- `desktopTreeVisualizationPanelTextFix.ts`
 - `firstLoginMobileTutorialFixes.ts`
 - `mobileCuriositiesNavigationFix.ts`
 - `mobileTreePanelViewportFix.ts`
@@ -96,6 +95,25 @@ Regras:
 - evitar observar atributos quando o runtime altera `style`, `dataset` ou classes;
 - usar `requestAnimationFrame` e `try/catch` para evitar travamento;
 - migrar regra para componente de origem quando o comportamento estiver estabilizado.
+
+## Componentes e utilitários de exportação
+
+| Componente / módulo | Papel |
+|---|---|
+| `DesktopTreeVisualizationPanel.tsx` | Expõe apenas `Salvar Imagem` e `Imprimir` na seção `Exportar` do painel desktop. |
+| `SidebarPanelTabs.tsx` | Mantém as mesmas ações de exportação no painel compacto/flyout. |
+| `HomeTreeSection.tsx` | Recebe ações `select-area` e `print`, abre modal de instruções, inicia captura real ou impressão limpa. |
+| `AreaCaptureInstructionsDialog` | Modal local de `HomeTreeSection.tsx` com três etapas: permissão da guia, seleção da área e salvamento. |
+| `screenAreaCapture.ts` | Utilitário de captura real da tela/aba, com validação de superfície, overlay de seleção, geração de PNG e salvamento. |
+| `exportColorSanitizer.ts` | Sanitização de CSS moderno para fluxos internos que ainda usam `html2canvas`. |
+
+Regras de composição:
+
+- `Salvar Imagem` é o rótulo público da ação interna `select-area`;
+- `Imagem` e `PDF` não devem aparecer como botões diretos no painel principal;
+- o modal de instruções deve ser fechado antes de abrir a permissão de captura;
+- botões de zoom, favorito e `?` devem ficar ocultos durante a seleção de área;
+- impressão deve usar página limpa, com título e árvore centralizados em uma página.
 
 ## Páginas de membro
 

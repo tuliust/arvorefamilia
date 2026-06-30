@@ -1,6 +1,6 @@
 # QA manual
 
-> Última revisão: 2026-06-29
+> Última revisão: 2026-06-30
 > Escopo: validação manual das rotas e contratos documentados.
 > Status: canônico.
 
@@ -52,10 +52,18 @@ Quando houver migration nova, confirmar se o arquivo existe localmente e se foi 
 - O painel deve exibir `Grupos de Familiares` e subtítulo `Clique para exibir/ocultar grupos de parentes na árvore`.
 - Abre perfil em `/pessoa/:id`.
 - Mantém painel desktop sem cortar exportação.
-- `Imagem`, `PDF` e `Imprimir` devem abrir aba/janela de preview com `exportPreview=1` e `exportIntent` correspondente.
-- O preview não deve exibir header, painel lateral, botão flutuante `?`, toolbar indevida, sombras artificiais, blocos cinza ou títulos cortados.
-- `Área` deve permitir selecionar região visível e exibir ações `Salvar PNG`, `Salvar PDF`, `Imprimir` e `Cancelar`.
-- O overlay de seleção/loading não deve aparecer no arquivo exportado.
+- A seção `Exportar` deve exibir apenas `Salvar Imagem` e `Imprimir`.
+- Os botões `Salvar Imagem` e `Imprimir` devem ficar compactos, em uma linha com duas colunas, sem extrapolar o painel.
+- Não deve haver mojibake em textos do painel, como `Visualização`, `Visão por grupos`, `Por gerações`, `Núcleo`, `Avós`, `Bisavós`, `Irmãos` e `Cônjuges`.
+- `Salvar Imagem` deve abrir o modal de instruções antes de solicitar permissão de captura.
+- O modal deve ter fundo opaco em `/mapa-familiar` e `/mapa-familiar-horizontal`.
+- Após `Continuar`, a captura deve ocultar controles de zoom, botão de favorito/estrela e botão flutuante `?`.
+- A captura deve orientar o usuário a escolher `Esta aba`/`Aba atual` pela interface do modal, sem toast instrucional redundante.
+- O arquivo salvo não deve incluir modal, overlay, toast, controles de zoom, favorito ou botão `?`.
+- `Imprimir` deve abrir a janela nativa de impressão.
+- A impressão deve incluir o título superior `Árvore Familiar de ...`.
+- A impressão deve ocultar header, painel lateral, controles de zoom, botão de favorito/estrela e botão flutuante `?`.
+- A árvore deve aparecer centralizada horizontalmente e caber em uma única página em `Retrato` e `Paisagem`.
 - Mobile não deve abrir painéis persistentes por padrão.
 - O painel aberto pelo botão `+` deve ficar acima de toolbar e canvas.
 - O painel mobile deve reconhecer familiares reais da pessoa ativa: pais, cônjuges, irmãos, filhos, pets, avós, bisavós, tataravós, tios, primos e sobrinhos.
@@ -110,11 +118,44 @@ Validar a direção física do dedo em iPhone/Safari real sempre que possível:
 - Renderiza linha geracional horizontal.
 - Mantém filtros aplicáveis e contadores coerentes.
 - Replica no painel desktop os critérios visuais de seletor, cabeçalho, grupos, paleta e exportação.
-- Exportação deve abrir preview dedicado por `exportPreview=1`.
+- A exportação deve seguir o mesmo contrato de `/mapa-familiar`: `Salvar Imagem` com modal/captura de área e `Imprimir` em uma página com título, centralização e sem elementos auxiliares.
 - No mobile, `data-family-map-horizontal-mobile-root="true"` deve ser respeitado.
 - Scripts de `/mapa-familiar` não devem alterar transformações da rota horizontal.
 - O CSS `family-map-horizontal.css` deve continuar aplicado.
 - Locks de `descendants` da rota 3x3 não devem afetar a rota horizontal.
+
+### QA desktop de exportação da árvore
+
+Validar em `/mapa-familiar` e `/mapa-familiar-horizontal`:
+
+#### Painel `Exportar`
+
+- Exibir apenas `Salvar Imagem` e `Imprimir`.
+- Não exibir botões diretos `Imagem` ou `PDF`.
+- Botões devem caber no painel, sem corte inferior.
+- Textos devem permanecer em UTF-8 válido.
+- O painel compacto/flyout deve preservar as mesmas ações.
+
+#### `Salvar Imagem`
+
+- Clicar em `Salvar Imagem` abre modal de instruções.
+- O modal deve exibir as três etapas: permitir guia, selecionar área e salvar arquivo.
+- O botão `Cancelar` fecha o modal sem iniciar captura.
+- O botão `Continuar` inicia captura real de tela.
+- A permissão do navegador deve permitir selecionar a aba atual.
+- Captura de janela/tela inteira não deve gerar recorte deslocado.
+- Durante a seleção, zoom, favorito e botão `?` devem ficar ocultos.
+- Não deve aparecer toast instrucional redundante depois do modal.
+- O PNG salvo deve conter apenas a região selecionada.
+
+#### `Imprimir`
+
+- Clicar em `Imprimir` abre a janela nativa do navegador.
+- Validar `Retrato` e `Paisagem`.
+- O título superior da árvore deve aparecer.
+- A árvore deve ficar centralizada horizontalmente.
+- A árvore deve caber em uma página.
+- Header, painel lateral, controles de zoom, botão de favorito, botão `?` e overlays não podem aparecer.
 
 ### `/linha-geracional`
 

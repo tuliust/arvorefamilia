@@ -1,6 +1,6 @@
 # Mapa familiar
 
-> Última revisão: 2026-06-29
+> Última revisão: 2026-06-30
 > Escopo: `/mapa-familiar`, `/mapa-familiar-horizontal`, `/linha-geracional`, `Home.tsx` e componentes `FamilyTree`.
 > Status: canônico.
 
@@ -55,6 +55,40 @@ Ao navegar para perfil, o retorno é preservado em `?voltar=` quando o fluxo de 
 - Títulos `Resumo`, `Grupos de Familiares` e `Exportar` devem ter tratamento tipográfico equivalente.
 - Cards `Núcleo`, `Ascendentes` e `Colaterais` devem ocupar o espaço vertical disponível sem cortar a seção `Exportar`.
 - Em perspectiva por `?pessoa=`, o controle de cônjuges colaterais pode ficar indisponível para evitar exibir parentes por afinidade fora da perspectiva atual.
+## Exportação no painel desktop
+
+A seção `Exportar` do painel desktop das rotas `/mapa-familiar` e `/mapa-familiar-horizontal` deve expor somente as ações principais estabilizadas:
+
+- `Salvar Imagem`;
+- `Imprimir`.
+
+Contrato visual:
+
+- os dois botões devem ficar em uma linha com duas colunas;
+- os botões devem ser compactos e não podem extrapolar a altura do painel;
+- a nomenclatura `Salvar Imagem` substitui a ação antiga `Área`;
+- os botões diretos `Imagem` e `PDF` não devem aparecer no painel principal;
+- o painel compacto/flyout deve preservar a mesma semântica quando expuser exportação.
+
+### `Salvar Imagem`
+
+- Abre modal de instruções antes de acionar captura real.
+- O modal explica permissão da guia, seleção da área e salvamento do arquivo.
+- O usuário deve selecionar a aba atual no prompt do navegador.
+- A captura é feita sobre a área visível da página e salva em PNG.
+- Durante a seleção, controles de zoom, favorito e botão flutuante `?` devem ficar ocultos.
+- O modal deve ter fundo opaco nas duas rotas de mapa.
+
+### `Imprimir`
+
+- Abre a janela nativa de impressão do navegador.
+- A página de impressão deve ser limpa e conter apenas título superior e árvore.
+- O título deve usar o padrão `Árvore Familiar de X` mesmo quando a rota atual for `/mapa-familiar-horizontal`.
+- A árvore deve ficar centralizada horizontalmente.
+- A árvore deve caber em uma única página por dimensionamento proporcional.
+- O usuário pode alternar `Retrato` e `Paisagem`, e ambos os modos devem ser validados.
+- Header, painel lateral, zoom, favorito, botão `?` e overlays não podem aparecer na impressão.
+
 ## Layout mobile de `/mapa-familiar`
 
 - A visualização mobile usa telas/grupos navegáveis por gesto, sem herdar o painel fixo desktop.
@@ -192,29 +226,26 @@ Regras atuais:
 
 ## Exportação
 
-As ações de exportação são disparadas pelo painel lateral e executadas pelo componente de árvore ativo ou pela aba de preview.
+As ações de exportação são disparadas pelo painel lateral e executadas em `HomeTreeSection.tsx`.
 
 Comportamento atual:
 
-- `Área` continua usando o fluxo de seleção visível da árvore e seus estados próprios de loading;
-- no fluxo `Área`, os botões `Salvar PNG`, `Salvar PDF`, `Imprimir` e `Cancelar` devem executar a ação correspondente ou encerrar a seleção;
-- `Imagem`, `PDF` e `Imprimir` não devem substituir a página de trabalho atual do usuário;
-- `Imagem`, `PDF` e `Imprimir` abrem uma nova aba/janela usando a rota atual com `exportPreview=1`;
-- `exportIntent=png` exibe apenas a ação `Salvar PNG`;
-- `exportIntent=pdf` exibe apenas a ação `Exportar PDF`;
-- `exportIntent=print` exibe apenas a ação `Imprimir`;
-- a aba de preview deve renderizar a mesma visualização de `/mapa-familiar` ou `/mapa-familiar-horizontal`, sem header, painel lateral, botão flutuante `?`, favoritos, controles auxiliares ou toolbars de navegação;
-- `Salvar PNG` captura a árvore renderizada no próprio preview com escala `1.5`;
-- `Exportar PDF` deve gerar arquivo PDF a partir da captura do preview quando o fluxo estiver estável;
-- `Imprimir` deve organizar a árvore em página única, usando orientação retrato ou paisagem conforme a proporção;
-- `treeExport.ts` e `TreeAreaSelectionOverlay.tsx` devem tratar erros, timeouts e bloqueio de pop-up com mensagem legível;
-- a página principal do usuário deve permanecer preservada durante os fluxos de preview.
+- `Salvar Imagem` é a ação pública de captura de área real da tela;
+- `Salvar Imagem` abre modal de instruções antes de acionar `getDisplayMedia`;
+- o usuário seleciona uma área visível da árvore e salva o resultado como PNG;
+- durante a seleção, controles de zoom, favorito e botão flutuante `?` ficam ocultos;
+- `Imprimir` abre a janela nativa do navegador a partir de uma página limpa de impressão;
+- a impressão deve exibir título superior, árvore centralizada e caber em uma única página;
+- a impressão não deve exibir header, painel lateral, zoom, favorito, botão `?`, modais ou overlays;
+- fluxos internos de preview/PNG/PDF podem existir como compatibilidade técnica, mas não são ações principais expostas no painel desktop atual.
 
-Estado de QA:
+QA mínimo:
 
-- o preview real está implementado, mas a captura final por `html2canvas` ainda exige validação visual;
-- o artefato exportado não pode exibir blocos cinza derivados de sombras/filtros, títulos de grupos cortados, texto ilegível ou cards deformados;
-- se esses artefatos aparecerem, a frente deve permanecer marcada como em ajuste, sem ser tratada como concluída.
+- validar `Salvar Imagem` e `Imprimir` em `/mapa-familiar` e `/mapa-familiar-horizontal`;
+- validar impressão em `Retrato` e `Paisagem`;
+- confirmar que a saída não contém elementos auxiliares da interface;
+- confirmar que erros de captura/impressão usam `toast` e não diálogos nativos.
+
 ## Busca e notificações no header
 
 As páginas de mapa usam busca no header com sugestões de pessoas e páginas. As páginas internas que usam `MemberPageHeader` devem manter comportamento equivalente por meio do componente compartilhado `HeaderGlobalSearch`.

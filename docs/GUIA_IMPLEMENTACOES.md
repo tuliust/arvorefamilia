@@ -1,6 +1,6 @@
 # Guia de implementações
 
-> Última revisão: 2026-06-29
+> Última revisão: 2026-06-30
 > Escopo: comportamento implementado na branch `main`.
 > Status: canônico.
 
@@ -66,7 +66,6 @@ Componentes relevantes:
 Scripts relevantes antes de alterar mapa, mobile, curiosidades, tutorial ou painel desktop:
 
 - `mobileFamilyTreeMutationPerformanceGuard.ts`
-- `desktopTreeVisualizationPanelTextFix.ts`
 - `firstLoginMobileTutorialFixes.ts`
 - `mobileCuriositiesNavigationFix.ts`
 - `mobileTreePanelViewportFix.ts`
@@ -127,15 +126,61 @@ Contrato:
 
 - A paleta laranja da árvore deve permanecer quente, terracota e solar, sem voltar ao bege-pastel da paleta branca.
 - A paleta marrom deve preservar caráter documental/sépia.
-- `Área` mantém o fluxo de seleção visível da árvore e exibe botões próprios para `Salvar PNG`, `Salvar PDF`, `Imprimir` e `Cancelar`.
-- `Imagem`, `PDF` e `Imprimir` abrem aba/janela dedicada de preview por query string.
-- O preview usa `exportPreview=1` e `exportIntent=png`, `pdf` ou `print`, ocultando header, painel lateral, controles auxiliares e botão flutuante.
-- O toolbar do preview deve exibir apenas a ação escolhida no painel principal.
-- `Salvar PNG` captura a árvore renderizada no próprio preview com `html2canvas` e escala configurada em `1.5`.
-- `Exportar PDF` usa captura do preview e geração via `jsPDF` quando o fluxo estiver estável.
-- `treeExport.ts` concentra timeout, fallback, abertura de preview, sanitização de cores e escrita de erro em aba de preview.
-- `exportColorSanitizer.ts` deve ser usado em capturas que passem por `html2canvas`.
-- Estado atual: o fluxo de preview está implementado, mas a captura por `html2canvas` ainda exige QA visual específico.
+- A seção `Exportar` do painel desktop exibe somente `Salvar Imagem` e `Imprimir`.
+- `Salvar Imagem` é a ação pública de captura de área real da tela.
+- `Imprimir` abre a janela nativa de impressão a partir de uma página limpa com título e imagem dimensionada da árvore.
+- `Imagem` e `PDF` não são ações diretas expostas no painel principal atual.
+
+### Captura por `Salvar Imagem`
+
+Implementação:
+
+- `DesktopTreeVisualizationPanel.tsx` e `SidebarPanelTabs.tsx` disparam a ação interna `select-area`;
+- `HomeTreeSection.tsx` intercepta `select-area` e abre o modal de instruções;
+- o modal explica permissão da guia, seleção da área e salvamento;
+- `Continuar` chama `captureVisibleScreenAreaAsPng`;
+- `screenAreaCapture.ts` usa `navigator.mediaDevices.getDisplayMedia`;
+- o fluxo prefere `displaySurface: 'browser'`, `preferCurrentTab`, `selfBrowserSurface: 'include'` e `surfaceSwitching: 'exclude'` quando suportado;
+- a captura valida `displaySurface` e rejeita superfícies de janela/tela inteira quando isso puder deslocar o recorte;
+- o overlay de seleção usa eventos de ponteiro e `Escape` para cancelar;
+- o recorte usa proporção entre viewport e vídeo capturado;
+- `showSaveFilePicker` é usado quando disponível;
+- quando o File System Access API não estiver disponível, o fallback é download por `a[download]`;
+- streams devem ter tracks encerradas no `finally`.
+
+Durante a captura, o documento recebe estado transitório para ocultar:
+
+- `.tree-canvas-zoom-controls`;
+- `[data-tour-target="tree-favorite"]`;
+- `a[href="/duvidas"].fixed.bottom-8.right-8`.
+
+### Impressão
+
+Implementação atual:
+
+- `print` é tratado separadamente do fluxo de preview;
+- `HomeTreeSection.tsx` prepara uma página limpa de impressão;
+- a página de impressão inclui título superior com padrão `Árvore Familiar de X`;
+- a árvore é capturada internamente como imagem e inserida em uma página isolada;
+- a imagem usa contenção proporcional para caber em uma única página;
+- a árvore fica centralizada horizontalmente;
+- o usuário pode escolher `Retrato` ou `Paisagem` na janela nativa do navegador.
+
+Não devem aparecer na impressão:
+
+- header;
+- painel lateral;
+- controles de zoom;
+- botão de favorito/estrela;
+- botão flutuante `?`;
+- overlays, modais ou toolbars.
+
+### Helpers internos e compatibilidade
+
+- `html2canvas` ainda pode ser usado por helpers internos de captura/preview;
+- `jsPDF` permanece disponível para fluxos internos ou futuros, mas `PDF` não é ação exposta no painel principal;
+- `exportColorSanitizer.ts` deve ser usado antes de capturas que passem por `html2canvas`;
+- `window.alert`, `alert`, `confirm` e `prompt` não devem ser reintroduzidos.
 
 ## IA
 

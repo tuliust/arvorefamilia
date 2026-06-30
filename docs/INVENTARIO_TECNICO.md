@@ -1,6 +1,6 @@
 # Inventário técnico
 
-> Última revisão: 2026-06-29
+> Última revisão: 2026-06-30
 > Escopo: rotas, módulos, documentos finais e referências técnicas preservadas após limpeza documental.
 > Status: canônico.
 
@@ -130,7 +130,6 @@
 Além de `src/main.tsx`, `index.html` carrega os seguintes scripts defensivos:
 
 - `src/mobileFamilyTreeMutationPerformanceGuard.ts`
-- `src/desktopTreeVisualizationPanelTextFix.ts`
 - `src/firstLoginMobileTutorialFixes.ts`
 - `src/mobileCuriositiesNavigationFix.ts`
 - `src/mobileTreePanelViewportFix.ts`
@@ -162,6 +161,27 @@ Além de `src/main.tsx`, `index.html` carrega os seguintes scripts defensivos:
 
 Scripts defensivos devem ser tratados como camada de transição, sempre isolados por rota e breakpoint. Quando um comportamento estabilizar, a preferência é migrar para o componente React de origem.
 
+## Exportação e impressão da árvore
+
+Arquivos e módulos relevantes:
+
+- `src/app/pages/home/HomeTreeSection.tsx`: recebe ações do painel, controla o modal de instruções de `Salvar Imagem`, coordena impressão e mantém helpers de preview/captura interna.
+- `src/app/pages/home/DesktopTreeVisualizationPanel.tsx`: expõe no painel desktop somente `Salvar Imagem` e `Imprimir`.
+- `src/app/pages/home/SidebarPanelTabs.tsx`: preserva a mesma semântica no painel compacto/flyout.
+- `src/app/utils/screenAreaCapture.ts`: implementa captura real de área visível por `getDisplayMedia`, overlay de seleção, recorte, salvamento PNG e fallback de download.
+- `src/app/components/FamilyTree/utils/exportColorSanitizer.ts`: sanitiza cores para fluxos que ainda passam por `html2canvas`.
+- `html2canvas` e `jsPDF`: permanecem como dependências técnicas para captura/artefatos internos, mas `PDF` não é ação exposta no painel principal atual.
+
+Contrato técnico atual:
+
+- `select-area` representa `Salvar Imagem`;
+- `print` representa impressão em página limpa com título e imagem dimensionada da árvore;
+- durante captura de área, o `html` recebe atributo transitório para ocultar zoom, favorito e botão `?`;
+- durante impressão, a página gerada deve conter somente título e árvore, centralizados e em uma página;
+- `window.alert`, `alert`, `confirm` e `prompt` não devem ser usados.
+
 ## Arquivos removidos ou absorvidos
 
 A documentação operacional não deve manter arquivos de rodada, baseline antigo ou QA datado quando o conteúdo couber em documentos canônicos. Nesta auditoria, `docs/operacao/QA_NAO_REGRESSAO_MAPAS_MOBILE_POS_AJUSTES_2026_06_21.md` foi removido e seus pontos úteis foram consolidados em `QA_MANUAL.md`.
+
+O runtime `src/desktopTreeVisualizationPanelTextFix.ts` não deve ser listado como script ativo quando a correção textual já estiver aplicada nos componentes de origem.

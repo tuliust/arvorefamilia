@@ -1,6 +1,6 @@
 # Guia de UX e layout
 
-> Última revisão: 2026-06-29
+> Última revisão: 2026-06-30
 > Escopo: experiência visual das rotas principais da branch `main`.
 > Status: canônico.
 
@@ -30,12 +30,42 @@
 - Títulos `Núcleo`, `Ascendentes` e `Colaterais` devem usar peso moderado e tamanho compacto, sem competir com os títulos de seção.
 - Os itens internos desses cards podem aumentar ocupação vertical e espaçamento entre linhas desde que a altura geral do painel não gere corte da área `Exportar`.
 - A seção `Grupos de Familiares` deve exibir subtítulo `Clique para exibir/ocultar grupos de parentes na árvore`.
-- A área `Exportar` deve permanecer visível; quando houver sobra vertical, pode usar maior espaçamento interno e botões mais altos, desde que os quatro botões continuem no painel.
+- A área `Exportar` deve permanecer visível e conter apenas dois botões: `Salvar Imagem` e `Imprimir`.
 - O painel compacto deve preservar acesso aos botões de exportação.
 - No mapa por grupos, o card `Pai` e o card `Mãe` são referências de alinhamento visual: `Irmãos` deve alinhar à esquerda com `Pai`, enquanto `Cônjuge` e `Pets` devem alinhar à direita com `Mãe`.
 - `Filhos` e `Netos` podem ocupar faixa mais à direita, desde que a leitura geracional e os conectores permaneçam claros.
 - Grupos com pares conjugais devem evitar terceira linha desnecessária quando houver espaço para manter solteiros e pares em duas colunas.
-- Em preview/exportação, a nova aba deve renderizar a árvore real sem header, painel lateral, botão flutuante `?` e controles auxiliares. A imagem/PDF/print não pode trazer blocos cinza, sombras artificiais ou títulos cortados.
+- Os botões `Salvar Imagem` e `Imprimir` devem aparecer em uma linha com duas colunas, com ícone acima, texto centralizado e altura compacta.
+- `Salvar Imagem` deve abrir modal de instruções com fundo opaco, cards das três etapas e botões `Cancelar`/`Continuar`.
+- Durante a seleção de área, zoom, favorito e botão flutuante `?` devem desaparecer para não contaminar a captura.
+- A impressão deve usar página limpa, com título superior, árvore centralizada e ajuste proporcional para uma única página em retrato ou paisagem.
+
+### Exportação desktop
+
+Contrato visual da seção `Exportar`:
+
+- título `Exportar` alinhado aos demais títulos compactos do painel;
+- dois botões em grid de duas colunas;
+- botões com altura compacta para não sair do painel;
+- rótulos públicos: `Salvar Imagem` e `Imprimir`;
+- não exibir `Imagem` e `PDF` como ações diretas;
+- ícones devem ser legíveis mesmo em telas com menor altura;
+- texto deve permanecer em UTF-8 válido, sem mojibake.
+
+Contrato visual do modal de `Salvar Imagem`:
+
+- overlay com fundo opaco;
+- container branco;
+- três cards de instrução;
+- aviso destacado sobre usar zoom antes de capturar;
+- botões de rodapé `Cancelar` e `Continuar`.
+
+Contrato visual da impressão:
+
+- título superior em formato de chip;
+- árvore centralizada horizontalmente;
+- uma página;
+- sem header, painel lateral, controles de zoom, favorito ou botão `?`.
 
 ### Mobile
 
