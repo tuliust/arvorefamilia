@@ -77,7 +77,7 @@ function openTreeExportPreviewRoute(location: ReturnType<typeof useLocation>, ac
   const previewWindow = window.open(url, '_blank', 'noopener,noreferrer');
 
   if (!previewWindow) {
-    window.alert('O navegador bloqueou a janela de preview da exportaÃ§Ã£o. Libere pop-ups para este site e tente novamente.');
+    toast.warning('O navegador bloqueou a janela de preview da exportação. Libere pop-ups para este site e tente novamente.');
   }
 
   return true;
