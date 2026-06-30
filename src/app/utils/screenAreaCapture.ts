@@ -258,8 +258,6 @@ async function requestCurrentTabStream() {
     throw new Error('Este navegador não permite captura real da tela. Use a exportação por imagem como alternativa.');
   }
 
-  toast.message('Na janela do navegador, selecione "Esta aba" ou "Aba atual". Não selecione "Janela" nem "Tela inteira".');
-
   const options = {
     video: {
       displaySurface: 'browser',
@@ -434,7 +432,6 @@ export async function captureVisibleScreenAreaAsPng({
     const video = await createVideoElement(stream);
     const mapper = assertCurrentTabCapture(stream, video);
 
-    toast.message('Arraste na página para selecionar a área que deseja salvar.');
     const rect = await selectVisibleScreenArea();
 
     await waitForAnimationFrame();

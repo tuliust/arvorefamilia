@@ -45,14 +45,14 @@ const viewOptions: Array<{
 }> = [
   {
     key: 'mapa-familiar',
-    label: 'Ãrvore Familiar',
-    subtitle: 'VisÃ£o por grupos',
+    label: 'Árvore Familiar',
+    subtitle: 'Visão por grupos',
     icon: Tally3,
   },
   {
     key: 'mapa-familiar-horizontal',
     label: 'Linha Geracional',
-    subtitle: 'Por geraÃ§Ãµes',
+    subtitle: 'Por gerações',
     icon: Network,
   },
 ];
@@ -75,20 +75,20 @@ const groupSections: Array<{
   }>;
 }> = [
   {
-    title: 'NÃºcleo',
+    title: 'Núcleo',
     rows: [
       { keys: ['pais'], label: 'Pais', icon: UsersRound },
       { keys: ['filhos'], label: 'Filhos', icon: Baby },
       { keys: ['netos'], label: 'Netos', icon: Baby },
-      { keys: ['irmaos'], label: 'IrmÃ£os', icon: UsersRound },
+      { keys: ['irmaos'], label: 'Irmãos', icon: UsersRound },
     ],
   },
   {
     title: 'Ascendentes',
     rows: [
-      { keys: ['avos'], label: 'AvÃ³s', icon: Tally3 },
-      { keys: ['bisavos'], label: 'BisavÃ³s', icon: Tally2 },
-      { keys: ['tataravos'], label: 'TataravÃ³s', icon: Tally1 },
+      { keys: ['avos'], label: 'Avós', icon: Tally3 },
+      { keys: ['bisavos'], label: 'Bisavós', icon: Tally2 },
+      { keys: ['tataravos'], label: 'Tataravós', icon: Tally1 },
     ],
   },
   {
@@ -117,7 +117,7 @@ function getGroupCount(counts: DirectRelationCounts, keys: DirectRelativeGroup[]
 export function DesktopTreeVisualizationPanel({
   showViewAsSelector = true,
   viewAsPersonValue = '',
-  defaultViewAsPersonLabel = 'Sua view padrÃ£o',
+  defaultViewAsPersonLabel = 'Sua view padrão',
   viewAsPersonOptions,
   onViewAsPersonChange,
   totalPeople,
@@ -197,7 +197,7 @@ export function DesktopTreeVisualizationPanel({
     <div className="desktop-tree-visualization-panel-shell" data-tree-export-ignore="true">
       <section
         className="desktop-tree-visualization-panel"
-        aria-label="VisualizaÃ§Ã£o da Ã¡rvore"
+        aria-label="Visualização da árvore"
         data-tree-export-ignore="true"
       >
         <div className="desktop-tree-panel-header">
@@ -205,7 +205,7 @@ export function DesktopTreeVisualizationPanel({
             <span className="desktop-tree-panel-eye" aria-hidden="true">
               <Eye />
             </span>
-            <h2 className="desktop-tree-panel-title">VisualizaÃ§Ã£o</h2>
+            <h2 className="desktop-tree-panel-title">Visualização</h2>
           </div>
 
           {onCollapse && (
@@ -227,10 +227,10 @@ export function DesktopTreeVisualizationPanel({
             value={viewAsPersonValue}
             onChange={(event) => handleViewAsChange(event.target.value)}
             className="desktop-tree-view-select"
-            aria-label="Visualizar Ã¡rvore como outra pessoa"
+            aria-label="Visualizar árvore como outra pessoa"
           >
             <option value="" hidden>{defaultViewAsPersonLabel}</option>
-            <option value="__view_as_placeholder__" disabled>Visualize a Ã¡rvore como...</option>
+            <option value="__view_as_placeholder__" disabled>Visualize a árvore como...</option>
             {viewAsPersonOptions.map((pessoa) => (
               <option key={pessoa.id} value={pessoa.id}>
                 {pessoa.label}
@@ -239,7 +239,7 @@ export function DesktopTreeVisualizationPanel({
           </select>
         )}
 
-        <div className="desktop-tree-palette-row" aria-label="VisualizaÃ§Ã£o da Ã¡rvore">
+        <div className="desktop-tree-palette-row" aria-label="Visualização da árvore">
           {paletteOptions.map((paletteKey) => {
             const palette = TREE_COLOR_PALETTES[paletteKey];
             const active = treeColorPalette === paletteKey;
@@ -313,7 +313,7 @@ export function DesktopTreeVisualizationPanel({
         <div className="desktop-tree-family-groups-header">
           <h3 className="desktop-tree-family-groups-title">Grupos de Familiares</h3>
           <p className="desktop-tree-family-groups-subtitle">
-            Clique para exibir/ocultar grupos de parentes na Ã¡rvore
+            Clique para exibir/ocultar grupos de parentes na árvore
           </p>
         </div>
 
@@ -346,7 +346,7 @@ export function DesktopTreeVisualizationPanel({
           ))}
         </div>
 
-        <section className="desktop-tree-export-panel" aria-label="Exportar Ã¡rvore" data-tree-export-ignore="true">
+        <section className="desktop-tree-export-panel" aria-label="Exportar árvore" data-tree-export-ignore="true">
           <h3 className="desktop-tree-export-title">Exportar</h3>
           <div className="desktop-tree-export-actions">
             {exportOptions.map((option) => {
@@ -380,21 +380,21 @@ export function DesktopTreeVisualizationPanel({
               onToggleDirectRelative('conjuge');
             }}
             title={isViewingPersonPerspective
-              ? 'Oculto ao visualizar a Ã¡rvore como outro perfil'
+              ? 'Oculto ao visualizar a árvore como outro perfil'
               : effectiveDirectRelativeFilters.conjuge
-                ? 'Ocultar cÃ´njuges de tios, primos etc'
-                : 'Mostrar cÃ´njuges de tios, primos etc'}
+                ? 'Ocultar cônjuges de tios, primos etc'
+                : 'Mostrar cônjuges de tios, primos etc'}
           >
             <HeartHandshake />
-            <span>{effectiveDirectRelativeFilters.conjuge ? 'Ocultar cÃ´njuges de tios, primos etc' : 'Exibir cÃ´njuges de tios, primos etc'}</span>
+            <span>{effectiveDirectRelativeFilters.conjuge ? 'Ocultar cônjuges de tios, primos etc' : 'Exibir cônjuges de tios, primos etc'}</span>
           </button>
 
           <button
             type="button"
             className="desktop-tree-final-filter-button"
             disabled
-            aria-label="Apenas meus familiares. Funcionalidade serÃ¡ definida posteriormente."
-            title="Funcionalidade serÃ¡ definida posteriormente."
+            aria-label="Apenas meus familiares. Funcionalidade será definida posteriormente."
+            title="Funcionalidade será definida posteriormente."
           >
             <UsersRound />
             <span>Apenas meus familiares</span>

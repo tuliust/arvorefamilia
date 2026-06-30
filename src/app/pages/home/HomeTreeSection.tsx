@@ -105,11 +105,11 @@ function printCurrentTreePage() {
     const rect = exportRoot.getBoundingClientRect();
     const treeWidth = Math.ceil(Math.max(rect.width, exportRoot.offsetWidth, exportRoot.scrollWidth, 1));
     const treeHeight = Math.ceil(Math.max(rect.height, exportRoot.offsetHeight, exportRoot.scrollHeight, 1));
-    const availableWidth = Math.max(window.innerWidth, document.documentElement.clientWidth, 1);
-    const availableHeight = Math.max(window.innerHeight, document.documentElement.clientHeight, 1);
-    const scale = Math.min(1, availableWidth / treeWidth, availableHeight / treeHeight);
+    const safePageWidth = 720;
+    const safePageHeight = 940;
+    const scale = Math.min(1, safePageWidth / treeWidth, safePageHeight / treeHeight);
 
-    root.style.setProperty('--tree-direct-print-scale', String(Math.max(scale, 0.2)));
+    root.style.setProperty('--tree-direct-print-scale', String(Math.max(scale, 0.12)));
     root.style.setProperty('--tree-direct-print-width', `${treeWidth}px`);
     root.style.setProperty('--tree-direct-print-height', `${treeHeight}px`);
   }
@@ -534,11 +534,12 @@ function AreaCaptureInstructionsDialog({
 
   return (
     <div
-      className="fixed inset-0 z-[2147483000] flex items-center justify-center bg-slate-950/45 px-4 py-6 backdrop-blur-sm"
+      className="fixed inset-0 z-[2147483000] flex items-center justify-center bg-slate-950/65 px-4 py-6 backdrop-blur-sm"
       role="dialog"
       aria-modal="true"
       aria-labelledby="area-capture-instructions-title"
       data-tree-export-ignore="true"
+      style={{ backgroundColor: 'rgba(15, 23, 42, 0.64)' }}
     >
       <button
         type="button"
@@ -551,8 +552,9 @@ function AreaCaptureInstructionsDialog({
       <section
         className="relative flex max-h-[min(92vh,780px)] w-full max-w-4xl flex-col overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-2xl"
         data-tree-export-ignore="true"
+        style={{ backgroundColor: '#ffffff' }}
       >
-        <div className="border-b border-slate-100 px-5 py-4 sm:px-6">
+        <div className="border-b border-slate-100 bg-white px-5 py-4 sm:px-6" style={{ backgroundColor: '#ffffff' }}>
           <p className="text-xs font-black uppercase tracking-[0.18em] text-blue-700">
             Exportar área
           </p>
@@ -567,7 +569,7 @@ function AreaCaptureInstructionsDialog({
           </p>
         </div>
 
-        <div className="min-h-0 flex-1 overflow-y-auto px-5 py-5 sm:px-6">
+        <div className="min-h-0 flex-1 overflow-y-auto bg-white px-5 py-5 sm:px-6" style={{ backgroundColor: '#ffffff' }}>
           <div className="grid gap-4 lg:grid-cols-3">
             <InstructionStepCard
               number="1"
@@ -597,7 +599,7 @@ function AreaCaptureInstructionsDialog({
           </div>
         </div>
 
-        <div className="flex flex-col-reverse gap-2 border-t border-slate-100 bg-slate-50 px-5 py-4 sm:flex-row sm:justify-end sm:px-6">
+        <div className="flex flex-col-reverse gap-2 border-t border-slate-100 bg-slate-50 px-5 py-4 sm:flex-row sm:justify-end sm:px-6" style={{ backgroundColor: '#f8fafc' }}>
           <button
             type="button"
             className="inline-flex h-11 items-center justify-center rounded-xl border border-slate-200 bg-white px-5 text-sm font-bold text-slate-700 shadow-sm transition hover:bg-slate-100"
@@ -914,12 +916,16 @@ export function HomeTreeSection({
             html[data-tree-direct-print="true"] #root {
               width: 100% !important;
               min-width: 100% !important;
-              height: auto !important;
+              height: 100% !important;
               min-height: 100% !important;
-              overflow: visible !important;
+              overflow: hidden !important;
               background: #f7f1e8 !important;
               -webkit-print-color-adjust: exact !important;
               print-color-adjust: exact !important;
+            }
+
+            html[data-tree-direct-print="true"] body * {
+              visibility: hidden !important;
             }
 
             html[data-tree-direct-print="true"] header,
@@ -933,35 +939,12 @@ export function HomeTreeSection({
               visibility: hidden !important;
             }
 
-            html[data-tree-direct-print="true"] main {
-              position: static !important;
-              display: block !important;
-              width: 100vw !important;
-              min-width: 100vw !important;
-              height: auto !important;
-              min-height: 100vh !important;
-              overflow: visible !important;
-              background: #f7f1e8 !important;
-            }
-
-            html[data-tree-direct-print="true"] [data-tree-direct-print-page="true"] {
-              position: static !important;
-              display: flex !important;
-              width: 100vw !important;
-              min-width: 100vw !important;
-              max-width: 100vw !important;
-              height: 100vh !important;
-              min-height: 100vh !important;
-              overflow: hidden !important;
-              align-items: flex-start !important;
-              justify-content: center !important;
-              background: #f7f1e8 !important;
-              flex: none !important;
-            }
-
             html[data-tree-direct-print="true"] [data-family-map-export-root="true"],
             html[data-tree-direct-print="true"] [data-family-map-horizontal-root="true"],
             html[data-tree-direct-print="true"] [data-export-root="family-tree"] {
+              position: fixed !important;
+              left: 0 !important;
+              top: 0 !important;
               width: var(--tree-direct-print-width, auto) !important;
               height: var(--tree-direct-print-height, auto) !important;
               max-width: none !important;
@@ -970,8 +953,15 @@ export function HomeTreeSection({
               background: #f7f1e8 !important;
               isolation: isolate !important;
               transform: scale(var(--tree-direct-print-scale, 1)) !important;
-              transform-origin: top center !important;
-              margin: 0 auto !important;
+              transform-origin: top left !important;
+              margin: 0 !important;
+              visibility: visible !important;
+            }
+
+            html[data-tree-direct-print="true"] [data-family-map-export-root="true"] *,
+            html[data-tree-direct-print="true"] [data-family-map-horizontal-root="true"] *,
+            html[data-tree-direct-print="true"] [data-export-root="family-tree"] * {
+              visibility: visible !important;
             }
 
             html[data-tree-direct-print="true"] [data-export-root="family-tree"] > div.absolute.left-0.right-0 {

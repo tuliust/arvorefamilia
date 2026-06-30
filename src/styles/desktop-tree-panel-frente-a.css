@@ -58,7 +58,7 @@
   }
 
   .desktop-tree-family-group-row,
-  .desktop-tree-family-group-card[aria-label='NÃºcleo'] .desktop-tree-family-group-row {
+  .desktop-tree-family-group-card[aria-label='Núcleo'] .desktop-tree-family-group-row {
     min-height: clamp(1.34rem, 2.74vh, 1.64rem) !important;
     grid-template-columns: minmax(0, 1fr) auto !important;
     gap: clamp(0.28rem, 0.64vw, 0.46rem) !important;
@@ -139,7 +139,7 @@
   }
 
   .desktop-tree-family-group-row,
-  .desktop-tree-family-group-card[aria-label='NÃºcleo'] .desktop-tree-family-group-row {
+  .desktop-tree-family-group-card[aria-label='Núcleo'] .desktop-tree-family-group-row {
     min-height: 1.16rem !important;
   }
 
@@ -194,7 +194,7 @@
   }
 }
 
-/* Frente 2026-06-28: tÃ­tulo dos grupos, preservaÃ§Ã£o do painel e ajustes de exportaÃ§Ã£o. */
+/* Frente 2026-06-28: título dos grupos, preservação do painel e ajustes de exportação. */
 @media (min-width: 768px) {
   .desktop-tree-family-groups-header {
     order: 10 !important;
@@ -320,7 +320,7 @@ html.is-exporting-family-tree [data-family-map-horizontal-root='true'] .family-m
   vertical-align: middle !important;
 }
 
-/* Frente 2026-06-28: padronizaÃ§Ã£o tipogrÃ¡fica do painel esquerdo. */
+/* Frente 2026-06-28: padronização tipográfica do painel esquerdo. */
 @media (min-width: 768px) {
   .desktop-tree-panel-title {
     font-size: 1.125rem !important;
@@ -360,7 +360,7 @@ html.is-exporting-family-tree [data-family-map-horizontal-root='true'] .family-m
   }
 
   .desktop-tree-family-group-row,
-  .desktop-tree-family-group-card[aria-label='NÃºcleo'] .desktop-tree-family-group-row {
+  .desktop-tree-family-group-card[aria-label='Núcleo'] .desktop-tree-family-group-row {
     min-height: clamp(0.72rem, 1.34vh, 0.92rem) !important;
     padding-top: 0 !important;
     padding-bottom: 0 !important;
@@ -373,12 +373,12 @@ html.is-exporting-family-tree [data-family-map-horizontal-root='true'] .family-m
   }
 
   .desktop-tree-family-group-row,
-  .desktop-tree-family-group-card[aria-label='NÃºcleo'] .desktop-tree-family-group-row {
+  .desktop-tree-family-group-card[aria-label='Núcleo'] .desktop-tree-family-group-row {
     min-height: 0.62rem !important;
   }
 }
 
-/* 2026-06-30: exportaÃ§Ã£o simplificada em dois botÃµes quadrados. */
+/* 2026-06-30: exportação simplificada em dois botões quadrados. */
 @media (min-width: 768px) {
   .desktop-tree-export-actions {
     display: grid !important;
@@ -416,5 +416,51 @@ html.is-exporting-family-tree [data-family-map-horizontal-root='true'] .family-m
 @media (max-height: 720px) and (min-width: 768px) {
   .desktop-tree-export-action-button {
     min-height: clamp(3.45rem, 7.4vh, 4.3rem) !important;
+  }
+}
+
+/* 2026-06-30: ajuste final dos botões compactos de exportação. */
+@media (min-width: 768px) {
+  .desktop-tree-export-panel {
+    gap: clamp(0.24rem, 0.52vh, 0.36rem) !important;
+    padding: clamp(0.24rem, 0.5vh, 0.38rem) !important;
+  }
+
+  .desktop-tree-export-actions {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: clamp(0.3rem, 0.62vh, 0.46rem) !important;
+  }
+
+  .desktop-tree-export-action-button {
+    aspect-ratio: auto !important;
+    width: 100% !important;
+    min-height: clamp(2.65rem, 5.6vh, 3.35rem) !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: clamp(0.18rem, 0.42vh, 0.3rem) !important;
+    padding: clamp(0.3rem, 0.68vh, 0.46rem) !important;
+    text-align: center !important;
+  }
+
+  .desktop-tree-export-action-button svg {
+    width: clamp(0.95rem, 1.78vh, 1.15rem) !important;
+    height: clamp(0.95rem, 1.78vh, 1.15rem) !important;
+  }
+
+  .desktop-tree-export-action-button span {
+    max-width: 100% !important;
+    white-space: normal !important;
+    overflow-wrap: anywhere !important;
+    text-align: center !important;
+    font-size: clamp(0.58rem, 1.12vh, 0.7rem) !important;
+    line-height: 1.05 !important;
+  }
+}
+
+@media (max-height: 720px) and (min-width: 768px) {
+  .desktop-tree-export-action-button {
+    min-height: clamp(2.35rem, 4.9vh, 2.85rem) !important;
   }
 }
