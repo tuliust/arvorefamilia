@@ -84,13 +84,66 @@ function openTreeExportPreviewRoute(location: ReturnType<typeof useLocation>, ac
   return true;
 }
 
-async function printCurrentTreePage(title: string) {
-  try {
-    await printPreviewTreeOnOnePage(title);
-  } catch (error) {
-    console.error('Erro ao imprimir árvore:', error);
-    toast.error(error instanceof Error ? error.message : 'Não foi possível preparar a impressão da árvore.');
+function printCurrentTreePage(title: string) {
+  const root = document.documentElement;
+  const exportRoot = document.querySelector<HTMLElement>(TREE_EXPORT_ROOT_SELECTOR);
+  let fallbackCleanupTimer: number | undefined;
+
+  const cleanup = () => {
+    delete root.dataset.treeDirectPrint;
+    root.style.removeProperty('--tree-direct-print-scale');
+    root.style.removeProperty('--tree-direct-print-width');
+    root.style.removeProperty('--tree-direct-print-height');
+    root.style.removeProperty('--tree-direct-print-left');
+    root.style.removeProperty('--tree-direct-print-top');
+    window.removeEventListener('afterprint', cleanup);
+
+    if (fallbackCleanupTimer !== undefined) {
+      window.clearTimeout(fallbackCleanupTimer);
+    }
+  };
+
+  if (exportRoot) {
+    const rect = exportRoot.getBoundingClientRect();
+    const treeWidth = Math.ceil(Math.max(rect.width, exportRoot.offsetWidth, exportRoot.scrollWidth, 1));
+    const treeHeight = Math.ceil(Math.max(rect.height, exportRoot.offsetHeight, exportRoot.scrollHeight, 1));
+
+    /*
+     * Mantém a impressão fiel ao DOM real da tela. Não usa html2canvas aqui:
+     * captura em canvas deixa o clique lento e pode desformatar cards/conectores.
+     *
+     * Como o browser não informa previamente o tamanho físico escolhido na janela
+     * de impressão, usamos uma área segura conservadora e centralizamos o resultado.
+     */
+    const pageWidth = Math.max(window.innerWidth, document.documentElement.clientWidth, 1);
+    const pageHeight = Math.max(window.innerHeight, document.documentElement.clientHeight, 1);
+    const titleReservedHeight = 72;
+    const horizontalPadding = 32;
+    const bottomPadding = 28;
+    const availableWidth = Math.max(pageWidth - horizontalPadding * 2, 1);
+    const availableHeight = Math.max(pageHeight - titleReservedHeight - bottomPadding, 1);
+    const scale = Math.min(1, availableWidth / treeWidth, availableHeight / treeHeight);
+    const safeScale = Math.max(scale, 0.1);
+    const scaledWidth = treeWidth * safeScale;
+    const scaledHeight = treeHeight * safeScale;
+    const left = Math.max(horizontalPadding, (pageWidth - scaledWidth) / 2);
+    const top = Math.max(titleReservedHeight, titleReservedHeight + (availableHeight - scaledHeight) / 2);
+
+    root.style.setProperty('--tree-direct-print-scale', String(safeScale));
+    root.style.setProperty('--tree-direct-print-width', `${treeWidth}px`);
+    root.style.setProperty('--tree-direct-print-height', `${treeHeight}px`);
+    root.style.setProperty('--tree-direct-print-left', `${left}px`);
+    root.style.setProperty('--tree-direct-print-top', `${top}px`);
   }
+
+  root.dataset.treeDirectPrint = 'true';
+  window.addEventListener('afterprint', cleanup, { once: true });
+
+  window.setTimeout(() => {
+    window.print();
+
+    fallbackCleanupTimer = window.setTimeout(cleanup, 1600);
+  }, 80);
 }
 
 function getExportIntentTitle(intent: string | null) {
@@ -961,6 +1014,10 @@ export function HomeTreeSection({
     >
       <style>
         {`
+          .tree-direct-print-title {
+            display: none;
+          }
+
           @media print {
             @page {
               margin: 0;
@@ -995,12 +1052,35 @@ export function HomeTreeSection({
               visibility: hidden !important;
             }
 
+            html[data-tree-direct-print="true"] .tree-direct-print-title {
+              position: fixed !important;
+              top: 14px !important;
+              left: 50% !important;
+              z-index: 2147483000 !important;
+              box-sizing: border-box !important;
+              display: inline-flex !important;
+              align-items: center !important;
+              justify-content: center !important;
+              max-width: calc(100vw - 36px) !important;
+              padding: 4px 16px 5px !important;
+              border: 1px solid #ead4c5 !important;
+              border-radius: 999px !important;
+              background: rgba(255, 250, 244, 0.96) !important;
+              color: #6b5346 !important;
+              font: 700 18px/1.15 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif !important;
+              letter-spacing: -0.02em !important;
+              text-align: center !important;
+              white-space: nowrap !important;
+              transform: translateX(-50%) !important;
+              visibility: visible !important;
+            }
+
             html[data-tree-direct-print="true"] [data-family-map-export-root="true"],
             html[data-tree-direct-print="true"] [data-family-map-horizontal-root="true"],
             html[data-tree-direct-print="true"] [data-export-root="family-tree"] {
               position: fixed !important;
-              left: 0 !important;
-              top: 0 !important;
+              left: var(--tree-direct-print-left, 0) !important;
+              top: var(--tree-direct-print-top, 72px) !important;
               width: var(--tree-direct-print-width, auto) !important;
               height: var(--tree-direct-print-height, auto) !important;
               max-width: none !important;
@@ -1027,7 +1107,11 @@ export function HomeTreeSection({
         `}
       </style>
 
-      <AreaCaptureInstructionsDialog
+      <div className="tree-direct-print-title" aria-hidden="true">
+        {printTreeTitle}
+      </div>
+
+            <AreaCaptureInstructionsDialog
         open={areaCaptureInstructionsOpen}
         onCancel={closeAreaCaptureInstructions}
         onContinue={continueAreaCapture}
