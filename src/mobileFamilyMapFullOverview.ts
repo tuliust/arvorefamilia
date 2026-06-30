@@ -119,6 +119,7 @@ function ensureStyles() {
         width: 100% !important;
         height: 100% !important;
         min-height: 0 !important;
+        flex: 1 1 auto !important;
         background: transparent !important;
         padding: 0 !important;
       }
@@ -126,7 +127,7 @@ function ensureStyles() {
       #${FULL_MAP_ID} .mobile-family-full-map-viewport {
         position: relative !important;
         flex: 1 1 auto !important;
-        min-height: 0 !important;
+        min-height: 18rem !important;
         width: 100% !important;
         overflow: hidden !important;
         border: 1px solid rgb(226, 232, 240) !important;
@@ -769,6 +770,21 @@ function buildFullMapStage() {
   return stage;
 }
 
+function getInlineFullMap() {
+  const fullMap = document.querySelector<HTMLElement>(
+    `#${FULL_MAP_ID}[data-mobile-family-map-full-inline="true"], ${INLINE_OVERVIEW_SELECTOR} #${FULL_MAP_ID}`
+  );
+  if (!fullMap) return null;
+
+  return fullMap.matches('[data-mobile-family-map-full-inline="true"]') || fullMap.closest(INLINE_OVERVIEW_SELECTOR)
+    ? fullMap
+    : null;
+}
+
+function hasHydratedStage() {
+  return Boolean(getInlineFullMap()?.querySelector('.mobile-family-full-map-stage'));
+}
+
 function closeFullMap() {
   document.getElementById(FULL_MAP_ID)?.remove();
 }
@@ -850,8 +866,8 @@ function hydrateFullMap() {
   if (!isEnabled()) return;
 
   ensureStyles();
-  const fullMap = document.getElementById(FULL_MAP_ID);
-  if (!fullMap?.closest(INLINE_OVERVIEW_SELECTOR)) return;
+  const fullMap = getInlineFullMap();
+  if (!fullMap) return;
 
   const viewport = fullMap.querySelector<HTMLElement>('.mobile-family-full-map-viewport');
   if (!viewport) return;
@@ -878,11 +894,23 @@ function ensureFullMapButton() {
   hydrateFullMap();
 }
 
+function scheduleHydrateFullMap() {
+  if (!isEnabled()) return;
+
+  window.requestAnimationFrame(hydrateFullMap);
+  [40, 160, 420].forEach((delay) => window.setTimeout(hydrateFullMap, delay));
+}
+
 function scheduleEnsureButton() {
   if (scheduled) return;
   scheduled = true;
   window.requestAnimationFrame(() => {
     scheduled = false;
+    if (document.getElementById(FULL_MAP_ID)) {
+      scheduleHydrateFullMap();
+      return;
+    }
+
     ensureFullMapButton();
   });
 }
@@ -896,14 +924,14 @@ if (typeof window !== 'undefined' && typeof document !== 'undefined') {
   observer.observe(document.documentElement, { childList: true, subtree: true });
 
   window.addEventListener('resize', () => {
-    ensureFullMapButton();
-    if (document.getElementById(FULL_MAP_ID)) resetTransform();
+    scheduleHydrateFullMap();
+    if (hasHydratedStage()) resetTransform();
   }, { passive: true });
   window.addEventListener('orientationchange', () => {
-    ensureFullMapButton();
-    if (document.getElementById(FULL_MAP_ID)) window.setTimeout(resetTransform, 220);
+    scheduleHydrateFullMap();
+    if (hasHydratedStage()) window.setTimeout(resetTransform, 220);
   }, { passive: true });
-  window.addEventListener(FULL_MAP_OPEN_EVENT, hydrateFullMap);
+  window.addEventListener(FULL_MAP_OPEN_EVENT, scheduleHydrateFullMap);
   window.addEventListener('popstate', () => { closeFullMap(); }, { passive: true });
   document.addEventListener('visibilitychange', ensureFullMapButton, { passive: true });
 }

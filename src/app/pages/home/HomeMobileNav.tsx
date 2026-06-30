@@ -95,6 +95,7 @@ function getFirstName(value?: string | null) {
 }
 
 const MOBILE_SPOUSE_FILTER_STORAGE_KEY = 'arvorefamilia:mobile-family-map:show-extended-spouses';
+const MOBILE_FULL_MAP_OPEN_EVENT = 'arvorefamilia:mobile-full-map-open';
 
 function getShortPersonName(pessoa: Pessoa) {
   const source = String(pessoa.nome_completo || pessoa.id || '').trim();
@@ -832,7 +833,18 @@ export function HomeMobileNav({
 
   useEffect(() => {
     if (activeToolbarAction !== 'zoom' || mobileMapPanelMode !== 'full') return;
-    window.dispatchEvent(new CustomEvent('arvorefamilia:mobile-full-map-open'));
+
+    const dispatchFullMapOpen = () => {
+      window.dispatchEvent(new CustomEvent(MOBILE_FULL_MAP_OPEN_EVENT));
+    };
+
+    const animationFrameId = window.requestAnimationFrame(dispatchFullMapOpen);
+    const timeoutIds = [40, 160, 420].map((delay) => window.setTimeout(dispatchFullMapOpen, delay));
+
+    return () => {
+      window.cancelAnimationFrame(animationFrameId);
+      timeoutIds.forEach((timeoutId) => window.clearTimeout(timeoutId));
+    };
   }, [activeToolbarAction, mobileMapPanelMode]);
 
   useEffect(() => {
@@ -1257,13 +1269,13 @@ export function HomeMobileNav({
                 ) : (
                   <div
                     id="mobile-family-map-full-overview"
-                    className="mobile-family-full-map-panel min-h-0 flex-1"
+                    className="mobile-family-full-map-panel flex min-h-0 flex-1 flex-col"
                     role="region"
                     aria-label="Mapa completo da famÃ­lia"
                     data-tree-export-ignore="true"
                     data-mobile-family-map-full-inline="true"
                   >
-                    <div className="mobile-family-full-map-viewport" aria-label="Mapa completo com zoom por toque" />
+                    <div className="mobile-family-full-map-viewport min-h-0 flex-1" aria-label="Mapa completo com zoom por toque" />
                   </div>
                 )}
               </div>
