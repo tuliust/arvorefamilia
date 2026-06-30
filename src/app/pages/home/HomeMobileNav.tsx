@@ -1178,48 +1178,61 @@ export function HomeMobileNav({
           {activeToolbarAction === 'zoom' && (
             <div
               className={`fixed inset-x-2 ${mobileTreeViewPopoverTopClass} z-[10001] md:hidden`}
+              style={{ bottom: 'calc(env(safe-area-inset-bottom,0px)+5.65rem)' }}
               data-tree-export-ignore="true"
             >
               <div
-                className="mx-auto grid max-w-md grid-cols-3 grid-rows-3 gap-1.5 rounded-xl border border-slate-200 bg-white/95 p-1.5 shadow-sm backdrop-blur"
+                className="mx-auto flex h-full max-w-md flex-col gap-2 rounded-2xl border border-slate-200 bg-white/95 p-2 shadow-[0_14px_34px_rgba(15,23,42,0.14)] backdrop-blur"
                 aria-label="Mapa da família"
                 data-mobile-family-map-inline-overview="true"
+                data-mobile-family-map-overview-source="direct-map"
+                data-mobile-family-map-overview-stable="true"
               >
-                {MOBILE_MAP_OVERVIEW_SCREENS.map((screen) => {
-                  const Icon = screen.icon;
-                  const active = activeMobileMapScreen === screen.key;
-                  const count = mobileMapOverviewCounts[screen.key] ?? 0;
+                <div className="grid min-h-0 flex-1 grid-cols-3 grid-rows-3 gap-1.5 overflow-visible">
+                  {MOBILE_MAP_OVERVIEW_SCREENS.map((screen) => {
+                    const Icon = screen.icon;
+                    const active = activeMobileMapScreen === screen.key;
+                    const count = mobileMapOverviewCounts[screen.key] ?? 0;
 
-                  return (
-                    <button
-                      key={screen.key}
-                      type="button"
-                      data-screen={screen.key}
-                      aria-label={`${active ? 'Tela atual: ' : 'Abrir tela: '}${screen.title}`}
-                      aria-current={active ? 'location' : undefined}
-                      onClick={() => {
-                        navigateMobileMapOverview(screen.key);
-                        setActiveToolbarAction(null);
-                      }}
-                      className={[
-                        'flex h-[74px] min-w-0 flex-col items-center justify-between gap-1 overflow-hidden rounded-lg border bg-white px-1.5 py-1.5 text-center shadow-sm transition active:scale-[0.99]',
-                        active
-                          ? 'border-blue-500 bg-blue-50 text-blue-950 ring-1 ring-blue-500'
-                          : 'border-slate-200 text-slate-900 hover:border-blue-200 hover:bg-blue-50/70',
-                      ].join(' ')}
-                    >
-                      <span className="flex min-h-[1.45rem] w-full items-center justify-center text-[8.5px] font-black uppercase leading-[0.95] tracking-[-0.02em] text-current">
-                        {screen.title}
-                      </span>
-                      <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-blue-600 to-cyan-500 text-white shadow-[0_6px_14px_rgba(37,99,235,0.18)]" aria-hidden="true">
-                        <Icon className="h-4 w-4" />
-                      </span>
-                      <span className="inline-flex max-w-full items-center justify-center rounded-full border border-blue-200 bg-blue-50 px-1.5 py-0.5 text-[8.5px] font-black leading-none text-blue-800">
-                        {count} pessoa{count === 1 ? '' : 's'}
-                      </span>
-                    </button>
-                  );
-                })}
+                    return (
+                      <button
+                        key={screen.key}
+                        type="button"
+                        data-screen={screen.key}
+                        aria-label={`${active ? 'Tela atual: ' : 'Abrir tela: '}${screen.title}`}
+                        aria-current={active ? 'location' : undefined}
+                        onClick={() => {
+                          navigateMobileMapOverview(screen.key);
+                          setActiveToolbarAction(null);
+                        }}
+                        className={[
+                          'flex min-h-0 min-w-0 flex-col items-center justify-center gap-1 overflow-visible rounded-xl border bg-white px-1 py-1.5 text-center shadow-sm transition active:scale-[0.99]',
+                          active
+                            ? 'border-blue-500 bg-blue-50 text-blue-950 ring-2 ring-blue-500/70'
+                            : 'border-slate-200 text-slate-900 hover:border-blue-200 hover:bg-blue-50/70',
+                        ].join(' ')}
+                      >
+                        <span className="flex min-h-[1.5rem] w-full shrink-0 items-center justify-center px-0.5 text-[8.5px] font-black uppercase leading-[0.95] tracking-[-0.025em] text-current min-[390px]:text-[9.5px]">
+                          {screen.title}
+                        </span>
+                        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-blue-600 to-cyan-500 text-white shadow-[0_7px_16px_rgba(37,99,235,0.20)] min-[390px]:h-9 min-[390px]:w-9" aria-hidden="true">
+                          <Icon className="h-4 w-4 min-[390px]:h-[1.1rem] min-[390px]:w-[1.1rem]" />
+                        </span>
+                        <span className="inline-flex max-w-full shrink-0 items-center justify-center rounded-full border border-blue-200 bg-blue-50 px-1.5 py-0.5 text-[8.5px] font-black leading-none text-blue-800 min-[390px]:text-[9.5px]">
+                          {count} pessoa{count === 1 ? '' : 's'}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+
+                <button
+                  type="button"
+                  data-mobile-family-full-map-button="true"
+                  className="flex min-h-10 w-full shrink-0 items-center justify-center rounded-xl border border-blue-600 bg-blue-600 px-3 text-sm font-black leading-none tracking-[-0.015em] text-white shadow-[0_10px_24px_rgba(37,99,235,0.22)] transition active:scale-[0.99]"
+                >
+                  Exibir mapa completo
+                </button>
               </div>
             </div>
           )}

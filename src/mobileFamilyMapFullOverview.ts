@@ -91,7 +91,7 @@ function escapeHtml(value: string) {
 function ensureStyles() {
   const css = `
     @media (max-width: 767px) {
-      #${OVERVIEW_ID} [${FULL_MAP_BUTTON_ATTR}="true"] {
+      [${FULL_MAP_BUTTON_ATTR}="true"] {
         appearance: none !important;
         display: flex !important;
         width: min(100%, 28rem) !important;
@@ -962,9 +962,26 @@ function openFullMap() {
   window.setTimeout(resetTransform, 40);
 }
 
+function bindFullMapButton(button: HTMLButtonElement) {
+  if (button.dataset.mobileFamilyFullMapBound === 'true') return;
+
+  button.dataset.mobileFamilyFullMapBound = 'true';
+  button.addEventListener('click', (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    if ('stopImmediatePropagation' in event) event.stopImmediatePropagation();
+    openFullMap();
+  });
+}
+
 function ensureFullMapButton() {
   if (!isEnabled()) return;
   ensureStyles();
+
+  document
+    .querySelectorAll<HTMLButtonElement>(`[${FULL_MAP_BUTTON_ATTR}="true"]`)
+    .forEach(bindFullMapButton);
+
   const overview = document.getElementById(OVERVIEW_ID);
   const map = overview?.querySelector<HTMLElement>('.mobile-family-overview-map');
   if (!overview || !map) return;
@@ -978,15 +995,7 @@ function ensureFullMapButton() {
     map.insertAdjacentElement('afterend', button);
   }
 
-  if (button.dataset.mobileFamilyFullMapBound !== 'true') {
-    button.dataset.mobileFamilyFullMapBound = 'true';
-    button.addEventListener('click', (event) => {
-      event.preventDefault();
-      event.stopPropagation();
-      if ('stopImmediatePropagation' in event) event.stopImmediatePropagation();
-      openFullMap();
-    });
-  }
+  bindFullMapButton(button);
 }
 
 function scheduleEnsureButton() {
