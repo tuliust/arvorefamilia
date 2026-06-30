@@ -63,6 +63,7 @@ type MobileMapOverviewScreenName =
   | 'descendants'
   | 'maternal-cousins';
 type MobileMapPanelMode = 'overview' | 'full';
+type MobileGenerationMapPanelMode = 'overview' | 'full';
 type MobileFamilyGroupCountKey =
   | 'pais'
   | 'conjuges'
@@ -96,6 +97,7 @@ function getFirstName(value?: string | null) {
 
 const MOBILE_SPOUSE_FILTER_STORAGE_KEY = 'arvorefamilia:mobile-family-map:show-extended-spouses';
 const MOBILE_FULL_MAP_OPEN_EVENT = 'arvorefamilia:mobile-full-map-open';
+const MOBILE_GENERATION_FULL_MAP_OPEN_EVENT = 'arvorefamilia:mobile-generation-full-map-open';
 
 function getShortPersonName(pessoa: Pessoa) {
   const source = String(pessoa.nome_completo || pessoa.id || '').trim();
@@ -458,6 +460,27 @@ function countMobileMapCards(screenName: MobileMapOverviewScreenName) {
   return getMobileMapScreen(screenName, root)?.querySelectorAll('[data-family-map-mobile-card="true"]').length ?? 0;
 }
 
+function countMobileGenerationCards(generation: number) {
+  if (typeof document === 'undefined') return generation === 5 ? 1 : 0;
+
+  return document.querySelectorAll(
+    `[data-family-map-horizontal-mobile-root="true"] [data-mobile-horizontal-generation="${generation}"][data-mobile-horizontal-card="true"]`
+  ).length;
+}
+
+function getActiveMobileGeneration() {
+  if (typeof document === 'undefined') return 5;
+
+  const activeButton = Array.from(
+    document.querySelectorAll<HTMLButtonElement>(
+      '[data-family-map-horizontal-mobile-root="true"] nav[aria-label^="Gera"] button'
+    )
+  ).find((button) => button.getAttribute('aria-current') === 'page');
+  const generation = Number((activeButton?.textContent ?? '').match(/\d+/)?.[0]);
+
+  return Number.isFinite(generation) ? generation : 5;
+}
+
 function parseMobileMapScreenFromTransform(value: string) {
   const match = value.match(/translate3d\(calc\((-?\d+(?:\.\d+)?)%[^,]*,\s*calc\((-?\d+(?:\.\d+)?)%/);
   if (!match) return 'core' as MobileMapOverviewScreenName;
@@ -551,6 +574,21 @@ const MOBILE_MAP_OVERVIEW_SCREENS: Array<{
   { key: 'paternal-cousins', title: 'Primos paternos', column: 0, row: 2, icon: Layers },
   { key: 'descendants', title: 'Descendentes', column: 1, row: 2, icon: PawPrint },
   { key: 'maternal-cousins', title: 'Primos maternos', column: 2, row: 2, icon: ClipboardList },
+];
+
+const MOBILE_GENERATION_OVERVIEW_SCREENS: Array<{
+  generation: number;
+  title: string;
+  icon: React.ComponentType<{ className?: string }>;
+}> = [
+  { generation: 1, title: 'Tataravós', icon: Network },
+  { generation: 2, title: 'Bisavós', icon: UsersRound },
+  { generation: 3, title: 'Avós', icon: UsersRound },
+  { generation: 4, title: 'Pais', icon: HeartHandshake },
+  { generation: 5, title: 'Pessoa principal', icon: UserRound },
+  { generation: 6, title: 'Filhos', icon: Heart },
+  { generation: 7, title: 'Netos', icon: UsersRound },
+  { generation: 8, title: 'Pets', icon: PawPrint },
 ];
 
 const TREE_VIEW_OPTIONS: Array<{
@@ -699,6 +737,7 @@ export function HomeMobileNav({
   const [unreadNotificationsCount, setUnreadNotificationsCount] = useState(0);
   const [activeToolbarAction, setActiveToolbarAction] = useState<MobileFamilyMapToolbarAction | null>(null);
   const [mobileMapPanelMode, setMobileMapPanelMode] = useState<MobileMapPanelMode>('overview');
+  const [mobileGenerationMapPanelMode, setMobileGenerationMapPanelMode] = useState<MobileGenerationMapPanelMode>('overview');
   const [treeColorPalette, setTreeColorPalette] = useState<TreeColorPalette>(getStoredPalette);
   const [viewAsPersonOptions, setViewAsPersonOptions] = useState<ViewAsPersonOption[]>([]);
   const [mobilePeople, setMobilePeople] = useState<Pessoa[]>([]);
@@ -712,6 +751,10 @@ export function HomeMobileNav({
     Object.fromEntries(MOBILE_MAP_OVERVIEW_SCREENS.map((screen) => [screen.key, screen.key === 'core' ? 1 : 0])) as Record<MobileMapOverviewScreenName, number>
   ));
   const [activeMobileMapScreen, setActiveMobileMapScreen] = useState<MobileMapOverviewScreenName>('core');
+  const [mobileGenerationOverviewCounts, setMobileGenerationOverviewCounts] = useState<Record<number, number>>(() => (
+    Object.fromEntries(MOBILE_GENERATION_OVERVIEW_SCREENS.map((screen) => [screen.generation, screen.generation === 5 ? 1 : 0]))
+  ));
+  const [activeMobileGeneration, setActiveMobileGeneration] = useState(5);
 
   const refreshUnreadNotificationsCount = useCallback(async () => {
     if (!user) {
@@ -786,6 +829,8 @@ export function HomeMobileNav({
 
   const pathname = getCurrentPathname();
   const currentViewAsPersonValue = getCurrentSearchParams().get('pessoa')?.trim() || '';
+  const isGenerationLinePath = pathname === '/linha-geracional';
+  const isDirectFamilyMapPath = pathname === '/mapa-familiar';
   const isDirectFamilyMap = pathname === '/mapa-familiar' || pathname === '/mapa-familiar-horizontal' || pathname === '/linha-geracional';
   const selectedViewAsPersonOption = useMemo(
     () => viewAsPersonOptions.find((option) => option.id === currentViewAsPersonValue),
@@ -796,6 +841,7 @@ export function HomeMobileNav({
     if (!isDirectFamilyMap) {
       setActiveToolbarAction(null);
       setMobileMapPanelMode('overview');
+      setMobileGenerationMapPanelMode('overview');
       setFullControlsOpen(false);
     }
   }, [isDirectFamilyMap, pathname]);
@@ -803,11 +849,12 @@ export function HomeMobileNav({
   useEffect(() => {
     if (activeToolbarAction !== 'zoom') {
       setMobileMapPanelMode('overview');
+      setMobileGenerationMapPanelMode('overview');
     }
   }, [activeToolbarAction]);
 
   useEffect(() => {
-    if (!isDirectFamilyMap) return;
+    if (!isDirectFamilyMapPath) return;
 
     const updateOverviewState = () => {
       if (mobileMapPanelMode === 'full') return;
@@ -829,7 +876,32 @@ export function HomeMobileNav({
       window.removeEventListener('resize', updateOverviewState);
       window.removeEventListener('orientationchange', updateOverviewState);
     };
-  }, [isDirectFamilyMap, mobileMapPanelMode]);
+  }, [isDirectFamilyMapPath, mobileMapPanelMode]);
+
+  useEffect(() => {
+    if (!isGenerationLinePath) return;
+
+    const updateGenerationOverviewState = () => {
+      if (mobileGenerationMapPanelMode === 'full') return;
+
+      setMobileGenerationOverviewCounts(
+        Object.fromEntries(MOBILE_GENERATION_OVERVIEW_SCREENS.map((screen) => [screen.generation, countMobileGenerationCards(screen.generation)]))
+      );
+      setActiveMobileGeneration(getActiveMobileGeneration());
+    };
+
+    updateGenerationOverviewState();
+    const observer = new MutationObserver(updateGenerationOverviewState);
+    observer.observe(document.documentElement, { childList: true, subtree: true, attributes: true, attributeFilter: ['aria-current', 'style'] });
+    window.addEventListener('resize', updateGenerationOverviewState, { passive: true });
+    window.addEventListener('orientationchange', updateGenerationOverviewState, { passive: true });
+
+    return () => {
+      observer.disconnect();
+      window.removeEventListener('resize', updateGenerationOverviewState);
+      window.removeEventListener('orientationchange', updateGenerationOverviewState);
+    };
+  }, [isGenerationLinePath, mobileGenerationMapPanelMode]);
 
   useEffect(() => {
     if (activeToolbarAction !== 'zoom' || mobileMapPanelMode !== 'full') return;
@@ -846,6 +918,22 @@ export function HomeMobileNav({
       timeoutIds.forEach((timeoutId) => window.clearTimeout(timeoutId));
     };
   }, [activeToolbarAction, mobileMapPanelMode]);
+
+  useEffect(() => {
+    if (activeToolbarAction !== 'zoom' || mobileGenerationMapPanelMode !== 'full' || !isGenerationLinePath) return;
+
+    const dispatchFullMapOpen = () => {
+      window.dispatchEvent(new CustomEvent(MOBILE_GENERATION_FULL_MAP_OPEN_EVENT));
+    };
+
+    const animationFrameId = window.requestAnimationFrame(dispatchFullMapOpen);
+    const timeoutIds = [40, 160, 420].map((delay) => window.setTimeout(dispatchFullMapOpen, delay));
+
+    return () => {
+      window.cancelAnimationFrame(animationFrameId);
+      timeoutIds.forEach((timeoutId) => window.clearTimeout(timeoutId));
+    };
+  }, [activeToolbarAction, isGenerationLinePath, mobileGenerationMapPanelMode]);
 
   useEffect(() => {
     const metadataName = String(
@@ -1029,6 +1117,11 @@ export function HomeMobileNav({
     setActiveToolbarAction(null);
   }, []);
 
+  const visibleGenerationOverviewScreens = MOBILE_GENERATION_OVERVIEW_SCREENS.filter((screen) => (
+    screen.generation === 5 || (mobileGenerationOverviewCounts[screen.generation] ?? 0) > 0
+  ));
+  const activeMapPanelMode = isGenerationLinePath ? mobileGenerationMapPanelMode : mobileMapPanelMode;
+
   const itemClassName = 'flex min-h-14 flex-col items-center justify-center gap-1 rounded-lg px-1 text-xs font-semibold text-gray-700 transition hover:bg-gray-50 active:bg-gray-100';
   const activeItemClassName = 'flex min-h-14 flex-col items-center justify-center gap-1 rounded-lg bg-blue-50 px-1 text-xs font-semibold text-blue-700 ring-1 ring-blue-100 transition active:bg-blue-100';
 
@@ -1207,15 +1300,15 @@ export function HomeMobileNav({
             <div
               className={[
                 'fixed z-[10001] md:hidden',
-                mobileMapPanelMode === 'full'
+                activeMapPanelMode === 'full'
                   ? 'inset-x-0'
                   : `inset-x-2 ${mobileTreeViewPopoverTopClass}`,
               ].join(' ')}
               style={{
-                top: mobileMapPanelMode === 'full'
+                top: activeMapPanelMode === 'full'
                   ? 'calc(env(safe-area-inset-top,0px)+7.75rem)'
                   : undefined,
-                bottom: mobileMapPanelMode === 'full'
+                bottom: activeMapPanelMode === 'full'
                   ? 'calc(env(safe-area-inset-bottom,0px)+5.3rem)'
                   : 'calc(env(safe-area-inset-bottom,0px)+5.65rem)',
               }}
@@ -1224,7 +1317,7 @@ export function HomeMobileNav({
               <div
                 className={[
                   'mx-auto flex h-full max-w-md flex-col',
-                  mobileMapPanelMode === 'full'
+                  activeMapPanelMode === 'full'
                     ? 'gap-0 overflow-hidden rounded-none border-0 bg-white p-0 shadow-none'
                     : 'gap-2 rounded-2xl border border-slate-200 bg-white/95 p-2 shadow-[0_14px_34px_rgba(15,23,42,0.14)] backdrop-blur',
                 ].join(' ')}
@@ -1232,9 +1325,71 @@ export function HomeMobileNav({
                 data-mobile-family-map-inline-overview="true"
                 data-mobile-family-map-overview-source="direct-map"
                 data-mobile-family-map-overview-stable="true"
-                data-mobile-family-map-panel-mode={mobileMapPanelMode}
+                data-mobile-family-map-panel-mode={activeMapPanelMode}
               >
-                {mobileMapPanelMode === 'overview' ? (
+                {isGenerationLinePath ? (
+                  mobileGenerationMapPanelMode === 'overview' ? (
+                    <>
+                      <div className="grid min-h-0 flex-1 grid-cols-2 gap-1.5 overflow-y-auto pr-0.5 [-webkit-overflow-scrolling:touch] min-[390px]:grid-cols-3">
+                        {visibleGenerationOverviewScreens.map((screen) => {
+                          const Icon = screen.icon;
+                          const active = activeMobileGeneration === screen.generation;
+                          const count = mobileGenerationOverviewCounts[screen.generation] ?? 0;
+
+                          return (
+                            <button
+                              key={screen.generation}
+                              type="button"
+                              aria-label={`${active ? 'Geração atual: ' : 'Abrir geração: '}${screen.title}`}
+                              aria-current={active ? 'location' : undefined}
+                              onClick={() => {
+                                const target = Array.from(document.querySelectorAll<HTMLButtonElement>('[data-family-map-horizontal-mobile-root="true"] nav[aria-label^="Gera"] button'))
+                                  .find((button) => Number((button.textContent ?? '').match(/\d+/)?.[0]) === screen.generation);
+                                target?.click();
+                                setActiveToolbarAction(null);
+                              }}
+                              className={[
+                                'flex min-h-[5.6rem] min-w-0 flex-col items-center justify-center gap-1 rounded-xl border bg-white px-1.5 py-2 text-center shadow-sm transition active:scale-[0.99]',
+                                active
+                                  ? 'border-cyan-600 bg-cyan-50 text-slate-950 ring-2 ring-cyan-600/60'
+                                  : 'border-slate-200 text-slate-900 hover:border-cyan-200 hover:bg-cyan-50/70',
+                              ].join(' ')}
+                            >
+                              <span className="flex min-h-[1.35rem] w-full items-center justify-center text-[9px] font-black uppercase leading-[0.95] tracking-[-0.015em] text-current min-[390px]:text-[9.5px]">
+                                {screen.title}
+                              </span>
+                              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-[var(--tree-palette-card-central,#38bdf8)] text-[var(--tree-palette-text-primary,#0f172a)] shadow-[0_7px_16px_rgba(15,23,42,0.14)]" aria-hidden="true">
+                                <Icon className="h-4 w-4" />
+                              </span>
+                              <span className="inline-flex max-w-full shrink-0 items-center justify-center rounded-full border border-cyan-200 bg-cyan-50 px-1.5 py-0.5 text-[8.5px] font-black leading-none text-cyan-900">
+                                {count || (screen.generation === 5 ? 1 : 0)} pessoa{(count || (screen.generation === 5 ? 1 : 0)) === 1 ? '' : 's'}
+                              </span>
+                            </button>
+                          );
+                        })}
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={() => setMobileGenerationMapPanelMode('full')}
+                        className="flex min-h-10 w-full shrink-0 items-center justify-center rounded-xl border border-cyan-700 bg-cyan-700 px-3 text-sm font-black leading-none tracking-[-0.015em] text-white shadow-[0_10px_24px_rgba(8,145,178,0.22)] transition active:scale-[0.99]"
+                      >
+                        Exibir mapa completo
+                      </button>
+                    </>
+                  ) : (
+                    <div
+                      id="mobile-generation-line-full-overview"
+                      className="mobile-generation-line-full-map-panel flex min-h-0 flex-1 flex-col"
+                      role="region"
+                      aria-label="Mapa completo da linha geracional"
+                      data-tree-export-ignore="true"
+                      data-mobile-generation-line-full-inline="true"
+                    >
+                      <div className="mobile-generation-line-full-map-viewport min-h-0 flex-1" aria-label="Linha geracional completa com zoom por toque" />
+                    </div>
+                  )
+                ) : mobileMapPanelMode === 'overview' ? (
                   <>
                 <div className="grid min-h-0 flex-1 grid-cols-3 grid-rows-3 gap-1.5 overflow-visible">
                   {MOBILE_MAP_OVERVIEW_SCREENS.map((screen) => {
