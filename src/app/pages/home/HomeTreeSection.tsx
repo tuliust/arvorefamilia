@@ -84,6 +84,29 @@ function openTreeExportPreviewRoute(location: ReturnType<typeof useLocation>, ac
   return true;
 }
 
+function printCurrentTreePage() {
+  const root = document.documentElement;
+  let fallbackCleanupTimer: number | undefined;
+
+  const cleanup = () => {
+    delete root.dataset.treeDirectPrint;
+    window.removeEventListener('afterprint', cleanup);
+
+    if (fallbackCleanupTimer !== undefined) {
+      window.clearTimeout(fallbackCleanupTimer);
+    }
+  };
+
+  root.dataset.treeDirectPrint = 'true';
+  window.addEventListener('afterprint', cleanup, { once: true });
+
+  window.setTimeout(() => {
+    window.print();
+
+    fallbackCleanupTimer = window.setTimeout(cleanup, 1600);
+  }, 120);
+}
+
 function getExportIntentTitle(intent: string | null) {
   if (intent === 'png') return 'Salvar imagem da árvore';
   if (intent === 'pdf') return 'Exportar PDF da árvore';
@@ -782,8 +805,13 @@ export function HomeTreeSection({
     const handleSidebarTreeAction = (event: Event) => {
       const action = (event as CustomEvent<SidebarTreeAction>).detail;
 
-      if (!isExportPreview && (action === 'save-image' || action === 'save-pdf' || action === 'print')) {
+      if (!isExportPreview && (action === 'save-image' || action === 'save-pdf')) {
         openTreeExportPreviewRoute(location, action);
+        return;
+      }
+
+      if (!isExportPreview && action === 'print') {
+        printCurrentTreePage();
         return;
       }
 
@@ -838,7 +866,7 @@ export function HomeTreeSection({
       }
 
       if (action === 'print') {
-        void treeActions.print();
+        printCurrentTreePage();
       }
     };
 
