@@ -8,9 +8,9 @@ const INLINE_OVERVIEW_SELECTOR = '[data-mobile-family-map-inline-overview="true"
 const FULL_MAP_OPEN_EVENT = 'arvorefamilia:mobile-full-map-open';
 
 const STAGE_WIDTH = 1250;
-const STAGE_HEIGHT = 1320;
+const STAGE_HEIGHT = 1510;
 const STAGE_FOCUS_X = 625;
-const STAGE_FOCUS_Y = 660;
+const STAGE_FOCUS_Y = 705;
 
 type GestureState =
   | { mode: 'pan'; x: number; y: number; translateX: number; translateY: number }
@@ -197,12 +197,18 @@ function ensureStyles() {
       }
 
       #${FULL_MAP_ID} .mobile-family-full-map-node[data-full-map-kind="person"] .mobile-family-full-map-group-shell {
+        height: 100% !important;
         min-height: 0 !important;
         border: 0 !important;
         border-radius: 0 !important;
         background: transparent !important;
         box-shadow: none !important;
         padding: 0 !important;
+      }
+
+      #${FULL_MAP_ID} .mobile-family-full-map-node[data-full-map-kind="person"] .mobile-family-full-map-card-grid,
+      #${FULL_MAP_ID} .mobile-family-full-map-node[data-full-map-kind="person"] .mobile-family-full-map-card {
+        height: 100% !important;
       }
 
       #${FULL_MAP_ID} .mobile-family-full-map-group-title {
@@ -642,6 +648,25 @@ function anchorPoint(node: FullMapNode, anchor: Anchor) {
   return { x, y: y + h / 2 };
 }
 
+function estimateGroupHeight(
+  people: FullMapPerson[],
+  columns: number,
+  variant: FullMapCardVariant,
+  floorHeight: number,
+  kind: FullMapGroupKind
+) {
+  if (kind === 'person') return floorHeight;
+
+  const cardHeight = variant === 'mini' ? 76 : variant === 'core' ? 84 : 62;
+  const rows = Math.max(1, Math.ceil(people.length / Math.max(1, columns)));
+  const shellPadding = 18;
+  const titleHeight = 18;
+  const gridGap = 6;
+  const estimatedHeight = shellPadding + titleHeight + (rows * cardHeight) + ((rows - 1) * gridGap);
+
+  return Math.max(floorHeight, estimatedHeight);
+}
+
 function edgePath(from: { x: number; y: number }, to: { x: number; y: number }, via: FullMapEdge['via']) {
   if (via === 'horizontal') {
     const midX = (from.x + to.x) / 2;
@@ -696,9 +721,10 @@ function buildFullMapModel() {
   const netos = extractPeopleFromSection(findSectionByTitle('core', ['netos']), 'Netos');
 
   const columnGap = 45;
-  const topMargin = 50;
-  const verticalGroupGap = 34;
-  const uncleCousinGap = 12;
+  const topMargin = 24;
+  const verticalGroupGap = 42;
+  const ancestorUncleGap = 72;
+  const uncleCousinGap = 22;
   const sideColumnWidth = 260;
   const centerColumnWidth = 500;
   const leftColumnX = 70;
@@ -741,40 +767,48 @@ function buildFullMapModel() {
   const nodeById = new Map(nodes.map((node) => [node.id, node]));
   const placeNode = (id: string, left: number, top: number, width: number, minHeight: number, columns?: number) => {
     const node = nodeById.get(id);
-    if (!node) return false;
+    if (!node) return 0;
 
     node.left = left;
     node.top = top;
     node.width = width;
-    node.minHeight = minHeight;
     if (columns) node.columns = columns;
-    return true;
+    node.minHeight = estimateGroupHeight(node.people, node.columns, node.variant, minHeight, node.kind);
+    return node.minHeight;
   };
 
   let leftY = topMargin;
-  if (placeNode('tataravos-paternos', leftColumnX, leftY, sideColumnWidth, 125, 1)) leftY += 125 + verticalGroupGap;
-  if (placeNode('bisavos-paternos', leftColumnX, leftY, sideColumnWidth, 155, 1)) leftY += 155 + verticalGroupGap;
-  if (placeNode('tios-paternos', leftColumnX, leftY, sideColumnWidth, 330, 2)) leftY += 330 + uncleCousinGap;
+  const placedTataravosPaternos = placeNode('tataravos-paternos', leftColumnX, leftY, sideColumnWidth, 125, 1);
+  if (placedTataravosPaternos) leftY += placedTataravosPaternos + verticalGroupGap;
+  const placedBisavosPaternos = placeNode('bisavos-paternos', leftColumnX, leftY, sideColumnWidth, 155, 1);
+  if (placedBisavosPaternos) leftY += placedBisavosPaternos + ancestorUncleGap;
+  const placedTiosPaternos = placeNode('tios-paternos', leftColumnX, leftY, sideColumnWidth, 330, 2);
+  if (placedTiosPaternos) leftY += placedTiosPaternos + uncleCousinGap;
   placeNode('primos-paternos', leftColumnX, leftY, sideColumnWidth, 410, 2);
 
-  let centerY = topMargin + 40;
+  let centerY = topMargin + 18;
   const placeCenterRow = (leftId: string, rightId: string | null, rowHeight: number, rowGap = verticalGroupGap) => {
     const placedLeft = placeNode(leftId, centerColumnX, centerY, centerPairWidth, rowHeight);
     const placedRight = rightId ? placeNode(rightId, centerPairRightX, centerY, centerPairWidth, rowHeight) : false;
-    if (placedLeft || placedRight) centerY += rowHeight + rowGap;
+    const placedHeight = Math.max(placedLeft || 0, placedRight || 0);
+    if (placedHeight) centerY += placedHeight + rowGap;
   };
 
-  placeCenterRow('avos-paternos', 'avos-maternos', 165, 44);
-  placeCenterRow('pai', 'mae', 156, 48);
-  if (placeNode('central', centerSingleX, centerY, centerSingleWidth, 195, 1)) centerY += 195 + 46;
-  placeCenterRow('irmaos', 'conjuge', 190);
-  placeCenterRow('sobrinhos', 'pets', 145);
+  placeCenterRow('avos-paternos', 'avos-maternos', 165, 58);
+  placeCenterRow('pai', 'mae', 156, 50);
+  const placedCentral = placeNode('central', centerSingleX, centerY, centerSingleWidth, 195, 1);
+  if (placedCentral) centerY += placedCentral + 72;
+  placeCenterRow('irmaos', 'conjuge', 190, 70);
+  placeCenterRow('sobrinhos', 'pets', 145, 60);
   placeCenterRow('filhos', 'netos', 145);
 
   let rightY = topMargin;
-  if (placeNode('tataravos-maternos', rightColumnX, rightY, sideColumnWidth, 125, 1)) rightY += 125 + verticalGroupGap;
-  if (placeNode('bisavos-maternos', rightColumnX, rightY, sideColumnWidth, 155, 1)) rightY += 155 + verticalGroupGap;
-  if (placeNode('tios-maternos', rightColumnX, rightY, sideColumnWidth, 330, 2)) rightY += 330 + uncleCousinGap;
+  const placedTataravosMaternos = placeNode('tataravos-maternos', rightColumnX, rightY, sideColumnWidth, 125, 1);
+  if (placedTataravosMaternos) rightY += placedTataravosMaternos + verticalGroupGap;
+  const placedBisavosMaternos = placeNode('bisavos-maternos', rightColumnX, rightY, sideColumnWidth, 155, 1);
+  if (placedBisavosMaternos) rightY += placedBisavosMaternos + ancestorUncleGap;
+  const placedTiosMaternos = placeNode('tios-maternos', rightColumnX, rightY, sideColumnWidth, 330, 2);
+  if (placedTiosMaternos) rightY += placedTiosMaternos + uncleCousinGap;
   placeNode('primos-maternos', rightColumnX, rightY, sideColumnWidth, 410, 2);
 
   const edges: FullMapEdge[] = [
