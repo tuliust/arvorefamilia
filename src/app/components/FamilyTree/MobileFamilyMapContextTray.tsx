@@ -147,6 +147,7 @@ export const MobileFamilyMapContextTray = React.forwardRef<HTMLDivElement, Mobil
       'top-[calc(env(safe-area-inset-top,0px)+8.15rem)]',
       hasFlatWhiteTrayBase ? 'bg-white/95 backdrop-blur' : '',
       hasCenteredCompactTrayBase ? 'flex min-h-[5.15rem] items-center' : '',
+      action === 'formato' ? 'pb-2' : '',
       className,
     ].filter(Boolean).join(' ');
 
@@ -249,11 +250,22 @@ export const MobileFamilyMapContextTray = React.forwardRef<HTMLDivElement, Mobil
 
               [data-mobile-family-map-context-action="cor"] > div:first-of-type {
                 display: flex !important;
+                width: min(100%, 28rem) !important;
                 height: 4rem !important;
                 max-width: 28rem !important;
                 align-items: center !important;
-                padding-top: 0 !important;
-                padding-bottom: 0 !important;
+                justify-content: space-between !important;
+                padding: 0 1.45rem !important;
+              }
+
+              [data-mobile-family-map-context-action="cor"] > div:first-of-type button {
+                height: 3.35rem !important;
+                min-width: 3.35rem !important;
+              }
+
+              [data-mobile-family-map-context-action="cor"] > div:first-of-type button > span {
+                width: 2.05rem !important;
+                height: 2.05rem !important;
               }
 
               [data-mobile-family-map-context-action="grupos"] > div:first-of-type {
@@ -265,6 +277,19 @@ export const MobileFamilyMapContextTray = React.forwardRef<HTMLDivElement, Mobil
                 height: 4rem !important;
                 min-height: 4rem !important;
                 align-items: center !important;
+                gap: 0.75rem !important;
+                padding: 0.75rem 1rem !important;
+              }
+
+              [data-mobile-family-map-context-action="grupos"] > div:first-of-type button > svg {
+                width: 1.9rem !important;
+                height: 1.9rem !important;
+              }
+
+              [data-mobile-family-map-context-action="grupos"] > div:first-of-type button > span {
+                font-size: 0.82rem !important;
+                line-height: 1.05 !important;
+                letter-spacing: -0.02em !important;
               }
             `}
           </style>
