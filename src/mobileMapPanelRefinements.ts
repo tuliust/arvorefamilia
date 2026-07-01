@@ -45,12 +45,38 @@ function ensureRefinementStyles() {
         -webkit-user-select: none !important;
       }
 
+      [data-mobile-generation-overview-header="true"] {
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 0.2rem !important;
+        padding: 0.05rem 0.25rem 0.1rem !important;
+        text-align: left !important;
+      }
+
+      [data-mobile-generation-overview-title="true"] {
+        margin: 0 !important;
+        color: rgb(15, 23, 42) !important;
+        font-size: 1rem !important;
+        font-weight: 950 !important;
+        letter-spacing: -0.025em !important;
+        line-height: 1.05 !important;
+      }
+
+      [data-mobile-generation-overview-subtitle="true"] {
+        margin: 0 !important;
+        color: rgb(71, 85, 105) !important;
+        font-size: 0.68rem !important;
+        font-weight: 750 !important;
+        letter-spacing: -0.015em !important;
+        line-height: 1.12 !important;
+      }
+
       [data-mobile-generation-overview-grid="true"] {
         display: grid !important;
         grid-template-columns: repeat(6, minmax(0, 1fr)) !important;
         grid-template-rows: 1fr !important;
         gap: 0.38rem !important;
-        min-height: 9.2rem !important;
+        min-height: 8.9rem !important;
         overflow: visible !important;
       }
 
@@ -58,18 +84,18 @@ function ensureRefinementStyles() {
         appearance: none !important;
         display: flex !important;
         min-width: 0 !important;
-        min-height: 9.2rem !important;
+        min-height: 8.9rem !important;
         height: 100% !important;
         flex-direction: column !important;
         align-items: center !important;
         justify-content: center !important;
-        gap: 0.7rem !important;
+        gap: 0.62rem !important;
         border: 1px solid rgba(8, 145, 178, 0.26) !important;
         border-radius: 1.15rem !important;
         background: #fff !important;
         color: rgb(15, 23, 42) !important;
         box-shadow: 0 10px 24px rgba(15, 23, 42, 0.1) !important;
-        padding: 0.55rem 0.2rem !important;
+        padding: 0.48rem 0.16rem !important;
         text-align: center !important;
         transition: transform 120ms ease, border-color 120ms ease, box-shadow 120ms ease !important;
       }
@@ -85,25 +111,29 @@ function ensureRefinementStyles() {
 
       [data-mobile-generation-column-icon="true"] {
         display: flex !important;
-        width: 2.35rem !important;
-        height: 2.35rem !important;
+        width: 3.15rem !important;
+        height: 3.15rem !important;
         align-items: center !important;
         justify-content: center !important;
-        border-radius: 0.9rem !important;
-        background: var(--tree-palette-card-central, #38bdf8) !important;
-        color: var(--tree-palette-text-primary, #0f172a) !important;
-        box-shadow: 0 8px 18px rgba(15, 23, 42, 0.14) !important;
+        border-radius: 1rem !important;
+        background: rgb(241, 245, 249) !important;
+        color: rgb(15, 23, 42) !important;
+        box-shadow: 0 8px 18px rgba(15, 23, 42, 0.10) !important;
+      }
+
+      [data-mobile-generation-column-number="true"] {
+        display: block !important;
+        font-size: 1.85rem !important;
+        font-weight: 950 !important;
+        letter-spacing: -0.06em !important;
+        line-height: 0.92 !important;
       }
 
       [data-mobile-generation-column-title="true"] {
-        display: block !important;
-        max-width: 100% !important;
-        font-size: 0.56rem !important;
-        font-weight: 950 !important;
-        letter-spacing: 0.01em !important;
-        line-height: 1.05 !important;
-        text-transform: uppercase !important;
-        white-space: normal !important;
+        font-size: 0 !important;
+        line-height: 0 !important;
+        height: 0 !important;
+        overflow: hidden !important;
       }
     }
   `;
@@ -305,17 +335,6 @@ function refineFamilyFullMap() {
   rebuildFamilyConnectors(stage);
 }
 
-function generationIconSvg() {
-  return `
-    <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <rect x="9" y="3" width="6" height="6" rx="1" />
-      <rect x="4" y="15" width="6" height="6" rx="1" />
-      <rect x="14" y="15" width="6" height="6" rx="1" />
-      <path d="M12 9v3M7 15v-3h10v3" />
-    </svg>
-  `;
-}
-
 function clickGenerationButton(generation: number) {
   const navButtons = Array.from(document.querySelectorAll<HTMLButtonElement>('[data-family-map-horizontal-mobile-root="true"] nav[aria-label^="Gera"] button'));
   const target = navButtons.find((button) => Number((button.textContent ?? '').match(/\d+/)?.[0]) === generation);
@@ -326,13 +345,30 @@ function clickGenerationButton(generation: number) {
   window.setTimeout(() => activeMapButton?.click(), 20);
 }
 
+function ensureGenerationOverviewHeader(panel: HTMLElement, grid: HTMLElement) {
+  let header = panel.querySelector<HTMLElement>('[data-mobile-generation-overview-header="true"]');
+
+  if (!header) {
+    header = document.createElement('header');
+    header.dataset.mobileGenerationOverviewHeader = 'true';
+    header.innerHTML = `
+      <h2 data-mobile-generation-overview-title="true">Gerações</h2>
+      <p data-mobile-generation-overview-subtitle="true">Selecione a coluna: familiares mais antigos estão à esquerda, e os mais novos à direita.</p>
+    `;
+    panel.insertBefore(header, grid);
+    return;
+  }
+
+  if (header.nextElementSibling !== grid) panel.insertBefore(header, grid);
+}
+
 function refineGenerationOverview() {
   if (getPathname() !== GENERATION_LINE_PATH || !isMobileViewport()) return;
 
   const panel = document.querySelector<HTMLElement>('[data-mobile-family-map-inline-overview="true"][data-mobile-family-map-panel-mode="overview"]');
   if (!panel) return;
 
-  const grid = panel.querySelector<HTMLElement>(':scope > div');
+  const grid = panel.querySelector<HTMLElement>(':scope > div:not([data-mobile-generation-overview-header="true"])');
   const cta = panel.querySelector<HTMLButtonElement>(':scope > button');
   if (!grid || !cta) return;
 
@@ -342,17 +378,20 @@ function refineGenerationOverview() {
       ?.textContent?.match(/\d+/)?.[0]
   ) || 0;
 
-  const signature = `generation-columns-v2:${activeGeneration}`;
+  const signature = `generation-columns-v3:${activeGeneration}`;
   if (grid.dataset.mobileGenerationColumnsSignature !== signature) {
     grid.replaceChildren(...[1, 2, 3, 4, 5, 6].map((generation) => {
       const button = document.createElement('button');
       button.type = 'button';
       button.dataset.mobileGenerationColumnCard = 'true';
-      button.setAttribute('aria-label', `Abrir Geração ${generation}`);
+      button.dataset.generation = String(generation);
+      button.setAttribute('aria-label', `Abrir geração ${generation}`);
       if (activeGeneration === generation) button.setAttribute('aria-current', 'location');
       button.innerHTML = `
-        <span data-mobile-generation-column-icon="true">${generationIconSvg()}</span>
-        <span data-mobile-generation-column-title="true">Geração ${generation}</span>
+        <span data-mobile-generation-column-icon="true" aria-hidden="true">
+          <span data-mobile-generation-column-number="true">${generation}</span>
+        </span>
+        <span data-mobile-generation-column-title="true">${generation}</span>
       `;
       button.addEventListener('click', () => clickGenerationButton(generation));
       return button;
@@ -360,6 +399,7 @@ function refineGenerationOverview() {
     grid.dataset.mobileGenerationColumnsSignature = signature;
   }
 
+  ensureGenerationOverviewHeader(panel, grid);
   grid.dataset.mobileGenerationOverviewGrid = 'true';
   cta.textContent = 'Exibir visualização completa';
 }
