@@ -1,15 +1,16 @@
 # Plano de próximos passos
 
-> Última revisão: 2026-06-26
+> Última revisão: 2026-07-01
 > Escopo: pendências reais após auditoria documental da branch `main` e rodadas recentes de implementação.
 > Status: canônico.
 
 ## Pendências operacionais pós-merge
 
 - Conferir deploy gerado a partir da `main`.
-- Validar manualmente `/mapa-familiar`, `/mapa-familiar-horizontal`, `/curiosidades`, `/forum`, `/calendario-familiar`, `/meus-dados`, `/admin/duvidas`, `/admin/atividades` e `/admin/gestao-conteudo-pessoas` no ambiente publicado.
+- Validar manualmente `/mapa-familiar`, `/mapa-familiar-horizontal`, `/curiosidades`, `/forum`, `/calendario-familiar`, `/meus-dados`, `/admin/duvidas`, `/admin/atividades`, `/admin/notificacoes` e `/admin/gestao-conteudo-pessoas` no ambiente publicado.
 - Confirmar que o ambiente remoto do Supabase recebeu as migrations necessárias.
 - Confirmar que variáveis de ambiente de IA e demais chaves operacionais estão disponíveis quando exigidas.
+- Em `/admin/notificacoes`, abrir a aba `Configuração`, clicar em `Salvar` e confirmar registros em `admin_notification_configurations` e `admin_notification_catalogs`.
 
 ## Pendências de produto e QA visual
 
@@ -27,12 +28,15 @@
 - Criar/aplicar migration real de `person_visibility_settings` no Supabase remoto; o código atual apenas evita quebra da tela quando a tabela ainda não existe.
 - Planejar a reutilização administrativa dos fluxos `/meus-dados`, `/meus-vinculos` e `/arquivos-historicos` em `/admin/pessoas/:id/editar`, com abas e modo admin sem quebrar os fluxos de usuário.
 - Planejar aba de administração de vínculos de usuários em `/admin/relacionamentos`, separando permissões de edição/legado das relações familiares.
-- Planejar aba de grupos, preferências e destinatários em `/admin/notificacoes`, respeitando preferências individuais existentes.
+- Concluir a migração visual de `/admin/notificacoes` para consumir `loadAdminNotificationCatalog()` em todas as abas, removendo usos diretos de `ADMIN_NOTIFICATION_TYPES`, `ADMIN_NOTIFICATION_TEMPLATES`, `ADMIN_NOTIFICATION_RECIPIENT_GROUPS`, `ADMIN_NOTIFICATION_FREQUENCY_OPTIONS`, `ADMIN_NOTIFICATION_AUTOMATIONS` e `ADMIN_NOTIFICATION_SUGGESTIONS` onde ainda forem usados como fonte primária.
+- Mapear o gatilho de boas-vindas do primeiro acesso a um tipo customizado dedicado quando o tipo for criado no catálogo administrativo.
+- Conectar `trigger_user`, `specific_users` e `close_family` ao dispatch layer dos gatilhos reais que ainda usam destinatários fixos.
 
 ## Pendências técnicas permanentes
 
 - Confirmar políticas RLS para pessoas, relacionamentos, vínculos, fatos históricos, notificações, favoritos, fórum e visibilidade por pessoa.
-- Criar documentação administrativa mais detalhada apenas quando as novas rotas/abas administrativas forem implementadas no código.
+- Confirmar políticas RLS de `admin_notification_configurations`, `admin_notification_catalogs` e `user_first_map_accesses` em ambiente remoto.
+- Criar documentação administrativa mais detalhada apenas quando novas rotas/abas administrativas forem implementadas no código.
 
 ## Regra de manutenção
 
