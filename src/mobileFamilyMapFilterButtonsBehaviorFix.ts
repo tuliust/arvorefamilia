@@ -1,5 +1,6 @@
 const MOBILE_QUERY = '(max-width: 767px)';
-const FAMILY_MAP_PATHS = new Set(['/mapa-familiar', '/mapa-familiar-horizontal']);
+const FAMILY_MAP_PATHS = new Set(['/mapa-familiar', '/mapa-familiar-horizontal', '/linha-geracional']);
+const GENERATION_LINE_PATH = '/linha-geracional';
 const STORAGE_KEY = 'arvorefamilia:mobile-family-map:show-extended-spouses';
 const STYLE_ID = 'mobile-family-map-filter-buttons-behavior-fix-style';
 
@@ -20,6 +21,10 @@ function isFamilyMapMobile() {
   return isMobileViewport() && FAMILY_MAP_PATHS.has(getCurrentPath());
 }
 
+function isGenerationLineMobile() {
+  return isMobileViewport() && getCurrentPath() === GENERATION_LINE_PATH;
+}
+
 function normalizeText(value?: string | null) {
   return String(value ?? '')
     .normalize('NFD')
@@ -30,6 +35,8 @@ function normalizeText(value?: string | null) {
 }
 
 function readExtendedSpouseState() {
+  if (isGenerationLineMobile()) return true;
+
   try {
     return window.localStorage.getItem(STORAGE_KEY) === 'true';
   } catch {
@@ -66,7 +73,11 @@ function scheduleButtonStateSync() {
 function syncStoredSpouseState() {
   if (!isFamilyMapMobile()) return;
 
-  writeSpouseScopeDataset(readExtendedSpouseState());
+  const forcedGenerationLineState = isGenerationLineMobile();
+  const showExtended = forcedGenerationLineState ? true : readExtendedSpouseState();
+
+  if (forcedGenerationLineState) writeExtendedSpouseState(true);
+  writeSpouseScopeDataset(showExtended);
   scheduleButtonStateSync();
 }
 
@@ -81,12 +92,14 @@ function scheduleStoredSpouseStateSync() {
 }
 
 function setExtendedSpouseState(value: boolean) {
-  writeExtendedSpouseState(value);
-  writeSpouseScopeDataset(value);
+  const nextValue = isGenerationLineMobile() ? true : value;
+
+  writeExtendedSpouseState(nextValue);
+  writeSpouseScopeDataset(nextValue);
   scheduleButtonStateSync();
 
   window.dispatchEvent(new CustomEvent('arvorefamilia:mobile-spouse-filter-changed', {
-    detail: { showExtended: value },
+    detail: { showExtended: nextValue },
   }));
 }
 
@@ -113,13 +126,23 @@ function getFilterButtons() {
 function applyButtonState() {
   if (!isFamilyMapMobile()) return;
 
-  const showExtended = document.documentElement.dataset.mobileFamilySpouseScope === 'extended';
+  const showExtended = isGenerationLineMobile()
+    ? true
+    : document.documentElement.dataset.mobileFamilySpouseScope === 'extended';
   const { extendedButtons, familyOnlyButtons } = getFilterButtons();
 
   extendedButtons.forEach((button) => {
     button.dataset.mobileFamilyFilterOption = 'extended-spouses';
     button.dataset.mobileFamilyFilterActive = String(showExtended);
     button.setAttribute('aria-pressed', String(showExtended));
+
+    if (isGenerationLineMobile()) {
+      button.setAttribute('aria-disabled', 'true');
+      button.setAttribute('disabled', '');
+    } else {
+      button.removeAttribute('aria-disabled');
+      button.removeAttribute('disabled');
+    }
   });
 
   familyOnlyButtons.forEach((button) => {
@@ -141,7 +164,7 @@ function handleFilterClick(event: Event) {
     event.preventDefault();
     event.stopPropagation();
     event.stopImmediatePropagation();
-    setExtendedSpouseState(readExtendedSpouseState());
+    setExtendedSpouseState(true);
     return;
   }
 
@@ -149,7 +172,7 @@ function handleFilterClick(event: Event) {
     event.preventDefault();
     event.stopPropagation();
     event.stopImmediatePropagation();
-    setExtendedSpouseState(!readExtendedSpouseState());
+    setExtendedSpouseState(isGenerationLineMobile() ? true : !readExtendedSpouseState());
   }
 }
 
@@ -191,6 +214,11 @@ function ensureStyles() {
 
       button[data-mobile-family-filter-option="extended-spouses"][data-mobile-family-filter-active="false"] svg {
         color: rgb(148 163 184) !important;
+      }
+
+      html[data-mobile-family-spouse-scope="extended"] button[data-mobile-family-filter-option="extended-spouses"][disabled] {
+        cursor: default !important;
+        opacity: 1 !important;
       }
 
       button[data-mobile-family-filter-panel-toggle="true"] {
