@@ -65,7 +65,7 @@ export function MobileFamilyMapToolbar({
                 className={[
                   'min-w-0 whitespace-nowrap rounded-[1rem] px-1 py-2.5 text-center text-[9px] font-extrabold leading-none tracking-[-0.025em] transition min-[360px]:text-[10px] min-[390px]:px-2',
                   active
-                    ? 'bg-cyan-700 text-white shadow-[0_8px_18px_rgba(14,116,144,0.24)]'
+                    ? 'bg-blue-600 text-white shadow-[0_8px_18px_rgba(37,99,235,0.24)]'
                     : 'border border-transparent bg-slate-50 text-slate-600 hover:border-slate-200 hover:bg-white active:bg-white',
                 ].join(' ')}
               >
