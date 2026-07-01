@@ -26,7 +26,7 @@ npm run build
 
 No PowerShell, usar alternativa equivalente para buscar o caractere `U+FFFD` nos arquivos Markdown.
 
-Quando houver migration nova, confirmar se o arquivo existe localmente e se foi aplicado no Supabase remoto. Para vínculos de responsáveis pessoa-a-pessoa, validar `supabase/migrations/20260627143000_create_person_responsible_links.sql` e `supabase/migrations/20260627152000_allow_responsible_people_perspective.sql`.
+Quando houver migration nova, confirmar se o arquivo existe localmente e se foi aplicado no Supabase remoto. Para vínculos de responsáveis pessoa-a-pessoa, validar `supabase/migrations/20260627143000_create_person_responsible_links.sql` e `supabase/migrations/20260627152000_allow_responsible_people_perspective.sql`. Para notificações administrativas, validar `supabase/migrations/20260701120000_persist_admin_notification_config_and_first_map_access.sql` e `supabase/migrations/20260701143000_persist_full_admin_notification_catalog.sql`.
 
 ## QA transversal
 
@@ -266,6 +266,62 @@ Validar em `/mapa-familiar` e `/mapa-familiar-horizontal`:
 - Em `/revisao-dados` mobile, `Finalizar e acessar árvore` deve ficar no final da página.
 
 ## Funcionalidades autônomas
+
+### `/admin/notificacoes`
+
+Validar com usuário admin:
+
+- página carrega sem erro;
+- aba `Configuração` abre sem depender de localStorage antigo;
+- selecionar tipo de notificação atualiza os campos correspondentes;
+- frequência salva e permanece após recarregar;
+- status ativo/inativo salva e permanece após recarregar;
+- edição de título, texto e CTA salva e permanece após recarregar;
+- inclusão de variável salva e permanece após recarregar;
+- canais `interna`, `email`, `push` e `whatsapp` podem ser marcados/desmarcados conforme disponibilidade;
+- destinatário `Usuário do gatilho` pode ser marcado;
+- destinatário `Usuários específicos` abre seleção múltipla de usuários;
+- seleção de usuários específicos persiste após salvar;
+- destinatário `Familiares próximos` pode ser marcado;
+- botão `Novo tipo` cria tipo customizado sem quebrar templates;
+- botão `Salvar` grava em `admin_notification_configurations` e atualiza `admin_notification_catalogs`;
+- feedback de sucesso ou erro aparece por `toast`;
+- abas não devem exibir slugs crus como texto principal de leitura.
+
+Validação SQL mínima:
+
+```sql
+select
+  catalog_key,
+  jsonb_array_length(notification_types) as tipos,
+  jsonb_array_length(notification_templates) as templates,
+  jsonb_array_length(recipient_groups) as grupos,
+  updated_at
+from public.admin_notification_catalogs;
+```
+
+Resultado esperado: linha `default` com contagens maiores que zero.
+
+Também validar:
+
+```sql
+select config_key, updated_at
+from public.admin_notification_configurations;
+```
+
+Resultado esperado: linha `default` após salvar configurações.
+
+### Primeiro acesso a `/mapa-familiar`
+
+Validar com usuário vinculado:
+
+- antes do teste, garantir ausência de linha em `user_first_map_accesses` para o usuário;
+- acessar `/mapa-familiar`;
+- confirmar criação de linha em `user_first_map_accesses`;
+- confirmar criação de notificação interna em `notificacoes_usuario`;
+- confirmar atualização do dropdown/header por evento de notificações;
+- acessar `/mapa-familiar` novamente e confirmar que a notificação não duplica;
+- acessar `/linha-geracional`, `/mapa-familiar-horizontal`, `/busca` ou `/meus-dados` não deve gerar esse primeiro acesso.
 
 ### Busca global do header
 
