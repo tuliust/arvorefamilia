@@ -1,8 +1,10 @@
 const MOBILE_QUERY = '(max-width: 767px)';
-const FAMILY_MAP_PATH = '/mapa-familiar';
 const GENERATION_LINE_PATH = '/linha-geracional';
-const FAMILY_FULL_MAP_ID = 'mobile-family-map-full-overview';
-const REFINEMENT_STYLE_ID = 'mobile-map-panel-refinements-style';
+const STYLE_ID = 'mobile-map-panel-refinements-style';
+const OVERLAY_ID = 'mobile-generation-safe-overview-overlay';
+const PANEL_SELECTOR = '[data-mobile-family-map-inline-overview="true"][data-mobile-family-map-panel-mode="overview"]';
+
+let scheduled = false;
 
 function isMobileViewport() {
   return typeof window !== 'undefined'
@@ -14,7 +16,14 @@ function getPathname() {
   return typeof window === 'undefined' ? '' : window.location.pathname.replace(/\/$/, '');
 }
 
-function ensureRefinementStyles() {
+function isGenerationLineEnabled() {
+  return typeof window !== 'undefined'
+    && typeof document !== 'undefined'
+    && isMobileViewport()
+    && getPathname() === GENERATION_LINE_PATH;
+}
+
+function ensureStyles() {
   const css = `
     @media (max-width: 767px) {
       [data-mobile-family-tree-screen="paternal-uncles"],
@@ -35,8 +44,8 @@ function ensureRefinementStyles() {
         padding-bottom: calc(env(safe-area-inset-bottom,0px) + 7rem) !important;
       }
 
-      #${FAMILY_FULL_MAP_ID} .mobile-family-full-map-viewport,
-      #${FAMILY_FULL_MAP_ID} .mobile-family-full-map-stage,
+      #mobile-family-map-full-overview .mobile-family-full-map-viewport,
+      #mobile-family-map-full-overview .mobile-family-full-map-stage,
       #mobile-generation-line-full-overview .mobile-generation-line-full-map-viewport,
       #mobile-generation-line-full-overview .mobile-generation-line-full-map-stage {
         touch-action: none !important;
@@ -45,15 +54,27 @@ function ensureRefinementStyles() {
         -webkit-user-select: none !important;
       }
 
-      [data-mobile-generation-overview-header="true"] {
+      #${OVERLAY_ID} {
+        box-sizing: border-box !important;
         display: flex !important;
         flex-direction: column !important;
-        gap: 0.2rem !important;
-        padding: 0.05rem 0.25rem 0.1rem !important;
+        gap: 0.72rem !important;
+        border: 1px solid rgba(203, 213, 225, 0.95) !important;
+        border-radius: 1.45rem !important;
+        background: rgba(255, 255, 255, 0.98) !important;
+        box-shadow: 0 14px 34px rgba(15, 23, 42, 0.14) !important;
+        padding: 0.8rem !important;
+        pointer-events: auto !important;
+      }
+
+      #${OVERLAY_ID} [data-generation-overlay-header="true"] {
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 0.22rem !important;
         text-align: left !important;
       }
 
-      [data-mobile-generation-overview-title="true"] {
+      #${OVERLAY_ID} [data-generation-overlay-title="true"] {
         margin: 0 !important;
         color: rgb(15, 23, 42) !important;
         font-size: 1rem !important;
@@ -62,7 +83,7 @@ function ensureRefinementStyles() {
         line-height: 1.05 !important;
       }
 
-      [data-mobile-generation-overview-subtitle="true"] {
+      #${OVERLAY_ID} [data-generation-overlay-subtitle="true"] {
         margin: 0 !important;
         color: rgb(71, 85, 105) !important;
         font-size: 0.68rem !important;
@@ -71,45 +92,41 @@ function ensureRefinementStyles() {
         line-height: 1.12 !important;
       }
 
-      [data-mobile-generation-overview-grid="true"] {
+      #${OVERLAY_ID} [data-generation-overlay-grid="true"] {
         display: grid !important;
         grid-template-columns: repeat(6, minmax(0, 1fr)) !important;
-        grid-template-rows: 1fr !important;
         gap: 0.38rem !important;
         min-height: 8.9rem !important;
-        overflow: visible !important;
       }
 
-      [data-mobile-generation-column-card="true"] {
+      #${OVERLAY_ID} [data-generation-overlay-card="true"] {
         appearance: none !important;
         display: flex !important;
         min-width: 0 !important;
         min-height: 8.9rem !important;
-        height: 100% !important;
         flex-direction: column !important;
         align-items: center !important;
         justify-content: center !important;
-        gap: 0.62rem !important;
         border: 1px solid rgba(8, 145, 178, 0.26) !important;
         border-radius: 1.15rem !important;
         background: #fff !important;
         color: rgb(15, 23, 42) !important;
-        box-shadow: 0 10px 24px rgba(15, 23, 42, 0.1) !important;
+        box-shadow: 0 10px 24px rgba(15, 23, 42, 0.10) !important;
         padding: 0.48rem 0.16rem !important;
         text-align: center !important;
         transition: transform 120ms ease, border-color 120ms ease, box-shadow 120ms ease !important;
       }
 
-      [data-mobile-generation-column-card="true"][aria-current="location"] {
+      #${OVERLAY_ID} [data-generation-overlay-card="true"][aria-current="location"] {
         border-color: rgb(8, 145, 178) !important;
         box-shadow: inset 0 0 0 2px rgba(8, 145, 178, 0.45), 0 12px 28px rgba(8, 145, 178, 0.18) !important;
       }
 
-      [data-mobile-generation-column-card="true"]:active {
+      #${OVERLAY_ID} [data-generation-overlay-card="true"]:active {
         transform: scale(0.985) !important;
       }
 
-      [data-mobile-generation-column-icon="true"] {
+      #${OVERLAY_ID} [data-generation-overlay-number-shell="true"] {
         display: flex !important;
         width: 3.15rem !important;
         height: 3.15rem !important;
@@ -121,7 +138,7 @@ function ensureRefinementStyles() {
         box-shadow: 0 8px 18px rgba(15, 23, 42, 0.10) !important;
       }
 
-      [data-mobile-generation-column-number="true"] {
+      #${OVERLAY_ID} [data-generation-overlay-number="true"] {
         display: block !important;
         font-size: 1.85rem !important;
         font-weight: 950 !important;
@@ -129,210 +146,41 @@ function ensureRefinementStyles() {
         line-height: 0.92 !important;
       }
 
-      [data-mobile-generation-column-title="true"] {
-        font-size: 0 !important;
-        line-height: 0 !important;
-        height: 0 !important;
-        overflow: hidden !important;
+      #${OVERLAY_ID} [data-generation-overlay-cta="true"] {
+        appearance: none !important;
+        display: flex !important;
+        min-height: 3.25rem !important;
+        width: 100% !important;
+        align-items: center !important;
+        justify-content: center !important;
+        border: 1px solid rgb(14, 116, 144) !important;
+        border-radius: 1rem !important;
+        background: rgb(14, 116, 144) !important;
+        color: white !important;
+        font-size: 1rem !important;
+        font-weight: 950 !important;
+        letter-spacing: -0.025em !important;
+        box-shadow: 0 10px 24px rgba(8, 145, 178, 0.22) !important;
       }
     }
   `;
 
-  let style = document.getElementById(REFINEMENT_STYLE_ID) as HTMLStyleElement | null;
+  let style = document.getElementById(STYLE_ID) as HTMLStyleElement | null;
   if (!style) {
     style = document.createElement('style');
-    style.id = REFINEMENT_STYLE_ID;
+    style.id = STYLE_ID;
   }
 
   if (style.textContent !== css) style.textContent = css;
   if (!style.parentElement) document.head.appendChild(style);
 }
 
-function numericStyle(element: HTMLElement, property: 'left' | 'top' | 'width' | 'height' | 'minHeight') {
-  const raw = element.style[property] || window.getComputedStyle(element).getPropertyValue(property.replace(/[A-Z]/g, (match) => `-${match.toLowerCase()}`));
-  const value = Number.parseFloat(raw);
-  return Number.isFinite(value) ? value : 0;
-}
-
-function getFamilyNode(stage: HTMLElement, id: string) {
-  return stage.querySelector<HTMLElement>(`[data-full-map-id="${id}"]`);
-}
-
-function nodeBox(node: HTMLElement) {
-  const left = numericStyle(node, 'left');
-  const top = numericStyle(node, 'top');
-  const width = numericStyle(node, 'width') || node.offsetWidth;
-  const height = numericStyle(node, 'height') || numericStyle(node, 'minHeight') || node.offsetHeight;
-
-  return { left, top, width, height };
-}
-
-function setNodeBox(node: HTMLElement, next: Partial<ReturnType<typeof nodeBox>>) {
-  if (typeof next.left === 'number') node.style.setProperty('left', `${Math.round(next.left)}px`);
-  if (typeof next.top === 'number') node.style.setProperty('top', `${Math.round(next.top)}px`);
-  if (typeof next.width === 'number') node.style.setProperty('width', `${Math.round(next.width)}px`);
-  if (typeof next.height === 'number') {
-    const height = Math.round(next.height);
-    node.style.setProperty('height', `${height}px`);
-    node.style.setProperty('min-height', `${height}px`);
-  }
-}
-
-function desiredGroupHeight(node: HTMLElement, minimum = 0, extra = 18) {
-  const title = node.querySelector<HTMLElement>('.mobile-family-full-map-group-title');
-  const grid = node.querySelector<HTMLElement>('.mobile-family-full-map-card-grid');
-  if (!grid) return Math.max(minimum, nodeBox(node).height);
-
-  const titleHeight = title ? title.offsetHeight : 0;
-  const titleMargin = title ? 8 : 0;
-  const gridHeight = grid.scrollHeight || grid.offsetHeight;
-  const shellPadding = 18;
-  return Math.max(minimum, Math.ceil(titleHeight + titleMargin + gridHeight + shellPadding + extra));
-}
-
-function anchor(box: ReturnType<typeof nodeBox>, point: 'top' | 'right' | 'bottom' | 'left') {
-  if (point === 'top') return { x: box.left + box.width / 2, y: box.top };
-  if (point === 'right') return { x: box.left + box.width, y: box.top + box.height / 2 };
-  if (point === 'bottom') return { x: box.left + box.width / 2, y: box.top + box.height };
-  return { x: box.left, y: box.top + box.height / 2 };
-}
-
-function connectorPath(from: { x: number; y: number }, to: { x: number; y: number }, via: 'vertical' | 'horizontal' | 'elbow' = 'vertical') {
-  if (via === 'horizontal') {
-    const midX = (from.x + to.x) / 2;
-    return `M ${from.x} ${from.y} L ${midX} ${from.y} L ${midX} ${to.y} L ${to.x} ${to.y}`;
-  }
-
-  if (via === 'elbow') return `M ${from.x} ${from.y} L ${to.x} ${from.y} L ${to.x} ${to.y}`;
-  if (Math.abs(from.x - to.x) < 0.5) return `M ${from.x} ${from.y} L ${to.x} ${to.y}`;
-
-  const midY = (from.y + to.y) / 2;
-  return `M ${from.x} ${from.y} L ${from.x} ${midY} L ${to.x} ${midY} L ${to.x} ${to.y}`;
-}
-
-function rebuildFamilyConnectors(stage: HTMLElement) {
-  const svg = stage.querySelector<SVGSVGElement>('.mobile-family-full-map-connectors');
-  if (!svg) return;
-
-  const edges: Array<{ from: string; to: string; fromAnchor: 'top' | 'right' | 'bottom' | 'left'; toAnchor: 'top' | 'right' | 'bottom' | 'left'; via?: 'vertical' | 'horizontal' | 'elbow' }> = [
-    { from: 'tataravos-paternos', to: 'bisavos-paternos', fromAnchor: 'bottom', toAnchor: 'top', via: 'vertical' },
-    { from: 'bisavos-paternos', to: 'avos-paternos', fromAnchor: 'right', toAnchor: 'left', via: 'horizontal' },
-    { from: 'tataravos-maternos', to: 'bisavos-maternos', fromAnchor: 'bottom', toAnchor: 'top', via: 'vertical' },
-    { from: 'bisavos-maternos', to: 'avos-maternos', fromAnchor: 'left', toAnchor: 'right', via: 'horizontal' },
-    { from: 'avos-paternos', to: 'pai', fromAnchor: 'bottom', toAnchor: 'top', via: 'vertical' },
-    { from: 'avos-maternos', to: 'mae', fromAnchor: 'bottom', toAnchor: 'top', via: 'vertical' },
-    { from: 'pai', to: 'central', fromAnchor: 'bottom', toAnchor: 'top', via: 'vertical' },
-    { from: 'mae', to: 'central', fromAnchor: 'bottom', toAnchor: 'top', via: 'vertical' },
-    { from: 'tios-paternos', to: 'primos-paternos', fromAnchor: 'bottom', toAnchor: 'top', via: 'vertical' },
-    { from: 'tios-maternos', to: 'primos-maternos', fromAnchor: 'bottom', toAnchor: 'top', via: 'vertical' },
-    { from: 'pai', to: 'tios-paternos', fromAnchor: 'left', toAnchor: 'right', via: 'horizontal' },
-    { from: 'mae', to: 'tios-maternos', fromAnchor: 'right', toAnchor: 'left', via: 'horizontal' },
-    { from: 'central', to: 'irmaos', fromAnchor: 'bottom', toAnchor: 'top', via: 'vertical' },
-    { from: 'central', to: 'conjuge', fromAnchor: 'bottom', toAnchor: 'top', via: 'vertical' },
-    { from: 'irmaos', to: 'sobrinhos', fromAnchor: 'bottom', toAnchor: 'top', via: 'vertical' },
-    { from: 'conjuge', to: 'pets', fromAnchor: 'bottom', toAnchor: 'top', via: 'vertical' },
-    { from: 'filhos', to: 'netos', fromAnchor: 'right', toAnchor: 'left', via: 'horizontal' },
-  ];
-
-  svg.querySelectorAll('path').forEach((path) => path.remove());
-  edges.forEach((edge) => {
-    const fromNode = getFamilyNode(stage, edge.from);
-    const toNode = getFamilyNode(stage, edge.to);
-    if (!fromNode || !toNode) return;
-
-    const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-    path.setAttribute('d', connectorPath(anchor(nodeBox(fromNode), edge.fromAnchor), anchor(nodeBox(toNode), edge.toAnchor), edge.via));
-    svg.appendChild(path);
-  });
-}
-
-function refineFamilyFullMap() {
-  if (getPathname() !== FAMILY_MAP_PATH || !isMobileViewport()) return;
-
-  const stage = document.querySelector<HTMLElement>(`#${FAMILY_FULL_MAP_ID} .mobile-family-full-map-stage`);
-  if (!stage) return;
-
-  const tuneHeight = (id: string, min = 0, extra = 18) => {
-    const node = getFamilyNode(stage, id);
-    if (!node) return;
-    setNodeBox(node, { height: desiredGroupHeight(node, min, extra) });
-  };
-
-  tuneHeight('bisavos-paternos', 178, 24);
-  tuneHeight('avos-paternos', 176, 24);
-  tuneHeight('tios-paternos', 368, 26);
-  tuneHeight('primos-maternos', 118, 22);
-  tuneHeight('avos-maternos', 118, 14);
-  tuneHeight('bisavos-maternos', 118, 14);
-  tuneHeight('tios-maternos', 190, 14);
-  tuneHeight('conjuge', 0, 16);
-  tuneHeight('sobrinhos', 0, 16);
-  tuneHeight('pets', 0, 16);
-
-  const bisavosPaternos = getFamilyNode(stage, 'bisavos-paternos');
-  const tiosPaternos = getFamilyNode(stage, 'tios-paternos');
-  const primosPaternos = getFamilyNode(stage, 'primos-paternos');
-  if (bisavosPaternos && tiosPaternos) {
-    const nextTop = nodeBox(bisavosPaternos).top + nodeBox(bisavosPaternos).height + 72;
-    setNodeBox(tiosPaternos, { top: nextTop });
-  }
-  if (tiosPaternos && primosPaternos) {
-    const nextTop = nodeBox(tiosPaternos).top + nodeBox(tiosPaternos).height + 22;
-    setNodeBox(primosPaternos, { top: nextTop });
-  }
-
-  const tiosMaternos = getFamilyNode(stage, 'tios-maternos');
-  const primosMaternos = getFamilyNode(stage, 'primos-maternos');
-  if (tiosMaternos && primosMaternos) {
-    const tiosBox = nodeBox(tiosMaternos);
-    const primosBox = nodeBox(primosMaternos);
-    setNodeBox(primosMaternos, {
-      left: tiosBox.left + (tiosBox.width - primosBox.width) / 2,
-      top: tiosBox.top + tiosBox.height + 22,
-    });
-  }
-
-  const central = getFamilyNode(stage, 'central');
-  const irmaos = getFamilyNode(stage, 'irmaos');
-  const conjuge = getFamilyNode(stage, 'conjuge');
-  const sobrinhos = getFamilyNode(stage, 'sobrinhos');
-  const pets = getFamilyNode(stage, 'pets');
-  if (central && (irmaos || conjuge)) {
-    const centralBox = nodeBox(central);
-    const centerX = centralBox.left + centralBox.width / 2;
-    const lowerTop = centralBox.top + centralBox.height + 96;
-    const offset = 132;
-
-    if (irmaos) {
-      const box = nodeBox(irmaos);
-      setNodeBox(irmaos, { left: centerX - offset - box.width / 2, top: lowerTop });
-    }
-
-    if (conjuge) {
-      const box = nodeBox(conjuge);
-      setNodeBox(conjuge, { left: centerX + offset - box.width / 2, top: lowerTop });
-    }
-  }
-
-  if (irmaos && sobrinhos) {
-    const parent = nodeBox(irmaos);
-    const child = nodeBox(sobrinhos);
-    setNodeBox(sobrinhos, {
-      left: parent.left + (parent.width - child.width) / 2,
-      top: parent.top + parent.height + 44,
-    });
-  }
-
-  if (conjuge && pets) {
-    const parent = nodeBox(conjuge);
-    const child = nodeBox(pets);
-    setNodeBox(pets, {
-      left: parent.left + (parent.width - child.width) / 2,
-      top: parent.top + parent.height + 44,
-    });
-  }
-
-  rebuildFamilyConnectors(stage);
+function getActiveGeneration() {
+  return Number(
+    Array.from(document.querySelectorAll<HTMLButtonElement>('[data-family-map-horizontal-mobile-root="true"] nav[aria-label^="Gera"] button'))
+      .find((button) => button.getAttribute('aria-current') === 'page' || button.getAttribute('aria-pressed') === 'true')
+      ?.textContent?.match(/\d+/)?.[0]
+  ) || 0;
 }
 
 function clickGenerationButton(generation: number) {
@@ -342,84 +190,113 @@ function clickGenerationButton(generation: number) {
 
   const activeMapButton = Array.from(document.querySelectorAll<HTMLButtonElement>('button'))
     .find((button) => button.getAttribute('aria-pressed') === 'true' && /\bMapa\b/i.test(button.textContent ?? ''));
-  window.setTimeout(() => activeMapButton?.click(), 20);
+  window.setTimeout(() => activeMapButton?.click(), 30);
 }
 
-function ensureGenerationOverviewHeader(panel: HTMLElement, grid: HTMLElement) {
-  let header = panel.querySelector<HTMLElement>('[data-mobile-generation-overview-header="true"]');
+function removeGenerationOverlay() {
+  document.getElementById(OVERLAY_ID)?.remove();
+}
 
-  if (!header) {
-    header = document.createElement('header');
-    header.dataset.mobileGenerationOverviewHeader = 'true';
-    header.innerHTML = `
-      <h2 data-mobile-generation-overview-title="true">Gerações</h2>
-      <p data-mobile-generation-overview-subtitle="true">Selecione a coluna: familiares mais antigos estão à esquerda, e os mais novos à direita.</p>
-    `;
-    panel.insertBefore(header, grid);
-    return;
+function renderGenerationOverlay(panel: HTMLElement) {
+  const rect = panel.getBoundingClientRect();
+  if (rect.width < 120 || rect.height < 120) return;
+
+  let overlay = document.getElementById(OVERLAY_ID) as HTMLDivElement | null;
+  if (!overlay) {
+    overlay = document.createElement('div');
+    overlay.id = OVERLAY_ID;
+    document.body.appendChild(overlay);
   }
 
-  if (header.nextElementSibling !== grid) panel.insertBefore(header, grid);
+  const activeGeneration = getActiveGeneration();
+  const signature = `generation-safe-overlay:${activeGeneration}`;
+  if (overlay.dataset.signature !== signature) {
+    overlay.innerHTML = `
+      <header data-generation-overlay-header="true">
+        <h2 data-generation-overlay-title="true">Gerações</h2>
+        <p data-generation-overlay-subtitle="true">Selecione a coluna: familiares mais antigos estão à esquerda, e os mais novos à direita.</p>
+      </header>
+      <div data-generation-overlay-grid="true">
+        ${[1, 2, 3, 4, 5, 6].map((generation) => `
+          <button type="button" data-generation-overlay-card="true" data-generation="${generation}" aria-label="Abrir geração ${generation}" ${activeGeneration === generation ? 'aria-current="location"' : ''}>
+            <span data-generation-overlay-number-shell="true" aria-hidden="true">
+              <span data-generation-overlay-number="true">${generation}</span>
+            </span>
+          </button>
+        `).join('')}
+      </div>
+      <button type="button" data-generation-overlay-cta="true">Exibir visualização completa</button>
+    `;
+    overlay.dataset.signature = signature;
+  }
+
+  overlay.style.setProperty('position', 'fixed');
+  overlay.style.setProperty('left', `${Math.round(rect.left)}px`);
+  overlay.style.setProperty('top', `${Math.round(rect.top)}px`);
+  overlay.style.setProperty('width', `${Math.round(rect.width)}px`);
+  overlay.style.setProperty('height', `${Math.round(rect.height)}px`);
+  overlay.style.setProperty('z-index', '10002');
 }
 
 function refineGenerationOverview() {
-  if (getPathname() !== GENERATION_LINE_PATH || !isMobileViewport()) return;
-
-  const panel = document.querySelector<HTMLElement>('[data-mobile-family-map-inline-overview="true"][data-mobile-family-map-panel-mode="overview"]');
-  if (!panel) return;
-
-  const grid = panel.querySelector<HTMLElement>(':scope > div:not([data-mobile-generation-overview-header="true"])');
-  const cta = panel.querySelector<HTMLButtonElement>(':scope > button');
-  if (!grid || !cta) return;
-
-  const activeGeneration = Number(
-    Array.from(document.querySelectorAll<HTMLButtonElement>('[data-family-map-horizontal-mobile-root="true"] nav[aria-label^="Gera"] button'))
-      .find((button) => button.getAttribute('aria-current') === 'page' || button.getAttribute('aria-pressed') === 'true')
-      ?.textContent?.match(/\d+/)?.[0]
-  ) || 0;
-
-  const signature = `generation-columns-v3:${activeGeneration}`;
-  if (grid.dataset.mobileGenerationColumnsSignature !== signature) {
-    grid.replaceChildren(...[1, 2, 3, 4, 5, 6].map((generation) => {
-      const button = document.createElement('button');
-      button.type = 'button';
-      button.dataset.mobileGenerationColumnCard = 'true';
-      button.dataset.generation = String(generation);
-      button.setAttribute('aria-label', `Abrir geração ${generation}`);
-      if (activeGeneration === generation) button.setAttribute('aria-current', 'location');
-      button.innerHTML = `
-        <span data-mobile-generation-column-icon="true" aria-hidden="true">
-          <span data-mobile-generation-column-number="true">${generation}</span>
-        </span>
-        <span data-mobile-generation-column-title="true">${generation}</span>
-      `;
-      button.addEventListener('click', () => clickGenerationButton(generation));
-      return button;
-    }));
-    grid.dataset.mobileGenerationColumnsSignature = signature;
+  if (!isGenerationLineEnabled()) {
+    removeGenerationOverlay();
+    return;
   }
 
-  ensureGenerationOverviewHeader(panel, grid);
-  grid.dataset.mobileGenerationOverviewGrid = 'true';
-  cta.textContent = 'Exibir visualização completa';
+  ensureStyles();
+  const panel = document.querySelector<HTMLElement>(PANEL_SELECTOR);
+  if (!panel) {
+    removeGenerationOverlay();
+    return;
+  }
+
+  renderGenerationOverlay(panel);
 }
 
-let scheduled = false;
+function handleOverlayClick(event: Event) {
+  const target = event.target instanceof Element ? event.target : null;
+  const overlay = target?.closest<HTMLElement>(`#${OVERLAY_ID}`);
+  if (!overlay) return;
+
+  event.preventDefault();
+  event.stopPropagation();
+  event.stopImmediatePropagation?.();
+
+  const card = target?.closest<HTMLButtonElement>('[data-generation-overlay-card="true"]');
+  if (card) {
+    const generation = Number(card.dataset.generation);
+    if (Number.isFinite(generation)) {
+      removeGenerationOverlay();
+      clickGenerationButton(generation);
+    }
+    return;
+  }
+
+  const cta = target?.closest<HTMLButtonElement>('[data-generation-overlay-cta="true"]');
+  if (cta) {
+    const panel = document.querySelector<HTMLElement>(PANEL_SELECTOR);
+    const nativeCta = panel?.querySelector<HTMLButtonElement>(':scope > button');
+    removeGenerationOverlay();
+    nativeCta?.click();
+  }
+}
+
 function scheduleRefinement() {
   if (scheduled) return;
   scheduled = true;
   window.requestAnimationFrame(() => {
     scheduled = false;
-    ensureRefinementStyles();
-    refineFamilyFullMap();
     refineGenerationOverview();
   });
 }
 
 if (typeof window !== 'undefined' && typeof document !== 'undefined') {
-  ensureRefinementStyles();
+  ensureStyles();
   scheduleRefinement();
   [80, 180, 420, 900].forEach((delay) => window.setTimeout(scheduleRefinement, delay));
+
+  document.addEventListener('click', handleOverlayClick, { capture: true });
 
   const observer = new MutationObserver(scheduleRefinement);
   observer.observe(document.documentElement, { childList: true, subtree: true, attributes: true, attributeFilter: ['data-mobile-family-map-panel-mode', 'style', 'aria-current', 'aria-pressed'] });
@@ -427,8 +304,7 @@ if (typeof window !== 'undefined' && typeof document !== 'undefined') {
   window.addEventListener('resize', scheduleRefinement, { passive: true });
   window.addEventListener('orientationchange', () => window.setTimeout(scheduleRefinement, 180), { passive: true });
   window.addEventListener('popstate', scheduleRefinement, { passive: true });
-  window.addEventListener('arvorefamilia:mobile-full-map-open', scheduleRefinement);
-  window.addEventListener('arvorefamilia:mobile-generation-full-map-open', scheduleRefinement);
+  window.addEventListener('scroll', scheduleRefinement, { passive: true });
 }
 
 export {};
