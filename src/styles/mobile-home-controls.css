@@ -243,3 +243,35 @@
     padding-left: 0 !important;
   }
 }
+
+/* Ajustes mobile trays mapa familiar 2026-07-01 */
+@media (max-width: 767px) {
+  div[data-mobile-family-map-context-tray="true"][data-mobile-family-map-context-action="zoom"] > div[aria-label="Mapa da família"],
+  div[data-mobile-family-map-context-tray="true"][data-mobile-family-map-context-action="zoom"] > div[aria-label="Mapa da linha geracional"] {
+    background: rgba(255, 255, 255, 0.98) !important;
+    padding-bottom: 0.7rem !important;
+  }
+
+  div[data-mobile-family-map-context-tray="true"][data-mobile-family-map-context-action="zoom"] [data-mobile-family-map-overview-source="direct-map"] button[data-screen] > span:nth-of-type(2) {
+    width: 1.85rem !important;
+    height: 1.85rem !important;
+    border-radius: 0.72rem !important;
+  }
+
+  div[data-mobile-family-map-context-tray="true"][data-mobile-family-map-context-action="zoom"] [data-mobile-family-map-overview-source="direct-map"] button[data-screen] > span:nth-of-type(2) svg {
+    width: 0.92rem !important;
+    height: 0.92rem !important;
+  }
+}
+
+@media (min-width: 390px) and (max-width: 767px) {
+  div[data-mobile-family-map-context-tray="true"][data-mobile-family-map-context-action="zoom"] [data-mobile-family-map-overview-source="direct-map"] button[data-screen] > span:nth-of-type(2) {
+    width: 2rem !important;
+    height: 2rem !important;
+  }
+
+  div[data-mobile-family-map-context-tray="true"][data-mobile-family-map-context-action="zoom"] [data-mobile-family-map-overview-source="direct-map"] button[data-screen] > span:nth-of-type(2) svg {
+    width: 1rem !important;
+    height: 1rem !important;
+  }
+}
