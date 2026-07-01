@@ -1,4 +1,5 @@
 const MOBILE_QUERY = '(max-width: 767px)';
+const DIRECT_FAMILY_MAP_PATH = '/mapa-familiar';
 const BACKDROP_ID = 'mobile-map-toolbar-panel-backdrop';
 const STYLE_ID = 'mobile-map-toolbar-backdrop-layer-fix-style';
 const BACKDROP_BOTTOM_VAR = '--mobile-map-toolbar-backdrop-bottom';
@@ -18,6 +19,14 @@ function isMobileViewport() {
   return typeof window !== 'undefined'
     && typeof window.matchMedia === 'function'
     && window.matchMedia(MOBILE_QUERY).matches;
+}
+
+function getPathname() {
+  return typeof window === 'undefined' ? '' : window.location.pathname.replace(/\/$/, '');
+}
+
+function isDirectFamilyMapPath() {
+  return getPathname() === DIRECT_FAMILY_MAP_PATH;
 }
 
 function ensureStyles() {
@@ -129,6 +138,11 @@ function getActivePanelBottom(toolbarBottom: number) {
   return Math.min(bottomLimit, Math.max(toolbarBottom, Math.ceil(relevant.rect.bottom)));
 }
 
+function getBackdropTop(toolbarBottom: number) {
+  if (isDirectFamilyMapPath()) return toolbarBottom;
+  return getActivePanelBottom(toolbarBottom);
+}
+
 function syncBackdropLayer() {
   ensureStyles();
 
@@ -138,10 +152,10 @@ function syncBackdropLayer() {
   if (!backdrop) return;
 
   const toolbarBottom = getToolbarBottom();
-  const panelBottom = getActivePanelBottom(toolbarBottom);
+  const backdropTop = getBackdropTop(toolbarBottom);
 
   document.documentElement.dataset.mobileMapToolbarBackdrop = 'true';
-  document.documentElement.style.setProperty(BACKDROP_TOP_VAR, `${panelBottom}px`);
+  document.documentElement.style.setProperty(BACKDROP_TOP_VAR, `${backdropTop}px`);
   document.documentElement.style.setProperty(BACKDROP_BOTTOM_VAR, `${getBottomNavigationOffset()}px`);
 }
 
@@ -165,12 +179,11 @@ if (typeof window !== 'undefined' && typeof document !== 'undefined') {
     subtree: true,
     attributes: true,
     attributeFilter: [
-      'data-mobile-map-toolbar-backdrop',
       'data-mobile-family-map-toolbar-active',
       'data-mobile-family-map-toolbar-action',
       'data-mobile-family-map-panel-mode',
-      'class',
-      'style',
+      'aria-current',
+      'aria-pressed',
     ],
   });
 
