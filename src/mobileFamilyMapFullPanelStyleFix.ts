@@ -9,15 +9,20 @@ function ensureStyles() {
     @media (max-width: 767px) {
       div[role="dialog"][aria-label="Painel de visualização"] {
         background: rgba(15, 23, 42, 0.56) !important;
+        -webkit-backdrop-filter: blur(6px) saturate(0.84) !important;
+        backdrop-filter: blur(6px) saturate(0.84) !important;
       }
 
       div[role="dialog"][aria-label="Painel de visualização"] > button[aria-label="Fechar painel de visualização"] {
         background: rgba(15, 23, 42, 0.56) !important;
+        -webkit-backdrop-filter: blur(6px) saturate(0.84) !important;
+        backdrop-filter: blur(6px) saturate(0.84) !important;
       }
 
       div[role="dialog"][aria-label="Painel de visualização"] > section {
         background: #ffffff !important;
         opacity: 1 !important;
+        z-index: 12010 !important;
       }
     }
   `;
