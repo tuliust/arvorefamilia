@@ -27,6 +27,7 @@ import {
   AdminNotificationConfiguration,
   AdminNotificationCustomDefinition,
   AdminNotificationContentOverride,
+  AdminNotificationVariableSettings,
 } from '../../components/admin/notifications/AdminNotificationConfiguration';
 import { AdminNotificationMetrics } from '../../components/admin/notifications/AdminNotificationMetrics';
 import { useAuth } from '../../contexts/AuthContext';
@@ -60,6 +61,7 @@ import { NotificationAdminSummary, NotificationDispatchLog, NotificationDispatch
 import { isPersonDeceased } from '../../utils/personFields';
 
 const ADMIN_NOTIFICATION_STORAGE_KEY = 'arvorefamilia:admin-notifications-console-config';
+const ADMIN_NOTIFICATION_ACTIVE_TAB_KEY = 'arvorefamilia:admin-notifications-active-tab';
 
 const PREFERENCE_CATEGORY_OPTIONS = [
   { value: 'all', label: 'Todas as categorias' },
@@ -81,6 +83,8 @@ const CHANNEL_OPTIONS = [
   { value: 'whatsapp', label: 'WhatsApp' },
 ] as const;
 
+type AdminNotificationTab = 'visao-geral' | 'configuracao' | 'preferencias' | 'automacoes' | 'metricas' | 'diagnostico';
+
 type NotificationConfirmAction =
   | { type: 'email_test' }
   | { type: 'manual_routine' }
@@ -94,6 +98,7 @@ type StoredAdminNotificationConfig = {
   channelOverrides?: Record<string, TipoCanalNotificacao[]>;
   recipientOverrides?: Record<string, string[]>;
   variableOverrides?: Record<string, string[]>;
+  variableSettings?: AdminNotificationVariableSettings;
   customDefinitions?: AdminNotificationCustomDefinition[];
 };
 
@@ -169,8 +174,22 @@ function saveStoredAdminConfig(config: StoredAdminNotificationConfig) {
   window.localStorage.setItem(ADMIN_NOTIFICATION_STORAGE_KEY, JSON.stringify(config));
 }
 
+function getStoredActiveTab(): AdminNotificationTab {
+  if (typeof window === 'undefined') return 'visao-geral';
+  const value = window.localStorage.getItem(ADMIN_NOTIFICATION_ACTIVE_TAB_KEY) as AdminNotificationTab | null;
+  return value && ['visao-geral', 'configuracao', 'preferencias', 'automacoes', 'metricas', 'diagnostico'].includes(value)
+    ? value
+    : 'visao-geral';
+}
+
+function saveStoredActiveTab(tab: AdminNotificationTab) {
+  if (typeof window === 'undefined') return;
+  window.localStorage.setItem(ADMIN_NOTIFICATION_ACTIVE_TAB_KEY, tab);
+}
+
 export function AdminNotificacoes() {
   const { user } = useAuth();
+  const [activeTab, setActiveTab] = useState<AdminNotificationTab>(() => getStoredActiveTab());
   const [notifications, setNotifications] = useState<NotificacaoUsuario[]>([]);
   const [preferences, setPreferences] = useState<PreferenciaNotificacao[]>([]);
   const [dispatchLogs, setDispatchLogs] = useState<NotificationDispatchLog[]>([]);
@@ -218,20 +237,42 @@ export function AdminNotificacoes() {
   const [channelOverrides, setChannelOverrides] = useState<Record<string, TipoCanalNotificacao[]>>(storedConfig.channelOverrides || {});
   const [recipientOverrides, setRecipientOverrides] = useState<Record<string, string[]>>(storedConfig.recipientOverrides || {});
   const [variableOverrides, setVariableOverrides] = useState<Record<string, string[]>>(storedConfig.variableOverrides || {});
+  const [variableSettings, setVariableSettings] = useState<AdminNotificationVariableSettings>(storedConfig.variableSettings || {});
   const [customDefinitions, setCustomDefinitions] = useState<AdminNotificationCustomDefinition[]>(storedConfig.customDefinitions || []);
   const [pendingConfirmAction, setPendingConfirmAction] = useState<NotificationConfirmAction | null>(null);
 
+  const draftConfig = useMemo<StoredAdminNotificationConfig>(() => ({
+    frequencyOverrides,
+    themeOverrides,
+    activeOverrides,
+    contentOverrides,
+    channelOverrides,
+    recipientOverrides,
+    variableOverrides,
+    variableSettings,
+    customDefinitions,
+  }), [
+    activeOverrides,
+    channelOverrides,
+    contentOverrides,
+    customDefinitions,
+    frequencyOverrides,
+    recipientOverrides,
+    themeOverrides,
+    variableOverrides,
+    variableSettings,
+  ]);
+
+  useEffect(() => {
+    saveStoredAdminConfig(draftConfig);
+  }, [draftConfig]);
+
+  useEffect(() => {
+    saveStoredActiveTab(activeTab);
+  }, [activeTab]);
+
   const saveAdminNotificationConfig = () => {
-    saveStoredAdminConfig({
-      frequencyOverrides,
-      themeOverrides,
-      activeOverrides,
-      contentOverrides,
-      channelOverrides,
-      recipientOverrides,
-      variableOverrides,
-      customDefinitions,
-    });
+    saveStoredAdminConfig(draftConfig);
     toast.success('Configurações de notificação salvas.');
   };
 
@@ -336,7 +377,6 @@ export function AdminNotificacoes() {
     }
   };
 
-
   const handleSendEmailTest = () => {
     if (!user?.id || sendingEmailTest) return;
     setPendingConfirmAction({ type: 'email_test' });
@@ -351,7 +391,7 @@ export function AdminNotificacoes() {
         userId: user.id,
         type: 'notificacao',
         titulo: 'Teste de e-mail de notificação',
-        mensagem: 'E-mail de teste enviado pelo painel admin para validar provider, prefer?ncias e logs.',
+        mensagem: 'E-mail de teste enviado pelo painel admin para validar provider, preferências e logs.',
         link: '/notificacoes',
         metadata: { source: 'admin-email-test', test: true },
         channels: ['interna', 'email'],
@@ -367,7 +407,6 @@ export function AdminNotificacoes() {
       setSendingEmailTest(false);
     }
   };
-
 
   const handleRunManualRoutine = () => {
     if (runningManualRoutine) return;
@@ -391,7 +430,6 @@ export function AdminNotificacoes() {
       setRunningManualRoutine(false);
     }
   };
-
 
   const handleAutomationTest = (automationId: string) => {
     if (!user?.id || sendingAutomationTest) return;
@@ -707,7 +745,7 @@ export function AdminNotificacoes() {
           </Card>
         )}
 
-        <Tabs defaultValue="visao-geral" className="gap-6">
+        <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as AdminNotificationTab)} className="gap-6">
           <div className="overflow-x-auto">
             <TabsList className="h-auto min-w-max flex-wrap justify-start gap-2 rounded-lg bg-transparent p-0">
               <TabsTrigger value="visao-geral">Visão geral</TabsTrigger>
@@ -739,6 +777,7 @@ export function AdminNotificacoes() {
               recipientOverrides={recipientOverrides}
               activeOverrides={activeOverrides}
               variableOverrides={variableOverrides}
+              variableSettings={variableSettings}
               customTypeCount={customDefinitions.length}
               onFrequencyChange={(typeId, frequency) => setFrequencyOverrides((current) => ({ ...current, [typeId]: frequency }))}
               onContentChange={(templateId, content) => setContentOverrides((current) => ({ ...current, [templateId]: content }))}
@@ -746,6 +785,7 @@ export function AdminNotificacoes() {
               onRecipientsChange={(typeId, recipients) => setRecipientOverrides((current) => ({ ...current, [typeId]: recipients }))}
               onActiveChange={(typeId, active) => setActiveOverrides((current) => ({ ...current, [typeId]: active }))}
               onVariablesChange={(templateId, variables) => setVariableOverrides((current) => ({ ...current, [templateId]: variables }))}
+              onVariableSettingsChange={(templateId, settings) => setVariableSettings((current) => ({ ...current, [templateId]: settings }))}
               onCreateType={(definition) => setCustomDefinitions((current) => [...current, definition])}
               onSave={saveAdminNotificationConfig}
             />
@@ -761,58 +801,6 @@ export function AdminNotificacoes() {
               channelOptions={CHANNEL_OPTIONS.map((option) => ({ value: option.value, label: option.label }))}
               stats={preferenceStats}
             />
-          </TabsContent>
-
-          <TabsContent value="destinatarios">
-            <AdminNotificationRecipients
-              loading={loading}
-              rows={recipientGroupRows}
-              peopleOptions={peopleOptions}
-              selectedPersonId={selectedPersonId}
-              onSelectedPersonIdChange={setSelectedPersonId}
-              selectedPersonCountLabel={
-                selectedPersonId
-                  ? selectedPersonLoading
-                    ? 'Resolviendo usuários vinculados...'
-                    : `${selectedPersonUserIds.length} usuários atualmente vinculados à pessoa selecionada.`
-                  : 'Selecione uma pessoa para consultar.'
-              }
-            />
-          </TabsContent>
-
-          <TabsContent value="tipos">
-            <AdminNotificationTypesCatalog
-              items={ADMIN_NOTIFICATION_TYPES}
-              frequencyOverrides={frequencyOverrides}
-              activeOverrides={activeOverrides}
-              onFrequencyChange={(typeId, frequency) => setFrequencyOverrides((current) => ({ ...current, [typeId]: frequency }))}
-              onActiveChange={(typeId, active) => setActiveOverrides((current) => ({ ...current, [typeId]: active }))}
-            />
-          </TabsContent>
-
-          <TabsContent value="templates">
-            <div className="space-y-6">
-              <AdminNotificationTemplates
-                items={ADMIN_NOTIFICATION_TEMPLATES}
-                themeOverrides={themeOverrides}
-                onThemeChange={(templateId, themeId) => setThemeOverrides((current) => ({ ...current, [templateId]: themeId }))}
-              />
-              <Card>
-                <CardContent className="pt-6">
-                  <div className="flex flex-wrap gap-2">
-                    {ADMIN_NOTIFICATION_SUGGESTIONS.map((suggestion) => (
-                      <span key={suggestion} className="rounded-md border border-gray-200 px-3 py-1 text-sm text-gray-700">
-                        {suggestion}
-                      </span>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          </TabsContent>
-
-          <TabsContent value="frequencia">
-            <AdminNotificationFrequenciesAndThemes frequencyUsage={typeFrequencyUsage} themeUsage={templateThemeUsage} />
           </TabsContent>
 
           <TabsContent value="automacoes">
