@@ -1,5 +1,6 @@
 import { Plus, Save } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { toast } from 'sonner';
 import {
   AdminNotificationFrequencyId,
   AdminNotificationRecipientGroupDefinition,
@@ -7,6 +8,11 @@ import {
   AdminNotificationTypeDefinition,
   ADMIN_NOTIFICATION_FREQUENCY_OPTIONS,
 } from '../../../constants/adminNotificationCatalog';
+import { adminListProfilesForLinking, AdminLinkableProfile } from '../../../services/memberProfileService';
+import {
+  loadAdminNotificationConfiguration,
+  saveAdminNotificationConfiguration,
+} from '../../../services/adminNotificationConfigurationService';
 import { TipoCanalNotificacao } from '../../../types';
 import { Badge } from '../../ui/badge';
 import { Button } from '../../ui/button';
@@ -31,6 +37,31 @@ export type AdminNotificationCustomDefinition = {
 
 const CHANNEL_OPTIONS: TipoCanalNotificacao[] = ['interna', 'email', 'push', 'whatsapp'];
 const EDITABLE_FIELDS = ['title', 'longMessage', 'cta'] as const;
+const SPECIFIC_USER_PREFIX = 'specific_user:';
+
+const EXTRA_RECIPIENT_GROUPS: AdminNotificationRecipientGroupDefinition[] = [
+  {
+    id: 'trigger_user',
+    title: 'Usuário do gatilho',
+    description: 'Usuário que realizou a ação que originou a notificação, como primeiro login ou atualização própria.',
+    kind: 'gatilho',
+    availability: 'available',
+  },
+  {
+    id: 'specific_users',
+    title: 'Usuários específicos',
+    description: 'Permite selecionar um ou mais usuários manualmente para receber a notificação.',
+    kind: 'manual_futuro',
+    availability: 'available',
+  },
+  {
+    id: 'close_family',
+    title: 'Familiares próximos',
+    description: 'Pai, mãe, irmãos, cônjuge ativo, filhos, netos e sobrinhos do usuário ou pessoa do gatilho.',
+    kind: 'gatilho',
+    availability: 'available',
+  },
+];
 
 type EditableField = typeof EDITABLE_FIELDS[number];
 
@@ -99,6 +130,24 @@ function createCustomNotificationDefinition(index: number): AdminNotificationCus
   };
 }
 
+function getSpecificUserToken(userId: string) {
+  return `${SPECIFIC_USER_PREFIX}${userId}`;
+}
+
+function getSpecificUserIdFromToken(token: string) {
+  return token.startsWith(SPECIFIC_USER_PREFIX) ? token.slice(SPECIFIC_USER_PREFIX.length) : null;
+}
+
+function getProfileLabel(profile: AdminLinkableProfile) {
+  return String(profile.nome_exibicao || profile.email || profile.id).trim();
+}
+
+function mergeRecipientGroups(groups: AdminNotificationRecipientGroupDefinition[]) {
+  const map = new Map<string, AdminNotificationRecipientGroupDefinition>();
+  [...groups, ...EXTRA_RECIPIENT_GROUPS].forEach((group) => map.set(group.id, group));
+  return Array.from(map.values());
+}
+
 export function AdminNotificationConfiguration(props: {
   types: AdminNotificationTypeDefinition[];
   templates: AdminNotificationTemplateDefinition[];
@@ -122,12 +171,18 @@ export function AdminNotificationConfiguration(props: {
   const [selectedTypeId, setSelectedTypeId] = useState(props.types[0]?.id ?? '');
   const [activeField, setActiveField] = useState<EditableField>('longMessage');
   const [newVariableName, setNewVariableName] = useState('');
+  const [profiles, setProfiles] = useState<AdminLinkableProfile[]>([]);
+  const [profilesLoading, setProfilesLoading] = useState(false);
+  const [persistedConfigLoading, setPersistedConfigLoading] = useState(false);
+  const [savingConfig, setSavingConfig] = useState(false);
+  const persistedConfigLoadedRef = useRef(false);
   const fieldRefs = {
     title: useRef<HTMLInputElement | null>(null),
     longMessage: useRef<HTMLTextAreaElement | null>(null),
     cta: useRef<HTMLInputElement | null>(null),
   };
 
+  const recipientGroups = useMemo(() => mergeRecipientGroups(props.recipientGroups), [props.recipientGroups]);
   const selectedType = useMemo(
     () => props.types.find((item) => item.id === selectedTypeId) ?? props.types[0],
     [props.types, selectedTypeId],
@@ -145,6 +200,9 @@ export function AdminNotificationConfiguration(props: {
   const selectedRecipients = selectedType
     ? props.recipientOverrides[selectedType.id] ?? [selectedType.defaultAudience].filter(Boolean)
     : [];
+  const selectedSpecificUserIds = selectedRecipients
+    .map(getSpecificUserIdFromToken)
+    .filter((userId): userId is string => Boolean(userId));
   const selectedFrequency = selectedType
     ? props.frequencyOverrides[selectedType.id] ?? selectedType.defaultFrequency
     : 'manual';
@@ -160,6 +218,65 @@ export function AdminNotificationConfiguration(props: {
       setSelectedTypeId(props.types[0].id);
     }
   }, [props.types, selectedTypeId]);
+
+  useEffect(() => {
+    let mounted = true;
+
+    async function loadProfiles() {
+      try {
+        setProfilesLoading(true);
+        const result = await adminListProfilesForLinking();
+        if (mounted) setProfiles(result.data);
+      } catch (error) {
+        console.warn('[Notificações] Não foi possível carregar usuários para seleção específica:', error);
+        if (mounted) setProfiles([]);
+      } finally {
+        if (mounted) setProfilesLoading(false);
+      }
+    }
+
+    void loadProfiles();
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (persistedConfigLoadedRef.current) return;
+    persistedConfigLoadedRef.current = true;
+
+    let mounted = true;
+
+    async function loadPersistedConfig() {
+      try {
+        setPersistedConfigLoading(true);
+        const config = await loadAdminNotificationConfiguration();
+        if (!mounted) return;
+
+        Object.entries(config.frequencyOverrides ?? {}).forEach(([typeId, frequency]) => props.onFrequencyChange(typeId, frequency));
+        Object.entries(config.contentOverrides ?? {}).forEach(([templateIdKey, content]) => props.onContentChange(templateIdKey, content));
+        Object.entries(config.channelOverrides ?? {}).forEach(([typeId, channels]) => props.onChannelsChange(typeId, channels));
+        Object.entries(config.recipientOverrides ?? {}).forEach(([typeId, recipients]) => props.onRecipientsChange(typeId, recipients));
+        Object.entries(config.activeOverrides ?? {}).forEach(([typeId, active]) => props.onActiveChange(typeId, active));
+        Object.entries(config.variableOverrides ?? {}).forEach(([templateIdKey, nextVariables]) => props.onVariablesChange(templateIdKey, nextVariables));
+
+        (config.customDefinitions ?? [])
+          .filter((definition) => !props.types.some((type) => type.id === definition.type.id))
+          .forEach((definition) => props.onCreateType(definition));
+      } catch (error) {
+        console.warn('[Notificações] Não foi possível aplicar configuração persistida:', error);
+      } finally {
+        if (mounted) setPersistedConfigLoading(false);
+      }
+    }
+
+    void loadPersistedConfig();
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   const updateDraft = (field: EditableField, value: string) => {
     if (!templateId) return;
@@ -197,9 +314,24 @@ export function AdminNotificationConfiguration(props: {
 
   const toggleRecipient = (recipientId: string, checked: boolean) => {
     if (!selectedType) return;
+    const withoutSpecificUsers = recipientId === 'specific_users'
+      ? selectedRecipients.filter((item) => !item.startsWith(SPECIFIC_USER_PREFIX))
+      : selectedRecipients;
     const next = checked
-      ? Array.from(new Set([...selectedRecipients, recipientId]))
-      : selectedRecipients.filter((item) => item !== recipientId);
+      ? Array.from(new Set([...withoutSpecificUsers, recipientId]))
+      : withoutSpecificUsers.filter((item) => item !== recipientId);
+    props.onRecipientsChange(selectedType.id, next);
+  };
+
+  const toggleSpecificUser = (userId: string, checked: boolean) => {
+    if (!selectedType) return;
+    const token = getSpecificUserToken(userId);
+    const baseRecipients = selectedRecipients.includes('specific_users')
+      ? selectedRecipients
+      : [...selectedRecipients, 'specific_users'];
+    const next = checked
+      ? Array.from(new Set([...baseRecipients, token]))
+      : baseRecipients.filter((item) => item !== token);
     props.onRecipientsChange(selectedType.id, next);
   };
 
@@ -217,6 +349,32 @@ export function AdminNotificationConfiguration(props: {
     setNewVariableName('');
   };
 
+  const handleSave = async () => {
+    try {
+      setSavingConfig(true);
+      await saveAdminNotificationConfiguration({
+        frequencyOverrides: props.frequencyOverrides,
+        contentOverrides: props.contentOverrides,
+        channelOverrides: props.channelOverrides,
+        recipientOverrides: props.recipientOverrides,
+        activeOverrides: props.activeOverrides,
+        variableOverrides: props.variableOverrides,
+        customDefinitions: props.types
+          .filter((type) => type.id.startsWith('custom_notification_'))
+          .map((type) => {
+            const template = props.templates.find((item) => item.typeId === type.id);
+            return template ? { type, template } : null;
+          })
+          .filter((definition): definition is AdminNotificationCustomDefinition => Boolean(definition)),
+      });
+      props.onSave();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Não foi possível salvar as configurações de notificação.');
+    } finally {
+      setSavingConfig(false);
+    }
+  };
+
   if (!selectedType || !selectedTemplate) {
     return (
       <Card>
@@ -229,15 +387,18 @@ export function AdminNotificationConfiguration(props: {
     <div className="space-y-6">
       <Card>
         <CardHeader className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-          <CardTitle className="text-base">Configuração da notificação</CardTitle>
+          <div>
+            <CardTitle className="text-base">Configuração da notificação</CardTitle>
+            {persistedConfigLoading && <p className="mt-1 text-xs text-gray-500">Carregando configuração salva no Supabase...</p>}
+          </div>
           <div className="flex flex-col gap-2 sm:flex-row">
             <Button type="button" variant="outline" onClick={handleCreateType}>
               <Plus className="h-4 w-4" />
               Novo tipo
             </Button>
-            <Button type="button" onClick={props.onSave}>
+            <Button type="button" onClick={handleSave} disabled={savingConfig}>
               <Save className="h-4 w-4" />
-              Salvar
+              {savingConfig ? 'Salvando...' : 'Salvar'}
             </Button>
           </div>
         </CardHeader>
@@ -390,26 +551,57 @@ export function AdminNotificationConfiguration(props: {
         <CardHeader>
           <CardTitle className="text-base">Destinatários</CardTitle>
         </CardHeader>
-        <CardContent className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
-          {props.recipientGroups.map((group) => (
-            <Label key={group.id} className="flex items-start gap-3 rounded-md border border-gray-200 p-3">
-              <Checkbox
-                checked={selectedRecipients.includes(group.id)}
-                onCheckedChange={(checked) => toggleRecipient(group.id, checked === true)}
-                className="mt-0.5"
-              />
-              <span className="min-w-0">
-                <span className="block font-medium text-gray-900">{group.title}</span>
-                <span className="mt-1 block text-sm font-normal leading-5 text-gray-600">{group.description}</span>
-                <span className="mt-2 flex flex-wrap gap-1">
-                  <Badge variant="outline">{formatAdminNotificationLabel(group.kind)}</Badge>
-                  <Badge variant={group.availability === 'available' ? 'outline' : 'secondary'}>
-                    {formatAdminNotificationLabel(group.availability)}
-                  </Badge>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
+            {recipientGroups.map((group) => (
+              <Label key={group.id} className="flex items-start gap-3 rounded-md border border-gray-200 p-3">
+                <Checkbox
+                  checked={selectedRecipients.includes(group.id)}
+                  onCheckedChange={(checked) => toggleRecipient(group.id, checked === true)}
+                  className="mt-0.5"
+                />
+                <span className="min-w-0">
+                  <span className="block font-medium text-gray-900">{group.title}</span>
+                  <span className="mt-1 block text-sm font-normal leading-5 text-gray-600">{group.description}</span>
+                  <span className="mt-2 flex flex-wrap gap-1">
+                    <Badge variant="outline">{formatAdminNotificationLabel(group.kind)}</Badge>
+                    <Badge variant={group.availability === 'available' ? 'outline' : 'secondary'}>
+                      {formatAdminNotificationLabel(group.availability)}
+                    </Badge>
+                  </span>
                 </span>
-              </span>
-            </Label>
-          ))}
+              </Label>
+            ))}
+          </div>
+
+          {selectedRecipients.includes('specific_users') && (
+            <div className="rounded-md border border-gray-200 bg-gray-50 p-3">
+              <details>
+                <summary className="cursor-pointer text-sm font-semibold text-gray-900">
+                  Selecionar usuários específicos
+                  {selectedSpecificUserIds.length > 0 ? ` (${selectedSpecificUserIds.length})` : ''}
+                </summary>
+                <div className="mt-3 max-h-64 space-y-2 overflow-y-auto pr-1">
+                  {profilesLoading && <p className="text-sm text-gray-500">Carregando usuários...</p>}
+                  {!profilesLoading && profiles.length === 0 && (
+                    <p className="text-sm text-gray-500">Nenhum usuário disponível para seleção.</p>
+                  )}
+                  {!profilesLoading && profiles.map((profile) => (
+                    <Label key={profile.id} className="flex items-center gap-3 rounded-md border border-gray-200 bg-white p-2">
+                      <Checkbox
+                        checked={selectedSpecificUserIds.includes(profile.id)}
+                        onCheckedChange={(checked) => toggleSpecificUser(profile.id, checked === true)}
+                      />
+                      <span className="min-w-0">
+                        <span className="block truncate text-sm font-medium text-gray-900">{getProfileLabel(profile)}</span>
+                        {profile.email && <span className="block truncate text-xs text-gray-500">{profile.email}</span>}
+                      </span>
+                    </Label>
+                  ))}
+                </div>
+              </details>
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>
