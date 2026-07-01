@@ -1,5 +1,5 @@
 const MOBILE_QUERY = '(max-width: 767px)';
-const TOOLBAR_BACKDROP_PATHS = new Set(['/linha-geracional']);
+const FAMILY_MAP_PATHS = new Set(['/mapa-familiar', '/linha-geracional']);
 const GENERATION_LINE_PATH = '/linha-geracional';
 const STYLE_ID = 'mobile-map-panel-refinements-style';
 const OVERLAY_ID = 'mobile-generation-safe-overview-overlay';
@@ -60,7 +60,7 @@ function isFamilyMapToolbarPath() {
   return typeof window !== 'undefined'
     && typeof document !== 'undefined'
     && isMobileViewport()
-    && TOOLBAR_BACKDROP_PATHS.has(getPathname());
+    && FAMILY_MAP_PATHS.has(getPathname());
 }
 
 function isGenerationLineEnabled() {

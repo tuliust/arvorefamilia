@@ -1,6 +1,4 @@
 const MOBILE_QUERY = '(max-width: 767px)';
-const DIRECT_MAP_PATH = '/mapa-familiar';
-const TOOLBAR_BACKDROP_PATHS = new Set(['/linha-geracional']);
 const BACKDROP_ID = 'mobile-map-toolbar-panel-backdrop';
 const STYLE_ID = 'mobile-map-toolbar-backdrop-layer-fix-style';
 const BACKDROP_BOTTOM_VAR = '--mobile-map-toolbar-backdrop-bottom';
@@ -20,25 +18,6 @@ function isMobileViewport() {
   return typeof window !== 'undefined'
     && typeof window.matchMedia === 'function'
     && window.matchMedia(MOBILE_QUERY).matches;
-}
-
-function getPathname() {
-  return typeof window === 'undefined' ? '' : window.location.pathname.replace(/\/$/, '');
-}
-
-function isDirectFamilyMapPath() {
-  return getPathname() === DIRECT_MAP_PATH;
-}
-
-function isRuntimeBackdropPath() {
-  return TOOLBAR_BACKDROP_PATHS.has(getPathname());
-}
-
-function removeRuntimeBackdropState() {
-  document.getElementById(BACKDROP_ID)?.remove();
-  document.documentElement.removeAttribute('data-mobile-map-toolbar-backdrop');
-  document.documentElement.style.removeProperty(BACKDROP_TOP_VAR);
-  document.documentElement.style.removeProperty(BACKDROP_BOTTOM_VAR);
 }
 
 function ensureStyles() {
@@ -153,15 +132,7 @@ function getActivePanelBottom(toolbarBottom: number) {
 function syncBackdropLayer() {
   ensureStyles();
 
-  if (!isMobileViewport()) {
-    removeRuntimeBackdropState();
-    return;
-  }
-
-  if (isDirectFamilyMapPath() || !isRuntimeBackdropPath()) {
-    removeRuntimeBackdropState();
-    return;
-  }
+  if (!isMobileViewport()) return;
 
   const backdrop = document.getElementById(BACKDROP_ID);
   if (!backdrop) return;
@@ -192,6 +163,15 @@ if (typeof window !== 'undefined' && typeof document !== 'undefined') {
   observer.observe(document.documentElement, {
     childList: true,
     subtree: true,
+    attributes: true,
+    attributeFilter: [
+      'data-mobile-map-toolbar-backdrop',
+      'data-mobile-family-map-toolbar-active',
+      'data-mobile-family-map-toolbar-action',
+      'data-mobile-family-map-panel-mode',
+      'class',
+      'style',
+    ],
   });
 
   window.addEventListener('resize', scheduleSync, { passive: true });

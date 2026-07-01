@@ -1121,10 +1121,6 @@ export function HomeMobileNav({
     screen.generation === 5 || (mobileGenerationOverviewCounts[screen.generation] ?? 0) > 0
   ));
   const activeMapPanelMode = isGenerationLinePath ? mobileGenerationMapPanelMode : mobileMapPanelMode;
-  const shouldShowDirectFamilyMapToolbarBackdrop =
-    isDirectFamilyMapPath &&
-    activeToolbarAction !== null &&
-    ['visualizacao', 'formato', 'cor', 'grupos', 'exportar', 'zoom'].includes(activeToolbarAction);
 
   const itemClassName = 'flex min-h-14 flex-col items-center justify-center gap-1 rounded-lg px-1 text-xs font-semibold text-gray-700 transition hover:bg-gray-50 active:bg-gray-100';
   const activeItemClassName = 'flex min-h-14 flex-col items-center justify-center gap-1 rounded-lg bg-blue-50 px-1 text-xs font-semibold text-blue-700 ring-1 ring-blue-100 transition active:bg-blue-100';
@@ -1165,19 +1161,6 @@ export function HomeMobileNav({
             onAction={openMobileControlsPanel}
             onAddClick={openFullControlsPanel}
           />
-
-          {shouldShowDirectFamilyMapToolbarBackdrop && (
-            <div
-              aria-hidden="true"
-              className="pointer-events-none fixed inset-x-0 z-[9990] bg-slate-950/35 backdrop-blur-[5px] md:hidden"
-              style={{
-                top: 'calc(env(safe-area-inset-top,0px)+8.15rem)',
-                bottom: 'calc(env(safe-area-inset-bottom,0px)+5.35rem)',
-              }}
-              data-mobile-family-map-react-toolbar-backdrop="true"
-              data-tree-export-ignore="true"
-            />
-          )}
 
           {activeToolbarAction === 'visualizacao' && (
             <div
@@ -1478,7 +1461,7 @@ export function HomeMobileNav({
                     id="mobile-family-map-full-overview"
                     className="mobile-family-full-map-panel flex min-h-0 flex-1 flex-col"
                     role="region"
-                    aria-label="Mapa completo da família"
+                    aria-label="Mapa completo da famÃ­lia"
                     data-tree-export-ignore="true"
                     data-mobile-family-map-full-inline="true"
                   >
