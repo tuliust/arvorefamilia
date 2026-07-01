@@ -1,4 +1,4 @@
-﻿-- =====================================================
+-- =====================================================
 -- PROFILE CONTROL REQUESTS
 -- Data: 2026-06-26
 -- Objetivo: permitir solicitacao e aprovacao de responsaveis por perfis legados ou criancas.
@@ -89,7 +89,7 @@ set search_path = public
 as $$
   select
     upl.user_id,
-    coalesce(nullif(p.nome_exibicao, ''), 'Usu├írio respons├ível')::text as nome_exibicao,
+    coalesce(nullif(p.nome_exibicao, ''), 'Usuario responsavel')::text as nome_exibicao,
     p.avatar_url::text,
     coalesce(upl.permission_role, case when upl.principal then 'owner' when upl.can_edit = false then 'viewer' else 'editor' end)::text as permission_role,
     coalesce(upl.principal, false) as principal,
@@ -205,7 +205,7 @@ as $$
     pcr.id,
     pcr.requester_user_id,
     pcr.requester_pessoa_id,
-    coalesce(rp.nome_completo, pr.nome_exibicao, au.email::text, 'Usu├írio solicitante')::text as requester_label,
+    coalesce(rp.nome_completo, pr.nome_exibicao, au.email::text, 'Usuario solicitante')::text as requester_label,
     au.email::text as requester_email,
     pcr.target_pessoa_id,
     coalesce(tp.nome_completo, 'Pessoa solicitada')::text as target_label,
