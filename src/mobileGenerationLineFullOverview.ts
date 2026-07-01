@@ -49,9 +49,23 @@ function isEnabled() {
     && window.location.pathname.replace(/\/$/, '') === GENERATION_LINE_PATH;
 }
 
+function setFullMapSourceHidden(active: boolean, snapshotting = false) {
+  if (active) document.documentElement.dataset.mobileGenerationFullMapActive = 'true';
+  else delete document.documentElement.dataset.mobileGenerationFullMapActive;
+
+  if (snapshotting) document.documentElement.dataset.mobileGenerationFullMapSnapshotting = 'true';
+  else delete document.documentElement.dataset.mobileGenerationFullMapSnapshotting;
+}
+
 function ensureStyles() {
   const css = `
     @media (max-width: 767px) {
+      html[data-mobile-generation-full-map-active="true"] [data-family-map-horizontal-mobile-root="true"],
+      html[data-mobile-generation-full-map-snapshotting="true"] [data-family-map-horizontal-mobile-root="true"] {
+        visibility: hidden !important;
+        pointer-events: none !important;
+      }
+
       #${FULL_MAP_ID} {
         position: relative !important;
         display: flex !important;
@@ -229,19 +243,23 @@ async function collectFullMap(): Promise<CollectedFullMap | null> {
   const collected: CollectedGeneration[] = [];
   let headers: HTMLElement[] = [];
 
-  for (const generation of generations) {
-    byGeneration.get(generation)?.click();
-    await waitForRender();
+  setFullMapSourceHidden(true, true);
+  try {
+    for (const generation of generations) {
+      byGeneration.get(generation)?.click();
+      await waitForRender();
 
-    const root = document.querySelector<HTMLElement>(HORIZONTAL_ROOT_SELECTOR);
-    if (root && headers.length === 0) headers = cloneGenerationHeaders(root);
+      const root = document.querySelector<HTMLElement>(HORIZONTAL_ROOT_SELECTOR);
+      if (root && headers.length === 0) headers = cloneGenerationHeaders(root);
 
-    const current = collectVisibleGeneration(generation);
-    if (current) collected.push(current);
-  }
-
-  if (typeof originalGeneration === 'number') {
-    byGeneration.get(originalGeneration)?.click();
+      const current = collectVisibleGeneration(generation);
+      if (current) collected.push(current);
+    }
+  } finally {
+    if (typeof originalGeneration === 'number') {
+      byGeneration.get(originalGeneration)?.click();
+    }
+    setFullMapSourceHidden(true, false);
   }
 
   if (collected.length === 0) return null;
@@ -417,15 +435,22 @@ function handleTouchEnd(event: TouchEvent) {
 }
 
 async function hydrateFullMap() {
-  if (!isEnabled()) return;
+  if (!isEnabled()) {
+    setFullMapSourceHidden(false, false);
+    return;
+  }
   if (hydrationInFlight) return hydrationInFlight;
 
   hydrationInFlight = (async () => {
     ensureStyles();
     const fullMap = getInlineFullMap();
     const viewport = fullMap?.querySelector<HTMLElement>('.mobile-generation-line-full-map-viewport');
-    if (!viewport) return;
+    if (!viewport) {
+      setFullMapSourceHidden(false, false);
+      return;
+    }
 
+    setFullMapSourceHidden(true, false);
     const model = await collectFullMap();
     if (!model) return;
 
@@ -468,11 +493,15 @@ if (typeof window !== 'undefined' && typeof document !== 'undefined') {
   window.addEventListener(FULL_MAP_OPEN_EVENT, scheduleHydrateFullMap);
   window.addEventListener('resize', scheduleHydrateFullMap, { passive: true });
   window.addEventListener('orientationchange', () => window.setTimeout(scheduleHydrateFullMap, 220), { passive: true });
-  window.addEventListener('popstate', () => { gestureState = null; }, { passive: true });
+  window.addEventListener('popstate', () => {
+    gestureState = null;
+    setFullMapSourceHidden(false, false);
+  }, { passive: true });
   document.addEventListener('visibilitychange', () => { if (!document.hidden) scheduleHydrateFullMap(); }, { passive: true });
 
   const observer = new MutationObserver(() => {
     if (getInlineFullMap()) scheduleHydrateFullMap();
+    else setFullMapSourceHidden(false, false);
   });
   observer.observe(document.documentElement, { childList: true, subtree: true });
 }
