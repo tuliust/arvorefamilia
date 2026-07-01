@@ -26,7 +26,8 @@
 | Revisão de dados | `funcionalidades/REVISAO_DADOS.md` |
 | Curiosidades | `funcionalidades/CURIOSIDADES.md` |
 | Arquivos históricos | `funcionalidades/ARQUIVOS_HISTORICOS.md` |
-| Fórum, favoritos, notificações, dúvidas, calendário, onboarding, timeline, exportação, perfil e administração | `funcionalidades/FUNCIONALIDADES_COMPLEMENTARES.md` |
+| Notificações administrativas, catálogo e destinatários | `funcionalidades/NOTIFICACOES_ADMIN.md` |
+| Fórum, favoritos, notificações do usuário, dúvidas, calendário, onboarding, timeline, exportação, perfil e administração | `funcionalidades/FUNCIONALIDADES_COMPLEMENTARES.md` |
 | Configurações públicas de `/admin/home` | `admin-home-configuracoes-publicas.md` |
 
 ## Documentos técnicos finais
@@ -132,6 +133,27 @@ Notas técnicas:
 - pets salvos por modal devem sincronizar com a página principal antes da revisão final;
 - badges de pendência em vínculos e revisão representam solicitações ou estados aguardando aprovação;
 - ajustes documentais dessa frente não alteram Supabase, autenticação, migrations ou guards.
+
+## Notificações administrativas: arquivos de implementação
+
+| Área | Arquivos principais |
+|---|---|
+| Painel administrativo de notificações | `src/app/pages/admin/AdminNotificacoes.tsx` |
+| Aba de configuração, conteúdo, canais, destinatários e variáveis | `src/app/components/admin/notifications/AdminNotificationConfiguration.tsx` |
+| Catálogo base/fallback de tipos, templates, automações, frequências e grupos | `src/app/constants/adminNotificationCatalog.ts` |
+| Persistência de configuração e catálogo completo | `src/app/services/adminNotificationConfigurationService.ts` |
+| Resolução de destinatários e familiares próximos | `src/app/services/notificationRecipientsService.ts` |
+| Primeiro acesso real ao mapa | `src/app/services/firstMapWelcomeNotificationService.ts`, `src/app/components/TreeAccessRoute.tsx` |
+| Dispatch e persistência de notificações reais | `src/app/services/notificationDispatchService.ts`, `src/app/services/notificationAdminService.ts`, `src/app/services/notificationScheduledService.ts` |
+| Header/dropdown de notificações | `src/app/components/layout/HeaderNotificationsDropdown.tsx` |
+
+Tabelas Supabase relacionadas:
+
+- `notificacoes_usuario`, para notificações reais entregues;
+- `preferencias_notificacao`, para preferências de usuários;
+- `admin_notification_configurations`, para overrides/configurações da UI administrativa;
+- `admin_notification_catalogs`, para snapshot editável do catálogo completo;
+- `user_first_map_accesses`, para deduplicação do gatilho de boas-vindas ao acessar `/mapa-familiar`.
 
 ## Runtimes e wrappers relevantes
 
