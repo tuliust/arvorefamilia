@@ -59,6 +59,14 @@ function normalizeText(value: string | null | undefined) {
     .trim();
 }
 
+function closeActiveToolbarTray() {
+  if (typeof document === 'undefined') return;
+
+  document
+    .querySelector<HTMLButtonElement>('nav[data-mobile-family-map-toolbar="true"] button[aria-pressed="true"]')
+    ?.click();
+}
+
 export const MobileFamilyMapContextTray = React.forwardRef<HTMLDivElement, MobileFamilyMapContextTrayProps>(
   function MobileFamilyMapContextTray({ action, children, className = '' }, ref) {
     const innerRef = useRef<HTMLDivElement | null>(null);
@@ -74,7 +82,7 @@ export const MobileFamilyMapContextTray = React.forwardRef<HTMLDivElement, Mobil
       setGenerationTrayState({
         enabled,
         activeGeneration: enabled ? getActiveGeneration() : 5,
-        counts: enabled ? getGenerationCounts() : getGenerationCounts(),
+        counts: getGenerationCounts(),
       });
     }, [action]);
 
@@ -113,6 +121,7 @@ export const MobileFamilyMapContextTray = React.forwardRef<HTMLDivElement, Mobil
 
       target?.click();
       window.setTimeout(updateGenerationTrayState, 80);
+      window.setTimeout(closeActiveToolbarTray, 120);
     }, [updateGenerationTrayState]);
 
     const handleOpenFullGenerationMap = useCallback(() => {
