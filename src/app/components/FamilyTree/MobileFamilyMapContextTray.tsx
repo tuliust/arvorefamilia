@@ -132,7 +132,10 @@ export const MobileFamilyMapContextTray = React.forwardRef<HTMLDivElement, Mobil
       hiddenFullMapButton?.click();
     }, []);
 
-    const trayInsetClassName = action === 'formato'
+    const hasFlatWhiteTrayBase = action === 'formato' || action === 'cor' || action === 'grupos';
+    const hasCenteredCompactTrayBase = action === 'cor' || action === 'grupos';
+
+    const trayInsetClassName = hasFlatWhiteTrayBase
       ? 'inset-x-0 px-2'
       : action === 'cor'
         ? 'inset-x-3'
@@ -142,7 +145,8 @@ export const MobileFamilyMapContextTray = React.forwardRef<HTMLDivElement, Mobil
       'fixed z-[10001] md:hidden',
       trayInsetClassName,
       'top-[calc(env(safe-area-inset-top,0px)+8.15rem)]',
-      action === 'formato' ? 'bg-white/95 backdrop-blur' : '',
+      hasFlatWhiteTrayBase ? 'bg-white/95 backdrop-blur' : '',
+      hasCenteredCompactTrayBase ? 'flex min-h-[5.15rem] items-center' : '',
       className,
     ].filter(Boolean).join(' ');
 
@@ -217,7 +221,7 @@ export const MobileFamilyMapContextTray = React.forwardRef<HTMLDivElement, Mobil
         data-mobile-family-map-context-action={action}
         data-tree-export-ignore="true"
       >
-        {action === 'formato' && (
+        {hasFlatWhiteTrayBase && (
           <style>
             {`
               [data-mobile-family-map-context-action="formato"] > div:first-of-type {
@@ -235,6 +239,32 @@ export const MobileFamilyMapContextTray = React.forwardRef<HTMLDivElement, Mobil
               [data-mobile-family-map-context-action="formato"] > div:first-of-type button > svg {
                 width: 1.55rem !important;
                 height: 1.55rem !important;
+              }
+
+              [data-mobile-family-map-context-action="cor"] > div:first-of-type,
+              [data-mobile-family-map-context-action="grupos"] > div:first-of-type {
+                margin-top: 0 !important;
+                margin-bottom: 0 !important;
+              }
+
+              [data-mobile-family-map-context-action="cor"] > div:first-of-type {
+                display: flex !important;
+                height: 4rem !important;
+                max-width: 28rem !important;
+                align-items: center !important;
+                padding-top: 0 !important;
+                padding-bottom: 0 !important;
+              }
+
+              [data-mobile-family-map-context-action="grupos"] > div:first-of-type {
+                width: min(100%, 28rem) !important;
+                align-items: center !important;
+              }
+
+              [data-mobile-family-map-context-action="grupos"] > div:first-of-type button {
+                height: 4rem !important;
+                min-height: 4rem !important;
+                align-items: center !important;
               }
             `}
           </style>
