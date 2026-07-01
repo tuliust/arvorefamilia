@@ -5,6 +5,15 @@ type UserIdRow = {
   autor_id?: string | null;
 };
 
+type RelationshipRow = {
+  pessoa_origem_id?: string | null;
+  pessoa_destino_id?: string | null;
+  tipo_relacionamento?: string | null;
+  subtipo_relacionamento?: string | null;
+  ativo?: boolean | null;
+  data_separacao?: string | null;
+};
+
 export function uniqueUserIds(userIds: Array<string | null | undefined>) {
   return Array.from(new Set(userIds.filter((userId): userId is string => Boolean(userId))));
 }
@@ -62,6 +71,123 @@ export async function listLinkedUserIdsForPessoas(pessoaIds: string[]): Promise<
     },
     {}
   );
+}
+
+async function listRelationshipsForPeople(pessoaIds: string[]) {
+  const ids = Array.from(new Set(pessoaIds.filter(Boolean)));
+  if (ids.length === 0) return [] as RelationshipRow[];
+
+  const { data, error } = await supabase
+    .from('relacionamentos')
+    .select('pessoa_origem_id,pessoa_destino_id,tipo_relacionamento,subtipo_relacionamento,ativo,data_separacao')
+    .or(`pessoa_origem_id.in.(${ids.join(',')}),pessoa_destino_id.in.(${ids.join(',')})`);
+
+  if (error) {
+    console.warn('[Supabase] Não foi possível listar relacionamentos para destinatários próximos:', error.message);
+    return [] as RelationshipRow[];
+  }
+
+  return ((data || []) as RelationshipRow[]).filter((relationship) => relationship.ativo !== false);
+}
+
+function getOtherPersonId(relationship: RelationshipRow, pessoaId: string) {
+  if (relationship.pessoa_origem_id === pessoaId) return relationship.pessoa_destino_id ?? null;
+  if (relationship.pessoa_destino_id === pessoaId) return relationship.pessoa_origem_id ?? null;
+  return null;
+}
+
+function getParentChildIds(relationship: RelationshipRow) {
+  if (relationship.tipo_relacionamento === 'filho') {
+    return {
+      parentId: relationship.pessoa_origem_id ?? null,
+      childId: relationship.pessoa_destino_id ?? null,
+    };
+  }
+
+  if (relationship.tipo_relacionamento === 'pai' || relationship.tipo_relacionamento === 'mae') {
+    return {
+      parentId: relationship.pessoa_destino_id ?? null,
+      childId: relationship.pessoa_origem_id ?? null,
+    };
+  }
+
+  return { parentId: null, childId: null };
+}
+
+function isActiveSpouseRelationship(relationship: RelationshipRow) {
+  if (relationship.tipo_relacionamento !== 'conjuge') return false;
+  if (relationship.ativo === false) return false;
+  if (relationship.data_separacao) return false;
+  return relationship.subtipo_relacionamento !== 'separado';
+}
+
+function collectImmediateFamilyIds(pessoaId: string, relationships: RelationshipRow[]) {
+  const parents = new Set<string>();
+  const siblings = new Set<string>();
+  const spouses = new Set<string>();
+  const children = new Set<string>();
+
+  relationships.forEach((relationship) => {
+    if (relationship.tipo_relacionamento === 'irmao') {
+      const otherId = getOtherPersonId(relationship, pessoaId);
+      if (otherId) siblings.add(otherId);
+      return;
+    }
+
+    if (isActiveSpouseRelationship(relationship)) {
+      const otherId = getOtherPersonId(relationship, pessoaId);
+      if (otherId) spouses.add(otherId);
+      return;
+    }
+
+    const { parentId, childId } = getParentChildIds(relationship);
+    if (!parentId || !childId) return;
+
+    if (childId === pessoaId) parents.add(parentId);
+    if (parentId === pessoaId) children.add(childId);
+  });
+
+  return { parents, siblings, spouses, children };
+}
+
+function collectChildrenOfPeople(peopleIds: Set<string>, relationships: RelationshipRow[]) {
+  const children = new Set<string>();
+
+  relationships.forEach((relationship) => {
+    const { parentId, childId } = getParentChildIds(relationship);
+    if (parentId && childId && peopleIds.has(parentId)) {
+      children.add(childId);
+    }
+  });
+
+  return children;
+}
+
+export async function listCloseFamilyUserIdsForPessoa(params: {
+  pessoaId: string;
+  actorUserId?: string | null;
+}) {
+  const firstLevelRelationships = await listRelationshipsForPeople([params.pessoaId]);
+  const immediate = collectImmediateFamilyIds(params.pessoaId, firstLevelRelationships);
+  const secondLevelSeedIds = [...immediate.children, ...immediate.siblings];
+  const secondLevelRelationships = await listRelationshipsForPeople(secondLevelSeedIds);
+
+  const grandchildren = collectChildrenOfPeople(immediate.children, secondLevelRelationships);
+  const nephewsAndNieces = collectChildrenOfPeople(immediate.siblings, secondLevelRelationships);
+
+  const closePessoaIds = Array.from(new Set([
+    ...immediate.parents,
+    ...immediate.siblings,
+    ...immediate.spouses,
+    ...immediate.children,
+    ...grandchildren,
+    ...nephewsAndNieces,
+  ])).filter((id) => id !== params.pessoaId);
+
+  const linkedUserGroups = await listLinkedUserIdsForPessoas(closePessoaIds);
+  const recipients = Object.values(linkedUserGroups).flat();
+
+  return excludeActor(uniqueUserIds(recipients), params.actorUserId);
 }
 
 async function listPessoaIdsForRelationship(relacionamentoId: string) {
