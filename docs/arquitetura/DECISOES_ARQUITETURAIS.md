@@ -52,6 +52,31 @@ Essa separação evita gravar `pessoas.id` em campos que referenciam `auth.users
 
 A página `/admin/responsaveis` usa `person_responsible_links` para o seletor inline de responsáveis em perfis legados e crianças. As solicitações de administração continuam sendo tratadas pelo fluxo próprio de solicitações e, quando aprovadas, podem gerar vínculo com usuário autenticado.
 
+### Notificações administrativas
+
+A arquitetura separa três camadas de notificações:
+
+- entrega real ao usuário, persistida em `notificacoes_usuario`;
+- preferências individuais, persistidas em `preferencias_notificacao`;
+- administração de catálogo e configuração, persistida em `admin_notification_configurations` e `admin_notification_catalogs`.
+
+Decisão vigente:
+
+- o catálogo administrativo de notificações deve ser editável e persistido no Supabase;
+- `admin_notification_catalogs` guarda snapshot completo em JSONB com frequências, temas, grupos, tipos, templates, automações e sugestões;
+- `admin_notification_configurations` guarda overrides e configurações da tela administrativa;
+- `src/app/constants/adminNotificationCatalog.ts` permanece como fallback/base técnica enquanto a UI ainda termina a migração para consumo integral do catálogo persistido;
+- novas evoluções devem preferir `loadAdminNotificationCatalog()` e serviços correlatos em vez de imports diretos do catálogo base;
+- entregas reais não devem ser confundidas com catálogo; dispatch continua responsável por criar notificações em `notificacoes_usuario`.
+
+Destinatários avançados aceitos:
+
+- usuário do gatilho;
+- usuários específicos;
+- familiares próximos: pai, mãe, irmãos, cônjuge ativo, filhos, netos e sobrinhos.
+
+O primeiro acesso real a `/mapa-familiar` pode gerar notificação interna de boas-vindas, deduplicada por `user_first_map_accesses`.
+
 ## Runtimes defensivos de UI
 
 A aplicação admite componentes de runtime para compatibilidade visual temporária, desde que o escopo seja controlado.
@@ -118,6 +143,7 @@ A área administrativa deve manter rotas protegidas, header reduzido e páginas 
 - `/aprovacoes` e `/admin/aprovacoes` concentram solicitações pendentes.
 - `/admin/home` concentra configurações públicas salváveis.
 - `/admin/responsaveis` concentra responsáveis por perfis legados e crianças.
+- `/admin/notificacoes` concentra visão geral, configuração, preferências, automações, métricas e diagnóstico de notificações.
 - `/admin/gestao-conteudo-pessoas` concentra textos automáticos, visibilidade e conteúdos de pessoas.
 
 ## Decisões de documentação
@@ -125,6 +151,7 @@ A área administrativa deve manter rotas protegidas, header reduzido e páginas 
 - Documentos datados de rodada não são contrato operacional.
 - Histórico técnico fragmentado fica em `historico/LEGADO_TECNICO.md`.
 - Funcionalidades menores ficam em `funcionalidades/FUNCIONALIDADES_COMPLEMENTARES.md`.
+- Funcionalidades com contrato técnico extenso podem ganhar documento próprio em `funcionalidades/`, como `NOTIFICACOES_ADMIN.md`.
 - `docs/README.md` e `docs/INVENTARIO_TECNICO.md` são as fontes de navegação documental.
 
 ## Regra de atualização
