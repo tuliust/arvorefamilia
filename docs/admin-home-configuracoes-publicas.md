@@ -1,7 +1,7 @@
 # /admin/home — configurações visuais e páginas públicas
 
-> Última revisão: 2026-06-27  
-> Escopo: `/admin/home`, configurações públicas, publicação, rascunho, agendamento, auditoria e salvamento por abas.  
+> Última revisão: 2026-07-01
+> Escopo: `/admin/home`, configurações públicas, publicação, rascunho, agendamento, auditoria e salvamento por abas.
 > Status: canônico.
 
 ## Objetivo
@@ -201,6 +201,27 @@ Secrets necessários no GitHub:
 |---|---|
 | `SITE_SETTINGS_PUBLISH_URL` | `https://<project-ref>.functions.supabase.co/publish-scheduled-site-settings` |
 | `SITE_SETTINGS_CRON_SECRET` | Mesmo valor configurado em `SITE_SETTINGS_CRON_SECRET` no Supabase. |
+
+
+## Cache público local
+
+`useSiteVisualSettings.ts` usa cache local best-effort para reduzir flicker visual e preservar o último tema público conhecido quando a leitura remota falha.
+
+Contrato:
+
+- chave de cache: `arvorefamilia:site-visual-settings:public`;
+- o hook inicializa o estado com o cache quando disponível e válido;
+- após leitura bem-sucedida de `getSiteVisualSettings()`, o cache é atualizado com a versão retornada pelo Supabase;
+- quando a leitura remota falha, o hook retorna o cache válido; se não houver cache, retorna `DEFAULT_SITE_VISUAL_SETTINGS`;
+- falha de `localStorage`, JSON inválido ou ambiente sem `window` não podem bloquear renderização;
+- o cache não substitui o Supabase como fonte de verdade e não deve ser usado para gravação administrativa.
+
+QA específico:
+
+1. Abrir página pública com cache existente e confirmar que o tema aparece antes da resposta remota.
+2. Simular erro de leitura remota e confirmar fallback para o cache.
+3. Remover cache e confirmar fallback para `DEFAULT_SITE_VISUAL_SETTINGS`.
+4. Publicar alteração em `/admin/home`, recarregar página pública e confirmar atualização posterior do cache.
 
 ## QA mínimo
 

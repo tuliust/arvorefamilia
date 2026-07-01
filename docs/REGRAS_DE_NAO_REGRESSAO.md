@@ -60,6 +60,7 @@
 - Backdrop/blur parcial deve ficar atrás do painel ativo e nunca cobrir header, toolbar, cards, CTA ou navegação inferior.
 - Backdrop/blur parcial deve terminar no topo real da navegação inferior, sem faixa desfocada acima do menu inferior.
 - O modo imersivo é exclusivo do mapa completo e nunca pode cobrir a camada do mapa completo nem o botão `X`.
+- No modo imersivo, header, toolbar, tray, conteúdo e navegação inferior ficam atrás do blur; mapa completo e botão `X` ficam acima.
 - Em `Formato`, `Mapa da família` e `Gerações`, o blur parcial deve começar abaixo do container completo do painel, incluindo botões inferiores.
 - O fundo branco de `Mapa da família` e `Gerações` deve envolver cards e CTA, sem corte abaixo de `Exibir mapa completo`.
 - `Tios Paternos` e `Tios Maternos` devem exibir inicialmente no máximo 8 cards no mobile quando houver muitos registros.

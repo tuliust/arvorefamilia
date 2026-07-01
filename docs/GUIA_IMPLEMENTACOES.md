@@ -90,6 +90,7 @@ Componentes relevantes:
 Scripts relevantes antes de alterar mapa, mobile, curiosidades, tutorial ou painel desktop:
 
 - `mobileFamilyTreeMutationPerformanceGuard.ts`
+- `visualPatchB.ts`
 - `firstLoginMobileTutorialFixes.ts`
 - `mobileCuriositiesNavigationFix.ts`
 - `mobileTreePanelViewportFix.ts`
@@ -116,9 +117,14 @@ Scripts relevantes antes de alterar mapa, mobile, curiosidades, tutorial ou pain
 - `mobileFamilyMapExtendedSpouseCards.ts`
 - `mobileFamilyMapFilterButtonsBehaviorFix.ts`
 - `mobileFamilyMapFullOverview.ts`
+- `mobileGenerationLineFullOverview.ts`
 - `mobileFamilyMapFullOverviewConnectorFix.ts`
 - `mobileFamilyMapFullOverviewButtonGuard.ts`
-- `mobileMapToolbarBackdropLayerFix.ts`
+
+Arquivos de transição neutralizados:
+
+- `mobileMapToolbarBackdropLayerFix.ts`, `mobileMapPanelRefinements.ts`, `mobileFamilyMapFullPanelStyleFix.ts` e `mobileFamilyMapFullOverviewButtonGuard.ts` não devem voltar a concentrar regras de backdrop/tray.
+- `visualPatchA.ts` não é carregado e deve ser removido ou justificado em limpeza técnica futura.
 
 Handlers de `touchmove`/`touchend` devem mapear a ordem de captura (`window capture` antes de `document capture`) antes de chamar `preventDefault()` ou `stopImmediatePropagation()`. Scroll interno de listas deve ser avaliado antes de bloquear o gesto para navegação por swipe.
 

@@ -1,7 +1,7 @@
 # Inventário técnico
 
 > Última revisão: 2026-07-01
-> Escopo: rotas, módulos, documentos finais e referências técnicas preservadas após limpeza documental.
+> Escopo: rotas, módulos, documentos finais e referências técnicas preservadas após limpeza documental e ajustes mobile/admin de 2026-07-01.
 > Status: canônico.
 
 ## Stack
@@ -140,12 +140,14 @@ Notas técnicas:
 |---|---|
 | Painel administrativo de notificações | `src/app/pages/admin/AdminNotificacoes.tsx` |
 | Aba de configuração, conteúdo, canais, destinatários e variáveis | `src/app/components/admin/notifications/AdminNotificationConfiguration.tsx` |
+| Formatação humana de labels, variáveis e slugs | `src/app/components/admin/notifications/adminNotificationFormatters.ts` |
 | Catálogo base/fallback de tipos, templates, automações, frequências e grupos | `src/app/constants/adminNotificationCatalog.ts` |
 | Persistência de configuração e catálogo completo | `src/app/services/adminNotificationConfigurationService.ts` |
 | Resolução de destinatários e familiares próximos | `src/app/services/notificationRecipientsService.ts` |
 | Primeiro acesso real ao mapa | `src/app/services/firstMapWelcomeNotificationService.ts`, `src/app/components/TreeAccessRoute.tsx` |
 | Dispatch e persistência de notificações reais | `src/app/services/notificationDispatchService.ts`, `src/app/services/notificationAdminService.ts`, `src/app/services/notificationScheduledService.ts` |
 | Header/dropdown de notificações | `src/app/components/layout/HeaderNotificationsDropdown.tsx` |
+| Campo de texto com ref para inserção de variável no cursor | `src/app/components/ui/textarea.tsx` |
 
 Tabelas Supabase relacionadas:
 
@@ -154,6 +156,29 @@ Tabelas Supabase relacionadas:
 - `admin_notification_configurations`, para overrides/configurações da UI administrativa;
 - `admin_notification_catalogs`, para snapshot editável do catálogo completo;
 - `user_first_map_accesses`, para deduplicação do gatilho de boas-vindas ao acessar `/mapa-familiar`.
+
+Migrations relacionadas:
+
+- `supabase/migrations/20260701120000_persist_admin_notification_config_and_first_map_access.sql`;
+- `supabase/migrations/20260701143000_persist_full_admin_notification_catalog.sql`.
+
+## Configurações públicas e tema
+
+| Área | Arquivos principais |
+|---|---|
+| Admin de configurações públicas | `src/app/pages/admin/AdminHomeSettings.tsx`, `src/app/pages/admin/AdminHomeSettingsWithSaveBar.tsx` |
+| Serviço de leitura, salvamento, publicação, rascunho e diff | `src/app/services/siteVisualSettingsService.ts` |
+| Auditoria de configurações visuais | `src/app/services/siteVisualSettingsAuditService.ts`, `src/app/services/siteVisualSettingsAuditDiffService.ts` |
+| Consumo público do tema | `src/app/hooks/useSiteVisualSettings.ts` |
+| Frame público temático | `src/app/components/public/PublicThemeFrame.tsx` |
+| Páginas públicas tematizadas | `src/app/pages/Entrar.tsx`, `src/app/pages/Duvidas.tsx`, `src/app/pages/legal/PublicLegalDocumentPage.tsx` |
+
+Notas técnicas:
+
+- `useSiteVisualSettings.ts` pode usar cache best-effort em `localStorage` para reduzir flicker e servir fallback quando a leitura remota falhar;
+- a fonte definitiva permanece `site_visual_settings`;
+- cache local não substitui auditoria, publicação, rascunho ou agendamento;
+- alterações dessa frente devem ser refletidas em `admin-home-configuracoes-publicas.md`.
 
 ## Runtimes e wrappers relevantes
 
@@ -168,19 +193,18 @@ Tabelas Supabase relacionadas:
 - Wrappers ativos: `AdminDashboardWithTweaks`, `AdminHomeSettingsWithSaveBar`, `MeusDadosWithInlineProfileBio`, `MeusVinculosWithProfileBio` e `MeusVinculosMobileShortcutsPage`.
 - Componentes auxiliares do primeiro acesso: `MeusVinculosPetEditorPortal`, `RelationshipGroupPanel`, `RelativeCard`, `RelationshipOverview` e `ProfileControlRequestDialog`.
 
-### Runtimes de mapa mobile estabilizados
+## Mapa mobile: componentes React vigentes
 
 | Arquivo | Responsabilidade |
 |---|---|
-| `src/app/components/FamilyTree/MobileFamilyMapBackdrop.tsx` | Backdrop React parcial/imersivo dos painéis mobile de mapa; calcula o limite inferior do blur parcial pelo topo real da navegação inferior. |
+| `src/app/pages/home/HomeMobileNav.tsx` | Centraliza estado dos botões `Formato`, `Cor`, `Filtros`, `Mapa` e `+`; renderiza toolbar, trays, backdrop parcial/imersivo e camada de mapa completo. |
+| `src/app/components/FamilyTree/MobileFamilyMapToolbar.tsx` | Toolbar mobile de mapa; o botão `Mapa` abre visão geral, não zoom direto. |
+| `src/app/components/FamilyTree/MobileFamilyMapBackdrop.tsx` | Backdrop React parcial/imersivo; no modo parcial calcula limite inferior pelo topo real da navegação inferior e no modo imersivo cobre a shell atrás da camada ativa. |
 | `src/app/components/FamilyTree/MobileFamilyMapContextTray.tsx` | Tray contextual React da toolbar; em `/linha-geracional`, renderiza atalhos `GER. 1` a `GER. 6`, contadores e CTA de mapa completo. |
 | `src/app/components/FamilyTree/MobileFamilyMapFullLayer.tsx` | Camada React de mapa completo acima do blur imersivo, com botão `X`, safe-area e área de toque confortável. |
-| `src/mobileMapPanelRefinements.ts` | Backdrop, overlay seguro de gerações e refinamentos de gestos/camadas dos mapas mobile enquanto houver compatibilidade legada. |
-| `src/mobileMapToolbarBackdropLayerFix.ts` | Script de transição para limites superior/inferior do blur; não deve reintroduzir seletores legados como contrato vigente. |
-| `src/mobileFamilyMapFullOverviewButtonGuard.ts` | Guarda ativações do mapa completo de `/mapa-familiar` e carrega side effects relacionados. |
-| `src/mobileFamilyMapFullOverview.ts` | Renderiza o mapa completo mobile de `/mapa-familiar` quando o fluxo usar runtime de compatibilidade. |
-| `src/mobileFamilyMapFullOverviewConnectorFix.ts` | Refinamentos de conectores do mapa completo mobile. |
-| `src/mobileGenerationLineFullOverview.ts` | Renderiza a visualização completa de `/linha-geracional` e preserva pan/zoom após gestos. |
+| `src/mobileFamilyMapFullOverview.ts` | Runtime de compatibilidade do mapa completo mobile de `/mapa-familiar`, quando usado pelo fluxo de renderização vigente. |
+| `src/mobileGenerationLineFullOverview.ts` | Runtime de compatibilidade da visualização completa de `/linha-geracional`, preservando pan/zoom após gestos. |
+| `src/mobileFamilyMapFullOverviewConnectorFix.ts` | Refinamentos de conectores do mapa completo mobile enquanto a regra não estiver totalmente absorvida pelo modelo React. |
 | `src/mobileFamilyMapFilterButtonsBehaviorFix.ts` | Isola comportamento de filtros mobile, incluindo regra de cônjuges colaterais na linha geracional. |
 
 Scripts defensivos devem ser tratados como camada de transição. Quando o comportamento estiver estabilizado em componente React, a documentação canônica deve privilegiar o componente de origem.
@@ -190,6 +214,7 @@ Scripts defensivos devem ser tratados como camada de transição. Quando o compo
 Além de `src/main.tsx`, `index.html` carrega os seguintes scripts defensivos:
 
 - `src/mobileFamilyTreeMutationPerformanceGuard.ts`
+- `src/visualPatchB.ts`
 - `src/firstLoginMobileTutorialFixes.ts`
 - `src/mobileCuriositiesNavigationFix.ts`
 - `src/mobileTreePanelViewportFix.ts`
@@ -216,11 +241,27 @@ Além de `src/main.tsx`, `index.html` carrega os seguintes scripts defensivos:
 - `src/mobileFamilyMapExtendedSpouseCards.ts`
 - `src/mobileFamilyMapFilterButtonsBehaviorFix.ts`
 - `src/mobileFamilyMapFullOverview.ts`
+- `src/mobileGenerationLineFullOverview.ts`
 - `src/mobileFamilyMapFullOverviewConnectorFix.ts`
 - `src/mobileFamilyMapFullOverviewButtonGuard.ts`
-- `src/mobileMapToolbarBackdropLayerFix.ts`
 
-Scripts defensivos devem ser tratados como camada de transição, sempre isolados por rota e breakpoint. Quando um comportamento estabilizar, a preferência é migrar para o componente React de origem.
+Observações:
+
+- `src/mobileMapToolbarBackdropLayerFix.ts` não deve ser listado como script ativo se não estiver carregado por `index.html`.
+- `src/mobileMapPanelRefinements.ts` não deve ser listado como script ativo se não estiver carregado por `index.html`.
+- `src/mobileFamilyMapFullPanelStyleFix.ts` não deve ser listado como script ativo se não estiver carregado por `index.html`.
+- `src/visualPatchA.ts`, quando existir sem carregamento em `index.html`, deve ser tratado como resíduo técnico a remover ou justificar em outra frente.
+
+## Scripts neutralizados, removidos ou absorvidos
+
+| Arquivo | Situação documental |
+|---|---|
+| `src/mobileMapPanelRefinements.ts` | Não é contrato vigente se estiver vazio ou não carregado; regras de backdrop/tray devem ficar nos componentes React. |
+| `src/mobileMapToolbarBackdropLayerFix.ts` | Não é contrato vigente se estiver vazio ou não carregado; seletores legados de backdrop não devem ser reintroduzidos. |
+| `src/mobileFamilyMapFullPanelStyleFix.ts` | Não é contrato vigente se estiver vazio ou não carregado; estilos do mapa completo devem estar no componente/camada atual. |
+| `src/mobileFamilyMapFullOverviewButtonGuard.ts` | Se estiver carregado mas vazio, é compatibilidade/no-op e deve ser removido quando seguro. |
+| `src/desktopTreeVisualizationPanelTextFix.ts` | Não deve ser listado como script ativo quando a correção textual já estiver aplicada nos componentes de origem. |
+| `src/visualPatchA.ts` | Se existir apenas como teste/resíduo e não for carregado, deve ser removido em limpeza técnica futura. |
 
 ## Exportação e impressão da árvore
 
@@ -246,3 +287,5 @@ Contrato técnico atual:
 A documentação operacional não deve manter arquivos de rodada, baseline antigo ou QA datado quando o conteúdo couber em documentos canônicos. Nesta auditoria, `docs/operacao/QA_NAO_REGRESSAO_MAPAS_MOBILE_POS_AJUSTES_2026_06_21.md` foi removido e seus pontos úteis foram consolidados em `QA_MANUAL.md`.
 
 O runtime `src/desktopTreeVisualizationPanelTextFix.ts` não deve ser listado como script ativo quando a correção textual já estiver aplicada nos componentes de origem.
+
+Arquivos temporários, patches de teste e módulos sem carregamento ativo devem ser removidos em limpeza técnica posterior, ou documentados explicitamente como pendência quando houver motivo para mantê-los no repositório.

@@ -143,6 +143,7 @@ Validar em 320px, 375px, 390px e 430px, preferencialmente em iPhone/Safari real 
 #### `Exibir mapa completo` em `/mapa-familiar`
 
 - `Exibir mapa completo` deve abrir uma camada completa acima do blur imersivo.
+- O blur imersivo deve cobrir header, toolbar, tray, conteúdo e navegação inferior atrás do mapa completo.
 - A árvore completa não pode ficar por baixo do backdrop/blur.
 - O botão `X` deve aparecer no canto superior direito, respeitando `safe-area`.
 - O botão `X` deve ter área de toque confortável e ficar acima do palco do mapa.
@@ -163,6 +164,7 @@ Validar em 320px, 375px, 390px e 430px, preferencialmente em iPhone/Safari real 
 - O fundo branco deve envolver a grade e o botão `Exibir mapa completo`.
 - O blur deve começar abaixo do botão inferior do container.
 - `Exibir mapa completo` deve abrir as colunas geracionais completas acima do blur imersivo.
+- O blur imersivo deve cobrir header, toolbar, tray, conteúdo e navegação inferior atrás da visualização completa.
 - O botão `X` deve fechar a camada completa sem deixar blur preso.
 - Pan com um dedo deve mover a visualização completa.
 - Zoom por pinça deve alterar a escala.

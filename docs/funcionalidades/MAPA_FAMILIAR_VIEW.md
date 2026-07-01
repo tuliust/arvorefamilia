@@ -98,6 +98,14 @@ Contrato visual:
 - O backdrop parcial deve calcular o limite inferior pelo topo real da navegação inferior (`nav[data-tree-export-ignore="true"]`) e usar `safe-area` apenas como fallback.
 - O backdrop parcial não deve deixar faixa desfocada acima do menu inferior nem cobrir a área clicável da navegação.
 - O modo imersivo é reservado ao mapa completo: ele cobre a shell da página atrás do mapa, enquanto a camada do mapa completo e o botão `X` permanecem acima do blur.
+
+### Camadas mobile: tray parcial e modo imersivo
+
+- `Formato`, `Cor`, `Filtros` e `Mapa` em modo visão geral usam tray contextual e blur parcial.
+- No blur parcial, header, toolbar, tray, cards, CTA e navegação inferior permanecem acima da camada desfocada.
+- `Exibir mapa completo` e o painel do botão `+` usam blur imersivo.
+- No blur imersivo, a shell da página fica atrás do blur; apenas a camada principal aberta e seus controles próprios ficam acima dele.
+
 - O painel aberto pelo botão `+` deve aparecer na camada mais alta da página, acima de header, toolbar, notificações, busca e conteúdo da árvore.
 - O painel de visualização deve reconhecer corretamente os familiares da pessoa ativa: pais, cônjuges, irmãos, filhos, pets, avós, bisavós, tataravós, tios, primos e sobrinhos.
 - Os itens expandidos do painel devem exibir primeiro e segundo nome completos, evitando truncamentos como duas letras ou reticências prematuras.
@@ -149,7 +157,7 @@ Contrato visual e funcional:
 
 ### Mapa completo mobile
 
-O botão `Exibir mapa completo` abre uma camada própria de mapa completo no mobile. Essa camada fica acima do blur imersivo e da shell da página.
+O botão `Exibir mapa completo` abre uma camada própria de mapa completo no mobile. Essa camada fica acima do blur imersivo e da shell da página; o blur imersivo cobre tudo que fica atrás do mapa, incluindo header, toolbar, tray, conteúdo e navegação inferior.
 
 Contrato atual:
 
@@ -200,7 +208,7 @@ O painel acionado por `Mapa` em `/linha-geracional` deve ser isolado da rota `/m
 
 Contrato:
 
-- o runtime específico da linha geracional só deve ser montado em `/linha-geracional`;
+- o tray/fluxo específico da linha geracional só deve ser montado em `/linha-geracional`;
 - header, toolbar superior e navegação inferior devem permanecer visíveis durante o painel parcial;
 - o painel de gerações deve ficar acima do backdrop/blur, sem ser escurecido ou desfocado;
 - o fundo branco do painel deve envolver toda a grade de gerações e o CTA inferior;

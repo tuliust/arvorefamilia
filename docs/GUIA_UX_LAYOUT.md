@@ -83,7 +83,7 @@ Contrato visual da impressão:
 - Se uma área inferior não tiver conteúdo, o gesto vertical para baixo deve ser bloqueado.
 - O modal de dica desktop/mobile deve respeitar chave de sessão e não reaparecer continuamente.
 
-#### Modal `Mapa da família`
+#### Tray `Mapa da família`
 
 Os botões da visão geral mobile devem seguir contrato visual próprio:
 
@@ -106,12 +106,13 @@ Os botões da visão geral mobile devem seguir contrato visual próprio:
 #### Mapa completo mobile
 
 - A visualização completa é uma camada própria acima da shell mobile e do blur imersivo.
+- O blur imersivo cobre tudo que fica atrás do mapa completo, incluindo header, toolbar, tray, conteúdo e navegação inferior.
 - O palco do mapa deve permitir pan com um dedo e zoom por pinça.
 - Após pan ou pinch, o `transform` aplicado pelo usuário deve ser preservado e não pode voltar automaticamente ao enquadramento inicial.
 - A ação `Reenquadrar`, quando disponível, é a única forma explícita de recalcular escala e posição sem reconstrução do stage.
 - Cards e grupos devem seguir uma estrutura única para evitar diferenças visuais entre grupos clonados.
 - Conectores devem tocar as bordas dos grupos/cards e não podem atravessar badges ou títulos.
-- Backdrop/blur nunca pode ficar acima da árvore completa.
+- Backdrop/blur imersivo nunca pode ficar acima da árvore completa nem do botão `X`.
 - O botão `X` deve ficar no canto superior direito, respeitar `safe-area`, ter área de toque confortável e ficar visualmente acima do mapa.
 - Fechar pelo `X` deve restaurar a shell mobile sem deixar blur, overlay ou tray preso.
 

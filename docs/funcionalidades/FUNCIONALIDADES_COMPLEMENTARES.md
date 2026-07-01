@@ -434,6 +434,31 @@ Regras de relacionamentos:
 - cards de filiação devem exibir `Pai`, `Mãe` ou `Filho` com capitalização correta;
 - classificações legadas `sangue` e `adotivo` não devem aparecer na interface de listagem nem em aprovações, embora o campo técnico possa continuar existindo para compatibilidade futura.
 
+
+### `/admin/notificacoes` — aba Configuração
+
+A aba `Configuração` permite ajustar o comportamento administrativo do catálogo de notificações sem alterar diretamente código de constantes.
+
+Regras atuais:
+
+- deve haver botão `Salvar` para persistir frequência, conteúdo, canais, destinatários, status, variáveis e tipos personalizados;
+- deve haver botão `Novo tipo` para criar definição administrativa customizada com template inicial;
+- cada tipo deve permitir status `Ativo` ou `Inativo`;
+- o campo `Texto curto` não deve ser exibido nessa aba quando o contrato visual pedir foco em título, texto e CTA;
+- variáveis customizadas podem ser criadas pelo botão `+` e normalizadas para o formato `{{nome_da_variavel}}`;
+- clicar em uma variável deve inserir o token no cursor do campo ativo ou substituir a seleção atual;
+- `{{nome}}` deve inserir `{{nome_curto}}` e `{{nome_autor}}` deve inserir `{{nome_autor_curto}}` para preservar mensagens compactas;
+- `Textarea` precisa aceitar `ref` para manter foco, seleção e reposicionamento do cursor;
+- falhas de carregamento ou salvamento devem usar `toast`/mensagem não bloqueante e não quebrar as demais abas.
+
+Não regressão mínima:
+
+- carregar configuração persistida sem duplicar tipos customizados;
+- salvar alterações e recarregar a página confirmando persistência;
+- inserir variável no meio do texto, no fim do texto e substituindo uma seleção;
+- criar novo tipo e confirmar que ele aparece no seletor;
+- alternar `Ativo/Inativo` sem perder conteúdo editado.
+
 ## Regra de manutenção
 
 Novas funcionalidades pequenas devem ser adicionadas aqui, salvo quando tiverem contrato técnico extenso. Evitar recriar arquivos individuais para funcionalidades de apoio.

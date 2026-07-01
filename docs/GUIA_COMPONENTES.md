@@ -63,6 +63,7 @@
 Esses scripts devem ser conferidos antes de alterar mobile, mapa familiar, curiosidades, tutorial ou painel desktop:
 
 - `mobileFamilyTreeMutationPerformanceGuard.ts`
+- `visualPatchB.ts`
 - `firstLoginMobileTutorialFixes.ts`
 - `mobileCuriositiesNavigationFix.ts`
 - `mobileTreePanelViewportFix.ts`
@@ -89,9 +90,15 @@ Esses scripts devem ser conferidos antes de alterar mobile, mapa familiar, curio
 - `mobileFamilyMapExtendedSpouseCards.ts`
 - `mobileFamilyMapFilterButtonsBehaviorFix.ts`
 - `mobileFamilyMapFullOverview.ts`
+- `mobileGenerationLineFullOverview.ts`
 - `mobileFamilyMapFullOverviewConnectorFix.ts`
 - `mobileFamilyMapFullOverviewButtonGuard.ts`
-- `mobileMapToolbarBackdropLayerFix.ts`
+
+Scripts e seletores absorvidos pela implementação React:
+
+- `mobileMapToolbarBackdropLayerFix.ts`, `mobileMapPanelRefinements.ts` e `mobileFamilyMapFullPanelStyleFix.ts` permanecem como arquivos neutralizados quando existirem no código, mas não são contratos ativos.
+- `mobileFamilyMapFullOverviewButtonGuard.ts` é carregado por compatibilidade e atualmente não deve concentrar regra de camada.
+- `visualPatchA.ts` não é carregado por `index.html` e não é contrato operacional.
 
 Regras:
 
