@@ -44,6 +44,17 @@ function ensureStyles() {
         padding-bottom: calc(env(safe-area-inset-bottom,0px) + 7rem) !important;
       }
 
+      [role="dialog"][aria-label="Filtros do mapa familiar"] {
+        box-sizing: border-box !important;
+        border: 1px solid rgba(226, 232, 240, 0.96) !important;
+        border-radius: 1.25rem !important;
+        background: rgba(255, 255, 255, 0.96) !important;
+        box-shadow: 0 14px 34px rgba(15, 23, 42, 0.14) !important;
+        padding: 0.5rem !important;
+        backdrop-filter: blur(10px) !important;
+        -webkit-backdrop-filter: blur(10px) !important;
+      }
+
       #mobile-family-map-full-overview .mobile-family-full-map-viewport,
       #mobile-family-map-full-overview .mobile-family-full-map-stage,
       #mobile-generation-line-full-overview .mobile-generation-line-full-map-viewport,
@@ -58,11 +69,12 @@ function ensureStyles() {
         box-sizing: border-box !important;
         display: flex !important;
         flex-direction: column !important;
-        gap: 0.72rem !important;
+        gap: 0.62rem !important;
         border: 1px solid rgba(203, 213, 225, 0.95) !important;
         border-radius: 1.45rem !important;
         background: rgba(255, 255, 255, 0.98) !important;
         box-shadow: 0 14px 34px rgba(15, 23, 42, 0.14) !important;
+        overflow: hidden !important;
         padding: 0.8rem !important;
         pointer-events: auto !important;
       }
@@ -96,14 +108,14 @@ function ensureStyles() {
         display: grid !important;
         grid-template-columns: repeat(6, minmax(0, 1fr)) !important;
         gap: 0.38rem !important;
-        min-height: 8.9rem !important;
+        min-height: 8.35rem !important;
       }
 
       #${OVERLAY_ID} [data-generation-overlay-card="true"] {
         appearance: none !important;
         display: flex !important;
         min-width: 0 !important;
-        min-height: 8.9rem !important;
+        min-height: 8.35rem !important;
         flex-direction: column !important;
         align-items: center !important;
         justify-content: center !important;
@@ -112,7 +124,7 @@ function ensureStyles() {
         background: #fff !important;
         color: rgb(15, 23, 42) !important;
         box-shadow: 0 10px 24px rgba(15, 23, 42, 0.10) !important;
-        padding: 0.48rem 0.16rem !important;
+        padding: 0.46rem 0.14rem !important;
         text-align: center !important;
         transition: transform 120ms ease, border-color 120ms ease, box-shadow 120ms ease !important;
       }
@@ -128,11 +140,11 @@ function ensureStyles() {
 
       #${OVERLAY_ID} [data-generation-overlay-number-shell="true"] {
         display: flex !important;
-        width: 3.15rem !important;
-        height: 3.15rem !important;
+        width: 2.76rem !important;
+        height: 2.76rem !important;
         align-items: center !important;
         justify-content: center !important;
-        border-radius: 1rem !important;
+        border-radius: 0.92rem !important;
         background: rgb(241, 245, 249) !important;
         color: rgb(15, 23, 42) !important;
         box-shadow: 0 8px 18px rgba(15, 23, 42, 0.10) !important;
@@ -140,9 +152,9 @@ function ensureStyles() {
 
       #${OVERLAY_ID} [data-generation-overlay-number="true"] {
         display: block !important;
-        font-size: 1.85rem !important;
+        font-size: 1.48rem !important;
         font-weight: 950 !important;
-        letter-spacing: -0.06em !important;
+        letter-spacing: -0.055em !important;
         line-height: 0.92 !important;
       }
 
@@ -234,8 +246,15 @@ function renderGenerationOverlay(panel: HTMLElement) {
   overlay.style.setProperty('left', `${Math.round(rect.left)}px`);
   overlay.style.setProperty('top', `${Math.round(rect.top)}px`);
   overlay.style.setProperty('width', `${Math.round(rect.width)}px`);
-  overlay.style.setProperty('height', `${Math.round(rect.height)}px`);
+  overlay.style.setProperty('height', 'auto');
   overlay.style.setProperty('z-index', '10002');
+
+  const safeBottom = 106;
+  const minHeight = 304;
+  const availableHeight = Math.max(minHeight, window.innerHeight - rect.top - safeBottom);
+  const contentHeight = Math.ceil(overlay.scrollHeight || minHeight);
+  const nextHeight = Math.min(Math.max(rect.height, contentHeight, minHeight), availableHeight);
+  overlay.style.setProperty('height', `${Math.round(nextHeight)}px`);
 }
 
 function refineGenerationOverview() {
