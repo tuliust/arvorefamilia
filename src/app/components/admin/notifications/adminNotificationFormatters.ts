@@ -41,6 +41,8 @@ const LABELS: Record<string, string> = {
   shortmessage: 'Texto curto',
   longmessage: 'Texto',
   cta: 'CTA',
+  nome_curto: 'Nome curto',
+  nome_autor_curto: 'Nome do autor curto',
   ativo: 'Ativo',
   verificado: 'Verificado',
   'não configurado': 'Não configurado',

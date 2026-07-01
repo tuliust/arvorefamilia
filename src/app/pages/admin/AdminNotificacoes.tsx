@@ -25,6 +25,7 @@ import { AdminNotificationTemplates } from '../../components/admin/notifications
 import { AdminNotificationTypesCatalog } from '../../components/admin/notifications/AdminNotificationTypesCatalog';
 import {
   AdminNotificationConfiguration,
+  AdminNotificationCustomDefinition,
   AdminNotificationContentOverride,
 } from '../../components/admin/notifications/AdminNotificationConfiguration';
 import { AdminNotificationMetrics } from '../../components/admin/notifications/AdminNotificationMetrics';
@@ -92,6 +93,8 @@ type StoredAdminNotificationConfig = {
   contentOverrides?: Record<string, AdminNotificationContentOverride>;
   channelOverrides?: Record<string, TipoCanalNotificacao[]>;
   recipientOverrides?: Record<string, string[]>;
+  variableOverrides?: Record<string, string[]>;
+  customDefinitions?: AdminNotificationCustomDefinition[];
 };
 
 function formatDate(value?: string) {
@@ -214,9 +217,11 @@ export function AdminNotificacoes() {
   const [contentOverrides, setContentOverrides] = useState<Record<string, AdminNotificationContentOverride>>(storedConfig.contentOverrides || {});
   const [channelOverrides, setChannelOverrides] = useState<Record<string, TipoCanalNotificacao[]>>(storedConfig.channelOverrides || {});
   const [recipientOverrides, setRecipientOverrides] = useState<Record<string, string[]>>(storedConfig.recipientOverrides || {});
+  const [variableOverrides, setVariableOverrides] = useState<Record<string, string[]>>(storedConfig.variableOverrides || {});
+  const [customDefinitions, setCustomDefinitions] = useState<AdminNotificationCustomDefinition[]>(storedConfig.customDefinitions || []);
   const [pendingConfirmAction, setPendingConfirmAction] = useState<NotificationConfirmAction | null>(null);
 
-  useEffect(() => {
+  const saveAdminNotificationConfig = () => {
     saveStoredAdminConfig({
       frequencyOverrides,
       themeOverrides,
@@ -224,8 +229,11 @@ export function AdminNotificacoes() {
       contentOverrides,
       channelOverrides,
       recipientOverrides,
+      variableOverrides,
+      customDefinitions,
     });
-  }, [activeOverrides, channelOverrides, contentOverrides, frequencyOverrides, recipientOverrides, themeOverrides]);
+    toast.success('Configurações de notificação salvas.');
+  };
 
   const loadDiagnostics = async () => {
     try {
@@ -427,6 +435,16 @@ export function AdminNotificacoes() {
     }
     await handleRunManualRoutine();
   };
+
+  const notificationTypesForConfiguration = useMemo(
+    () => [...ADMIN_NOTIFICATION_TYPES, ...customDefinitions.map((definition) => definition.type)],
+    [customDefinitions],
+  );
+
+  const notificationTemplatesForConfiguration = useMemo(
+    () => [...ADMIN_NOTIFICATION_TEMPLATES, ...customDefinitions.map((definition) => definition.template)],
+    [customDefinitions],
+  );
 
   const profileMap = useMemo(() => new Map(profiles.map((profile) => [profile.id, profile])), [profiles]);
 
@@ -712,17 +730,24 @@ export function AdminNotificacoes() {
 
           <TabsContent value="configuracao">
             <AdminNotificationConfiguration
-              types={ADMIN_NOTIFICATION_TYPES}
-              templates={ADMIN_NOTIFICATION_TEMPLATES}
+              types={notificationTypesForConfiguration}
+              templates={notificationTemplatesForConfiguration}
               recipientGroups={ADMIN_NOTIFICATION_RECIPIENT_GROUPS}
               frequencyOverrides={frequencyOverrides}
               contentOverrides={contentOverrides}
               channelOverrides={channelOverrides}
               recipientOverrides={recipientOverrides}
+              activeOverrides={activeOverrides}
+              variableOverrides={variableOverrides}
+              customTypeCount={customDefinitions.length}
               onFrequencyChange={(typeId, frequency) => setFrequencyOverrides((current) => ({ ...current, [typeId]: frequency }))}
               onContentChange={(templateId, content) => setContentOverrides((current) => ({ ...current, [templateId]: content }))}
               onChannelsChange={(typeId, channels) => setChannelOverrides((current) => ({ ...current, [typeId]: channels }))}
               onRecipientsChange={(typeId, recipients) => setRecipientOverrides((current) => ({ ...current, [typeId]: recipients }))}
+              onActiveChange={(typeId, active) => setActiveOverrides((current) => ({ ...current, [typeId]: active }))}
+              onVariablesChange={(templateId, variables) => setVariableOverrides((current) => ({ ...current, [templateId]: variables }))}
+              onCreateType={(definition) => setCustomDefinitions((current) => [...current, definition])}
+              onSave={saveAdminNotificationConfig}
             />
           </TabsContent>
 
