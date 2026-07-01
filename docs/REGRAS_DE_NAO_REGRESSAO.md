@@ -1,6 +1,6 @@
 # Regras de não regressão
 
-> Última revisão: 2026-06-30
+> Última revisão: 2026-07-01
 > Escopo: contratos que não devem ser quebrados em novas alterações.
 > Status: canônico.
 
@@ -137,22 +137,41 @@
 - O toggle `Vivo/Falecido` no mobile deve permanecer compacto.
 - A tela final do questionário `Sobre Mim` deve exibir `Seu Perfil`.
 - Mini Bio e Curiosidades devem ser editáveis em `/meus-dados`, não em `/meus-vinculos`.
-- `Voltar`, `Pular Tudo` e `Avançar` devem ficar na mesma linha no questionário mobile.
+- Nas etapas intermediárias do questionário mobile, `Voltar`, `Pular Tudo` e `Avançar` devem ficar na mesma linha quando houver espaço.
+- `Voltar` e `Avançar` podem ser icon-only no mobile para evitar texto espremido dentro dos botões.
+- Ao avançar, voltar ou finalizar etapas do questionário `Sobre Mim`, a página deve reposicionar no topo da seção `Sobre Mim`.
+- O `ref`/âncora de rolagem do questionário não pode apontar para a seção `Contato, endereço e redes`.
+- Na última etapa do questionário `Sobre Mim`, `Pular Tudo` não deve aparecer.
+- Na última etapa do questionário `Sobre Mim`, o CTA `Finalizar` deve aparecer com largura confortável no mobile.
 
 ## Meus vínculos
 
 - Cônjuges devem aparecer antes de filhos.
 - Filhos devem respeitar regra de cônjuge quando o fluxo pedir outro pai/mãe.
 - Pets devem abrir modal próprio e não podem reaparecer como área permanente separada de cadastro.
+- Pet cadastrado por modal deve ser refletido na área `Pets` sem exigir recarregamento manual.
+- O modal de pet deve manter upload com zoom/crop e não deve reintroduzir botão redundante `Atualizar`.
+- O dropdown `Outros tutores` de pet deve listar apenas `Sou o único tutor` e cônjuges cadastrados.
+- O dropdown `Outros tutores` de pet não pode listar pais, mães, filhos, irmãos ou parentes genéricos.
 - Badges `Pré-cadastrado`, `Vivo`, `Falecido` e `Falecida` devem manter formatação coerente no mobile.
 - Botão de lixeira no mobile deve ficar no topo direito do card.
 - Modais de adicionar parentes não devem abrir teclado automaticamente sem foco explícito.
 - A seleção de filhos, cônjuges, irmãos ou pets não pode travar o mobile.
+- Se a pessoa em revisão ou o cônjuge for falecido, não reexibir `Relacionamento ativo`, `Data de separação` ou `Local de separação`.
 - Alterações pendentes devem aparecer como `Em análise` até revisão.
+
+## Arquivos históricos
+
+- O seletor `Pessoas participantes` deve ficar oculto por padrão no primeiro acesso.
+- O botão `Adicionar outras pessoas` deve revelar o seletor sem deslocar o layout de forma quebrada.
+- Se já houver participantes selecionados, o seletor pode permanecer visível para edição.
 
 ## Revisão de dados
 
 - Parentes adicionados ou removidos devem aparecer como `Em análise`.
+- Pets pendentes devem aparecer no resumo final; quando a UI usar `Em aprovação`, esse estado deve ser tratado como equivalente funcional de pendência.
+- No mobile, o card inicial não deve exibir o botão `Editar perfil`.
+- No mobile, o botão `Finalizar e acessar árvore` deve ficar no final da página.
 - Antes de finalizar para `/mapa-familiar`, se o usuário tiver perfis sob responsabilidade, deve aparecer modal perguntando se deseja editar esses perfis agora.
 - O modal de responsáveis não deve aparecer quando não houver perfis sob responsabilidade.
 

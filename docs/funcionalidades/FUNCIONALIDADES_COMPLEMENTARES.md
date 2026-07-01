@@ -1,6 +1,6 @@
 # Funcionalidades complementares
 
-> Última revisão: 2026-06-30
+> Última revisão: 2026-07-01
 > Escopo: calendário, dúvidas, fórum, favoritos, notificações, onboarding, exportação, busca global, timeline, perfil, aprovações e cadastros administrativos de pessoas.
 > Status: canônico complementar.
 
@@ -199,6 +199,23 @@ Função:
 - reduzir fricção inicial de navegação.
 
 O onboarding deve respeitar sessão, perfil e vínculo familiar disponível.
+
+Fluxo funcional:
+
+- `/meus-dados` revisa dados pessoais, privacidade, avatar e questionário `Sobre Mim`;
+- `/meus-vinculos` revisa pais, cônjuges, filhos, pets e irmãos;
+- `/arquivos-historicos` permite registrar fatos e arquivos antes da entrada na árvore;
+- `/preferencias` é exibida para pessoa viva e pulada quando a pessoa está marcada como falecida;
+- `/revisao-dados` consolida o que será mantido, atualizado ou enviado para aprovação antes de seguir para `/mapa-familiar`.
+
+Regras complementares:
+
+- o questionário `Sobre Mim` deve preservar a posição de leitura ao trocar etapas, voltando ao topo da própria seção;
+- a última etapa do questionário usa `Finalizar` como CTA principal e não deve exibir `Pular Tudo`;
+- pets são tratados como grupo próprio, cadastrados por modal e refletidos na área `Pets`;
+- tutores adicionais de pet devem ser restritos a cônjuges cadastrados;
+- fatos e arquivos históricos podem ocultar o seletor de participantes até o usuário clicar em `Adicionar outras pessoas`;
+- a revisão final deve exibir pets pendentes e manter o CTA final no fim da página mobile.
 
 ## Exportação da árvore
 

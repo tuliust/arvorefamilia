@@ -1,6 +1,6 @@
 # Guia de implementações
 
-> Última revisão: 2026-06-30
+> Última revisão: 2026-07-01
 > Escopo: comportamento implementado na branch `main`.
 > Status: canônico.
 
@@ -12,6 +12,16 @@
 - A rota raiz redireciona para `/mapa-familiar`.
 - `/aprovacoes` e `/admin/aprovacoes` carregam a página administrativa de aprovações.
 - Runtime tweaks globais devem ser defensivos, com `requestAnimationFrame`, `try/catch` e observação mínima de mutações para evitar loops de renderização.
+
+## Primeiro acesso e rascunhos locais
+
+- O primeiro acesso usa rotas de membro com estado preservado por usuário e pessoa vinculada.
+- Rascunhos de `/meus-dados` e `/meus-vinculos` podem usar `sessionStorage` com chave segmentada por `user.id` e `pessoa.id`.
+- Rascunhos são proteção auxiliar de UX; falhas de storage não devem bloquear salvamento nem navegação.
+- O fluxo deve preservar a ordem `/meus-dados` → `/meus-vinculos` → `/arquivos-historicos` → `/preferencias` → `/revisao-dados` → `/mapa-familiar`.
+- Pessoa marcada como falecida em `/meus-dados` deve pular `/preferencias`.
+- Alterações de vínculos que dependem de aprovação devem ser representadas como pendência, não como gravação definitiva.
+- Eventos customizados entre componentes de primeiro acesso devem ter escopo local da página e não podem virar substitutos de serviço de dados ou autenticação.
 
 ## Runtimes defensivos mobile
 
@@ -255,12 +265,21 @@ A varredura técnica esperada em `src/` deve retornar apenas o falso positivo vi
 - A área `Outros ajustes` não deve aparecer no mobile.
 - O botão de foto no mobile deve usar `Adicionar foto`.
 - O questionário `Sobre Mim` deve exibir Mini Bio e Curiosidades na tela final `Seu Perfil` dentro de `/meus-dados`, não em `/meus-vinculos`.
+- A âncora de rolagem do questionário `Sobre Mim` deve ficar no container da própria seção, não na seção de contato/endereço.
+- Trocas de etapa do questionário devem usar rolagem controlada para o topo da seção e considerar header/áreas fixas no mobile.
+- A última etapa do questionário deve ocultar `Pular Tudo` e expor `Finalizar` como CTA principal.
+- `MeusDadosWithInlineProfileBio` pode complementar a tela final `Seu Perfil`, mas não deve injetar CTA concorrente que duplique o encerramento do questionário.
 
 ## Meus vínculos
 
 - Cônjuges devem aparecer antes de filhos.
 - A seção permanente de cadastro de pets deve ser substituída por modal acionado pela seção `Pets`.
+- O modal de pet deve reaproveitar o padrão de upload com crop/zoom do avatar quando houver foto.
+- Ao salvar pet pelo modal, a página principal deve receber a atualização e refletir o pet na área `Pets`, preservando o estado pendente quando houver aprovação.
+- A integração entre modal de pet e página principal pode usar evento customizado local, desde que o payload contenha o pet salvo e não substitua persistência definitiva.
+- O dropdown `Outros tutores` de pet deve ser derivado de `relationships.conjuges`, com opção neutra `Sou o único tutor`.
 - Filhos podem depender de cônjuge cadastrado quando o fluxo pedir o outro pai/mãe.
+- Em dados conjugais, falecimento da pessoa em revisão ou do cônjuge deve zerar/inibir relacionamento ativo e ocultar campos de separação na UI de primeiro acesso.
 - Badges de pendência como `Em análise` devem aparecer para parentes adicionados ou removidos até aprovação.
 - No mobile, modais de adicionar parentes não devem abrir teclado automaticamente nem travar ao trocar pessoa selecionada.
 

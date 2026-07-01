@@ -1,6 +1,6 @@
 # QA manual
 
-> Última revisão: 2026-06-30
+> Última revisão: 2026-07-01
 > Escopo: validação manual das rotas e contratos documentados.
 > Status: canônico.
 
@@ -177,6 +177,11 @@ Validar em `/mapa-familiar` e `/mapa-familiar-horizontal`:
 - Redes sociais devem permitir digitação de perfil completo antes de converter o item em badge/lista finalizada.
 - No mobile, a área `Outros ajustes` não deve aparecer.
 - No mobile, o botão da foto deve exibir `Adicionar foto`.
+- Em 320px, 375px, 390px e 430px, avançar e voltar no questionário `Sobre Mim` deve reposicionar a página no topo da própria seção.
+- O reposicionamento do questionário não pode parar no bloco `Contato, endereço e redes`, no meio da seção ou no final do formulário.
+- Nas etapas intermediárias, os botões de navegação devem caber no container; `Voltar` e `Avançar` podem aparecer apenas com setas no mobile.
+- Na última etapa do questionário, `Pular Tudo` não deve aparecer.
+- Na última etapa do questionário, o botão `Finalizar` deve aparecer com largura suficiente para não cortar o texto.
 - Após concluir ou pular o questionário, deve aparecer tela final `Seu Perfil` com Mini Bio e Curiosidades editáveis.
 - Mini Bio e Curiosidades não devem aparecer em `/meus-vinculos`.
 
@@ -187,6 +192,15 @@ Validar em `/mapa-familiar` e `/mapa-familiar-horizontal`:
 - Não grava vínculo definitivo quando a regra exigir solicitação.
 - Cônjuges devem aparecer antes de filhos.
 - Pets devem aparecer apenas na área `Pets`; cadastro/edição deve abrir por modal.
+- Cadastrar pet pelo modal deve atualizar a área `Pets` sem exigir recarregamento manual.
+- Pet adicionado localmente deve aparecer com estado pendente quando depender de aprovação.
+- O modal de pet deve permitir foto com zoom/crop e não deve expor botão redundante `Atualizar`.
+- Campos de data de pet devem aceitar `DD/MM/AAAA` ou `AAAA`.
+- Campos de local/cidade do pet devem seguir `Cidade/UF` quando não forem exterior.
+- O dropdown `Outros tutores` de pet deve exibir apenas `Sou o único tutor` e cônjuges cadastrados.
+- O dropdown `Outros tutores` de pet não deve listar pais, filhos, irmãos ou parentes genéricos.
+- Quando a pessoa em revisão ou o cônjuge for falecido, não deve aparecer checkbox `Relacionamento ativo`.
+- Quando a pessoa em revisão ou o cônjuge for falecido, não devem aparecer `Data de separação` nem `Local de separação`.
 - Modais de adicionar parentes não devem abrir teclado automaticamente.
 - Selecionar filhos, cônjuges, irmãos ou pets não deve travar a página.
 - Alterações pendentes devem aparecer como `Em análise`.
@@ -194,8 +208,13 @@ Validar em `/mapa-familiar` e `/mapa-familiar-horizontal`:
 ### `/arquivos-historicos`, `/preferencias` e `/revisao-dados`
 
 - `/arquivos-historicos` permite fato sem arquivo, upload de imagem/PDF e vínculo com pessoa ou relacionamento.
+- Em `/arquivos-historicos`, `Pessoas participantes` deve ficar oculto por padrão.
+- Em `/arquivos-historicos`, clicar em `Adicionar outras pessoas` deve revelar o seletor de participantes.
 - `/preferencias` deve ser acessível para pessoa viva e pulada para pessoa marcada como falecida.
 - `/revisao-dados` resume informações, respeita solicitações pendentes e pode perguntar se o usuário deseja editar perfis sob sua responsabilidade.
+- Em `/revisao-dados`, pets pendentes devem aparecer no resumo final, com badge `Em aprovação` ou estado equivalente.
+- Em `/revisao-dados` mobile, o card inicial deve exibir o nome completo e não deve exibir `Editar perfil`.
+- Em `/revisao-dados` mobile, `Finalizar e acessar árvore` deve ficar no final da página.
 
 ## Funcionalidades autônomas
 

@@ -1,6 +1,6 @@
 # Inventário técnico
 
-> Última revisão: 2026-06-30
+> Última revisão: 2026-07-01
 > Escopo: rotas, módulos, documentos finais e referências técnicas preservadas após limpeza documental.
 > Status: canônico.
 
@@ -116,6 +116,23 @@
 - `/admin/gestao-conteudo-pessoas`
 - `/admin/duvidas`
 
+## Primeiro acesso: arquivos de implementação
+
+| Área | Arquivos principais |
+|---|---|
+| Dados pessoais, avatar, privacidade e questionário `Sobre Mim` | `src/app/pages/MeusDados.tsx`, `src/app/pages/MeusDadosWithInlineProfileBio.tsx` |
+| Vínculos, pets, cônjuges e rascunho de relacionamentos | `src/app/pages/MeusVinculos.tsx`, `src/app/pages/MeusVinculosWithProfileBio.tsx`, `src/app/pages/MeusVinculosMobileShortcutsPage.tsx` |
+| Modal de pet | `src/app/pages/meus-vinculos/MeusVinculosPetEditorPortal.tsx` |
+| Fatos e arquivos históricos | `src/app/components/ArquivosHistoricos.tsx`, `src/app/pages/ArquivosHistoricosPage.tsx` |
+| Revisão final | `src/app/pages/RevisaoDados.tsx`, `src/app/pages/RevisaoDadosFlowPage.tsx` |
+
+Notas técnicas:
+
+- rascunhos de primeiro acesso são auxiliares e podem usar `sessionStorage` segmentado por usuário/pessoa;
+- pets salvos por modal devem sincronizar com a página principal antes da revisão final;
+- badges de pendência em vínculos e revisão representam solicitações ou estados aguardando aprovação;
+- ajustes documentais dessa frente não alteram Supabase, autenticação, migrations ou guards.
+
 ## Runtimes e wrappers relevantes
 
 - `src/app/components/MobileGlobalTweaks.tsx`
@@ -123,7 +140,8 @@
 - `src/app/components/LinhaGeracionalMobilePanelLayerTweaks.tsx`
 - `src/app/components/FirstLoginTutorialRuntimeTweaks.tsx`
 - `src/app/components/person/PersonProfileRuntimeTweaks.tsx`
-- Wrappers ativos: `AdminDashboardWithTweaks`, `AdminHomeSettingsWithSaveBar`, `MeusDadosWithInlineProfileBio` e `MeusVinculosMobileShortcutsPage`.
+- Wrappers ativos: `AdminDashboardWithTweaks`, `AdminHomeSettingsWithSaveBar`, `MeusDadosWithInlineProfileBio`, `MeusVinculosWithProfileBio` e `MeusVinculosMobileShortcutsPage`.
+- Componentes auxiliares do primeiro acesso: `MeusVinculosPetEditorPortal`, `RelationshipGroupPanel`, `RelativeCard`, `RelationshipOverview` e `ProfileControlRequestDialog`.
 
 ## Scripts carregados por `index.html`
 

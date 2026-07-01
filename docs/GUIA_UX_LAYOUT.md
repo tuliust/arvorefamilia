@@ -1,6 +1,6 @@
 # Guia de UX e layout
 
-> Última revisão: 2026-06-30
+> Última revisão: 2026-07-01
 > Escopo: experiência visual das rotas principais da branch `main`.
 > Status: canônico.
 
@@ -146,7 +146,11 @@ Pessoa marcada como falecida em `/meus-dados` pula `/preferencias` e segue para 
 - No mobile, o botão de foto deve usar `Adicionar foto`.
 - No mobile, o toggle `Vivo/Falecido` deve ser compacto.
 - O questionário `Sobre Mim` deve terminar em tela `Seu Perfil`, com Mini Bio e Curiosidades editáveis.
-- No mobile, os botões `Voltar`, `Pular Tudo` e `Avançar` devem ficar lado a lado; `Voltar` e `Avançar` podem usar apenas ícones.
+- Ao avançar, voltar ou finalizar etapas do questionário `Sobre Mim`, a página deve reposicionar no topo da própria seção `Sobre Mim`, não no bloco anterior de contato/endereço nem no meio do formulário.
+- No mobile, os botões de navegação do questionário devem preservar largura mínima confortável; `Voltar` e `Avançar` podem usar apenas ícones para evitar texto espremido.
+- Nas etapas intermediárias, `Voltar`, `Pular Tudo` e `Avançar` podem ficar lado a lado quando houver espaço.
+- Na última etapa do questionário, `Pular Tudo` não deve aparecer, porque sua função já seria levar ao encerramento do fluxo.
+- Na última etapa do questionário, o CTA principal deve ser `Finalizar`, com largura suficiente para não cortar o texto no mobile.
 
 ## Meus vínculos
 
@@ -155,14 +159,23 @@ Pessoa marcada como falecida em `/meus-dados` pula `/preferencias` e segue para 
 - O bloco de textos pessoais não fica nos blocos de vínculos.
 - Alterações em vínculos são tratadas como solicitações quando aplicável.
 - Pets são cadastrados por modal próprio acionado na seção `Pets`.
+- Pets adicionados pelo modal devem aparecer na seção `Pets` com estado pendente quando a alteração depender de aprovação.
+- O modal de pet deve usar o mesmo padrão de upload de foto com zoom/crop usado no avatar do usuário.
+- O dropdown `Outros tutores` de pet deve listar apenas `Sou o único tutor` e cônjuges cadastrados; não deve listar pais, mães, filhos, irmãos ou parentes genéricos.
 - Cards mobile devem manter lixeira no topo direito e badges alinhadas.
 - Modais de adicionar parentes não devem abrir teclado automaticamente.
+- Quando a pessoa em revisão ou o cônjuge for falecido, não exibir `Relacionamento ativo`, `Data de separação` ou `Local de separação` no bloco de relacionamento conjugal.
+- Campos de datas de pet e relacionamento conjugal devem aceitar `DD/MM/AAAA` ou `AAAA`.
+- Campos de local/cidade usados nesse fluxo devem seguir o padrão `Cidade/UF` quando não forem marcados como exterior.
 
 ## Arquivos históricos
 
 - A etapa aceita fatos sem arquivo e arquivos vinculados.
 - Upload é opcional.
 - O termo funcional é `Fatos e Arquivos Históricos`.
+- O campo `Pessoas participantes` deve ficar oculto por padrão para reduzir ruído no primeiro acesso.
+- O botão compacto `Adicionar outras pessoas` deve revelar o seletor de participantes.
+- Se já houver participantes selecionados, o seletor pode permanecer visível para preservar contexto e edição.
 
 ## Revisão de dados
 
@@ -170,6 +183,9 @@ Pessoa marcada como falecida em `/meus-dados` pula `/preferencias` e segue para 
 - Deve deixar claro o que será mantido, atualizado ou solicitado.
 - Não deve prometer gravação direta quando a regra implementada gerar solicitação pendente.
 - Parentes pendentes devem aparecer como `Em análise`.
+- Pets pendentes vindos de `/meus-vinculos` devem aparecer no resumo final; para pets, a badge pública pode usar `Em aprovação` como estado equivalente de pendência.
+- No mobile, o topo deve priorizar o nome completo do usuário e não deve exibir o botão `Editar perfil` no card inicial.
+- No mobile, o botão `Finalizar e acessar árvore` deve ficar no final da página, depois do resumo.
 - Se houver perfis sob responsabilidade do usuário, o modal final deve oferecer editar agora ou depois.
 
 ## Perfil de pessoa
