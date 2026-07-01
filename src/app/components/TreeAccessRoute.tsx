@@ -1,6 +1,7 @@
 import React from 'react';
-import { Navigate } from 'react-router';
+import { Navigate, useLocation } from 'react-router';
 import { useAuth } from '../contexts/AuthContext';
+import { ensureFirstMapWelcomeNotification } from '../services/firstMapWelcomeNotificationService';
 import { resolveFirstAccessLinkForUser } from '../services/memberProfileService';
 
 const RECENT_LOGIN_LIMIT_MS = 60 * 60 * 1000;
@@ -27,6 +28,7 @@ function hasRecentLogin(lastSignInAt?: string | null) {
 
 export function TreeAccessRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
+  const location = useLocation();
   const [checking, setChecking] = React.useState(true);
   const [target, setTarget] = React.useState<'tree' | 'auth' | 'profile'>('auth');
 
@@ -59,6 +61,10 @@ export function TreeAccessRoute({ children }: { children: React.ReactNode }) {
         setTarget('profile');
       } else {
         setTarget('tree');
+
+        if (location.pathname === '/mapa-familiar') {
+          void ensureFirstMapWelcomeNotification(user.id, result.data.pessoa_id);
+        }
       }
 
       setChecking(false);
@@ -69,7 +75,7 @@ export function TreeAccessRoute({ children }: { children: React.ReactNode }) {
     return () => {
       mounted = false;
     };
-  }, [loading, user?.id, user?.last_sign_in_at]);
+  }, [loading, location.pathname, user?.id, user?.last_sign_in_at]);
 
   if (loading || checking) {
     return <AccessLoading />;
