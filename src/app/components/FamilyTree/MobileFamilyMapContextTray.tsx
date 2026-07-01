@@ -210,6 +210,13 @@ export const MobileFamilyMapContextTray = React.forwardRef<HTMLDivElement, Mobil
         data-mobile-family-map-context-action={action}
         data-tree-export-ignore="true"
       >
+        {action === 'formato' && (
+          <div
+            className="pointer-events-none absolute bottom-[-1.35rem] left-1/2 h-8 w-full max-w-md -translate-x-1/2 rounded-b-xl border-x border-b border-slate-200 bg-white/95 shadow-sm backdrop-blur"
+            aria-hidden="true"
+            data-mobile-family-map-format-tray-extension="true"
+          />
+        )}
         {children}
       </div>
     );
