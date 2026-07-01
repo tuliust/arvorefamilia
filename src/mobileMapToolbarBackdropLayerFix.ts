@@ -138,8 +138,29 @@ function getActivePanelBottom(toolbarBottom: number) {
   return Math.min(bottomLimit, Math.max(toolbarBottom, Math.ceil(relevant.rect.bottom)));
 }
 
+function hasVisibleFullscreenMapPanel(toolbarBottom: number) {
+  const bottomLimit = getBottomNavigationTop();
+
+  return Array.from(document.querySelectorAll<HTMLElement>(PANEL_SELECTORS))
+    .filter((element) => element.id !== BACKDROP_ID)
+    .some((element) => {
+      const rect = element.getBoundingClientRect();
+
+      return isFullscreenMapPanel(element)
+        && isVisibleRect(rect)
+        && rect.bottom > toolbarBottom + 4
+        && rect.top < bottomLimit - 8
+        && !element.matches(TOOLBAR_SELECTOR);
+    });
+}
+
 function getBackdropTop(toolbarBottom: number) {
-  if (isDirectFamilyMapPath()) return toolbarBottom;
+  if (isDirectFamilyMapPath()) {
+    return hasVisibleFullscreenMapPanel(toolbarBottom)
+      ? getBottomNavigationTop()
+      : toolbarBottom;
+  }
+
   return getActivePanelBottom(toolbarBottom);
 }
 

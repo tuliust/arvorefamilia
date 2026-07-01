@@ -56,6 +56,7 @@ let scale = 1;
 let translateX = 0;
 let translateY = 0;
 let scheduled = false;
+let userTransformLocked = false;
 
 function isMobileViewport() {
   return typeof window !== 'undefined'
@@ -1078,14 +1079,25 @@ function applyTransform() {
   stage.style.setProperty('transform', `translate3d(${translateX}px, ${translateY}px, 0) scale(${scale})`, 'important');
 }
 
-function resetTransform() {
+function markUserTransform(viewport?: HTMLElement | null) {
+  userTransformLocked = true;
+  viewport?.setAttribute('data-mobile-family-full-map-user-transformed', 'true');
+}
+
+function resetTransform(force = false) {
   const viewport = document.querySelector<HTMLElement>(`#${FULL_MAP_ID} .mobile-family-full-map-viewport`);
   const stage = document.querySelector<HTMLElement>(`#${FULL_MAP_ID} .mobile-family-full-map-stage`);
   if (!viewport || !stage) return;
 
+  const userTransformed = userTransformLocked || viewport.dataset.mobileFamilyFullMapUserTransformed === 'true';
+  if (!force && userTransformed) {
+    applyTransform();
+    return;
+  }
+
   const viewportRect = viewport.getBoundingClientRect();
   if (viewportRect.width < 120 || viewportRect.height < 220) {
-    window.setTimeout(resetTransform, 80);
+    window.setTimeout(() => resetTransform(force), 80);
     return;
   }
 
@@ -1095,6 +1107,7 @@ function resetTransform() {
   scale = clamp(fitScale * 1.02, 0.2, 0.9);
   translateX = (viewportRect.width / 2) - (STAGE_FOCUS_X * scale);
   translateY = (viewportRect.height / 2) - (STAGE_FOCUS_Y * scale);
+  viewport.dataset.mobileFamilyFullMapFitted = 'true';
   applyTransform();
 }
 
@@ -1130,6 +1143,8 @@ function handleTouchStart(event: TouchEvent) {
   const viewport = event.currentTarget as HTMLElement;
   if (!viewport || !document.getElementById(FULL_MAP_ID)) return;
 
+  markUserTransform(viewport);
+
   if (event.touches.length === 2) {
     const [first, second] = [event.touches[0], event.touches[1]];
     const mid = midpoint(first, second, viewport);
@@ -1161,6 +1176,8 @@ function handleTouchMove(event: TouchEvent) {
   const viewport = event.currentTarget as HTMLElement;
   if (!gestureState || !viewport || !document.getElementById(FULL_MAP_ID)) return;
 
+  markUserTransform(viewport);
+
   if (gestureState.mode === 'pinch' && event.touches.length >= 2) {
     const [first, second] = [event.touches[0], event.touches[1]];
     const mid = midpoint(first, second, viewport);
@@ -1183,6 +1200,9 @@ function handleTouchMove(event: TouchEvent) {
 }
 
 function handleTouchEnd(event: TouchEvent) {
+  const viewport = event.currentTarget as HTMLElement | null;
+  markUserTransform(viewport);
+
   if (event.touches.length === 0) {
     gestureState = null;
     return;
@@ -1201,7 +1221,10 @@ function handleTouchEnd(event: TouchEvent) {
 }
 
 function hydrateFullMap() {
-  if (!isEnabled()) return;
+  if (!isEnabled()) {
+    userTransformLocked = false;
+    return;
+  }
 
   ensureStyles();
   const fullMap = getInlineFullMap();
@@ -1214,16 +1237,29 @@ function hydrateFullMap() {
     || !viewport.querySelector('.mobile-family-full-map-stage');
 
   if (needsStage) {
+    userTransformLocked = false;
+    viewport.removeAttribute('data-mobile-family-full-map-user-transformed');
     viewport.replaceChildren(buildFullMapStage());
     viewport.dataset.mobileFamilyFullMapHydrated = 'true';
-    viewport.addEventListener('touchstart', handleTouchStart, { passive: false });
-    viewport.addEventListener('touchmove', handleTouchMove, { passive: false });
-    viewport.addEventListener('touchend', handleTouchEnd, { passive: false });
-    viewport.addEventListener('touchcancel', handleTouchEnd, { passive: false });
+    viewport.removeAttribute('data-mobile-family-full-map-fitted');
+
+    if (viewport.dataset.mobileFamilyFullMapGestures !== 'true') {
+      viewport.addEventListener('touchstart', handleTouchStart, { passive: false });
+      viewport.addEventListener('touchmove', handleTouchMove, { passive: false });
+      viewport.addEventListener('touchend', handleTouchEnd, { passive: false });
+      viewport.addEventListener('touchcancel', handleTouchEnd, { passive: false });
+      viewport.dataset.mobileFamilyFullMapGestures = 'true';
+    }
   }
 
-  window.requestAnimationFrame(resetTransform);
-  window.setTimeout(resetTransform, 40);
+  const userTransformed = userTransformLocked || viewport.dataset.mobileFamilyFullMapUserTransformed === 'true';
+  if (needsStage || viewport.dataset.mobileFamilyFullMapFitted !== 'true') {
+    window.requestAnimationFrame(() => resetTransform(true));
+    window.setTimeout(() => resetTransform(true), 40);
+    return;
+  }
+
+  if (userTransformed) applyTransform();
 }
 
 function ensureFullMapButton() {
@@ -1270,7 +1306,10 @@ if (typeof window !== 'undefined' && typeof document !== 'undefined') {
     if (hasHydratedStage()) window.setTimeout(resetTransform, 220);
   }, { passive: true });
   window.addEventListener(FULL_MAP_OPEN_EVENT, scheduleHydrateFullMap);
-  window.addEventListener('popstate', () => { closeFullMap(); }, { passive: true });
+  window.addEventListener('popstate', () => {
+    userTransformLocked = false;
+    closeFullMap();
+  }, { passive: true });
   document.addEventListener('visibilitychange', ensureFullMapButton, { passive: true });
 }
 

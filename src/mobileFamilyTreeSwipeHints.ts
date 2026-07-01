@@ -1,8 +1,11 @@
 const MOBILE_QUERY = '(max-width: 767px)';
 const ROOT_SELECTOR = '[data-mobile-family-tree-root="true"]';
+const GENERATION_LINE_ROOT_SELECTOR = '[data-family-map-horizontal-mobile-root="true"]';
+const GENERATION_LINE_PATH = '/linha-geracional';
 const SCREEN_SELECTOR = '[data-mobile-family-tree-screen]';
 const STYLE_ID = 'mobile-family-tree-swipe-hints-style';
 const HINTS_CLASS = 'mobile-family-tree-swipe-hints';
+const GENERATION_LINE_HINTS_CLASS = 'mobile-generation-line-swipe-hints';
 const VISIBLE_CLASS = 'is-visible';
 const HINT_DELAY_MS = 1000;
 const HINT_DURATION_MS = 2000;
@@ -42,6 +45,7 @@ const ARROW_CONTENT: Record<SwipeDirection, string> = {
 };
 
 let activeScreen: MobileTreeScreen | null = null;
+let generationLineHintsScheduled = false;
 let showTimer: number | null = null;
 let hideTimer: number | null = null;
 let scheduled = false;
@@ -54,6 +58,10 @@ function isMobileViewport() {
 
 function isFamilyMapPath() {
   return typeof window !== 'undefined' && window.location.pathname === '/mapa-familiar';
+}
+
+function isGenerationLinePath() {
+  return typeof window !== 'undefined' && window.location.pathname.replace(/\/$/, '') === GENERATION_LINE_PATH;
 }
 
 function isMobileTreeScreen(value: string | undefined | null): value is MobileTreeScreen {
@@ -142,6 +150,51 @@ function ensureStyles() {
         animation: mobile-family-tree-hint-right 1050ms ease-in-out infinite;
       }
 
+      ${GENERATION_LINE_ROOT_SELECTOR} .${GENERATION_LINE_HINTS_CLASS} {
+        position: fixed;
+        inset: 0;
+        z-index: 90;
+        pointer-events: none;
+        opacity: 0;
+        transition: opacity 220ms ease;
+      }
+
+      ${GENERATION_LINE_ROOT_SELECTOR} .${GENERATION_LINE_HINTS_CLASS}.${VISIBLE_CLASS} {
+        opacity: 1;
+      }
+
+      ${GENERATION_LINE_ROOT_SELECTOR} .${GENERATION_LINE_HINTS_CLASS}__arrow {
+        position: absolute;
+        display: flex;
+        width: 2rem;
+        height: 2rem;
+        align-items: center;
+        justify-content: center;
+        border-radius: 9999px;
+        background: rgba(15, 23, 42, 0.72);
+        color: #fff;
+        font-size: 1.15rem;
+        font-weight: 900;
+        line-height: 1;
+        box-shadow: 0 10px 22px rgba(15, 23, 42, 0.2);
+        opacity: 0.88;
+        will-change: transform, opacity;
+      }
+
+      ${GENERATION_LINE_ROOT_SELECTOR} .${GENERATION_LINE_HINTS_CLASS}__arrow--left {
+        top: 50%;
+        left: 0.75rem;
+        transform: translateY(-50%);
+        animation: mobile-family-tree-hint-left 1050ms ease-in-out infinite;
+      }
+
+      ${GENERATION_LINE_ROOT_SELECTOR} .${GENERATION_LINE_HINTS_CLASS}__arrow--right {
+        top: 50%;
+        right: 0.75rem;
+        transform: translateY(-50%);
+        animation: mobile-family-tree-hint-right 1050ms ease-in-out infinite;
+      }
+
       @keyframes mobile-family-tree-hint-up {
         0%, 100% { transform: translate(-50%, 0); opacity: 0.62; }
         50% { transform: translate(-50%, -0.45rem); opacity: 1; }
@@ -184,6 +237,54 @@ function getHintsElement(root: HTMLElement) {
 
 function hideHints(root = getRoot()) {
   root?.querySelector<HTMLElement>(`.${HINTS_CLASS}`)?.classList.remove(VISIBLE_CLASS);
+}
+
+function getGenerationLineRoot() {
+  return document.querySelector<HTMLElement>(GENERATION_LINE_ROOT_SELECTOR);
+}
+
+function getGenerationLineHintsElement(root: HTMLElement) {
+  let hints = root.querySelector<HTMLElement>(`.${GENERATION_LINE_HINTS_CLASS}`);
+  if (hints) return hints;
+
+  hints = document.createElement('div');
+  hints.className = GENERATION_LINE_HINTS_CLASS;
+  hints.setAttribute('aria-hidden', 'true');
+  hints.setAttribute('data-tree-export-ignore', 'true');
+  root.appendChild(hints);
+  return hints;
+}
+
+function hideGenerationLineHints(root = getGenerationLineRoot()) {
+  root?.querySelector<HTMLElement>(`.${GENERATION_LINE_HINTS_CLASS}`)?.classList.remove(VISIBLE_CLASS);
+}
+
+function renderGenerationLineHints(root: HTMLElement) {
+  const hints = getGenerationLineHintsElement(root);
+  hints.innerHTML = [
+    `<span class="${GENERATION_LINE_HINTS_CLASS}__arrow ${GENERATION_LINE_HINTS_CLASS}__arrow--left">←</span>`,
+    `<span class="${GENERATION_LINE_HINTS_CLASS}__arrow ${GENERATION_LINE_HINTS_CLASS}__arrow--right">→</span>`,
+  ].join('');
+  hints.classList.add(VISIBLE_CLASS);
+}
+
+function scheduleGenerationLineHints(root: HTMLElement) {
+  if (generationLineHintsScheduled) return;
+
+  generationLineHintsScheduled = true;
+  clearHintTimers();
+  hideGenerationLineHints(root);
+
+  showTimer = window.setTimeout(() => {
+    const currentRoot = getGenerationLineRoot();
+    if (!currentRoot || !isGenerationLinePath()) return;
+
+    renderGenerationLineHints(currentRoot);
+
+    hideTimer = window.setTimeout(() => {
+      hideGenerationLineHints(currentRoot);
+    }, HINT_DURATION_MS);
+  }, HINT_DELAY_MS);
 }
 
 function hasDescendantContent(root: HTMLElement) {
@@ -276,14 +377,44 @@ function scheduleHintsForScreen(root: HTMLElement, screenName: MobileTreeScreen)
 }
 
 function updateSwipeHints() {
-  if (!isMobileViewport() || !isFamilyMapPath()) {
+  if (!isMobileViewport()) {
     clearHintTimers();
     hideHints();
+    hideGenerationLineHints();
     activeScreen = null;
+    generationLineHintsScheduled = false;
     return;
   }
 
   ensureStyles();
+
+  if (isGenerationLinePath()) {
+    hideHints();
+    activeScreen = null;
+
+    const generationRoot = getGenerationLineRoot();
+    if (!generationRoot) {
+      clearHintTimers();
+      hideGenerationLineHints();
+      generationLineHintsScheduled = false;
+      return;
+    }
+
+    scheduleGenerationLineHints(generationRoot);
+    return;
+  }
+
+  if (!isFamilyMapPath()) {
+    clearHintTimers();
+    hideHints();
+    hideGenerationLineHints();
+    activeScreen = null;
+    generationLineHintsScheduled = false;
+    return;
+  }
+
+  hideGenerationLineHints();
+  generationLineHintsScheduled = false;
 
   const root = getRoot();
   if (!root) {
@@ -313,12 +444,26 @@ function scheduleUpdate() {
 
 function resetAfterUserInteraction() {
   const root = getRoot();
+  const generationRoot = getGenerationLineRoot();
+
   clearHintTimers();
   hideHints(root);
+  hideGenerationLineHints(generationRoot);
+  generationLineHintsScheduled = false;
 
   window.setTimeout(() => {
+    if (!isMobileViewport()) return;
+
+    if (isGenerationLinePath()) {
+      const currentGenerationRoot = getGenerationLineRoot();
+      if (!currentGenerationRoot) return;
+
+      scheduleGenerationLineHints(currentGenerationRoot);
+      return;
+    }
+
     const currentRoot = getRoot();
-    if (!currentRoot || !isMobileViewport() || !isFamilyMapPath()) return;
+    if (!currentRoot || !isFamilyMapPath()) return;
 
     const currentScreen = getVisibleScreen(currentRoot);
     if (!currentScreen) return;
