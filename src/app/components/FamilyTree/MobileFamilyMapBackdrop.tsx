@@ -15,18 +15,18 @@ function getBottomNavigationOffset() {
   if (!viewportHeight) return 0;
 
   const bottomNavigation = Array.from(document.querySelectorAll<HTMLElement>('nav[data-tree-export-ignore="true"]'))
-    .map((element) => ({ element, rect: element.getBoundingClientRect() }))
-    .filter(({ rect }) => (
+    .map((element) => element.getBoundingClientRect())
+    .filter((rect) => (
       rect.width > 0 &&
       rect.height > 0 &&
       rect.top > viewportHeight / 2 &&
       Math.abs(rect.bottom - viewportHeight) <= 8
     ))
-    .sort((a, b) => b.rect.height - a.rect.height)[0];
+    .sort((a, b) => b.height - a.height)[0];
 
   if (!bottomNavigation) return 0;
 
-  return Math.max(0, Math.ceil(viewportHeight - bottomNavigation.rect.top));
+  return Math.max(0, Math.ceil(viewportHeight - bottomNavigation.top));
 }
 
 export function MobileFamilyMapBackdrop({
