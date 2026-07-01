@@ -217,6 +217,28 @@ export const MobileFamilyMapContextTray = React.forwardRef<HTMLDivElement, Mobil
         data-mobile-family-map-context-action={action}
         data-tree-export-ignore="true"
       >
+        {action === 'formato' && (
+          <style>
+            {`
+              [data-mobile-family-map-context-action="formato"] > div:first-of-type {
+                padding-bottom: 0.5rem !important;
+              }
+
+              [data-mobile-family-map-context-action="formato"] > div:first-of-type button {
+                min-height: 72px !important;
+                justify-content: center !important;
+                gap: 0.375rem !important;
+                padding-top: 0.625rem !important;
+                padding-bottom: 0.625rem !important;
+              }
+
+              [data-mobile-family-map-context-action="formato"] > div:first-of-type button > svg {
+                width: 1.55rem !important;
+                height: 1.55rem !important;
+              }
+            `}
+          </style>
+        )}
         {children}
       </div>
     );
