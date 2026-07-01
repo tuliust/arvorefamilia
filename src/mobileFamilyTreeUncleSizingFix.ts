@@ -17,12 +17,7 @@ function isMobileFamilyMap() {
 }
 
 function ensureStyles() {
-  const existing = document.getElementById(STYLE_ID);
-  existing?.remove();
-
-  const style = document.createElement('style');
-  style.id = STYLE_ID;
-  style.textContent = `
+  const css = `
     @media (max-width: 767px) {
       ${UNCLE_SCREEN_SELECTOR} {
         position: relative !important;
@@ -202,7 +197,18 @@ function ensureStyles() {
     }
   `;
 
-  document.head.appendChild(style);
+  let style = document.getElementById(STYLE_ID) as HTMLStyleElement | null;
+  if (!style) {
+    style = document.createElement('style');
+    style.id = STYLE_ID;
+  }
+
+  if (style.textContent !== css) style.textContent = css;
+  if (!style.parentElement) document.head.appendChild(style);
+}
+
+function setAttributeIfChanged(element: HTMLElement, name: string, value: string) {
+  if (element.getAttribute(name) !== value) element.setAttribute(name, value);
 }
 
 function normalizeTitle(screenName: string, screen: HTMLElement) {
@@ -213,7 +219,7 @@ function normalizeTitle(screenName: string, screen: HTMLElement) {
   if (!heading) return;
 
   if (heading.textContent?.trim() !== title) heading.textContent = title;
-  heading.setAttribute('aria-label', title);
+  setAttributeIfChanged(heading, 'aria-label', title);
 }
 
 function ensureEmptyState(screenName: string, screen: HTMLElement) {
@@ -238,12 +244,14 @@ function ensureEmptyState(screenName: string, screen: HTMLElement) {
 
 function markUncleScreen(screen: HTMLElement) {
   const scrollArea = screen.querySelector<HTMLElement>(':scope > div');
-  scrollArea?.setAttribute('data-mobile-tree-scroll', 'true');
-  scrollArea?.setAttribute('data-mobile-family-tree-uncle-scroll', 'true');
+  if (scrollArea) {
+    setAttributeIfChanged(scrollArea, 'data-mobile-tree-scroll', 'true');
+    setAttributeIfChanged(scrollArea, 'data-mobile-family-tree-uncle-scroll', 'true');
+  }
 
   screen.querySelectorAll<HTMLElement>('section').forEach((section) => {
     const cardCount = section.querySelectorAll('[data-family-map-mobile-card="true"]').length;
-    if (cardCount > 0) section.setAttribute('data-family-map-card-count', String(cardCount));
+    if (cardCount > 0) setAttributeIfChanged(section, 'data-family-map-card-count', String(cardCount));
   });
 }
 
