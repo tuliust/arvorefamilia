@@ -6,6 +6,7 @@ const OVERLAY_ID = 'mobile-generation-safe-overview-overlay';
 const BACKDROP_ID = 'mobile-map-toolbar-panel-backdrop';
 const PANEL_SELECTOR = '[data-mobile-family-map-inline-overview="true"][data-mobile-family-map-panel-mode="overview"]';
 const ACTIVE_TOOLBAR_SELECTOR = '[data-mobile-family-map-toolbar="true"][data-mobile-family-map-toolbar-active="true"]';
+const BACKDROP_TOP_VAR = '--mobile-map-toolbar-backdrop-top';
 
 type ManagedMapKind = 'family' | 'generation';
 type ManagedGestureState =
@@ -74,12 +75,28 @@ function ensureStyles() {
     @media (max-width: 767px) {
       #${BACKDROP_ID} {
         position: fixed !important;
-        inset: 0 !important;
-        z-index: 9999 !important;
+        left: 0 !important;
+        right: 0 !important;
+        top: var(${BACKDROP_TOP_VAR}, 0px) !important;
+        bottom: 0 !important;
+        z-index: 10000 !important;
         background: rgba(15, 23, 42, 0.38) !important;
         backdrop-filter: blur(5px) saturate(0.86) !important;
         -webkit-backdrop-filter: blur(5px) saturate(0.86) !important;
         pointer-events: none !important;
+      }
+
+      html[data-mobile-map-toolbar-backdrop="true"] [data-mobile-family-map-toolbar="true"],
+      html[data-mobile-map-toolbar-backdrop="true"] [role="dialog"][aria-label="Filtros do mapa familiar"],
+      html[data-mobile-map-toolbar-backdrop="true"] [data-mobile-family-map-inline-overview="true"],
+      html[data-mobile-map-toolbar-backdrop="true"] #mobile-family-map-full-overview,
+      html[data-mobile-map-toolbar-backdrop="true"] #mobile-generation-line-full-overview {
+        position: relative !important;
+        z-index: 10001 !important;
+      }
+
+      html[data-mobile-map-toolbar-backdrop="true"] #${OVERLAY_ID} {
+        z-index: 10002 !important;
       }
 
       [data-mobile-family-tree-screen="paternal-uncles"],
@@ -246,6 +263,8 @@ function ensureStyles() {
 
 function removeToolbarBackdrop() {
   document.getElementById(BACKDROP_ID)?.remove();
+  document.documentElement.removeAttribute('data-mobile-map-toolbar-backdrop');
+  document.documentElement.style.removeProperty(BACKDROP_TOP_VAR);
 }
 
 function shouldShowToolbarBackdrop() {
@@ -256,6 +275,12 @@ function shouldShowToolbarBackdrop() {
 
   const action = toolbar.dataset.mobileFamilyMapToolbarAction;
   return Boolean(action && ['visualizacao', 'formato', 'cor', 'grupos', 'zoom', 'exportar'].includes(action));
+}
+
+function getBackdropTop() {
+  const toolbar = document.querySelector<HTMLElement>(ACTIVE_TOOLBAR_SELECTOR);
+  const toolbarBottom = toolbar?.getBoundingClientRect().bottom ?? 0;
+  return Math.max(0, Math.ceil(toolbarBottom));
 }
 
 function renderToolbarBackdrop() {
@@ -271,6 +296,9 @@ function renderToolbarBackdrop() {
     backdrop.setAttribute('aria-hidden', 'true');
     document.body.appendChild(backdrop);
   }
+
+  document.documentElement.dataset.mobileMapToolbarBackdrop = 'true';
+  document.documentElement.style.setProperty(BACKDROP_TOP_VAR, `${getBackdropTop()}px`);
 }
 
 function getActiveGeneration() {
