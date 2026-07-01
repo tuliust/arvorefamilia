@@ -1,6 +1,6 @@
 # Documentação do produto — arvorefamilia
 
-> Última revisão: 2026-06-29
+> Última revisão: 2026-07-01
 > Escopo: documentação canônica mantida em `docs/` após auditoria e limpeza final.
 > Status: canônico.
 
@@ -42,6 +42,7 @@ docs/
     MAPA_FAMILIAR_VIEW.md
     MEUS_VINCULOS.md
     MINI_BIO_CURIOSIDADES_IA.md
+    NOTIFICACOES_ADMIN.md
     REVISAO_DADOS.md
     STATUS_CONJUGAL.md
 
@@ -80,6 +81,7 @@ Arquivos residuais fora desse índice não devem ser usados como contrato operac
 | Revisão de dados | `funcionalidades/REVISAO_DADOS.md` |
 | Curiosidades | `funcionalidades/CURIOSIDADES.md` |
 | Fatos e arquivos históricos | `funcionalidades/ARQUIVOS_HISTORICOS.md` |
+| Notificações administrativas | `funcionalidades/NOTIFICACOES_ADMIN.md` |
 | Funcionalidades complementares | `funcionalidades/FUNCIONALIDADES_COMPLEMENTARES.md` |
 | Auditoria documental | `historico/AUDITORIA_DOCUMENTACAO_FINAL_20260623.md` |
 | Legado técnico consolidado | `historico/LEGADO_TECNICO.md` |
@@ -159,10 +161,11 @@ As rotas abaixo refletem `src/app/routes.tsx` na branch `main`.
 - O arquivo `src/app/components/ui/alert.tsx` é componente visual e pode aparecer em varreduras textuais como falso positivo; ele não representa uso de API nativa do navegador.
 - Ajustes mobile devem ser isolados por rota/breakpoint e não podem alterar layout ou comportamento desktop sem decisão explícita.
 - Overlays mobile de busca, notificações, avatar e painel da árvore devem permanecer acima de toolbars sticky e canvas.
+- Catálogo administrativo de notificações deve ser persistido no Supabase e documentado em `funcionalidades/NOTIFICACOES_ADMIN.md` quando houver mudança de schema, destinatários ou gatilhos.
 
 ## Atualizações recentes documentadas
 
-Esta revisão incorpora contratos recentes de mobile, exportação e limpeza documental:
+Esta revisão incorpora contratos recentes de mobile, exportação, notificações administrativas e limpeza documental:
 
 - camada superior de notificações, busca, avatar, botão `+` e painéis de árvore no mobile;
 - isolamento do runtime específico de `/linha-geracional`;
@@ -172,6 +175,9 @@ Esta revisão incorpora contratos recentes de mobile, exportação e limpeza doc
 - scroll vertical das telas de primos paternos e maternos;
 - limite visual inicial de 8 cards em tios paternos e maternos no mobile;
 - labels compactos dos cards superiores de `/admin` mobile;
+- persistência de configurações e catálogo administrativo de notificações em Supabase;
+- destinatários avançados de notificações: usuário do gatilho, usuários específicos e familiares próximos;
+- gatilho de primeira entrada real em `/mapa-familiar` com deduplicação por usuário;
 - continuidade do fluxo de preview/exportação em aba dedicada;
 - remoção de checklist datado de QA mobile após consolidação em `QA_MANUAL.md`.
 
