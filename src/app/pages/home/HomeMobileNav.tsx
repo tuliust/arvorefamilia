@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import {
   Bell,
   CalendarDays,
@@ -27,6 +27,9 @@ import {
   MobileFamilyMapToolbar,
   type MobileFamilyMapToolbarAction,
 } from '../../components/FamilyTree/MobileFamilyMapToolbar';
+import { MobileFamilyMapBackdrop } from '../../components/FamilyTree/MobileFamilyMapBackdrop';
+import { MobileFamilyMapContextTray } from '../../components/FamilyTree/MobileFamilyMapContextTray';
+import { MobileFamilyMapFullLayer } from '../../components/FamilyTree/MobileFamilyMapFullLayer';
 import {
   TREE_COLOR_PALETTE_CSS_VARIABLES,
   TREE_COLOR_PALETTE_STORAGE_KEY,
@@ -553,7 +556,6 @@ function navigateMobileMapOverview(screenName: MobileMapOverviewScreenName) {
 
 
 const mobileTreeToolbarTopClass = 'top-[calc(env(safe-area-inset-top,0px)+5.05rem)]';
-const mobileTreeViewPopoverTopClass = 'top-[calc(env(safe-area-inset-top,0px)+8.15rem)]';
 const paletteOptions: TreeColorPalette[] = ['white', 'visual', 'orange', 'brown'];
 const MOBILE_OVERVIEW_DESCENDANT_KEYS = ['irmaos', 'sobrinhos', 'conjuge', 'pets', 'filhos', 'netos'];
 const MOBILE_OVERVIEW_LOCK_ATTR = 'data-mobile-family-descendants-transform-lock';
@@ -747,6 +749,8 @@ export function HomeMobileNav({
   const [showExtendedSpouseFilters, setShowExtendedSpouseFilters] = useState(readStoredExtendedSpouseFilterState);
   const [fullControlsOpen, setFullControlsOpen] = useState(false);
   const [activeGroupTab, setActiveGroupTab] = useState<MobileFamilyGroupTab>('nucleo');
+  const contextTrayRef = useRef<HTMLDivElement | null>(null);
+  const [partialBackdropTop, setPartialBackdropTop] = useState(0);
   const [mobileMapOverviewCounts, setMobileMapOverviewCounts] = useState<Record<MobileMapOverviewScreenName, number>>(() => (
     Object.fromEntries(MOBILE_MAP_OVERVIEW_SCREENS.map((screen) => [screen.key, screen.key === 'core' ? 1 : 0])) as Record<MobileMapOverviewScreenName, number>
   ));
@@ -831,6 +835,7 @@ export function HomeMobileNav({
   const currentViewAsPersonValue = getCurrentSearchParams().get('pessoa')?.trim() || '';
   const isGenerationLinePath = pathname === '/linha-geracional';
   const isDirectFamilyMapPath = pathname === '/mapa-familiar';
+  const isMobileMapToolbarRoute = isDirectFamilyMapPath || isGenerationLinePath;
   const isDirectFamilyMap = pathname === '/mapa-familiar' || pathname === '/mapa-familiar-horizontal' || pathname === '/linha-geracional';
   const selectedViewAsPersonOption = useMemo(
     () => viewAsPersonOptions.find((option) => option.id === currentViewAsPersonValue),
@@ -1120,14 +1125,46 @@ export function HomeMobileNav({
   const visibleGenerationOverviewScreens = MOBILE_GENERATION_OVERVIEW_SCREENS.filter((screen) => (
     screen.generation === 5 || (mobileGenerationOverviewCounts[screen.generation] ?? 0) > 0
   ));
-  const activeMapPanelMode = isGenerationLinePath ? mobileGenerationMapPanelMode : mobileMapPanelMode;
+  const isFamilyMapFullOpen = isDirectFamilyMapPath && activeToolbarAction === 'zoom' && mobileMapPanelMode === 'full';
+  const isGenerationMapFullOpen = isGenerationLinePath && activeToolbarAction === 'zoom' && mobileGenerationMapPanelMode === 'full';
+  const isMapFullOpen = isFamilyMapFullOpen || isGenerationMapFullOpen;
+  const isTrayOpen = isMobileMapToolbarRoute && Boolean(activeToolbarAction) && !isMapFullOpen && !fullControlsOpen;
+  const isImmersiveOpen = isMapFullOpen || fullControlsOpen;
+
+  useLayoutEffect(() => {
+    if (!isTrayOpen) {
+      setPartialBackdropTop(0);
+      return;
+    }
+
+    const updateBackdropTop = () => {
+      const trayBottom = contextTrayRef.current?.getBoundingClientRect().bottom ?? 0;
+      setPartialBackdropTop(Math.max(0, Math.ceil(trayBottom)));
+    };
+
+    updateBackdropTop();
+
+    const resizeObserver = typeof ResizeObserver === 'undefined'
+      ? null
+      : new ResizeObserver(updateBackdropTop);
+    if (contextTrayRef.current) resizeObserver?.observe(contextTrayRef.current);
+
+    window.addEventListener('resize', updateBackdropTop, { passive: true });
+    window.addEventListener('orientationchange', updateBackdropTop, { passive: true });
+
+    return () => {
+      resizeObserver?.disconnect();
+      window.removeEventListener('resize', updateBackdropTop);
+      window.removeEventListener('orientationchange', updateBackdropTop);
+    };
+  }, [activeToolbarAction, isTrayOpen, mobileGenerationMapPanelMode, mobileMapPanelMode]);
 
   const itemClassName = 'flex min-h-14 flex-col items-center justify-center gap-1 rounded-lg px-1 text-xs font-semibold text-gray-700 transition hover:bg-gray-50 active:bg-gray-100';
   const activeItemClassName = 'flex min-h-14 flex-col items-center justify-center gap-1 rounded-lg bg-blue-50 px-1 text-xs font-semibold text-blue-700 ring-1 ring-blue-100 transition active:bg-blue-100';
 
   return (
     <>
-      {isDirectFamilyMap && (
+      {isMobileMapToolbarRoute && (
         <>
           <style>
             {`
@@ -1162,11 +1199,27 @@ export function HomeMobileNav({
             onAddClick={openFullControlsPanel}
           />
 
+          {isTrayOpen && (
+            <MobileFamilyMapBackdrop mode="partial" top={partialBackdropTop} />
+          )}
+
+          {isImmersiveOpen && (
+            <MobileFamilyMapBackdrop
+              mode="immersive"
+              onClick={() => {
+                if (fullControlsOpen) {
+                  setFullControlsOpen(false);
+                  return;
+                }
+
+                setMobileMapPanelMode('overview');
+                setMobileGenerationMapPanelMode('overview');
+              }}
+            />
+          )}
+
           {activeToolbarAction === 'visualizacao' && (
-            <div
-              className={`fixed inset-x-2 ${mobileTreeViewPopoverTopClass} z-[10001] pb-3 md:hidden`}
-              data-tree-export-ignore="true"
-            >
+            <MobileFamilyMapContextTray ref={contextTrayRef} action="visualizacao" className="pb-3">
               <label className="mx-auto block max-w-md">
                 <span className="sr-only">Selecionar visualizador</span>
                 <span className="relative block">
@@ -1189,14 +1242,11 @@ export function HomeMobileNav({
                   <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-700" />
                 </span>
               </label>
-            </div>
+            </MobileFamilyMapContextTray>
           )}
 
           {activeToolbarAction === 'formato' && (
-            <div
-              className={`fixed inset-x-2 ${mobileTreeViewPopoverTopClass} z-[10001] md:hidden`}
-              data-tree-export-ignore="true"
-            >
+            <MobileFamilyMapContextTray ref={contextTrayRef} action="formato">
               <div className="mx-auto max-w-md overflow-hidden rounded-xl border border-slate-200 bg-white/95 p-2 pb-5 shadow-sm backdrop-blur">
               <div className="grid grid-cols-2 gap-2">
                 {TREE_VIEW_OPTIONS.map((option) => {
@@ -1229,14 +1279,11 @@ export function HomeMobileNav({
                 })}
               </div>
               </div>
-            </div>
+            </MobileFamilyMapContextTray>
           )}
 
           {activeToolbarAction === 'cor' && (
-            <div
-              className={`fixed inset-x-3 ${mobileTreeViewPopoverTopClass} z-[10001] md:hidden`}
-              data-tree-export-ignore="true"
-            >
+            <MobileFamilyMapContextTray ref={contextTrayRef} action="cor">
               <div
                 className="mx-auto flex max-w-sm items-center justify-between gap-2 rounded-xl border border-slate-200 bg-white/95 px-3 py-1.5 shadow-sm backdrop-blur"
                 aria-label="Paletas de cores da árvore"
@@ -1266,14 +1313,11 @@ export function HomeMobileNav({
                   );
                 })}
               </div>
-            </div>
+            </MobileFamilyMapContextTray>
           )}
 
           {activeToolbarAction === 'grupos' && (
-            <div
-              className={`fixed inset-x-2 ${mobileTreeViewPopoverTopClass} z-[10001] md:hidden`}
-              data-tree-export-ignore="true"
-            >
+            <MobileFamilyMapContextTray ref={contextTrayRef} action="grupos">
               <div
                 className="mx-auto grid max-w-md grid-cols-2 gap-1.5"
                 role="dialog"
@@ -1311,39 +1355,22 @@ export function HomeMobileNav({
                   );
                 })}
               </div>
-            </div>
+            </MobileFamilyMapContextTray>
           )}
 
-          {activeToolbarAction === 'zoom' && (
-            <div
-              className={[
-                'fixed z-[10001] md:hidden',
-                activeMapPanelMode === 'full'
-                  ? 'inset-x-0'
-                  : `inset-x-2 ${mobileTreeViewPopoverTopClass}`,
-              ].join(' ')}
-              style={{
-                top: activeMapPanelMode === 'full'
-                  ? 'calc(env(safe-area-inset-top,0px)+7.75rem)'
-                  : undefined,
-                bottom: activeMapPanelMode === 'full'
-                  ? 'calc(env(safe-area-inset-bottom,0px)+5.3rem)'
-                  : 'calc(env(safe-area-inset-bottom,0px)+5.65rem)',
-              }}
-              data-tree-export-ignore="true"
+          {activeToolbarAction === 'zoom' && !isMapFullOpen && (
+            <MobileFamilyMapContextTray
+              ref={contextTrayRef}
+              action="zoom"
+              className="bottom-[calc(env(safe-area-inset-bottom,0px)+5.65rem)]"
             >
               <div
-                className={[
-                  'mx-auto flex h-full max-w-md flex-col',
-                  activeMapPanelMode === 'full'
-                    ? 'gap-0 overflow-hidden rounded-none border-0 bg-white p-0 shadow-none'
-                    : 'gap-2 rounded-2xl border border-slate-200 bg-white/95 p-2 shadow-[0_14px_34px_rgba(15,23,42,0.14)] backdrop-blur',
-                ].join(' ')}
+                className="mx-auto flex h-full max-h-[min(22rem,calc(100dvh-13.8rem))] max-w-md flex-col gap-2 overflow-hidden rounded-2xl border border-slate-200 bg-white/95 p-2 shadow-[0_14px_34px_rgba(15,23,42,0.14)] backdrop-blur"
                 aria-label="Mapa da família"
                 data-mobile-family-map-inline-overview="true"
                 data-mobile-family-map-overview-source="direct-map"
                 data-mobile-family-map-overview-stable="true"
-                data-mobile-family-map-panel-mode={activeMapPanelMode}
+                data-mobile-family-map-panel-mode="overview"
               >
                 {isGenerationLinePath ? (
                   mobileGenerationMapPanelMode === 'overview' ? (
@@ -1469,14 +1496,47 @@ export function HomeMobileNav({
                   </div>
                 )}
               </div>
-            </div>
+            </MobileFamilyMapContextTray>
+          )}
+
+          {isFamilyMapFullOpen && (
+            <MobileFamilyMapFullLayer
+              title="Mapa completo da familia"
+              onClose={() => setMobileMapPanelMode('overview')}
+            >
+              <div
+                id="mobile-family-map-full-overview"
+                className="mobile-family-full-map-panel flex h-full min-h-0 flex-1 flex-col"
+                role="region"
+                aria-label="Mapa completo da famÃƒÂ­lia"
+                data-tree-export-ignore="true"
+                data-mobile-family-map-full-inline="true"
+              >
+                <div className="mobile-family-full-map-viewport min-h-0 flex-1" aria-label="Mapa completo com zoom por toque" />
+              </div>
+            </MobileFamilyMapFullLayer>
+          )}
+
+          {isGenerationMapFullOpen && (
+            <MobileFamilyMapFullLayer
+              title="Visualizacao completa da linha geracional"
+              onClose={() => setMobileGenerationMapPanelMode('overview')}
+            >
+              <div
+                id="mobile-generation-line-full-overview"
+                className="mobile-generation-line-full-map-panel flex h-full min-h-0 flex-1 flex-col"
+                role="region"
+                aria-label="Mapa completo da linha geracional"
+                data-tree-export-ignore="true"
+                data-mobile-generation-line-full-inline="true"
+              >
+                <div className="mobile-generation-line-full-map-viewport min-h-0 flex-1" aria-label="Linha geracional completa com zoom por toque" />
+              </div>
+            </MobileFamilyMapFullLayer>
           )}
 
           {activeToolbarAction === 'exportar' && (
-            <div
-              className={`fixed inset-x-2 ${mobileTreeViewPopoverTopClass} z-[10001] md:hidden`}
-              data-tree-export-ignore="true"
-            >
+            <MobileFamilyMapContextTray ref={contextTrayRef} action="exportar">
               <div
                 className="mx-auto max-w-md rounded-xl border border-slate-200 bg-white/95 p-1.5 shadow-sm backdrop-blur"
                 role="dialog"
@@ -1504,12 +1564,12 @@ export function HomeMobileNav({
                   })}
                 </div>
               </div>
-            </div>
+            </MobileFamilyMapContextTray>
           )}
 
           {fullControlsOpen && (
             <div
-              className="fixed inset-0 z-[12000] md:hidden"
+              className="fixed inset-0 z-[12010] md:hidden"
               role="dialog"
               aria-modal="true"
               aria-label="Painel de visualização"
@@ -1517,7 +1577,7 @@ export function HomeMobileNav({
             >
               <button
                 type="button"
-                className="absolute inset-0 bg-slate-950/20 backdrop-blur-[1px]"
+                className="hidden"
                 onClick={() => setFullControlsOpen(false)}
                 aria-label="Fechar painel de visualização"
               />
