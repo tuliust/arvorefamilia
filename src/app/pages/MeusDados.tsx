@@ -492,7 +492,18 @@ export function MeusDados() {
 
   const scrollSobreMimToTop = () => {
     window.requestAnimationFrame(() => {
-      sobreMimSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      window.requestAnimationFrame(() => {
+        const section = sobreMimSectionRef.current;
+        if (!section) return;
+
+        const headerOffset = 96;
+        const top = section.getBoundingClientRect().top + window.scrollY - headerOffset;
+
+        window.scrollTo({
+          top: Math.max(top, 0),
+          behavior: 'smooth',
+        });
+      });
     });
   };
 
@@ -1278,7 +1289,7 @@ export function MeusDados() {
           </section>
 
           {form.falecido !== true && (
-          <section ref={sobreMimSectionRef} className="mt-5 rounded-xl border border-gray-200 bg-gray-50 p-4">
+          <section className="mt-5 rounded-xl border border-gray-200 bg-gray-50 p-4">
             <SectionTitle icon={MapPin}>Contato, endereço e redes</SectionTitle>
             <div className="grid grid-cols-1 items-start gap-4 md:grid-cols-2">
               <Field label="WhatsApp">
@@ -1317,7 +1328,7 @@ export function MeusDados() {
           </section>
           )}
 
-          <section className="mt-5 rounded-xl border border-gray-200 bg-gray-50 p-4">
+          <section ref={sobreMimSectionRef} className="mt-5 scroll-mt-24 rounded-xl border border-gray-200 bg-gray-50 p-4">
             <div className="mb-4">
               <SectionTitle icon={Sparkles} className="mb-0">Sobre Mim</SectionTitle>
               <p className="mt-2 break-words text-sm leading-relaxed text-gray-600">
@@ -1375,7 +1386,7 @@ export function MeusDados() {
                     type="button"
                     onClick={handleQuestionnaireFinish}
                     disabled={questionnaireSaving}
-                    className="h-12 min-w-[9rem] shrink-0 px-4 sm:h-10"
+                    className="h-12 min-w-[10rem] flex-1 shrink-0 px-4 sm:h-10 sm:flex-none sm:min-w-[9rem]"
                   >
                     {questionnaireSaving ? 'Salvando...' : 'Finalizar'}
                   </Button>

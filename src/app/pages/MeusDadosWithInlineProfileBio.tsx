@@ -699,6 +699,8 @@ function MeusDadosProfileBioResults() {
 function MeusDadosInlineProfileBioController() {
   const { resultHost, actionsHost, questionnaireCard, stepInfo } = useMeusDadosInlineHosts();
   const [showResults, setShowResults] = useState(false);
+  const finalStepReached = Boolean(stepInfo && stepInfo.current >= stepInfo.total);
+
   useHideConfirmUntilProfileResults(showResults);
 
   useEffect(() => {
@@ -714,25 +716,16 @@ function MeusDadosInlineProfileBioController() {
     });
   }, [questionnaireCard, showResults, stepInfo]);
 
-  const revealResults = useCallback(() => {
+  const revealResults = () => {
     setShowResults(true);
     window.setTimeout(() => {
       document.getElementById(PROFILE_RESULT_HOST_ID)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }, 80);
-  }, []);
-
-  useEffect(() => {
-    const handleQuestionnaireFinished = () => revealResults();
-    window.addEventListener('meus-dados:questionnaire-finished', handleQuestionnaireFinished);
-
-    return () => {
-      window.removeEventListener('meus-dados:questionnaire-finished', handleQuestionnaireFinished);
-    };
-  }, [revealResults]);
+  };
 
   return (
     <>
-      {actionsHost && !showResults ? createPortal(
+      {actionsHost && !showResults && !finalStepReached ? createPortal(
         <div className="flex w-full flex-col gap-2 sm:ml-auto sm:w-auto sm:flex-row sm:items-center">
           <Button
             type="button"

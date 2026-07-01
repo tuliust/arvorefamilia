@@ -1215,9 +1215,7 @@ export function MeusVinculos() {
       : {
           ativo: true,
           relationshipGroup: group === 'pets' ? 'pets' : group === 'filhos' ? 'filhos' : undefined,
-          otherParentId: childOtherParent[person.id] && childOtherParent[person.id] !== '__none__'
-            ? childOtherParent[person.id]
-            : null,
+          otherParentId: childOtherParent[person.id] || null,
         };
 
     return {
@@ -1574,7 +1572,8 @@ export function MeusVinculos() {
                 const status: RelationshipReviewStatus = hasProfileControlRequest(person.id)
                   ? 'control_pending'
                   : getRelationshipReviewStatus('pets', person);
-                const otherTutorOptions = getChildOtherParentOptionsForPerson(person);
+                const otherTutorOptions = uniquePeople(relationships.conjuges)
+                  .filter((spouse) => !removedRelationshipIds.conjuges.includes(spouse.id));
                 const tutorValue = childOtherParent[person.id] ?? '';
 
                 return (
@@ -1608,15 +1607,14 @@ export function MeusVinculos() {
                             }}
                             className="flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 ring-offset-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
                           >
-                            <option value="">Manter tutor atual do pré-cadastro</option>
-                            <option value="__none__">Não há outro tutor do pet</option>
+                            <option value="">Sou o único tutor</option>
                             {otherTutorOptions.map((option) => (
-                              <option key={option.id} value={option.id}>Alterar para {option.nome_completo}</option>
+                              <option key={option.id} value={option.id}>{option.nome_completo}</option>
                             ))}
                           </select>
                         </div>
                         {otherTutorOptions.length === 0 && (
-                          <p className="text-sm text-gray-500">Adicione um cônjuge ou outro familiar para habilitar a seleção de tutor adicional.</p>
+                          <p className="text-sm text-gray-500">Cadastre um cônjuge para informar outro tutor. Se não houver, mantenha “Sou o único tutor”.</p>
                         )}
                       </div>
                     )}
@@ -1724,22 +1722,24 @@ export function MeusVinculos() {
                                 placeholder="Cidade/UF"
                               />
                             </div>
-                            <div>
-                              <Label htmlFor={`spouse-separation-date-${person.id}`}>Data de separação</Label>
-                              <Input
-                                id={`spouse-separation-date-${person.id}`}
-                                value={details.data_separacao}
-                                onChange={(event) => updateMarriageDetail(person.id, {
-                                  ...details,
-                                  data_separacao: maskRelationshipDate(event.target.value),
-                                })}
-                                onBlur={() => updateMarriageDetail(person.id, {
-                                  ...details,
-                                  data_separacao: normalizeRelationshipDate(details.data_separacao),
-                                })}
-                                placeholder="DD/MM/AAAA ou AAAA"
-                              />
-                            </div>
+                            {!activeDisabled && (
+                              <div>
+                                <Label htmlFor={`spouse-separation-date-${person.id}`}>Data de separação</Label>
+                                <Input
+                                  id={`spouse-separation-date-${person.id}`}
+                                  value={details.data_separacao}
+                                  onChange={(event) => updateMarriageDetail(person.id, {
+                                    ...details,
+                                    data_separacao: maskRelationshipDate(event.target.value),
+                                  })}
+                                  onBlur={() => updateMarriageDetail(person.id, {
+                                    ...details,
+                                    data_separacao: normalizeRelationshipDate(details.data_separacao),
+                                  })}
+                                  placeholder="DD/MM/AAAA ou AAAA"
+                                />
+                              </div>
+                            )}
                           </div>
                         )}
                       </div>
