@@ -9,7 +9,7 @@ interface MobileFamilyMapContextTrayProps {
 
 const GENERATION_TRAY_CARDS = [1, 2, 3, 4, 5, 6].map((generation) => ({
   generation,
-  label: `GER. ${generation}`,
+  label: 'GERAÇÃO',
 }));
 
 function getGenerationNavigationButtons() {
@@ -151,11 +151,17 @@ export const MobileFamilyMapContextTray = React.forwardRef<HTMLDivElement, Mobil
       className,
     ].filter(Boolean).join(' ');
 
+    const generationTrayClassName = [
+      'fixed z-[10001] md:hidden inset-x-0 px-2',
+      'top-[calc(env(safe-area-inset-top,0px)+8.15rem)]',
+      'bg-white/95 pb-2 backdrop-blur',
+    ].join(' ');
+
     if (generationTrayState.enabled) {
       return (
         <div
           ref={setTrayRef}
-          className={trayClassName}
+          className={generationTrayClassName}
           data-mobile-family-map-context-tray="true"
           data-mobile-family-map-context-action={action}
           data-tree-export-ignore="true"
@@ -165,11 +171,11 @@ export const MobileFamilyMapContextTray = React.forwardRef<HTMLDivElement, Mobil
           </div>
 
           <div
-            className="mx-auto flex h-full max-h-[min(22rem,calc(100dvh-13.8rem))] max-w-md flex-col gap-2 overflow-hidden rounded-2xl border border-slate-200 bg-white/95 p-2 pb-3 shadow-[0_14px_34px_rgba(15,23,42,0.14)] backdrop-blur"
+            className="mx-auto flex max-w-md flex-col gap-2 overflow-hidden rounded-2xl border border-slate-200 bg-white/95 p-2 pb-3 shadow-[0_14px_34px_rgba(15,23,42,0.14)] backdrop-blur"
             aria-label="Mapa da linha geracional"
             data-mobile-generation-map-compact-tray="true"
           >
-            <div className="grid min-h-0 flex-1 grid-cols-3 gap-1.5">
+            <div className="grid grid-cols-3 gap-1.5">
               {GENERATION_TRAY_CARDS.map((card) => {
                 const active = generationTrayState.activeGeneration === card.generation;
                 const count = generationTrayState.counts[card.generation] ?? 0;
@@ -182,16 +188,16 @@ export const MobileFamilyMapContextTray = React.forwardRef<HTMLDivElement, Mobil
                     aria-current={active ? 'location' : undefined}
                     onClick={() => handleGenerationClick(card.generation)}
                     className={[
-                      'flex min-h-[4.9rem] min-w-0 flex-col items-center justify-center gap-1 rounded-xl border bg-white px-1.5 py-2 text-center shadow-sm transition active:scale-[0.99]',
+                      'flex min-h-[6.05rem] min-w-0 flex-col items-center justify-center gap-2 rounded-xl border bg-white px-1.5 py-3 text-center shadow-sm transition active:scale-[0.99]',
                       active
                         ? 'border-cyan-600 bg-cyan-50 text-slate-950 ring-2 ring-cyan-600/60'
                         : 'border-slate-200 text-slate-900 hover:border-cyan-200 hover:bg-cyan-50/70',
                     ].join(' ')}
                   >
-                    <span className="flex min-h-[1rem] w-full items-center justify-center text-[10px] font-black uppercase leading-none tracking-[-0.015em] text-current">
+                    <span className="flex min-h-[1rem] w-full items-center justify-center text-[10.5px] font-black uppercase leading-none tracking-[-0.015em] text-current">
                       {card.label}
                     </span>
-                    <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-xl bg-[var(--tree-palette-card-central,#38bdf8)] text-[var(--tree-palette-text-primary,#0f172a)] text-[10px] font-black shadow-[0_7px_16px_rgba(15,23,42,0.12)]" aria-hidden="true">
+                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-slate-100 text-[13px] font-black text-slate-950 shadow-[0_7px_16px_rgba(15,23,42,0.10)]" aria-hidden="true">
                       {card.generation}
                     </span>
                     <span className="inline-flex max-w-full shrink-0 items-center justify-center rounded-full border border-cyan-200 bg-cyan-50 px-1.5 py-0.5 text-[8.5px] font-black leading-none text-cyan-900">
