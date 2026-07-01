@@ -6,10 +6,12 @@ const NATIVE_TOGGLE_SELECTOR = 'button:not([data-family-map-mobile-card="true"])
 const STYLE_ID = 'mobile-family-map-uncle-card-limit-style';
 const CARD_LIMIT = 8;
 const UNCLE_SCREENS = ['paternal-uncles', 'maternal-uncles'] as const;
+const UNCLE_SCREEN_SELECTOR = '[data-mobile-family-tree-screen="paternal-uncles"], [data-mobile-family-tree-screen="maternal-uncles"]';
 
 type UncleScreenName = typeof UNCLE_SCREENS[number];
 
 let scheduled = false;
+let nativeExpansionClickAllowed = false;
 
 function isMobileViewport() {
   return typeof window !== 'undefined'
@@ -43,6 +45,14 @@ function getNativeToggle(screen: HTMLElement) {
       const text = (button.textContent ?? '').trim().toLowerCase();
       return text.includes('ver todos') || text.includes('mostrar menos');
     }) ?? null;
+}
+
+function isNativeUncleToggle(button: HTMLButtonElement) {
+  if (button.hasAttribute('data-mobile-family-tree-uncle-limit-toggle')) return false;
+  if (!button.closest(UNCLE_SCREEN_SELECTOR)) return false;
+
+  const text = (button.textContent ?? '').trim().toLowerCase();
+  return text.includes('ver todos') || text.includes('mostrar menos');
 }
 
 function getGroupPanel(screen: HTMLElement) {
@@ -116,7 +126,12 @@ function ensureReactGroupIsExpanded(screen: HTMLElement) {
   if (screen.dataset.mobileFamilyTreeUncleNativeExpanded === 'true') return false;
 
   screen.dataset.mobileFamilyTreeUncleNativeExpanded = 'true';
-  nativeToggle.click();
+  nativeExpansionClickAllowed = true;
+  try {
+    nativeToggle.click();
+  } finally {
+    nativeExpansionClickAllowed = false;
+  }
   return true;
 }
 
@@ -196,7 +211,20 @@ function scheduleApplyLimits() {
   });
 }
 
+function handleNativeUncleToggleClick(event: Event) {
+  if (!isEnabled()) return;
+  const target = event.target instanceof Element ? event.target : null;
+  const button = target?.closest<HTMLButtonElement>('button');
+  if (!button || !isNativeUncleToggle(button)) return;
+  if (nativeExpansionClickAllowed) return;
+
+  event.preventDefault();
+  event.stopPropagation();
+  if ('stopImmediatePropagation' in event) event.stopImmediatePropagation();
+}
+
 if (typeof window !== 'undefined' && typeof document !== 'undefined') {
+  document.addEventListener('click', handleNativeUncleToggleClick, { capture: true });
   applyLimits();
   [80, 240, 520, 1000, 1800].forEach((delay) => window.setTimeout(applyLimits, delay));
 
