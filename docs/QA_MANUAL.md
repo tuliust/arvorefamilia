@@ -26,7 +26,7 @@ npm run build
 
 No PowerShell, usar alternativa equivalente para buscar o caractere `U+FFFD` nos arquivos Markdown.
 
-Quando houver migration nova, confirmar se o arquivo existe localmente e se foi aplicado no Supabase remoto. Para vínculos de responsáveis pessoa-a-pessoa, validar `supabase/migrations/20260627143000_create_person_responsible_links.sql` e `supabase/migrations/20260627152000_allow_responsible_people_perspective.sql`. Para notificações administrativas, validar `supabase/migrations/20260701120000_persist_admin_notification_config_and_first_map_access.sql` e `supabase/migrations/20260701143000_persist_full_admin_notification_catalog.sql`.
+Quando houver migration nova, confirmar se o arquivo existe localmente e se foi aplicado no Supabase remoto. Para vínculos de responsáveis pessoa-a-pessoa, validar `supabase/migrations/20260627143000_create_person_responsible_links.sql` e `supabase/migrations/20260627152000_allow_responsible_people_perspective.sql`. Para notificações administrativas, validar `supabase/migrations/20260701120000_persist_admin_notification_config_and_first_map_access.sql`, `supabase/migrations/20260701143000_persist_full_admin_notification_catalog.sql` e `supabase/migrations/20260701170000_add_variable_settings_to_admin_notification_config.sql`.
 
 ## QA transversal
 
@@ -292,14 +292,27 @@ Validar com usuário admin:
 - frequência salva e permanece após recarregar;
 - status ativo/inativo salva e permanece após recarregar;
 - edição de título, texto e CTA salva e permanece após recarregar;
+- em tipo customizado, o título editado deve aparecer no seletor de tipo e substituir `Nova notificação N`;
 - inclusão de variável salva e permanece após recarregar;
+- clicar em variável insere no cursor do campo ativo, não sempre ao final do texto;
+- `{{nome}}` deve inserir `{{nome_curto}}`;
+- `{{nome_autor}}` deve inserir `{{nome_autor_curto}}`;
+- a área `Editar regras das variáveis` abre para cada variável;
+- `{{link}}` pode ser configurado com valor `/mapa-familiar`;
+- variáveis de data permitem formatos `short`, `long`, `relative` e `custom`;
+- regras de variáveis persistem em `variable_settings`;
 - canais `interna`, `email`, `push` e `whatsapp` podem ser marcados/desmarcados conforme disponibilidade;
 - destinatário `Usuário do gatilho` pode ser marcado;
+- ao marcar `Usuário do gatilho`, abre seleção de eventos;
+- `Primeiro acesso ao mapa familiar` aparece como implementado;
+- `Primeiro login`, `Conclusão do primeiro acesso` e `Atualização própria de perfil` aparecem como preparados quando ainda não houver conexão real de dispatch;
 - destinatário `Usuários específicos` abre seleção múltipla de usuários;
 - seleção de usuários específicos persiste após salvar;
 - destinatário `Familiares próximos` pode ser marcado;
 - botão `Novo tipo` cria tipo customizado sem quebrar templates;
 - botão `Salvar` grava em `admin_notification_configurations` e atualiza `admin_notification_catalogs`;
+- trocar de aba do navegador e voltar mantém a aba `Configuração` ativa;
+- rascunhos não salvos são preservados localmente até salvamento ou edição posterior;
 - feedback de sucesso ou erro aparece por `toast`;
 - abas não devem exibir slugs crus como texto principal de leitura.
 
@@ -320,11 +333,14 @@ Resultado esperado: linha `default` com contagens maiores que zero.
 Também validar:
 
 ```sql
-select config_key, updated_at
+select
+  config_key,
+  jsonb_typeof(variable_settings) as variable_settings_type,
+  updated_at
 from public.admin_notification_configurations;
 ```
 
-Resultado esperado: linha `default` após salvar configurações.
+Resultado esperado: linha `default`, `variable_settings_type = 'object'` e `updated_at` atualizado após salvar configurações.
 
 ### Primeiro acesso a `/mapa-familiar`
 

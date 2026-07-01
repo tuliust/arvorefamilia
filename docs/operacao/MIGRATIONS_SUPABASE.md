@@ -14,6 +14,7 @@ A branch atual possui diretório versionado `supabase/migrations`. As fontes SQL
 - `supabase/migrations/20260627152000_allow_responsible_people_perspective.sql`, que permite a perspectiva de pessoas sob responsabilidade quando aplicável;
 - `supabase/migrations/20260701120000_persist_admin_notification_config_and_first_map_access.sql`, que cria persistência de configuração administrativa de notificações e deduplicação do primeiro acesso a `/mapa-familiar`;
 - `supabase/migrations/20260701143000_persist_full_admin_notification_catalog.sql`, que cria persistência do catálogo administrativo completo de notificações;
+- `supabase/migrations/20260701170000_add_variable_settings_to_admin_notification_config.sql`, que adiciona `variable_settings` para origem, link, fallback e formato de variáveis administrativas;
 - `supabase/forum-schema.sql`;
 - `supabase/google-calendar-schema.sql`;
 - `supabase/config.toml`;
@@ -30,6 +31,7 @@ A branch atual possui diretório versionado `supabase/migrations`. As fontes SQL
 - Status conjugal permanece inferido pelos campos existentes; não criar migration de `status_conjugal` sem decisão explícita de schema.
 - Vínculos de responsáveis pessoa-a-pessoa devem usar `person_responsible_links`, não gravação indevida em `user_person_links.user_id`.
 - Catálogo administrativo de notificações deve usar `admin_notification_catalogs`; entregas reais ao usuário permanecem em `notificacoes_usuario`.
+- Configurações por variável de notificação devem usar `admin_notification_configurations.variable_settings` em JSONB, sem criar colunas específicas por variável.
 
 ## Tabelas e domínios esperados pela aplicação
 
@@ -47,6 +49,7 @@ A documentação funcional depende de tabelas ou estruturas equivalentes para:
 - notificações e preferências;
 - configurações administrativas de notificações;
 - catálogo administrativo de notificações;
+- regras administrativas de variáveis de notificação;
 - primeiro acesso ao mapa familiar;
 - fórum;
 - logs de atividade;
@@ -59,9 +62,37 @@ A documentação funcional depende de tabelas ou estruturas equivalentes para:
 |---|---|
 | `notificacoes_usuario` | Notificações reais entregues aos usuários. |
 | `preferencias_notificacao` | Preferências individuais por tipo/canal. |
-| `admin_notification_configurations` | Overrides e configurações da tela administrativa. |
+| `admin_notification_configurations` | Overrides, configurações da tela administrativa e `variable_settings`. |
 | `admin_notification_catalogs` | Snapshot editável do catálogo completo. |
 | `user_first_map_accesses` | Deduplicação do primeiro acesso real a `/mapa-familiar`. |
+
+### Coluna `variable_settings`
+
+A coluna `admin_notification_configurations.variable_settings` deve existir quando a UI de edição de regras de variáveis estiver ativa.
+
+Contrato:
+
+- tipo `jsonb`;
+- `not null`;
+- default `'{}'::jsonb`;
+- usada para guardar origem, valor, fallback, link e formato de data por variável/template;
+- não substitui `variable_overrides`, que continua representando a lista de tokens disponíveis por template.
+
+Validação SQL sugerida:
+
+```sql
+select
+  column_name,
+  data_type,
+  is_nullable,
+  column_default
+from information_schema.columns
+where table_schema = 'public'
+  and table_name = 'admin_notification_configurations'
+  and column_name = 'variable_settings';
+```
+
+Resultado esperado: uma linha `variable_settings`, `jsonb`, `NO` e default `{}`.
 
 ## Checklist operacional
 
@@ -72,6 +103,6 @@ A documentação funcional depende de tabelas ou estruturas equivalentes para:
 5. Confirmar que dados sensíveis não são expostos em views públicas.
 6. Confirmar RPC `get_person_profile_selected_badges(uuid)` ou fallback da aplicação.
 7. Confirmar RPCs de `/admin/home` quando configuração pública ou auditoria visual estiverem em validação.
-8. Quando houver mudanças em notificações administrativas, confirmar `admin_notification_configurations`, `admin_notification_catalogs` e `user_first_map_accesses`.
+8. Quando houver mudanças em notificações administrativas, confirmar `admin_notification_configurations`, `admin_notification_catalogs`, `user_first_map_accesses` e `admin_notification_configurations.variable_settings`.
 9. Rodar `npx supabase db push` antes do build quando houver migration nova.
 10. Rodar a aplicação e validar as rotas documentadas em `QA_MANUAL.md`.
