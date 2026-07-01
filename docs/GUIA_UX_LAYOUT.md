@@ -126,7 +126,7 @@ Os botões da visão geral mobile devem seguir contrato visual próprio:
 - Em `Mapa` de `/mapa-familiar`, o blur parcial começa abaixo dos cards de grupos e do CTA.
 - Em `Mapa` de `/linha-geracional`, o blur parcial começa abaixo do container `Gerações`, incluindo o botão `Exibir mapa completo`.
 - O backdrop parcial deve terminar no topo real da navegação inferior e nunca pode ocultá-la.
-- O modo imersivo é exclusivo do mapa completo: cobre a shell atrás do mapa, mas nunca cobre a camada completa nem o botão `X`.
+- O modo imersivo é reservado a camadas completas, especialmente mapa completo e painel do botão `+`: cobre a shell atrás da camada ativa, mas nunca cobre a camada completa nem seus controles próprios, como o botão `X`.
 - A toolbar não pode mudar de posição quando qualquer painel é aberto.
 
 ### `/linha-geracional`

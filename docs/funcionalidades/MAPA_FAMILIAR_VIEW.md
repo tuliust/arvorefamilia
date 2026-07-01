@@ -97,7 +97,7 @@ Contrato visual:
 - Backdrop/blur mobile, quando usado em painéis parciais, deve afetar apenas o conteúdo atrás do painel ativo, sem cobrir header, toolbar, painel, cards, CTA ou menu inferior.
 - O backdrop parcial deve calcular o limite inferior pelo topo real da navegação inferior (`nav[data-tree-export-ignore="true"]`) e usar `safe-area` apenas como fallback.
 - O backdrop parcial não deve deixar faixa desfocada acima do menu inferior nem cobrir a área clicável da navegação.
-- O modo imersivo é reservado ao mapa completo: ele cobre a shell da página atrás do mapa, enquanto a camada do mapa completo e o botão `X` permanecem acima do blur.
+- O modo imersivo é reservado a camadas completas, especialmente `Exibir mapa completo` e o painel do botão `+`: ele cobre a shell da página atrás da camada ativa, enquanto o mapa completo, o painel aberto e seus controles próprios permanecem acima do blur.
 
 ### Camadas mobile: tray parcial e modo imersivo
 
