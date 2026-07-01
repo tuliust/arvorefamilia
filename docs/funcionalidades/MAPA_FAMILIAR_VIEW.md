@@ -94,7 +94,10 @@ Contrato visual:
 - A visualização mobile usa telas/grupos navegáveis por gesto, sem herdar o painel fixo desktop.
 - A shell mobile das rotas de mapa preserva header, toolbar superior, área de conteúdo e navegação inferior como estrutura principal da página.
 - A toolbar mobile de mapa expõe `Formato`, `Cor`, `Filtros`, `Mapa` e `+`; abrir qualquer painel por esses botões não pode deslocar a toolbar para a parte inferior nem ocultar a navegação inferior.
-- Backdrop/blur mobile, quando usado, deve afetar apenas o conteúdo atrás do painel ativo, sem cobrir header, toolbar, painel, cards, CTA, mapa completo ou menu inferior.
+- Backdrop/blur mobile, quando usado em painéis parciais, deve afetar apenas o conteúdo atrás do painel ativo, sem cobrir header, toolbar, painel, cards, CTA ou menu inferior.
+- O backdrop parcial deve calcular o limite inferior pelo topo real da navegação inferior (`nav[data-tree-export-ignore="true"]`) e usar `safe-area` apenas como fallback.
+- O backdrop parcial não deve deixar faixa desfocada acima do menu inferior nem cobrir a área clicável da navegação.
+- O modo imersivo é reservado ao mapa completo: ele cobre a shell da página atrás do mapa, enquanto a camada do mapa completo e o botão `X` permanecem acima do blur.
 - O painel aberto pelo botão `+` deve aparecer na camada mais alta da página, acima de header, toolbar, notificações, busca e conteúdo da árvore.
 - O painel de visualização deve reconhecer corretamente os familiares da pessoa ativa: pais, cônjuges, irmãos, filhos, pets, avós, bisavós, tataravós, tios, primos e sobrinhos.
 - Os itens expandidos do painel devem exibir primeiro e segundo nome completos, evitando truncamentos como duas letras ou reticências prematuras.
@@ -134,6 +137,9 @@ Contrato visual e funcional:
 - tocar em um grupo deve navegar para a tela do grupo dentro de `/mapa-familiar`, sem abrir `/pessoa/:id`;
 - o guard contra ghost click deve impedir que o toque no painel vaze para cards posicionados por baixo;
 - o painel deve ficar acima do backdrop/blur e abaixo da toolbar dentro da estrutura mobile;
+- a área branca do painel deve envolver a grade de grupos e o CTA `Exibir mapa completo`, sem corte visual abaixo do botão;
+- os círculos e ícones centrais dos cards podem ser levemente reduzidos em telas estreitas para preservar margem, título e contador;
+- a partir de 390px, os ícones podem recuperar tamanho moderado sem comprometer o encaixe;
 - o backdrop/blur deve começar abaixo do painel ativo e terminar antes da navegação inferior;
 - o botão da toolbar mobile deve se chamar `Mapa`, não `Zoom`, porque sua função é abrir a visão geral de grupos;
 - o zoom real deve permanecer associado ao fluxo `Exibir mapa completo`;
@@ -143,14 +149,16 @@ Contrato visual e funcional:
 
 ### Mapa completo mobile
 
-O botão `Exibir mapa completo` abre a visualização completa da árvore no mobile dentro da experiência da rota, preservando a estrutura de navegação da página quando esse contrato estiver ativo: header, toolbar superior e menu inferior continuam visíveis e utilizáveis.
+O botão `Exibir mapa completo` abre uma camada própria de mapa completo no mobile. Essa camada fica acima do blur imersivo e da shell da página.
 
 Contrato atual:
 
-- a abertura parte do painel `Mapa`/`Mapa da família`;
-- o mapa completo deve ficar acima do backdrop/blur e não pode ser escurecido, desfocado ou dessaturado pela camada de fundo;
-- header, toolbar superior, painel ativo e navegação inferior não podem ser cobertos pelo mapa ou pelo backdrop;
-- o mapa completo deve ter área própria de viewport, com botão de fechar e ação de reenquadrar quando aplicável;
+- a abertura parte do painel `Mapa`/`Mapa da família` ou do painel `Mapa` da linha geracional;
+- o blur imersivo pode cobrir a shell da página atrás da camada completa;
+- o mapa completo, seus controles internos e o botão `X` não podem ficar por baixo do blur;
+- a camada completa usa viewport própria, respeitando `safe-area` superior, inferior e laterais;
+- o botão `X` deve ficar no canto superior direito, acima do mapa, com área de toque confortável e `z-index` superior ao palco;
+- fechar pelo `X` deve remover o blur imersivo, desmontar a camada completa e retornar ao estado anterior da shell, preferencialmente com o tray `Mapa` restaurável;
 - o usuário pode usar pan com um dedo e zoom por gesto de pinça;
 - pan e zoom não podem resetar automaticamente após o usuário soltar o dedo ou encerrar a pinça;
 - reidratações, `MutationObserver`, resize ou ajustes defensivos não podem sobrescrever o `transform` aplicado pelo usuário, salvo em ação explícita de reenquadrar ou reconstrução real do stage;
@@ -193,11 +201,16 @@ O painel acionado por `Mapa` em `/linha-geracional` deve ser isolado da rota `/m
 Contrato:
 
 - o runtime específico da linha geracional só deve ser montado em `/linha-geracional`;
-- header, toolbar superior e navegação inferior devem permanecer visíveis;
+- header, toolbar superior e navegação inferior devem permanecer visíveis durante o painel parcial;
 - o painel de gerações deve ficar acima do backdrop/blur, sem ser escurecido ou desfocado;
-- o painel deve exibir cards de `Geração 1` a `Geração 6` quando houver dados suficientes ou quando a estrutura de navegação exigir atalhos fixos;
-- o botão `Exibir visualização completa` deve ficar dentro da área branca do painel e acima do backdrop;
-- o backdrop/blur deve começar abaixo do container completo de `Gerações`, incluindo o botão inferior;
+- o fundo branco do painel deve envolver toda a grade de gerações e o CTA inferior;
+- o painel deve exibir atalhos compactos `GER. 1`, `GER. 2`, `GER. 3`, `GER. 4`, `GER. 5` e `GER. 6`;
+- os cards devem preferencialmente formar grid `3x2`, com contador de pessoas por geração quando disponível;
+- a geração ativa deve ter estado visual evidente e atributo de estado/acessibilidade equivalente;
+- tocar em um card `GER. N` deve acionar a navegação real da geração correspondente, atualizar o estado ativo e fechar o tray sem trocar de rota;
+- quando uma geração não tiver cards renderizados, o contador pode exibir `0 pessoas`, preservando o atalho fixo quando a navegação exigir;
+- o botão `Exibir mapa completo` deve ficar dentro da área branca do painel e acima do backdrop;
+- o backdrop/blur parcial deve começar abaixo do container completo de `Gerações`, incluindo o botão inferior, e terminar no topo real da navegação inferior;
 - a visualização completa deve montar colunas geracionais lado a lado e preservar pan/zoom sem reset automático após o gesto;
 - grupos devem ser calculados a partir dos dados reais de pessoas e relacionamentos;
 - nomes de pessoas devem exibir primeiro e segundo nome completos quando disponíveis;

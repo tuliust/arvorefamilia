@@ -71,8 +71,19 @@ Componentes relevantes:
 - Em `paternal-cousins` e `maternal-cousins`, o scroll vertical interno deve ter prioridade sobre a navegação por swipe e funcionar com um dedo no iPhone.
 - O botão mobile `Mapa` abre a visão geral de grupos; zoom real é reservado ao mapa completo.
 - A toolbar mobile de mapa deve permanecer fixa abaixo do header ao abrir `Formato`, `Cor`, `Filtros`, `Mapa` ou `+`.
-- Backdrop/blur mobile deve ser calculado abaixo do painel ativo e antes da navegação inferior.
-- Painéis ativos, cards, CTA e mapas completos devem permanecer acima do backdrop.
+- `MobileFamilyMapBackdrop.tsx` controla o backdrop React parcial/imersivo:
+  - no modo parcial, calcula `bottom` a partir do topo real do menu inferior;
+  - no modo imersivo, cobre a shell atrás do mapa completo;
+  - não deve usar `MutationObserver` para posicionar o blur.
+- `MobileFamilyMapContextTray.tsx` controla os trays contextuais da toolbar:
+  - preserva os children originais para ações internas;
+  - em `/linha-geracional`, substitui o card único por atalhos compactos `GER. 1` a `GER. 6`;
+  - fecha o tray após navegação para a geração selecionada;
+  - mantém o CTA `Exibir mapa completo` dentro da área branca.
+- `MobileFamilyMapFullLayer.tsx` monta a camada de mapa completo acima do blur imersivo, com botão `X` no canto superior direito, respeito a `safe-area` e área de toque confortável.
+- Backdrop/blur parcial deve ser calculado abaixo do painel ativo e terminar no topo da navegação inferior.
+- Painéis ativos, cards, CTA e mapas completos devem permanecer acima do backdrop aplicável.
+- Os seletores legados `mobile-map-toolbar-panel-backdrop`, `data-mobile-map-toolbar-backdrop`, `--mobile-map-toolbar-backdrop-top` e `--mobile-map-toolbar-backdrop-bottom` não devem ser reintroduzidos.
 
 ## Scripts carregados por `index.html`
 
@@ -118,14 +129,16 @@ O mapa completo mobile não deve ser tratado como simples captura ou clone de DO
 Contrato:
 
 - a abertura parte do botão `Exibir mapa completo` no painel `Mapa da família` ou no painel de gerações da linha geracional;
-- quando aberto dentro da shell mobile, header, toolbar superior e navegação inferior devem permanecer preservados conforme contrato da rota;
-- o mapa completo deve ficar acima do backdrop/blur e não pode ser escurecido, desfocado ou dessaturado;
+- a camada completa fica acima do blur imersivo e da shell da página;
+- no modo completo, a shell da página pode ficar como fundo desfocado; a interação principal passa a ser o mapa completo e seu botão `X`;
+- o botão `X` deve ficar no canto superior direito, respeitar `safe-area`, ter área de toque confortável e ficar acima do palco do mapa;
+- fechar o mapa deve remover a camada completa, limpar o blur imersivo e retornar ao estado anterior sem deixar backdrop preso;
 - a estrutura é montada por modelo declarativo com pessoas, nós e arestas;
 - conectores são SVGs gerados por âncoras dos nós;
 - pan e zoom devem usar eventos de toque sem permitir scroll da página por baixo;
 - reidratações e observers não podem sobrescrever o `transform` aplicado pelo usuário após pan ou pinça;
 - a ação `Reenquadrar` deve recalcular escala e posição conforme o viewport;
-- fechar o mapa deve remover a camada ou retornar ao painel anterior sem deixar backdrop preso.
+- a camada React de fechamento pertence a `MobileFamilyMapFullLayer.tsx`; fluxos legados de mapa completo devem respeitar os mesmos contratos de camada, toque e fechamento.
 
 ## Status conjugal
 

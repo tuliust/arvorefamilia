@@ -36,7 +36,9 @@ As rotas são declaradas em `src/app/routes.tsx`. Este documento deve citar apen
 - `/mapa-familiar` não deve carregar runtime específico da linha geracional.
 - O isolamento entre `/mapa-familiar` e `/linha-geracional` é regra de não regressão para evitar travamentos, overlays indevidos ou mudança de layout entre rotas.
 - Runtimes de mapa mobile importados por side effect devem permanecer isolados por rota, breakpoint e seletor explícito.
-- O backdrop/blur dos painéis de mapa é recurso visual da shell mobile e não deve mudar rota, guard ou estado de autenticação.
+- Componentes React de mapa mobile (`MobileFamilyMapBackdrop`, `MobileFamilyMapContextTray` e `MobileFamilyMapFullLayer`) não alteram rota, guard ou estado de autenticação.
+- O backdrop/blur parcial dos painéis de mapa é recurso visual da shell mobile e não deve mudar rota, guard ou estado de autenticação.
+- O mapa completo é camada visual temporária acima da rota atual; fechar pelo `X` deve restaurar a mesma rota e a mesma perspectiva de pessoa.
 
 ## Rotas de onboarding
 

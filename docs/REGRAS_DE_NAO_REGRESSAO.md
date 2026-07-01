@@ -57,21 +57,26 @@
 - O botão `Mapa` deve abrir a visão geral em `/mapa-familiar` e cada card deve navegar para sua tela correta, sem depender da tela atual do usuário.
 - O zoom real no mobile deve permanecer no fluxo `Exibir mapa completo`, com pan e pinça próprios.
 - Ao abrir `Formato`, `Cor`, `Filtros`, `Mapa` ou `+`, a toolbar mobile não pode mudar de posição e a navegação inferior não pode desaparecer.
-- Backdrop/blur mobile deve ficar atrás do painel ativo e nunca cobrir header, toolbar, cards, CTA, mapa completo ou navegação inferior.
-- Em `Formato`, `Mapa da família` e `Gerações`, o blur deve começar abaixo do container completo do painel, incluindo botões inferiores.
+- Backdrop/blur parcial deve ficar atrás do painel ativo e nunca cobrir header, toolbar, cards, CTA ou navegação inferior.
+- Backdrop/blur parcial deve terminar no topo real da navegação inferior, sem faixa desfocada acima do menu inferior.
+- O modo imersivo é exclusivo do mapa completo e nunca pode cobrir a camada do mapa completo nem o botão `X`.
+- Em `Formato`, `Mapa da família` e `Gerações`, o blur parcial deve começar abaixo do container completo do painel, incluindo botões inferiores.
+- O fundo branco de `Mapa da família` e `Gerações` deve envolver cards e CTA, sem corte abaixo de `Exibir mapa completo`.
 - `Tios Paternos` e `Tios Maternos` devem exibir inicialmente no máximo 8 cards no mobile quando houver muitos registros.
 - O botão local `+` dos tios deve revelar os demais cards e alternar para `−` para recolher; ele não pode acionar o painel global da toolbar.
 - `Primos Paternos` e `Primos Maternos` devem rolar com um dedo em iPhone/Safari.
 - Handlers em `window capture` ou `document capture` não podem bloquear `touchmove` antes de avaliar se há scroll interno vertical disponível.
 - O retorno de primos para tios deve ocorrer apenas no topo da lista de primos, quando o usuário puxar para baixo.
+- Os seletores legados `mobile-map-toolbar-panel-backdrop`, `data-mobile-map-toolbar-backdrop`, `--mobile-map-toolbar-backdrop-top` e `--mobile-map-toolbar-backdrop-bottom` não devem ser reintroduzidos como contrato ou dependência funcional.
 
 ### Mapa completo mobile
 
-- O botão `Exibir mapa completo` deve abrir a visualização completa sem sair da estrutura mobile contratada para a rota.
-- Header, toolbar superior e navegação inferior devem permanecer visíveis quando o contrato visual da rota exigir shell preservada.
+- O botão `Exibir mapa completo` deve abrir uma camada completa acima do blur imersivo.
 - O mapa completo não pode ficar por baixo de backdrop/blur.
 - O modal/painel anterior não pode permanecer por cima do mapa completo.
 - O mapa completo deve ter botão `X` e ação `Reenquadrar` quando aplicável.
+- O botão `X` deve ficar no canto superior direito, respeitar `safe-area`, ter área de toque confortável e permanecer acima do palco do mapa.
+- Fechar pelo `X` deve remover a camada completa, limpar o blur imersivo e restaurar a shell mobile sem overlay preso.
 - Pan e zoom por pinça devem funcionar sem rolar a página por baixo.
 - Pan e zoom não podem resetar automaticamente após o usuário soltar o dedo ou encerrar a pinça.
 - Reidratação, `MutationObserver`, resize ou runtime defensivo não podem sobrescrever o `transform` do usuário, salvo por `Reenquadrar` ou reconstrução real do stage.
@@ -93,8 +98,12 @@
 - Cards de cônjuges devem ficar empilhados quando necessário.
 - Linhas laterais devem conectar apenas relações reais, não todos os cards da geração.
 - Mudanças na linha geracional mobile não devem alterar o layout desktop de `/mapa-familiar-horizontal`.
-- O painel `Mapa` de `/linha-geracional` deve preservar header, toolbar superior e navegação inferior.
-- O container `Gerações`, seus cards e o botão `Exibir visualização completa` devem ficar acima do backdrop/blur.
+- O painel `Mapa` de `/linha-geracional` deve preservar header, toolbar superior e navegação inferior durante o painel parcial.
+- O container `Gerações`, seus cards e o botão `Exibir mapa completo` devem ficar acima do backdrop/blur parcial.
+- O painel `Mapa` deve exibir atalhos compactos `GER. 1` a `GER. 6`, preferencialmente em grid `3x2`.
+- Cada card `GER. N` deve navegar para a geração correspondente, atualizar o estado ativo e fechar o tray sem trocar de rota.
+- Contadores de pessoas por geração devem refletir os cards renderizados quando disponíveis.
+- O fundo branco do painel deve envolver grade e CTA inferior.
 - A visualização completa de `/linha-geracional` deve preservar o `transform` após pan ou pinch.
 
 ## Overlays mobile de header

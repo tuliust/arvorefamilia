@@ -30,6 +30,9 @@
 | `DesktopFamilyHorizontalMapFilteredView.tsx` | Linha geracional desktop filtrada. |
 | `MobileFamilyHorizontalMapView.tsx` | Linha geracional mobile/horizontal. |
 | `MobileFamilyHorizontalMapFilteredView.tsx` | Linha geracional mobile filtrada. |
+| `MobileFamilyMapBackdrop.tsx` | Backdrop mobile parcial ou imersivo dos painéis de mapa; no modo parcial calcula o limite inferior pelo menu inferior real e no modo imersivo cobre a shell atrás do mapa completo. |
+| `MobileFamilyMapContextTray.tsx` | Tray contextual dos botões `Formato`, `Cor`, `Filtros` e `Mapa`; em `/linha-geracional`, renderiza os atalhos compactos `GER. 1` a `GER. 6` e reaproveita o CTA real de mapa completo. |
+| `MobileFamilyMapFullLayer.tsx` | Camada completa mobile acima do blur imersivo, com container próprio, respeito a `safe-area` e botão `X` no canto superior direito. |
 | `mobileFamilyTreeModel.ts` | Modelo de parentesco mobile usado para reconhecer grupos familiares e navegação por telas. |
 | `buildTreeGraph.ts` | Montagem do grafo a partir de pessoas e relacionamentos. |
 | `MarriageNode.tsx` | Nó conjugal com símbolo, status, tooltip e acessibilidade do vínculo. |
@@ -109,10 +112,27 @@ Os seletores abaixo funcionam como contrato entre componentes React, runtimes de
 | `data-mobile-family-map-inline-overview` | Identifica painel inline de visão geral/mapa. |
 | `data-mobile-family-map-panel-mode` | Diferencia painel em modo `overview` ou `full`. |
 | `data-mobile-family-full-map-button` | Identifica o CTA de mapa completo de `/mapa-familiar`. |
-| `mobile-map-toolbar-panel-backdrop` | Backdrop/blur calculado para ficar atrás do painel ativo. |
-| `mobile-family-map-full-overview` | Container do mapa completo mobile de `/mapa-familiar`. |
-| `mobile-generation-line-full-overview` | Container da visualização completa de `/linha-geracional`. |
-| `mobile-generation-safe-overview-overlay` | Overlay seguro do painel de gerações. |
+| `data-mobile-family-map-backdrop` | Identifica o backdrop React vigente, com valores `partial` ou `immersive`. |
+| `data-mobile-family-map-context-tray` | Identifica o tray contextual React aberto por ação da toolbar. |
+| `data-mobile-family-map-context-action` | Expõe a ação do tray contextual, incluindo `zoom` para o botão `Mapa`. |
+| `data-mobile-family-map-context-hidden` | Preserva conteúdo original oculto para reaproveitar ações internas, como o CTA real de mapa completo. |
+| `data-mobile-generation-map-compact-tray` | Identifica o tray compacto de gerações de `/linha-geracional`. |
+| `data-mobile-family-map-full-layer` | Identifica a camada React de mapa completo mobile acima do blur imersivo. |
+| `data-family-map-horizontal-mobile-root` | Raiz da visualização horizontal/linha geracional mobile. |
+| `data-mobile-horizontal-generation` | Identifica a geração associada a cards da linha geracional mobile. |
+| `data-mobile-horizontal-card` | Identifica cards contabilizados por geração na linha geracional mobile. |
+| `mobile-family-map-full-overview` | Container do mapa completo mobile de `/mapa-familiar` quando renderizado por runtime de compatibilidade. |
+| `mobile-generation-line-full-overview` | Container da visualização completa de `/linha-geracional` quando renderizada por runtime de compatibilidade. |
+| `mobile-generation-safe-overview-overlay` | Overlay seguro do painel de gerações em implementações de transição. |
+
+Seletores legados que não devem voltar como contrato vigente:
+
+- `mobile-map-toolbar-panel-backdrop`;
+- `data-mobile-map-toolbar-backdrop`;
+- `--mobile-map-toolbar-backdrop-top`;
+- `--mobile-map-toolbar-backdrop-bottom`.
+
+Quando houver necessidade de compatibilidade com código legado, a documentação deve tratar esses seletores como histórico técnico, não como API operacional atual.
 
 ## Componentes e utilitários de exportação
 

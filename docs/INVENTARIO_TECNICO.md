@@ -160,6 +160,9 @@ Tabelas Supabase relacionadas:
 - `src/app/components/MobileGlobalTweaks.tsx`
 - `src/app/components/MobileTopLayerTweaks.tsx`
 - `src/app/components/LinhaGeracionalMobilePanelLayerTweaks.tsx`
+- `src/app/components/FamilyTree/MobileFamilyMapBackdrop.tsx`
+- `src/app/components/FamilyTree/MobileFamilyMapContextTray.tsx`
+- `src/app/components/FamilyTree/MobileFamilyMapFullLayer.tsx`
 - `src/app/components/FirstLoginTutorialRuntimeTweaks.tsx`
 - `src/app/components/person/PersonProfileRuntimeTweaks.tsx`
 - Wrappers ativos: `AdminDashboardWithTweaks`, `AdminHomeSettingsWithSaveBar`, `MeusDadosWithInlineProfileBio`, `MeusVinculosWithProfileBio` e `MeusVinculosMobileShortcutsPage`.
@@ -169,13 +172,18 @@ Tabelas Supabase relacionadas:
 
 | Arquivo | Responsabilidade |
 |---|---|
-| `src/mobileMapPanelRefinements.ts` | Backdrop, overlay seguro de gerações e refinamentos de gestos/camadas dos mapas mobile. |
-| `src/mobileMapToolbarBackdropLayerFix.ts` | Ajusta limites superior/inferior do blur para ficar atrás do painel ativo e fora da navegação inferior. |
+| `src/app/components/FamilyTree/MobileFamilyMapBackdrop.tsx` | Backdrop React parcial/imersivo dos painéis mobile de mapa; calcula o limite inferior do blur parcial pelo topo real da navegação inferior. |
+| `src/app/components/FamilyTree/MobileFamilyMapContextTray.tsx` | Tray contextual React da toolbar; em `/linha-geracional`, renderiza atalhos `GER. 1` a `GER. 6`, contadores e CTA de mapa completo. |
+| `src/app/components/FamilyTree/MobileFamilyMapFullLayer.tsx` | Camada React de mapa completo acima do blur imersivo, com botão `X`, safe-area e área de toque confortável. |
+| `src/mobileMapPanelRefinements.ts` | Backdrop, overlay seguro de gerações e refinamentos de gestos/camadas dos mapas mobile enquanto houver compatibilidade legada. |
+| `src/mobileMapToolbarBackdropLayerFix.ts` | Script de transição para limites superior/inferior do blur; não deve reintroduzir seletores legados como contrato vigente. |
 | `src/mobileFamilyMapFullOverviewButtonGuard.ts` | Guarda ativações do mapa completo de `/mapa-familiar` e carrega side effects relacionados. |
-| `src/mobileFamilyMapFullOverview.ts` | Renderiza o mapa completo mobile de `/mapa-familiar`. |
+| `src/mobileFamilyMapFullOverview.ts` | Renderiza o mapa completo mobile de `/mapa-familiar` quando o fluxo usar runtime de compatibilidade. |
 | `src/mobileFamilyMapFullOverviewConnectorFix.ts` | Refinamentos de conectores do mapa completo mobile. |
 | `src/mobileGenerationLineFullOverview.ts` | Renderiza a visualização completa de `/linha-geracional` e preserva pan/zoom após gestos. |
 | `src/mobileFamilyMapFilterButtonsBehaviorFix.ts` | Isola comportamento de filtros mobile, incluindo regra de cônjuges colaterais na linha geracional. |
+
+Scripts defensivos devem ser tratados como camada de transição. Quando o comportamento estiver estabilizado em componente React, a documentação canônica deve privilegiar o componente de origem.
 
 ## Scripts carregados por `index.html`
 

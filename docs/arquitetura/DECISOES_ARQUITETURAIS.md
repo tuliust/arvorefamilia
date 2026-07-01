@@ -121,11 +121,24 @@ Decisão vigente:
 - a renderização deve usar modelo próprio de pessoas, nós e arestas;
 - cards devem ser renderizados por estrutura comum, com variantes visuais declaradas;
 - conectores devem ser derivados de âncoras e bordas reais dos nós;
-- a experiência mobile pode preservar a shell da rota, mantendo header, toolbar superior e navegação inferior visíveis quando esse for o contrato visual vigente;
-- backdrop/blur é camada auxiliar atrás do painel ativo e não pode cobrir mapa completo, cards, CTA, toolbar ou navegação inferior;
+- painéis parciais de mapa preservam a shell da rota, mantendo header, toolbar superior e navegação inferior visíveis;
+- o mapa completo usa camada própria acima da shell e do blur imersivo;
+- backdrop/blur parcial é camada auxiliar atrás do painel ativo e não pode cobrir cards, CTA, toolbar ou navegação inferior;
+- blur imersivo é permitido atrás do mapa completo, mas nunca acima da camada completa ou do botão `X`;
 - pan/zoom devem preservar o `transform` aplicado pelo usuário após o gesto, sem reset automático por reidratação ou observer;
+- o botão `X` do mapa completo deve pertencer à camada React de mapa completo, respeitar `safe-area` e encerrar corretamente o modo imersivo;
 - ajustes de conector, camada ou gesto por runtime são aceitos como etapa de estabilização, mas devem preservar rota e breakpoint;
 - a evolução desejável é mover a regra para componentes React definitivos quando o comportamento visual estiver validado.
+
+### Trays mobile e backdrop por componentes React
+
+Decisão vigente:
+
+- `MobileFamilyMapBackdrop.tsx` é a fonte preferencial para backdrop parcial/imersivo dos mapas mobile;
+- `MobileFamilyMapContextTray.tsx` é a fonte preferencial para trays contextuais da toolbar;
+- `MobileFamilyMapFullLayer.tsx` é a fonte preferencial para a camada completa e o botão `X`;
+- novos ajustes não devem recriar scripts globais de backdrop nem depender de `MutationObserver` para posicionamento de blur;
+- seletores legados de backdrop de toolbar não devem voltar como contrato operacional.
 
 Motivação:
 

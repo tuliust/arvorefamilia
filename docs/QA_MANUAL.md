@@ -107,8 +107,9 @@ Validar em 320px, 375px, 390px e 430px, preferencialmente em iPhone/Safari real 
 - Header deve continuar exibindo `Árvore Familiar`.
 - Toolbar deve manter `Formato`, `Cor`, `Filtros`, `Mapa` e `+` abaixo do header.
 - Abrir qualquer botão da toolbar não pode deslocar a toolbar para a parte inferior da página.
-- A navegação inferior deve permanecer visível.
-- O backdrop/blur não pode cobrir header, toolbar, painel ativo, mapa completo ou navegação inferior.
+- A navegação inferior deve permanecer visível nos painéis parciais.
+- O backdrop/blur parcial não pode cobrir header, toolbar, painel ativo, cards, CTA ou navegação inferior.
+- O blur parcial deve terminar exatamente no topo visual do menu inferior, sem faixa desfocada acima dele.
 
 #### `Formato`
 
@@ -131,27 +132,38 @@ Validar em 320px, 375px, 390px e 430px, preferencialmente em iPhone/Safari real 
 
 - Tocar no botão `Mapa` deve abrir o painel `Mapa da família` dentro da estrutura mobile da rota.
 - O painel deve exibir 9 botões de grupos, cada um com ícone único.
-- Cards e CTA devem ficar acima do backdrop/blur.
+- O fundo branco deve envolver os cards e o CTA `Exibir mapa completo`.
+- Cards e CTA devem ficar acima do backdrop/blur parcial.
+- Círculos e ícones centrais dos cards devem ficar confortáveis em 320px/375px, sem invadir textos ou margens.
+- A partir de 390px, os ícones podem ficar ligeiramente maiores sem cortar títulos ou contadores.
 - Tocar em grupos deve navegar dentro do mapa e não abrir `/pessoa/:id`.
 - Repetir o teste a partir de `Tios Paternos`, `Primos Paternos`, `Tios Maternos`, `Primos Maternos` e `Descendentes`.
 - Cada botão da visão geral deve navegar para a tela correta independentemente da tela de origem.
 
 #### `Exibir mapa completo` em `/mapa-familiar`
 
-- `Exibir mapa completo` deve abrir a visualização completa sem cobrir indevidamente header, toolbar ou navegação inferior quando a shell mobile estiver contratada.
+- `Exibir mapa completo` deve abrir uma camada completa acima do blur imersivo.
 - A árvore completa não pode ficar por baixo do backdrop/blur.
+- O botão `X` deve aparecer no canto superior direito, respeitando `safe-area`.
+- O botão `X` deve ter área de toque confortável e ficar acima do palco do mapa.
 - `Reenquadrar` deve reposicionar o palco quando disponível.
 - Pan com um dedo deve mover o mapa.
 - Zoom por pinça deve alterar a escala.
 - Após soltar o dedo ou encerrar a pinça, zoom e posição não podem voltar automaticamente.
-- Fechar pelo `X` deve restaurar o estado anterior.
+- Fechar pelo `X` deve remover o blur imersivo, restaurar a shell mobile e não deixar overlay preso.
 
 #### `Mapa` e visualização completa em `/linha-geracional`
 
 - Tocar em `Mapa` deve abrir o container `Gerações` acima do backdrop.
-- Os cards de geração e o botão `Exibir visualização completa` devem ficar dentro da área branca e acima do blur.
+- O painel deve exibir 6 cards compactos `GER. 1`, `GER. 2`, `GER. 3`, `GER. 4`, `GER. 5` e `GER. 6`.
+- O layout deve preferencialmente formar grid `3x2`.
+- Cada card deve exibir contador de pessoas quando disponível.
+- A geração ativa deve ter estado visual evidente.
+- Tocar em `GER. N` deve navegar para a geração correspondente e fechar o tray.
+- O fundo branco deve envolver a grade e o botão `Exibir mapa completo`.
 - O blur deve começar abaixo do botão inferior do container.
-- `Exibir visualização completa` deve abrir as colunas geracionais completas sem blur por cima.
+- `Exibir mapa completo` deve abrir as colunas geracionais completas acima do blur imersivo.
+- O botão `X` deve fechar a camada completa sem deixar blur preso.
 - Pan com um dedo deve mover a visualização completa.
 - Zoom por pinça deve alterar a escala.
 - Após o gesto, o mapa não pode voltar automaticamente ao enquadramento inicial.
@@ -160,6 +172,7 @@ Validar em 320px, 375px, 390px e 430px, preferencialmente em iPhone/Safari real 
 
 - Conectores devem ligar bisavós a avós, tios a pai/mãe, pessoa central a pai/mãe, pessoa central a irmãos/cônjuge, irmãos a sobrinhos e tios maternos a primos maternos.
 - Rótulos `Pai` e `Mãe` não podem ficar cortados.
+- Fechar e reabrir o mapa completo não deve duplicar conectores, perder pan/zoom ou deixar o mapa sob o blur.
 
 ### `/mapa-familiar-horizontal`
 

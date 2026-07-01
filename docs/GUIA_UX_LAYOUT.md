@@ -99,28 +99,33 @@ Os botões da visão geral mobile devem seguir contrato visual próprio:
 - os cards da visão geral devem ter destino explícito por grupo e não depender da tela em que o usuário abriu o modal;
 - o controle local `+`/`−` de tios deve ser visualmente distinto do botão `+` global da toolbar.
 - o painel `Mapa` deve abrir dentro da shell mobile da rota, preservando header, toolbar superior e navegação inferior.
-- os cards e o botão de mapa completo devem permanecer acima do backdrop/blur.
+- os cards e o botão de mapa completo devem permanecer acima do backdrop/blur;
+- a área branca do painel deve se estender até abaixo do botão `Exibir mapa completo`;
+- círculos e ícones centrais podem ser levemente compactados em 320px/375px para preservar margens internas, com recuperação moderada a partir de 390px.
 
 #### Mapa completo mobile
 
-- A visualização completa deve permanecer integrada à shell mobile quando aberta a partir das rotas de mapa: header, toolbar superior e navegação inferior continuam visíveis.
+- A visualização completa é uma camada própria acima da shell mobile e do blur imersivo.
 - O palco do mapa deve permitir pan com um dedo e zoom por pinça.
 - Após pan ou pinch, o `transform` aplicado pelo usuário deve ser preservado e não pode voltar automaticamente ao enquadramento inicial.
 - A ação `Reenquadrar`, quando disponível, é a única forma explícita de recalcular escala e posição sem reconstrução do stage.
 - Cards e grupos devem seguir uma estrutura única para evitar diferenças visuais entre grupos clonados.
 - Conectores devem tocar as bordas dos grupos/cards e não podem atravessar badges ou títulos.
 - Backdrop/blur nunca pode ficar acima da árvore completa.
+- O botão `X` deve ficar no canto superior direito, respeitar `safe-area`, ter área de toque confortável e ficar visualmente acima do mapa.
+- Fechar pelo `X` deve restaurar a shell mobile sem deixar blur, overlay ou tray preso.
 
 #### Camadas e backdrop dos painéis mobile de mapa
 
-- Header, toolbar superior, painel ativo, cards, CTA, mapa completo e navegação inferior devem ficar acima do backdrop.
-- O backdrop/blur deve começar abaixo do painel ativo, não apenas abaixo da toolbar.
-- Em `Formato`, o blur começa abaixo dos cards de escolha de visualização.
-- Em `Cor`, o blur começa abaixo da faixa de paletas.
-- Em `Filtros`, o blur começa abaixo do container de filtros.
-- Em `Mapa` de `/mapa-familiar`, o blur começa abaixo dos cards de grupos e do CTA.
-- Em `Mapa` de `/linha-geracional`, o blur começa abaixo do container `Gerações`, incluindo o botão `Exibir visualização completa`.
-- O backdrop deve terminar antes da navegação inferior e nunca pode ocultá-la.
+- Header, toolbar superior, painel ativo, cards, CTA e navegação inferior devem ficar acima do backdrop parcial.
+- O backdrop/blur parcial deve começar abaixo do painel ativo, não apenas abaixo da toolbar.
+- Em `Formato`, o blur parcial começa abaixo dos cards de escolha de visualização.
+- Em `Cor`, o blur parcial começa abaixo da faixa de paletas.
+- Em `Filtros`, o blur parcial começa abaixo do container de filtros.
+- Em `Mapa` de `/mapa-familiar`, o blur parcial começa abaixo dos cards de grupos e do CTA.
+- Em `Mapa` de `/linha-geracional`, o blur parcial começa abaixo do container `Gerações`, incluindo o botão `Exibir mapa completo`.
+- O backdrop parcial deve terminar no topo real da navegação inferior e nunca pode ocultá-la.
+- O modo imersivo é exclusivo do mapa completo: cobre a shell atrás do mapa, mas nunca cobre a camada completa nem o botão `X`.
 - A toolbar não pode mudar de posição quando qualquer painel é aberto.
 
 ### `/linha-geracional`
@@ -131,6 +136,12 @@ Os botões da visão geral mobile devem seguir contrato visual próprio:
 - Cards conjugais devem empilhar quando necessário.
 - Conectores devem representar relações reais e não criar ligação lateral em todos os cards.
 - Ajustes de camada da linha geracional mobile devem ser isolados para não afetar `/mapa-familiar`.
+- O painel `Mapa` deve usar grid compacto preferencialmente `3x2`, com atalhos `GER. 1` a `GER. 6`.
+- Cada card `GER. N` deve ter área de toque confortável, label curto, contador quando disponível e estado ativo evidente.
+- O CTA `Exibir mapa completo` deve permanecer dentro da área branca do painel.
+- Tocar em um card de geração deve navegar para a geração correspondente e fechar o tray sem alterar rota.
+- O fundo branco do painel deve se estender até abaixo do CTA inferior.
+
 ## Overlays de header no mobile
 
 - Dropdown de notificações deve ficar acima de todo conteúdo, inclusive toolbars e painéis de árvore.
