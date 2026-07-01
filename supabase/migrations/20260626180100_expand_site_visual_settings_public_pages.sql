@@ -1,0 +1,67 @@
+-- =====================================================
+-- EXPANSAO DAS CONFIGURACOES VISUAIS PUBLICAS
+-- Data: 2026-06-26
+-- Objetivo: ampliar /admin/home para gerenciar tela /entrar, identidade visual global e metadados publicos.
+-- =====================================================
+
+alter table public.site_visual_settings
+  add column if not exists global_identity_name text not null default 'Família Souza Barros',
+  add column if not exists global_identity_short_name text not null default 'Árvore Genealógica',
+  add column if not exists global_identity_tagline text not null default 'Plataforma familiar privada',
+  add column if not exists global_primary_color text not null default '#1d4ed8',
+  add column if not exists global_accent_color text not null default '#0f172a',
+  add column if not exists global_text_color text not null default '#111827',
+  add column if not exists global_muted_text_color text not null default '#4b5563',
+  add column if not exists global_card_background_color text not null default '#ffffff',
+  add column if not exists global_button_radius text not null default '0.75rem',
+  add column if not exists global_card_radius text not null default '1rem',
+  add column if not exists home_logo_alt_text text not null default 'Família Souza Barros',
+  add column if not exists entrance_eyebrow text not null default 'Plataforma familiar privada',
+  add column if not exists entrance_title text not null default 'Família Souza Barros',
+  add column if not exists entrance_description text not null default 'Família Souza Barros é uma plataforma familiar privada para organizar a árvore genealógica, perfis de familiares, fotos, documentos, memórias e datas importantes da família.',
+  add column if not exists entrance_login_title text not null default 'Entrar na árvore',
+  add column if not exists entrance_login_description text not null default 'Entre com seu e-mail e senha para acessar sua árvore.',
+  add column if not exists entrance_first_access_title text not null default 'Primeiro acesso',
+  add column if not exists entrance_first_access_description text not null default 'Informe o código recebido e crie suas credenciais.',
+  add column if not exists entrance_confirmation_title text not null default 'Confirme seu e-mail',
+  add column if not exists entrance_confirmation_description text not null default 'Finalize a confirmação no seu e-mail antes de entrar.',
+  add column if not exists entrance_login_cta_label text not null default 'Entrar',
+  add column if not exists entrance_first_access_cta_label text not null default 'Validar código',
+  add column if not exists entrance_create_account_cta_label text not null default 'Criar conta e revisar dados',
+  add column if not exists entrance_forgot_password_label text not null default 'Esqueci minha senha',
+  add column if not exists entrance_footer_note text,
+  add column if not exists public_terms_label text not null default 'Termos de Uso',
+  add column if not exists public_terms_url text not null default '/termos',
+  add column if not exists public_privacy_label text not null default 'Política de Privacidade',
+  add column if not exists public_privacy_url text not null default '/privacidade',
+  add column if not exists public_support_label text,
+  add column if not exists public_support_url text,
+  add column if not exists seo_title text not null default 'Árvore Genealógica da Família',
+  add column if not exists seo_description text not null default 'Plataforma familiar privada para preservar pessoas, memórias e vínculos.',
+  add column if not exists social_share_image_url text;
+
+update public.site_visual_settings
+set
+  global_identity_name = coalesce(nullif(global_identity_name, ''), 'Família Souza Barros'),
+  global_identity_short_name = coalesce(nullif(global_identity_short_name, ''), 'Árvore Genealógica'),
+  global_identity_tagline = coalesce(nullif(global_identity_tagline, ''), 'Plataforma familiar privada'),
+  home_logo_alt_text = coalesce(nullif(home_logo_alt_text, ''), 'Família Souza Barros'),
+  entrance_eyebrow = coalesce(nullif(entrance_eyebrow, ''), 'Plataforma familiar privada'),
+  entrance_title = coalesce(nullif(entrance_title, ''), 'Família Souza Barros'),
+  entrance_description = coalesce(nullif(entrance_description, ''), 'Família Souza Barros é uma plataforma familiar privada para organizar a árvore genealógica, perfis de familiares, fotos, documentos, memórias e datas importantes da família.'),
+  entrance_login_title = coalesce(nullif(entrance_login_title, ''), 'Entrar na árvore'),
+  entrance_login_description = coalesce(nullif(entrance_login_description, ''), 'Entre com seu e-mail e senha para acessar sua árvore.'),
+  entrance_first_access_title = coalesce(nullif(entrance_first_access_title, ''), 'Primeiro acesso'),
+  entrance_first_access_description = coalesce(nullif(entrance_first_access_description, ''), 'Informe o código recebido e crie suas credenciais.'),
+  entrance_confirmation_title = coalesce(nullif(entrance_confirmation_title, ''), 'Confirme seu e-mail'),
+  entrance_confirmation_description = coalesce(nullif(entrance_confirmation_description, ''), 'Finalize a confirmação no seu e-mail antes de entrar.'),
+  entrance_login_cta_label = coalesce(nullif(entrance_login_cta_label, ''), 'Entrar'),
+  entrance_first_access_cta_label = coalesce(nullif(entrance_first_access_cta_label, ''), 'Validar código'),
+  entrance_create_account_cta_label = coalesce(nullif(entrance_create_account_cta_label, ''), 'Criar conta e revisar dados'),
+  entrance_forgot_password_label = coalesce(nullif(entrance_forgot_password_label, ''), 'Esqueci minha senha'),
+  public_terms_label = coalesce(nullif(public_terms_label, ''), 'Termos de Uso'),
+  public_terms_url = coalesce(nullif(public_terms_url, ''), '/termos'),
+  public_privacy_label = coalesce(nullif(public_privacy_label, ''), 'Política de Privacidade'),
+  public_privacy_url = coalesce(nullif(public_privacy_url, ''), '/privacidade'),
+  seo_title = coalesce(nullif(seo_title, ''), 'Árvore Genealógica da Família'),
+  seo_description = coalesce(nullif(seo_description, ''), 'Plataforma familiar privada para preservar pessoas, memórias e vínculos.');
