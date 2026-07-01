@@ -262,16 +262,16 @@
     width: 0.92rem !important;
     height: 0.92rem !important;
   }
-}
 
-@media (min-width: 390px) and (max-width: 767px) {
-  div[data-mobile-family-map-context-tray="true"][data-mobile-family-map-context-action="zoom"] [data-mobile-family-map-overview-source="direct-map"] button[data-screen] > span:nth-of-type(2) {
-    width: 2rem !important;
-    height: 2rem !important;
-  }
+  @media (min-width: 390px) {
+    div[data-mobile-family-map-context-tray="true"][data-mobile-family-map-context-action="zoom"] [data-mobile-family-map-overview-source="direct-map"] button[data-screen] > span:nth-of-type(2) {
+      width: 2rem !important;
+      height: 2rem !important;
+    }
 
-  div[data-mobile-family-map-context-tray="true"][data-mobile-family-map-context-action="zoom"] [data-mobile-family-map-overview-source="direct-map"] button[data-screen] > span:nth-of-type(2) svg {
-    width: 1rem !important;
-    height: 1rem !important;
+    div[data-mobile-family-map-context-tray="true"][data-mobile-family-map-context-action="zoom"] [data-mobile-family-map-overview-source="direct-map"] button[data-screen] > span:nth-of-type(2) svg {
+      width: 1rem !important;
+      height: 1rem !important;
+    }
   }
 }

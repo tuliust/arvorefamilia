@@ -30,7 +30,7 @@ export function MobileFamilyMapFullLayer({
         type="button"
         onClick={onClose}
         className="fixed right-[calc(env(safe-area-inset-right,0px)+1rem)] top-[calc(env(safe-area-inset-top,0px)+1rem)] z-[12030] flex h-11 w-11 items-center justify-center rounded-full border border-slate-200 bg-white text-lg font-black leading-none text-slate-950 shadow-[0_12px_28px_rgba(15,23,42,0.22)] transition active:scale-95"
-        aria-label="Fechar"
+        aria-label="Fechar mapa completo"
       >
         X
       </button>
