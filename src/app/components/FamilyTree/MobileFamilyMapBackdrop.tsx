@@ -69,7 +69,7 @@ export function MobileFamilyMapBackdrop({
   }, [mode]);
 
   const className = mode === 'immersive'
-    ? 'fixed inset-0 z-[11990] bg-slate-950/35 backdrop-blur-[5px] saturate-[0.86] md:hidden'
+    ? 'fixed inset-0 z-[9990] bg-slate-950/35 backdrop-blur-[5px] saturate-[0.86] md:hidden'
     : 'fixed inset-x-0 z-[9990] bg-slate-950/30 backdrop-blur-[5px] saturate-[0.86] pointer-events-none md:hidden';
 
   const style = mode === 'partial'
