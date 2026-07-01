@@ -175,7 +175,7 @@ describe('curiosidadesUtils', () => {
 
     expect(questions.length).toBeGreaterThan(0);
     expect(questions.map((question) => question.id)).toEqual(expect.arrayContaining(['oldest-living-person', 'youngest-person', 'profession-journalist', 'more-children']));
-    expect(questions.every((question) => question.options.length === 5)).toBe(true);
+    expect(questions.every((question) => question.options.length === 6)).toBe(true);
   });
 
   it('calcula signo e compatibilidade recreativa', () => {
