@@ -35,6 +35,7 @@ let translateX = 0;
 let translateY = 0;
 let scheduled = false;
 let hydrationInFlight: Promise<void> | null = null;
+let userTransformLocked = false;
 
 function isMobileViewport() {
   return typeof window !== 'undefined'
@@ -340,14 +341,25 @@ function applyTransform() {
   getStage()?.style.setProperty('transform', `translate3d(${translateX}px, ${translateY}px, 0) scale(${scale})`, 'important');
 }
 
-function resetTransform() {
+function markUserTransform(viewport?: HTMLElement | null) {
+  userTransformLocked = true;
+  viewport?.setAttribute('data-mobile-generation-line-user-transformed', 'true');
+}
+
+function resetTransform(force = false) {
   const viewport = document.querySelector<HTMLElement>(`#${FULL_MAP_ID} .mobile-generation-line-full-map-viewport`);
   const stage = getStage();
   if (!viewport || !stage) return;
 
+  const userTransformed = userTransformLocked || viewport.dataset.mobileGenerationLineUserTransformed === 'true';
+  if (!force && userTransformed) {
+    applyTransform();
+    return;
+  }
+
   const viewportRect = viewport.getBoundingClientRect();
   if (viewportRect.width < 120 || viewportRect.height < 220) {
-    window.setTimeout(resetTransform, 80);
+    window.setTimeout(() => resetTransform(force), 80);
     return;
   }
 
@@ -357,12 +369,15 @@ function resetTransform() {
   scale = clamp(fitScale * 1.02, 0.16, 1.05);
   translateX = (viewportRect.width - (stageWidth * scale)) / 2;
   translateY = (viewportRect.height - (stageHeight * scale)) / 2;
+  viewport.dataset.mobileGenerationLineFullMapFitted = 'true';
   applyTransform();
 }
 
 function handleTouchStart(event: TouchEvent) {
   const viewport = event.currentTarget as HTMLElement;
   if (!viewport || !document.getElementById(FULL_MAP_ID)) return;
+
+  markUserTransform(viewport);
 
   if (event.touches.length === 2) {
     const [first, second] = [event.touches[0], event.touches[1]];
@@ -395,6 +410,8 @@ function handleTouchMove(event: TouchEvent) {
   const viewport = event.currentTarget as HTMLElement;
   if (!gestureState || !viewport || !document.getElementById(FULL_MAP_ID)) return;
 
+  markUserTransform(viewport);
+
   if (gestureState.mode === 'pinch' && event.touches.length >= 2) {
     const [first, second] = [event.touches[0], event.touches[1]];
     const mid = midpoint(first, second, viewport);
@@ -417,6 +434,9 @@ function handleTouchMove(event: TouchEvent) {
 }
 
 function handleTouchEnd(event: TouchEvent) {
+  const viewport = event.currentTarget as HTMLElement;
+  markUserTransform(viewport);
+
   if (event.touches.length === 0) {
     gestureState = null;
     return;
@@ -437,6 +457,7 @@ function handleTouchEnd(event: TouchEvent) {
 async function hydrateFullMap() {
   if (!isEnabled()) {
     setFullMapSourceHidden(false, false);
+    userTransformLocked = false;
     return;
   }
   if (hydrationInFlight) return hydrationInFlight;
@@ -447,6 +468,7 @@ async function hydrateFullMap() {
     const viewport = fullMap?.querySelector<HTMLElement>('.mobile-generation-line-full-map-viewport');
     if (!viewport) {
       setFullMapSourceHidden(false, false);
+      userTransformLocked = false;
       return;
     }
 
@@ -455,11 +477,16 @@ async function hydrateFullMap() {
     if (!model) return;
 
     const currentStage = viewport.querySelector<HTMLElement>('.mobile-generation-line-full-map-stage');
-    if (viewport.dataset.mobileGenerationLineFullMapHydrated !== 'true'
+    const shouldRebuild = viewport.dataset.mobileGenerationLineFullMapHydrated !== 'true'
       || !currentStage
-      || currentStage.dataset.signature !== model.signature) {
+      || currentStage.dataset.signature !== model.signature;
+
+    if (shouldRebuild) {
+      userTransformLocked = false;
+      viewport.removeAttribute('data-mobile-generation-line-user-transformed');
       viewport.replaceChildren(buildStage(model));
       viewport.dataset.mobileGenerationLineFullMapHydrated = 'true';
+      viewport.removeAttribute('data-mobile-generation-line-full-map-fitted');
 
       if (viewport.dataset.mobileGenerationLineFullMapGestures !== 'true') {
         viewport.addEventListener('touchstart', handleTouchStart, { passive: false });
@@ -470,8 +497,16 @@ async function hydrateFullMap() {
       }
     }
 
-    window.requestAnimationFrame(resetTransform);
-    window.setTimeout(resetTransform, 40);
+    const userTransformed = userTransformLocked || viewport.dataset.mobileGenerationLineUserTransformed === 'true';
+    if (shouldRebuild || viewport.dataset.mobileGenerationLineFullMapFitted !== 'true') {
+      window.requestAnimationFrame(() => resetTransform(true));
+      window.setTimeout(() => resetTransform(true), 40);
+      return;
+    }
+
+    if (userTransformed) {
+      applyTransform();
+    }
   })().finally(() => {
     hydrationInFlight = null;
   });
@@ -495,13 +530,17 @@ if (typeof window !== 'undefined' && typeof document !== 'undefined') {
   window.addEventListener('orientationchange', () => window.setTimeout(scheduleHydrateFullMap, 220), { passive: true });
   window.addEventListener('popstate', () => {
     gestureState = null;
+    userTransformLocked = false;
     setFullMapSourceHidden(false, false);
   }, { passive: true });
   document.addEventListener('visibilitychange', () => { if (!document.hidden) scheduleHydrateFullMap(); }, { passive: true });
 
   const observer = new MutationObserver(() => {
     if (getInlineFullMap()) scheduleHydrateFullMap();
-    else setFullMapSourceHidden(false, false);
+    else {
+      userTransformLocked = false;
+      setFullMapSourceHidden(false, false);
+    }
   });
   observer.observe(document.documentElement, { childList: true, subtree: true });
 }
