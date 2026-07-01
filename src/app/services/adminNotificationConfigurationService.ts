@@ -114,6 +114,10 @@ function cloneCatalogItem<T>(item: T): T {
   return JSON.parse(JSON.stringify(item)) as T;
 }
 
+function sameJson(left: unknown, right: unknown) {
+  return JSON.stringify(left ?? null) === JSON.stringify(right ?? null);
+}
+
 function normalizeCatalog(row?: AdminNotificationCatalogRow | null): PersistedAdminNotificationCatalog | null {
   if (!row) return null;
 
@@ -202,19 +206,79 @@ function buildCatalogFromConfig(config: PersistedAdminNotificationConfig): Persi
   };
 }
 
-export async function loadAdminNotificationConfiguration(): Promise<PersistedAdminNotificationConfig> {
-  const { data, error } = await supabase
-    .from('admin_notification_configurations')
-    .select('*')
-    .eq('config_key', ADMIN_NOTIFICATION_CONFIG_KEY)
-    .maybeSingle();
+function buildConfigFromCatalog(catalog: PersistedAdminNotificationCatalog): PersistedAdminNotificationConfig {
+  const baseTypeMap = new Map(ADMIN_NOTIFICATION_TYPES.map((type) => [type.id, type]));
+  const baseTemplateMap = new Map(ADMIN_NOTIFICATION_TEMPLATES.map((template) => [template.id, template]));
+  const catalogTemplateByType = new Map(catalog.templates.map((template) => [template.typeId, template]));
 
-  if (error) {
-    console.warn('[Supabase] Não foi possível carregar configurações administrativas de notificações:', error.message);
-    return {};
-  }
+  const config: PersistedAdminNotificationConfig = {
+    frequencyOverrides: {},
+    themeOverrides: {},
+    activeOverrides: {},
+    contentOverrides: {},
+    channelOverrides: {},
+    recipientOverrides: {},
+    variableOverrides: {},
+    customDefinitions: [],
+  };
 
-  return normalizeConfig(data as AdminNotificationConfigurationRow | null);
+  catalog.types.forEach((type) => {
+    const baseType = baseTypeMap.get(type.id);
+    const persistedType = type as AdminNotificationTypeDefinition & { recipientGroupIds?: string[] };
+
+    if (!baseType) {
+      const template = catalogTemplateByType.get(type.id);
+      if (template) config.customDefinitions?.push({ type, template });
+      return;
+    }
+
+    if (baseType.defaultFrequency !== type.defaultFrequency) config.frequencyOverrides![type.id] = type.defaultFrequency;
+    if (baseType.active !== type.active) config.activeOverrides![type.id] = type.active;
+    if (!sameJson(baseType.allowedChannels, type.allowedChannels)) config.channelOverrides![type.id] = type.allowedChannels;
+
+    if (persistedType.recipientGroupIds?.length) {
+      config.recipientOverrides![type.id] = persistedType.recipientGroupIds;
+    } else if (baseType.defaultAudience !== type.defaultAudience) {
+      config.recipientOverrides![type.id] = [type.defaultAudience].filter(Boolean);
+    }
+  });
+
+  catalog.templates.forEach((template) => {
+    const baseTemplate = baseTemplateMap.get(template.id);
+    if (!baseTemplate) return;
+
+    const contentOverride: AdminNotificationContentOverride = {};
+    if (baseTemplate.title !== template.title) contentOverride.title = template.title;
+    if (baseTemplate.longMessage !== template.longMessage) contentOverride.longMessage = template.longMessage;
+    if (baseTemplate.cta !== template.cta) contentOverride.cta = template.cta;
+    if (Object.keys(contentOverride).length > 0) config.contentOverrides![template.id] = contentOverride;
+
+    if (baseTemplate.themeId !== template.themeId) config.themeOverrides![template.id] = template.themeId;
+    if (!sameJson(baseTemplate.variables, template.variables)) config.variableOverrides![template.id] = template.variables;
+  });
+
+  return config;
+}
+
+function mergeConfigs(
+  catalogConfig: PersistedAdminNotificationConfig,
+  rowConfig: PersistedAdminNotificationConfig,
+): PersistedAdminNotificationConfig {
+  const customDefinitionMap = new Map<string, AdminNotificationCustomDefinition>();
+  [...(catalogConfig.customDefinitions ?? []), ...(rowConfig.customDefinitions ?? [])].forEach((definition) => {
+    customDefinitionMap.set(definition.type.id, definition);
+  });
+
+  return {
+    frequencyOverrides: { ...(catalogConfig.frequencyOverrides ?? {}), ...(rowConfig.frequencyOverrides ?? {}) },
+    themeOverrides: { ...(catalogConfig.themeOverrides ?? {}), ...(rowConfig.themeOverrides ?? {}) },
+    activeOverrides: { ...(catalogConfig.activeOverrides ?? {}), ...(rowConfig.activeOverrides ?? {}) },
+    contentOverrides: { ...(catalogConfig.contentOverrides ?? {}), ...(rowConfig.contentOverrides ?? {}) },
+    channelOverrides: { ...(catalogConfig.channelOverrides ?? {}), ...(rowConfig.channelOverrides ?? {}) },
+    recipientOverrides: { ...(catalogConfig.recipientOverrides ?? {}), ...(rowConfig.recipientOverrides ?? {}) },
+    variableOverrides: { ...(catalogConfig.variableOverrides ?? {}), ...(rowConfig.variableOverrides ?? {}) },
+    customDefinitions: Array.from(customDefinitionMap.values()),
+  };
 }
 
 export async function loadAdminNotificationCatalog(): Promise<PersistedAdminNotificationCatalog | null> {
@@ -259,6 +323,41 @@ export async function saveAdminNotificationCatalog(
     );
 
   if (error) throw error;
+}
+
+async function loadOrSeedAdminNotificationCatalog(): Promise<PersistedAdminNotificationCatalog | null> {
+  const existingCatalog = await loadAdminNotificationCatalog();
+  if (existingCatalog) return existingCatalog;
+
+  try {
+    const { data: authData } = await supabase.auth.getUser();
+    const defaultCatalog = buildDefaultCatalog();
+    await saveAdminNotificationCatalog(defaultCatalog, authData.user?.id ?? null);
+    return defaultCatalog;
+  } catch (error) {
+    console.warn('[Supabase] Não foi possível inicializar catálogo administrativo de notificações:', error);
+    return null;
+  }
+}
+
+export async function loadAdminNotificationConfiguration(): Promise<PersistedAdminNotificationConfig> {
+  const [catalog, configurationResult] = await Promise.all([
+    loadOrSeedAdminNotificationCatalog(),
+    supabase
+      .from('admin_notification_configurations')
+      .select('*')
+      .eq('config_key', ADMIN_NOTIFICATION_CONFIG_KEY)
+      .maybeSingle(),
+  ]);
+
+  const catalogConfig = catalog ? buildConfigFromCatalog(catalog) : {};
+
+  if (configurationResult.error) {
+    console.warn('[Supabase] Não foi possível carregar configurações administrativas de notificações:', configurationResult.error.message);
+    return catalogConfig;
+  }
+
+  return mergeConfigs(catalogConfig, normalizeConfig(configurationResult.data as AdminNotificationConfigurationRow | null));
 }
 
 export async function saveAdminNotificationConfiguration(config: PersistedAdminNotificationConfig) {
