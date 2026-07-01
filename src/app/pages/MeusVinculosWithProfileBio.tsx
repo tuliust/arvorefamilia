@@ -1,13 +1,13 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { Sparkles, UserCircle2 } from 'lucide-react';
+import { Loader2, Sparkles, UserCircle2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '../components/ui/button';
 import { Label } from '../components/ui/label';
 import { Textarea } from '../components/ui/textarea';
 import { useAuth } from '../contexts/AuthContext';
 import {
-  getPrimaryLinkedPersonWithPessoa,
+  getCurrentUserLinkedPeople,
   resolveFirstAccessLinkForUser,
   updateOwnLinkedPerson,
 } from '../services/memberProfileService';
@@ -15,14 +15,20 @@ import {
   buildProfileQuestionnaireGenerationPayload,
   buildProfileQuestionnaireHash,
   getProfileQuestionnaireAnswers,
+  normalizeProfileQuestionnairePayload,
   upsertProfileQuestionnaireAnswers,
 } from '../services/profileQuestionnaireService';
-import type { Pessoa } from '../types';
-import type { PersonProfileQuestionnaireAnswers } from '../types/profileQuestionnaire';
-import { MeusVinculos } from './MeusVinculos';
-import { MeusVinculosPetEditorPortal } from './meus-vinculos/MeusVinculosPetEditorPortal';
 import { obterRelacionamentosDaPessoa } from '../services/dataService';
 import { listarArquivosHistoricosPorPessoa } from '../services/arquivosHistoricosService';
+import { AI_BADGE_GROUPS, type AiGeneratedQuestion, type AiTone } from '../constants/profileQuestionnaireConfig';
+import type { Pessoa } from '../types';
+import type { PersonProfileQuestionnaireAnswers } from '../types/profileQuestionnaire';
+import { MeusDados } from './MeusDados';
+
+const PROFILE_RESULT_HOST_ID = 'meus-dados-profile-bio-result-host';
+const PROFILE_ACTIONS_HOST_ID = 'meus-dados-profile-bio-actions-host';
+const PROFILE_ORIGINAL_CONTENT_ATTRIBUTE = 'data-meus-dados-questionnaire-original';
+const MAX_PROFILE_TEXT_LENGTH = 500;
 
 type ProfileTextState = {
   minibio: string;
@@ -33,14 +39,68 @@ type GeneratedProfileTextResponse = Partial<ProfileTextState> & {
   error?: string;
 };
 
-const PROFILE_BIO_PORTAL_ID = 'meus-vinculos-profile-bio-host';
-const MAX_PROFILE_TEXT_LENGTH = 500;
+type StepInfo = {
+  current: number;
+  total: number;
+};
+
+type MeusDadosDraft = {
+  aiTone?: AiTone;
+  aiSelectedBadges?: string[];
+  aiCustomTraits?: string;
+  aiGeneratedQuestions?: AiGeneratedQuestion[];
+  form?: {
+    falecido?: boolean;
+  };
+};
 
 function limitProfileText(value: unknown) {
   return String(value ?? '').trim().slice(0, MAX_PROFILE_TEXT_LENGTH);
 }
 
-function hasQuestionnaireSource(questionnaire: PersonProfileQuestionnaireAnswers | null) {
+function getDraftKey(userId: string, pessoaId: string) {
+  return `meus-dados-draft:${userId}:${pessoaId}`;
+}
+
+function readQuestionnaireDraft(userId: string, pessoaId: string): MeusDadosDraft | null {
+  if (typeof window === 'undefined') return null;
+
+  try {
+    const raw = window.sessionStorage.getItem(getDraftKey(userId, pessoaId));
+    if (!raw) return null;
+    return JSON.parse(raw) as MeusDadosDraft;
+  } catch {
+    return null;
+  }
+}
+
+function getAllAiBadges() {
+  return AI_BADGE_GROUPS.flatMap((group) => group.badges);
+}
+
+function buildDraftQuestionnaire(draft: MeusDadosDraft | null) {
+  if (!draft) return null;
+
+  const selectedBadgeIds = Array.isArray(draft.aiSelectedBadges) ? draft.aiSelectedBadges : [];
+  const selectedBadges = getAllAiBadges().filter((badge) => selectedBadgeIds.includes(badge.id));
+  const generatedQuestions = Array.isArray(draft.aiGeneratedQuestions) ? draft.aiGeneratedQuestions : [];
+  const answers = generatedQuestions.reduce<Record<string, string>>((nextAnswers, question) => {
+    const answer = question.answer.trim();
+    if (answer) nextAnswers[question.id] = answer;
+    return nextAnswers;
+  }, {});
+
+  return normalizeProfileQuestionnairePayload({
+    tone: draft.aiTone,
+    selectedBadges,
+    customTraits: draft.aiCustomTraits,
+    generatedQuestions,
+    answers,
+    memorialMode: draft.form?.falecido === true,
+  });
+}
+
+function hasQuestionnaireSource(questionnaire: Pick<PersonProfileQuestionnaireAnswers, 'selectedBadges' | 'customTraits' | 'generatedQuestions'> | null) {
   if (!questionnaire) return false;
   return (
     questionnaire.selectedBadges.length > 0 ||
@@ -145,59 +205,135 @@ async function buildSafeProfileContext(pessoa: Pessoa | null) {
   };
 }
 
-function ensurePortalHost() {
+function findSobreMimSection() {
   if (typeof document === 'undefined') return null;
 
-  const existingHost = document.getElementById(PROFILE_BIO_PORTAL_ID);
-  if (existingHost) return existingHost;
-
-  const targetSection = document.querySelector('main > section');
-  if (!targetSection) return null;
-
-  const host = document.createElement('div');
-  host.id = PROFILE_BIO_PORTAL_ID;
-  host.className = 'mb-6';
-  targetSection.insertBefore(host, targetSection.firstChild);
-  return host;
+  return Array.from(document.querySelectorAll<HTMLElement>('section')).find((section) => {
+    const text = section.textContent ?? '';
+    return text.includes('Sobre Mim') && text.includes('Etapa') && text.includes('Voltar');
+  }) ?? null;
 }
 
-function useProfileBioPortalHost() {
-  const [host, setHost] = useState<HTMLElement | null>(() => ensurePortalHost());
+function parseStepInfo(section: HTMLElement | null): StepInfo | null {
+  const match = (section?.textContent ?? '').match(/Etapa\s+(\d+)\s+de\s+(\d+)/i);
+  if (!match) return null;
+
+  return {
+    current: Number(match[1]),
+    total: Number(match[2]),
+  };
+}
+
+function ensureInlineHosts() {
+  const section = findSobreMimSection();
+  if (!section) return { resultHost: null, actionsHost: null, stepInfo: null, questionnaireCard: null };
+
+  const stepInfo = parseStepInfo(section);
+  const questionnaireCard = section.querySelector<HTMLElement>('.space-y-5.rounded-xl.border') ?? section;
+  const actionBar = Array.from(questionnaireCard.querySelectorAll<HTMLElement>('div'))
+    .reverse()
+    .find((node) => node.textContent?.includes('Voltar')) ?? null;
+
+  let resultHost = document.getElementById(PROFILE_RESULT_HOST_ID);
+  if (!resultHost) {
+    resultHost = document.createElement('div');
+    resultHost.id = PROFILE_RESULT_HOST_ID;
+    resultHost.className = 'hidden';
+  }
+
+  if (resultHost.parentElement !== questionnaireCard) {
+    questionnaireCard.insertBefore(resultHost, questionnaireCard.firstChild);
+  }
+
+  let actionsHost = document.getElementById(PROFILE_ACTIONS_HOST_ID);
+  if (!actionsHost) {
+    actionsHost = document.createElement('div');
+    actionsHost.id = PROFILE_ACTIONS_HOST_ID;
+  }
+
+  if (actionBar && actionsHost.parentElement !== actionBar) {
+    const nextButton = Array.from(actionBar.querySelectorAll('button')).find((button) => button.textContent?.includes('Avançar'));
+    actionBar.insertBefore(actionsHost, nextButton ?? null);
+  }
+
+  Array.from(questionnaireCard.children).forEach((child) => {
+    if (child.id === PROFILE_RESULT_HOST_ID) return;
+    if (child instanceof HTMLElement && !child.hasAttribute(PROFILE_ORIGINAL_CONTENT_ATTRIBUTE)) {
+      child.setAttribute(PROFILE_ORIGINAL_CONTENT_ATTRIBUTE, 'true');
+    }
+  });
+
+  return { resultHost, actionsHost, stepInfo, questionnaireCard };
+}
+
+function getSelectedPessoaIdFromPage() {
+  const selector = document.getElementById('linked-profile-selector') as HTMLSelectElement | null;
+  return selector?.value || '';
+}
+
+function useMeusDadosInlineHosts() {
+  const [resultHost, setResultHost] = useState<HTMLElement | null>(null);
+  const [actionsHost, setActionsHost] = useState<HTMLElement | null>(null);
+  const [questionnaireCard, setQuestionnaireCard] = useState<HTMLElement | null>(null);
+  const [stepInfo, setStepInfo] = useState<StepInfo | null>(null);
 
   useEffect(() => {
-    if (host) return undefined;
+    const syncHosts = () => {
+      const next = ensureInlineHosts();
+      setResultHost(next.resultHost as HTMLElement | null);
+      setActionsHost(next.actionsHost as HTMLElement | null);
+      setQuestionnaireCard(next.questionnaireCard as HTMLElement | null);
+      setStepInfo(next.stepInfo);
+    };
 
-    const animationFrame = window.requestAnimationFrame(() => {
-      const nextHost = ensurePortalHost();
-      if (nextHost) setHost(nextHost);
-    });
-
-    const observer = new MutationObserver(() => {
-      const nextHost = ensurePortalHost();
-      if (nextHost) {
-        setHost(nextHost);
-        observer.disconnect();
-        window.cancelAnimationFrame(animationFrame);
-      }
-    });
-
-    observer.observe(document.body, { childList: true, subtree: true });
+    syncHosts();
+    const observer = new MutationObserver(syncHosts);
+    observer.observe(document.body, { childList: true, subtree: true, characterData: true });
+    window.addEventListener('resize', syncHosts);
 
     return () => {
       observer.disconnect();
-      window.cancelAnimationFrame(animationFrame);
+      window.removeEventListener('resize', syncHosts);
+      document.querySelectorAll<HTMLElement>(`[${PROFILE_ORIGINAL_CONTENT_ATTRIBUTE}]`).forEach((node) => {
+        node.style.display = '';
+        node.removeAttribute(PROFILE_ORIGINAL_CONTENT_ATTRIBUTE);
+      });
+      document.getElementById(PROFILE_RESULT_HOST_ID)?.remove();
+      document.getElementById(PROFILE_ACTIONS_HOST_ID)?.remove();
     };
-  }, [host]);
-
-  useEffect(() => () => {
-    const currentHost = document.getElementById(PROFILE_BIO_PORTAL_ID);
-    currentHost?.remove();
   }, []);
 
-  return host;
+  return { resultHost, actionsHost, questionnaireCard, stepInfo };
 }
 
-function MeusVinculosProfileBioSection() {
+function useHideConfirmUntilProfileResults(showResults: boolean) {
+  useEffect(() => {
+    const updateVisibility = () => {
+      const submitButtons = Array.from(document.querySelectorAll<HTMLButtonElement>('button[type="submit"]'));
+      const confirmButton = submitButtons.find((button) => button.textContent?.includes('Confirmar meus dados'));
+      const wrapper = confirmButton?.parentElement;
+      if (!wrapper) return;
+
+      wrapper.dataset.meusDadosConfirmVisibility = showResults ? 'visible' : 'hidden';
+      wrapper.style.display = showResults ? '' : 'none';
+    };
+
+    updateVisibility();
+    const observer = new MutationObserver(updateVisibility);
+    observer.observe(document.body, { childList: true, subtree: true, characterData: true });
+
+    return () => {
+      observer.disconnect();
+      const wrapper = document.querySelector<HTMLElement>('[data-meus-dados-confirm-visibility]');
+      if (wrapper) {
+        wrapper.style.display = '';
+        delete wrapper.dataset.meusDadosConfirmVisibility;
+      }
+    };
+  }, [showResults]);
+}
+
+function MeusDadosProfileBioResults() {
   const { user } = useAuth();
   const [pessoa, setPessoa] = useState<Pessoa | null>(null);
   const [canEdit, setCanEdit] = useState(true);
@@ -209,8 +345,8 @@ function MeusVinculosProfileBioSection() {
   const [error, setError] = useState<string | null>(null);
   const [generationError, setGenerationError] = useState<string | null>(null);
   const loadedRef = useRef(false);
-  const dirtyRef = useRef(false);
-  const generationAttemptedKeyRef = useRef<string | null>(null);
+  const saveTimerRef = useRef<number | null>(null);
+  const autoGeneratedKeyRef = useRef<string | null>(null);
 
   const saveProfileTextValues = useCallback(async (
     values: ProfileTextState = profileText,
@@ -237,15 +373,12 @@ function MeusVinculosProfileBioSection() {
       return false;
     }
 
-    dirtyRef.current = false;
-    if (data) {
+    if (data && !quiet) {
       setPessoa(data);
-      if (!quiet) {
-        setProfileText({
-          minibio: limitProfileText(data.minibio),
-          curiosidades: limitProfileText(data.curiosidades),
-        });
-      }
+      setProfileText({
+        minibio: limitProfileText(data.minibio),
+        curiosidades: limitProfileText(data.curiosidades),
+      });
     }
 
     if (!quiet) toast.success('Mini Bio e Curiosidades salvas.');
@@ -255,7 +388,7 @@ function MeusVinculosProfileBioSection() {
   const generateProfileText = useCallback(async (sourceQuestionnaire: PersonProfileQuestionnaireAnswers, { manual = false } = {}) => {
     if (!pessoa?.id) return;
     if (!hasQuestionnaireSource(sourceQuestionnaire)) {
-      const message = 'Preencha o questionário em Meus Dados antes de gerar os textos.';
+      const message = 'Responda ao menos uma opção do questionário para gerar os textos.';
       setGenerationError(message);
       if (manual) toast.error(message);
       return;
@@ -288,7 +421,6 @@ function MeusVinculosProfileBioSection() {
       };
 
       setProfileText(generatedValues);
-      dirtyRef.current = true;
       const textSaved = await saveProfileTextValues(generatedValues, { quiet: !manual });
       if (!textSaved) {
         throw new Error('Os textos foram gerados, mas não foi possível salvá-los no perfil.');
@@ -329,45 +461,74 @@ function MeusVinculosProfileBioSection() {
       setError(null);
       setGenerationError(null);
       loadedRef.current = false;
-      dirtyRef.current = false;
-      generationAttemptedKeyRef.current = null;
+      autoGeneratedKeyRef.current = null;
 
       await resolveFirstAccessLinkForUser(user);
-      const { data, error: linkError } = await getPrimaryLinkedPersonWithPessoa(user.id);
-
+      const { data: linksData, error: linksError } = await getCurrentUserLinkedPeople();
       if (!mounted) return;
 
-      if (linkError || !data?.pessoa) {
-        setError(linkError || 'Não foi possível carregar o perfil vinculado.');
+      if (linksError) {
+        setError(linksError);
+        setLoading(false);
+        return;
+      }
+
+      const selectedPessoaId = getSelectedPessoaIdFromPage();
+      const selectedLink = (
+        selectedPessoaId ? linksData.find((item) => item.pessoa_id === selectedPessoaId) : null
+      ) || linksData.find((item) => item.principal) || linksData[0] || null;
+
+      if (!selectedLink?.pessoa) {
+        setError('Não foi possível carregar o perfil vinculado.');
         setPessoa(null);
         setQuestionnaire(null);
         setLoading(false);
         return;
       }
 
-      const linkedPessoa = data.pessoa;
+      const linkedPessoa = selectedLink.pessoa;
       setPessoa(linkedPessoa);
-      setCanEdit(data.can_edit !== false);
+      setCanEdit(selectedLink.can_edit !== false);
       setProfileText({
         minibio: limitProfileText(linkedPessoa.minibio),
         curiosidades: limitProfileText(linkedPessoa.curiosidades),
       });
 
-      const questionnaireResult = await getProfileQuestionnaireAnswers(linkedPessoa.id);
-      if (!mounted) return;
+      const draftQuestionnaire = buildDraftQuestionnaire(readQuestionnaireDraft(user.id, linkedPessoa.id));
+      let loadedQuestionnaire: PersonProfileQuestionnaireAnswers | null = null;
 
-      if (questionnaireResult.error) {
-        setGenerationError(`Não foi possível carregar o questionário de perfil: ${questionnaireResult.error}`);
-        setQuestionnaire(null);
-      } else {
-        setQuestionnaire(questionnaireResult.data);
+      if (draftQuestionnaire && hasQuestionnaireSource(draftQuestionnaire)) {
+        const savedDraft = await upsertProfileQuestionnaireAnswers(linkedPessoa.id, {
+          ...draftQuestionnaire,
+          lastGeneratedHash: null,
+        });
+
+        if (!mounted) return;
+
+        if (savedDraft.error) {
+          setGenerationError(`Não foi possível salvar o questionário antes de gerar os textos: ${savedDraft.error}`);
+        } else {
+          loadedQuestionnaire = savedDraft.data;
+        }
       }
 
+      if (!loadedQuestionnaire) {
+        const questionnaireResult = await getProfileQuestionnaireAnswers(linkedPessoa.id);
+        if (!mounted) return;
+
+        if (questionnaireResult.error) {
+          setGenerationError(`Não foi possível carregar o questionário de perfil: ${questionnaireResult.error}`);
+        } else {
+          loadedQuestionnaire = questionnaireResult.data;
+        }
+      }
+
+      setQuestionnaire(loadedQuestionnaire);
       loadedRef.current = true;
       setLoading(false);
     }
 
-    loadProfileText();
+    void loadProfileText();
 
     return () => {
       mounted = false;
@@ -376,162 +537,228 @@ function MeusVinculosProfileBioSection() {
 
   useEffect(() => {
     if (!loadedRef.current || !pessoa?.id || !questionnaire || !hasQuestionnaireSource(questionnaire)) return;
-    if (profileText.minibio.trim() || profileText.curiosidades.trim()) return;
 
     const currentHash = buildProfileQuestionnaireHash(questionnaire);
     const generationKey = `${pessoa.id}:${currentHash}`;
-    if (generationAttemptedKeyRef.current === generationKey) return;
+    if (autoGeneratedKeyRef.current === generationKey) return;
 
-    generationAttemptedKeyRef.current = generationKey;
+    const shouldGenerate =
+      !profileText.minibio.trim() ||
+      !profileText.curiosidades.trim() ||
+      questionnaire.lastGeneratedHash !== currentHash;
+
+    if (!shouldGenerate) return;
+
+    autoGeneratedKeyRef.current = generationKey;
     void generateProfileText(questionnaire);
   }, [generateProfileText, pessoa?.id, profileText.curiosidades, profileText.minibio, questionnaire]);
 
-  useEffect(() => {
-    const handleSaveProfileText = (event: Event) => {
-      if (!dirtyRef.current || !pessoa?.id || !canEdit) return;
-
-      const detail = (event as CustomEvent<{ register?: (promise: Promise<boolean>) => void }>).detail;
-      detail?.register?.(saveProfileTextValues(profileText, { quiet: true }));
-    };
-
-    window.addEventListener('meus-vinculos:save-profile-text', handleSaveProfileText);
-    return () => window.removeEventListener('meus-vinculos:save-profile-text', handleSaveProfileText);
-  }, [canEdit, pessoa?.id, profileText, saveProfileTextValues]);
-
-  const currentQuestionnaireHash = questionnaire ? buildProfileQuestionnaireHash(questionnaire) : null;
-  const hasOutdatedSuggestion = Boolean(
-    questionnaire &&
-    currentQuestionnaireHash &&
-    questionnaire.lastGeneratedHash !== currentQuestionnaireHash &&
-    (profileText.minibio.trim() || profileText.curiosidades.trim())
-  );
-  const canGenerate = Boolean(questionnaire && hasQuestionnaireSource(questionnaire) && canEdit);
+  useEffect(() => () => {
+    if (saveTimerRef.current) window.clearTimeout(saveTimerRef.current);
+  }, []);
 
   const updateProfileText = (field: keyof ProfileTextState, value: string) => {
-    dirtyRef.current = true;
-    setError(null);
-    setProfileText((current) => ({
-      ...current,
+    const nextValues = {
+      ...profileText,
       [field]: value.slice(0, MAX_PROFILE_TEXT_LENGTH),
-    }));
+    };
+
+    setProfileText(nextValues);
+    setError(null);
+
+    if (!loadedRef.current || !canEdit) return;
+    if (saveTimerRef.current) window.clearTimeout(saveTimerRef.current);
+    saveTimerRef.current = window.setTimeout(() => {
+      void saveProfileTextValues(nextValues, { quiet: true });
+    }, 800);
   };
 
+  const hasOutdatedSuggestion = useMemo(() => {
+    if (!questionnaire) return false;
+    const currentHash = buildProfileQuestionnaireHash(questionnaire);
+    return Boolean(
+      currentHash &&
+      questionnaire.lastGeneratedHash !== currentHash &&
+      (profileText.minibio.trim() || profileText.curiosidades.trim())
+    );
+  }, [profileText.curiosidades, profileText.minibio, questionnaire]);
+
+  const canGenerate = Boolean(questionnaire && hasQuestionnaireSource(questionnaire) && canEdit);
+
   return (
-    <section className="space-y-4">
-      <div className="flex min-w-0 items-start gap-3">
-        <span className="mt-1 flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-blue-700 ring-1 ring-blue-100">
-          <UserCircle2 className="h-5 w-5" />
-        </span>
-        <div className="min-w-0">
-          <h2 className="break-words text-2xl font-bold leading-tight text-gray-950">Sobre mim</h2>
-          <p className="mt-2 max-w-3xl break-words text-base leading-relaxed text-gray-600">
-            A IA usa as respostas de Meus Dados, os dados do perfil e alguns vínculos ou fatos históricos para sugerir sua Mini Bio e suas Curiosidades. Edite livremente antes de seguir.
-          </p>
+    <section className="space-y-5">
+      <div className="space-y-2">
+        <div className="flex items-center justify-between gap-3 text-xs font-medium text-gray-600">
+          <span>Etapa 9 de 9</span>
+          <span className="break-words text-right">Seu Perfil</span>
+        </div>
+        <div className="h-2 overflow-hidden rounded-full bg-gray-100">
+          <div className="h-full rounded-full bg-blue-600 transition-all" style={{ width: '100%' }} />
         </div>
       </div>
 
-      <div className="rounded-2xl border border-blue-100 bg-white p-5 shadow-sm">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+      <div className="space-y-4 rounded-xl border border-blue-100 bg-blue-50/40 p-4">
+        <div className="flex min-w-0 items-start gap-3">
+          <span className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white text-blue-700 ring-1 ring-blue-100">
+            <UserCircle2 className="h-5 w-5" />
+          </span>
           <div className="min-w-0">
-            <div className="inline-flex items-center gap-2 rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-800 ring-1 ring-blue-100">
-              <Sparkles className="h-3.5 w-3.5" />
-              Sugestão com IA
+            <h3 className="break-words text-lg font-bold text-gray-950">Seu Perfil</h3>
+            <p className="mt-1 break-words text-sm leading-relaxed text-gray-600">
+              Revise os textos gerados pela IA. Você pode editar livremente antes de confirmar seus dados.
+            </p>
+          </div>
+        </div>
+
+        {loading && (
+          <div className="flex items-center gap-2 rounded-xl border border-blue-100 bg-white px-3 py-3 text-sm text-blue-900">
+            <Loader2 className="h-4 w-4 animate-spin" />
+            Carregando questionário e preparando a geração...
+          </div>
+        )}
+
+        {generating && (
+          <div className="flex items-center gap-2 rounded-xl border border-blue-200 bg-blue-50 px-3 py-3 text-sm text-blue-900">
+            <Loader2 className="h-4 w-4 animate-spin" />
+            Gerando Mini Bio e Curiosidades com IA...
+          </div>
+        )}
+
+        {!loading && !questionnaire && (
+          <p className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
+            Não encontramos respostas salvas do questionário. Os campos podem ser preenchidos manualmente.
+          </p>
+        )}
+
+        {(error || generationError) && (
+          <p className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800">
+            {error || generationError}
+          </p>
+        )}
+
+        {hasOutdatedSuggestion && (
+          <p className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
+            O questionário foi alterado desde a última geração. Use “Atualizar com IA” apenas se quiser substituir a sugestão atual.
+          </p>
+        )}
+
+        <div className="grid gap-4 lg:grid-cols-2">
+          <div className="space-y-2">
+            <div className="flex items-center justify-between gap-3">
+              <Label htmlFor="meus-dados-minibio">Mini Bio</Label>
+              <span className="text-xs text-gray-500">{profileText.minibio.length}/{MAX_PROFILE_TEXT_LENGTH}</span>
             </div>
+            <Textarea
+              id="meus-dados-minibio"
+              value={profileText.minibio}
+              onChange={(event) => updateProfileText('minibio', event.target.value)}
+              placeholder="Escreva uma apresentação curta sobre você."
+              disabled={!canEdit || loading}
+              rows={5}
+            />
           </div>
 
-          <div className="flex flex-col gap-2 sm:flex-row">
-            {canGenerate && (
-              <Button
-                type="button"
-                variant="outline"
-                className="w-full sm:w-auto"
-                onClick={() => questionnaire && generateProfileText(questionnaire, { manual: true })}
-                disabled={generating || loading || saving}
-              >
-                {generating ? 'Gerando...' : hasOutdatedSuggestion ? 'Atualizar com IA' : 'Regenerar com IA'}
-              </Button>
-            )}
+          <div className="space-y-2">
+            <div className="flex items-center justify-between gap-3">
+              <Label htmlFor="meus-dados-curiosidades">Curiosidades</Label>
+              <span className="text-xs text-gray-500">{profileText.curiosidades.length}/{MAX_PROFILE_TEXT_LENGTH}</span>
+            </div>
+            <Textarea
+              id="meus-dados-curiosidades"
+              value={profileText.curiosidades}
+              onChange={(event) => updateProfileText('curiosidades', event.target.value)}
+              placeholder="Liste gostos, hábitos, memórias ou detalhes leves sobre você."
+              disabled={!canEdit || loading}
+              rows={5}
+            />
           </div>
         </div>
 
-      {loading && (
-        <p className="mt-4 rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-600">
-          Carregando Mini Bio e Curiosidades...
-        </p>
-      )}
-
-      {!loading && !questionnaire && (
-        <p className="mt-4 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
-          Não encontramos respostas salvas do questionário. Volte para Meus Dados se quiser gerar sugestões automaticamente.
-        </p>
-      )}
-
-      {generating && (
-        <p className="mt-4 rounded-xl border border-blue-200 bg-blue-50 px-3 py-2 text-sm text-blue-900">
-          Gerando sugestão com IA...
-        </p>
-      )}
-
-      {(error || generationError) && (
-        <p className="mt-4 rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800">
-          {error || generationError}
-        </p>
-      )}
-
-      {hasOutdatedSuggestion && (
-        <p className="mt-4 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
-          O questionário foi alterado desde a última geração. Use “Atualizar com IA” apenas se quiser substituir a sugestão atual.
-        </p>
-      )}
-
-        <div className="mt-5 grid gap-4 lg:grid-cols-2">
-        <div className="space-y-2">
-          <div className="flex items-center justify-between gap-3">
-            <Label htmlFor="meus-vinculos-minibio">Mini Bio</Label>
-            <span className="text-xs text-gray-500">{profileText.minibio.length}/{MAX_PROFILE_TEXT_LENGTH}</span>
-          </div>
-          <Textarea
-            id="meus-vinculos-minibio"
-            value={profileText.minibio}
-            onChange={(event) => updateProfileText('minibio', event.target.value)}
-            placeholder="Escreva uma apresentação curta sobre você."
-            disabled={!canEdit || loading}
-            rows={5}
-          />
-        </div>
-
-        <div className="space-y-2">
-          <div className="flex items-center justify-between gap-3">
-            <Label htmlFor="meus-vinculos-curiosidades">Curiosidades</Label>
-            <span className="text-xs text-gray-500">{profileText.curiosidades.length}/{MAX_PROFILE_TEXT_LENGTH}</span>
-          </div>
-          <Textarea
-            id="meus-vinculos-curiosidades"
-            value={profileText.curiosidades}
-            onChange={(event) => updateProfileText('curiosidades', event.target.value)}
-            placeholder="Liste gostos, hábitos, memórias ou detalhes leves sobre você."
-            disabled={!canEdit || loading}
-            rows={5}
-          />
-        </div>
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+          <p className="text-xs text-gray-500">
+            {saving ? 'Salvando textos...' : 'Os textos são salvos automaticamente ao editar.'}
+          </p>
+          {canGenerate && (
+            <Button
+              type="button"
+              variant="outline"
+              className="w-full sm:w-auto"
+              onClick={() => questionnaire && generateProfileText(questionnaire, { manual: true })}
+              disabled={generating || loading || saving}
+            >
+              <Sparkles className="h-4 w-4" />
+              {generating ? 'Gerando...' : hasOutdatedSuggestion ? 'Atualizar com IA' : 'Regenerar com IA'}
+            </Button>
+          )}
         </div>
       </div>
     </section>
   );
 }
 
-function MeusVinculosProfileBioPortal() {
-  const host = useProfileBioPortalHost();
-  if (!host) return null;
-  return createPortal(<MeusVinculosProfileBioSection />, host);
+function MeusDadosInlineProfileBioController() {
+  const { resultHost, actionsHost, questionnaireCard, stepInfo } = useMeusDadosInlineHosts();
+  const [showResults, setShowResults] = useState(false);
+  useHideConfirmUntilProfileResults(showResults);
+
+  useEffect(() => {
+    if (!resultHost) return;
+    resultHost.classList.toggle('hidden', !showResults);
+  }, [resultHost, showResults]);
+
+  useEffect(() => {
+    if (!questionnaireCard) return;
+
+    questionnaireCard.querySelectorAll<HTMLElement>(`[${PROFILE_ORIGINAL_CONTENT_ATTRIBUTE}]`).forEach((node) => {
+      node.style.display = showResults ? 'none' : '';
+    });
+  }, [questionnaireCard, showResults, stepInfo]);
+
+  const revealResults = useCallback(() => {
+    setShowResults(true);
+    window.setTimeout(() => {
+      document.getElementById(PROFILE_RESULT_HOST_ID)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 80);
+  }, []);
+
+  useEffect(() => {
+    const handleQuestionnaireFinished = () => revealResults();
+    window.addEventListener('meus-dados:questionnaire-finished', handleQuestionnaireFinished);
+
+    return () => {
+      window.removeEventListener('meus-dados:questionnaire-finished', handleQuestionnaireFinished);
+    };
+  }, [revealResults]);
+
+  return (
+    <>
+      {actionsHost && !showResults ? createPortal(
+        <div className="flex w-full flex-col gap-2 sm:ml-auto sm:w-auto sm:flex-row sm:items-center">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={revealResults}
+            className="w-full sm:w-auto"
+          >
+            Pular Tudo
+          </Button>
+        </div>,
+        actionsHost,
+      ) : null}
+
+      {resultHost && showResults ? createPortal(
+        <MeusDadosProfileBioResults />,
+        resultHost,
+      ) : null}
+    </>
+  );
 }
 
-export function MeusVinculosWithProfileBio() {
+export function MeusDadosWithInlineProfileBio() {
   return (
-    <div>
-      <MeusVinculosProfileBioPortal />
-      <MeusVinculosPetEditorPortal />
-      <MeusVinculos />
-    </div>
+    <>
+      <MeusDados />
+      <MeusDadosInlineProfileBioController />
+    </>
   );
 }
