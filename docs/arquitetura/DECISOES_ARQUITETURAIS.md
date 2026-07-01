@@ -66,7 +66,9 @@ Decisão vigente:
 - o catálogo administrativo de notificações deve ser editável e persistido no Supabase;
 - `admin_notification_catalogs` guarda snapshot completo em JSONB com frequências, temas, grupos, tipos, templates, automações e sugestões;
 - `admin_notification_configurations` guarda overrides e configurações da tela administrativa;
-- `src/app/constants/adminNotificationCatalog.ts` permanece como fallback/base técnica enquanto a UI ainda termina a migração para consumo integral do catálogo persistido;
+- `admin_notification_configurations.variable_settings` guarda regras por variável de template, como origem, valor/fallback, link considerado e formato de data;
+- `admin_notification_catalogs.notification_templates` pode persistir `variableSettings` como metadado do template salvo;
+- `src/app/constants/adminNotificationCatalog.ts` permanece como fallback/base técnica enquanto a UI termina a migração para consumo integral do catálogo persistido;
 - novas evoluções devem preferir `loadAdminNotificationCatalog()` e serviços correlatos em vez de imports diretos do catálogo base;
 - entregas reais não devem ser confundidas com catálogo; dispatch continua responsável por criar notificações em `notificacoes_usuario`.
 
@@ -76,7 +78,23 @@ Destinatários avançados aceitos:
 - usuários específicos;
 - familiares próximos: pai, mãe, irmãos, cônjuge ativo, filhos, netos e sobrinhos.
 
+A seleção `Usuário do gatilho` é composta por dois níveis:
+
+1. grupo dinâmico `trigger_user`, que indica que o destinatário será o usuário que realizou a ação;
+2. tokens `trigger_event:<evento>`, que indicam quais eventos administrativos podem acionar essa regra.
+
+Eventos conhecidos:
+
+- `trigger_event:first_map_access`: evento já implementado, baseado no primeiro acesso real a `/mapa-familiar`;
+- `trigger_event:first_login`: evento preparado, ainda dependente de conexão com o fluxo de autenticação;
+- `trigger_event:onboarding_completed`: evento preparado, ainda dependente de conexão com a conclusão do primeiro acesso;
+- `trigger_event:profile_updated`: evento preparado, ainda dependente de conexão com o fluxo de atualização própria de perfil.
+
 O primeiro acesso real a `/mapa-familiar` pode gerar notificação interna de boas-vindas, deduplicada por `user_first_map_accesses`.
+
+A configuração de variáveis é metadado administrativo. A substituição real de variáveis deve ocorrer no dispatch ou no serviço do gatilho, validando contexto, permissões e fallback antes de entregar a notificação ao usuário.
+
+A UI administrativa pode usar `localStorage` para preservar rascunho e aba ativa da página `/admin/notificacoes`, mas a fonte remota definitiva após `Salvar` permanece o Supabase.
 
 A documentação funcional canônica dessa frente é `funcionalidades/NOTIFICACOES_ADMIN.md`. O resumo de notificações do usuário permanece em `funcionalidades/FUNCIONALIDADES_COMPLEMENTARES.md`.
 

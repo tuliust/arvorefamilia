@@ -138,8 +138,8 @@ Notas técnicas:
 
 | Área | Arquivos principais |
 |---|---|
-| Painel administrativo de notificações | `src/app/pages/admin/AdminNotificacoes.tsx` |
-| Aba de configuração, conteúdo, canais, destinatários e variáveis | `src/app/components/admin/notifications/AdminNotificationConfiguration.tsx` |
+| Painel administrativo de notificações, aba ativa e rascunho local | `src/app/pages/admin/AdminNotificacoes.tsx` |
+| Aba de configuração, conteúdo, canais, destinatários, eventos de gatilho, variáveis e regras de variáveis | `src/app/components/admin/notifications/AdminNotificationConfiguration.tsx` |
 | Formatação humana de labels, variáveis e slugs | `src/app/components/admin/notifications/adminNotificationFormatters.ts` |
 | Catálogo base/fallback de tipos, templates, automações, frequências e grupos | `src/app/constants/adminNotificationCatalog.ts` |
 | Persistência de configuração e catálogo completo | `src/app/services/adminNotificationConfigurationService.ts` |
@@ -153,14 +153,26 @@ Tabelas Supabase relacionadas:
 
 - `notificacoes_usuario`, para notificações reais entregues;
 - `preferencias_notificacao`, para preferências de usuários;
-- `admin_notification_configurations`, para overrides/configurações da UI administrativa;
+- `admin_notification_configurations`, para overrides/configurações da UI administrativa, incluindo `variable_settings` por template;
 - `admin_notification_catalogs`, para snapshot editável do catálogo completo;
 - `user_first_map_accesses`, para deduplicação do gatilho de boas-vindas ao acessar `/mapa-familiar`.
+
+Tokens e chaves operacionais:
+
+- `specific_user:<uuid>`: seleção manual de usuários específicos;
+- `trigger_user`: grupo dinâmico para usuário que realizou a ação;
+- `trigger_event:first_map_access`: gatilho implementado de primeiro acesso a `/mapa-familiar`;
+- `trigger_event:first_login`: gatilho preparado para autenticação;
+- `trigger_event:onboarding_completed`: gatilho preparado para conclusão de primeiro acesso;
+- `trigger_event:profile_updated`: gatilho preparado para atualização própria de perfil;
+- `arvorefamilia:admin-notifications-console-config`: rascunho local da configuração administrativa;
+- `arvorefamilia:admin-notifications-active-tab`: aba ativa da página administrativa.
 
 Migrations relacionadas:
 
 - `supabase/migrations/20260701120000_persist_admin_notification_config_and_first_map_access.sql`;
-- `supabase/migrations/20260701143000_persist_full_admin_notification_catalog.sql`.
+- `supabase/migrations/20260701143000_persist_full_admin_notification_catalog.sql`;
+- `supabase/migrations/20260701170000_add_variable_settings_to_admin_notification_config.sql`.
 
 ## Configurações públicas e tema
 

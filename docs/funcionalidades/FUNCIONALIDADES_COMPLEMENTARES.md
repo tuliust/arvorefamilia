@@ -419,12 +419,64 @@ Rotas principais:
 - `/admin/notificacoes`;
 - `/admin/relacionamentos`.
 
+A documentação canônica detalhada de `/admin/notificacoes` é `funcionalidades/NOTIFICACOES_ADMIN.md`. Este documento mantém apenas o resumo operacional e as regras complementares para evitar duplicidade.
+
 Regras de notificações:
 
 - todas as abas de `/admin/notificacoes` devem exibir canais, tipos, status, disponibilidade, frequência e categorias em linguagem humana;
 - não exibir slugs crus como texto principal de leitura;
 - títulos, labels e badges devem iniciar com maiúscula quando aplicável;
-- cards principais da visão geral devem priorizar legibilidade dos números e reduzir excesso visual nos títulos.
+- cards principais da visão geral devem priorizar legibilidade dos números e reduzir excesso visual nos títulos;
+- a aba ativa deve ser preservada quando o admin troca de aba do navegador, recarrega ou a página remonta;
+- rascunhos locais da aba `Configuração` podem ser preservados em `localStorage` antes do salvamento final;
+- o salvamento final deve continuar persistindo no Supabase.
+
+### `/admin/notificacoes` — aba Configuração
+
+A aba `Configuração` permite ajustar o comportamento administrativo do catálogo de notificações sem alterar diretamente código de constantes.
+
+Regras atuais:
+
+- deve haver botão `Salvar` para persistir frequência, conteúdo, canais, destinatários, status, variáveis, regras de variáveis e tipos personalizados;
+- deve haver botão `Novo tipo` para criar definição administrativa customizada com template inicial;
+- cada tipo deve permitir status `Ativo` ou `Inativo`;
+- o campo `Texto curto` não deve ser exibido nessa aba quando o contrato visual pedir foco em título, texto e CTA;
+- variáveis customizadas podem ser criadas pelo botão `+` e normalizadas para o formato `{{nome_da_variavel}}`;
+- clicar em uma variável deve inserir o token no cursor do campo ativo ou substituir a seleção atual;
+- `{{nome}}` deve inserir `{{nome_curto}}` e `{{nome_autor}}` deve inserir `{{nome_autor_curto}}` para preservar mensagens compactas;
+- `Textarea` precisa aceitar `ref` para manter foco, seleção e reposicionamento do cursor;
+- a área `Editar regras das variáveis` deve permitir configurar origem, valor/fallback, link considerado e formato de data;
+- a variável `{{link}}`, quando configurada com valor fixo, deve atualizar o `defaultLink` do template/tipo salvo;
+- variáveis de data podem usar formato curto, longo, relativo ou personalizado;
+- falhas de carregamento ou salvamento devem usar `toast`/mensagem não bloqueante e não quebrar as demais abas.
+
+Destinatários:
+
+- `Usuário do gatilho` deve abrir uma configuração de eventos;
+- os eventos disponíveis devem incluir `Primeiro acesso ao mapa familiar`, `Primeiro login`, `Conclusão do primeiro acesso` e `Atualização própria de perfil`;
+- `Primeiro acesso ao mapa familiar` representa o evento já implementado;
+- `Primeiro login`, `Conclusão do primeiro acesso` e `Atualização própria de perfil` representam regras preparadas até que os fluxos reais sejam conectados;
+- `Usuários específicos` deve continuar abrindo lista de usuários e gravando seleção múltipla;
+- `Familiares próximos` deve permanecer disponível para fluxos que consigam resolver pessoa/usuário do contexto.
+
+Tipos personalizados:
+
+- um novo tipo pode nascer com nome temporário `Nova notificação N`;
+- depois que o admin preenche o campo `Título`, esse título deve ser usado como nome administrativo exibido no seletor;
+- ao salvar, o título deve ser persistido no tipo e no template customizado;
+- o catálogo persistido não deve depender apenas dos arrays de `src/app/constants/adminNotificationCatalog.ts`.
+
+Não regressão mínima:
+
+- carregar configuração persistida sem duplicar tipos customizados;
+- salvar alterações e recarregar a página confirmando persistência;
+- inserir variável no meio do texto, no fim do texto e substituindo uma seleção;
+- criar novo tipo e confirmar que ele aparece no seletor pelo título editado;
+- alternar `Ativo/Inativo` sem perder conteúdo editado;
+- selecionar `Usuário do gatilho` e confirmar que aparece a configuração de eventos;
+- selecionar `Usuários específicos` e confirmar que aparece a lista de usuários;
+- editar `{{link}}` e confirmar que a regra é salva;
+- trocar de aba do navegador e confirmar que a aba `Configuração` e o rascunho continuam preservados.
 
 Regras de relacionamentos:
 
@@ -434,30 +486,6 @@ Regras de relacionamentos:
 - cards de filiação devem exibir `Pai`, `Mãe` ou `Filho` com capitalização correta;
 - classificações legadas `sangue` e `adotivo` não devem aparecer na interface de listagem nem em aprovações, embora o campo técnico possa continuar existindo para compatibilidade futura.
 
-
-### `/admin/notificacoes` — aba Configuração
-
-A aba `Configuração` permite ajustar o comportamento administrativo do catálogo de notificações sem alterar diretamente código de constantes.
-
-Regras atuais:
-
-- deve haver botão `Salvar` para persistir frequência, conteúdo, canais, destinatários, status, variáveis e tipos personalizados;
-- deve haver botão `Novo tipo` para criar definição administrativa customizada com template inicial;
-- cada tipo deve permitir status `Ativo` ou `Inativo`;
-- o campo `Texto curto` não deve ser exibido nessa aba quando o contrato visual pedir foco em título, texto e CTA;
-- variáveis customizadas podem ser criadas pelo botão `+` e normalizadas para o formato `{{nome_da_variavel}}`;
-- clicar em uma variável deve inserir o token no cursor do campo ativo ou substituir a seleção atual;
-- `{{nome}}` deve inserir `{{nome_curto}}` e `{{nome_autor}}` deve inserir `{{nome_autor_curto}}` para preservar mensagens compactas;
-- `Textarea` precisa aceitar `ref` para manter foco, seleção e reposicionamento do cursor;
-- falhas de carregamento ou salvamento devem usar `toast`/mensagem não bloqueante e não quebrar as demais abas.
-
-Não regressão mínima:
-
-- carregar configuração persistida sem duplicar tipos customizados;
-- salvar alterações e recarregar a página confirmando persistência;
-- inserir variável no meio do texto, no fim do texto e substituindo uma seleção;
-- criar novo tipo e confirmar que ele aparece no seletor;
-- alternar `Ativo/Inativo` sem perder conteúdo editado.
 
 ## Regra de manutenção
 

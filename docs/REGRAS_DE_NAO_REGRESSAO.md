@@ -137,6 +137,17 @@
 - `person_responsible_links.responsible_pessoa_id` deve representar a pessoa responsável.
 - Uma pessoa não pode ser responsável por ela mesma em `person_responsible_links`.
 - O schema de `person_responsible_links` não deve substituir nem enfraquecer as regras de acesso autenticado de `user_person_links`.
+- Notificações reais entregues ao usuário devem continuar em `notificacoes_usuario`, não em tabelas administrativas.
+- Preferências individuais de usuário devem continuar em `preferencias_notificacao`.
+- Configurações administrativas da tela `/admin/notificacoes` devem usar `admin_notification_configurations`.
+- O catálogo administrativo editável deve usar `admin_notification_catalogs`.
+- `admin_notification_configurations.variable_settings` deve armazenar regras por variável de template, como origem, valor/fallback, link considerado e formato de data.
+- O snapshot de `admin_notification_catalogs.notification_templates` pode conter `variableSettings` como metadado do template, mas a execução real deve continuar validando o contexto do gatilho antes de substituir variáveis.
+- A deduplicação do primeiro acesso real a `/mapa-familiar` deve continuar em `user_first_map_accesses`.
+- Tokens de destinatário `specific_user:<uuid>` não podem ser confundidos com grupos fixos.
+- Tokens de evento `trigger_event:<evento>` não podem ser tratados como usuários reais.
+- `trigger_event:first_map_access` representa o gatilho já implementado de primeiro acesso a `/mapa-familiar`.
+- `trigger_event:first_login`, `trigger_event:onboarding_completed` e `trigger_event:profile_updated` podem existir como configuração preparada, mas não devem ser documentados como disparo real enquanto não estiverem conectados aos fluxos de autenticação, onboarding ou atualização de perfil.
 
 ## Status conjugal
 
@@ -243,6 +254,23 @@
 - A ação rápida deve usar `Textos automáticos`, não `Conteúdo de Pessoas`.
 - `/admin/home` deve permitir salvar alterações após carregamento das configurações.
 - `/admin/notificacoes` não deve exibir slugs crus em canais, tipos, status, disponibilidade, frequência ou categorias.
+- `/admin/notificacoes` deve persistir configurações em `admin_notification_configurations`.
+- `/admin/notificacoes` deve persistir snapshot editável do catálogo completo em `admin_notification_catalogs`.
+- `/admin/notificacoes` deve preservar a aba ativa em recarregamento, troca de aba do navegador ou remount da página.
+- `/admin/notificacoes` deve preservar rascunhos locais da aba `Configuração` enquanto o admin ainda não clicou em `Salvar`.
+- A aba `Configuração` deve permitir criar novo tipo de notificação sem manter o nome genérico `Nova notificação N` depois que o admin editar o título.
+- Tipos customizados devem usar o título preenchido pelo admin como nome administrativo exibido no seletor e persistido no catálogo.
+- O card `Usuário do gatilho` deve abrir configuração de eventos do gatilho quando selecionado.
+- A configuração de `Usuário do gatilho` deve oferecer ao menos `Primeiro acesso ao mapa familiar`, `Primeiro login`, `Conclusão do primeiro acesso` e `Atualização própria de perfil`, diferenciando visualmente gatilhos implementados e apenas preparados.
+- Selecionar `Usuário do gatilho` deve gravar o grupo `trigger_user` e tokens de evento `trigger_event:<evento>` em `recipientOverrides`.
+- Selecionar `Usuários específicos` deve continuar abrindo lista de usuários e gravando tokens `specific_user:<uuid>`.
+- `Usuários específicos` e `Usuário do gatilho` não podem apagar seleções de outros grupos de destinatários que não pertençam ao mesmo namespace.
+- A área de variáveis deve permitir inserir tokens no campo ativo preservando cursor e seleção.
+- A área de variáveis deve permitir editar regras por variável, incluindo origem, valor/fallback, link considerado e formato de data.
+- A variável `{{link}}`, quando configurada com valor fixo, deve atualizar o `defaultLink` do template/tipo customizado salvo.
+- Variáveis de data devem manter opção de formato curto, longo, relativo ou personalizado.
+- Salvar a aba `Configuração` deve gravar tanto `variable_overrides` quanto `variable_settings`.
+- `src/app/constants/adminNotificationCatalog.ts` pode permanecer como fallback/base técnica, mas não deve voltar a ser a única fonte de verdade para tipos customizados criados por admin.
 - `/admin/relacionamentos` deve manter filtros por cards, busca por pessoa, sugestões por nome e deduplicação de casamentos.
 - `/admin/relacionamentos` e `/admin/aprovacoes` não devem exibir a classificação legada `sangue`/`adotivo`.
 - `/admin/atividades` não deve apagar registros do banco ao acionar `Limpar`; a limpeza é visual/local.
