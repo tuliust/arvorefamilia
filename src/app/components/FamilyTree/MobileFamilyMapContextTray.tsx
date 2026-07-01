@@ -132,7 +132,7 @@ export const MobileFamilyMapContextTray = React.forwardRef<HTMLDivElement, Mobil
       hiddenFullMapButton?.click();
     }, []);
 
-    const hasFlatWhiteTrayBase = action === 'formato' || action === 'cor' || action === 'grupos';
+    const hasFlatWhiteTrayBase = action === 'formato' || action === 'cor' || action === 'grupos' || action === 'zoom';
     const hasCenteredCompactTrayBase = action === 'cor' || action === 'grupos';
 
     const trayInsetClassName = hasFlatWhiteTrayBase
@@ -290,6 +290,22 @@ export const MobileFamilyMapContextTray = React.forwardRef<HTMLDivElement, Mobil
                 font-size: 0.82rem !important;
                 line-height: 1.05 !important;
                 letter-spacing: -0.02em !important;
+              }
+
+              [data-mobile-family-map-context-action="zoom"] [data-mobile-family-map-inline-overview="true"] {
+                max-height: min(25.75rem, calc(100dvh - 12.75rem)) !important;
+              }
+
+              [data-mobile-family-map-context-action="zoom"] button[data-screen] {
+                min-height: 6.45rem !important;
+                justify-content: space-between !important;
+                gap: 0.35rem !important;
+                padding-top: 0.72rem !important;
+                padding-bottom: 0.85rem !important;
+              }
+
+              [data-mobile-family-map-context-action="zoom"] button[data-screen] > span:last-child {
+                margin-bottom: 0.2rem !important;
               }
             `}
           </style>
