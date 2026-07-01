@@ -4,6 +4,13 @@ const STYLE_ID = 'mobile-map-toolbar-backdrop-layer-fix-style';
 const BACKDROP_BOTTOM_VAR = '--mobile-map-toolbar-backdrop-bottom';
 const BACKDROP_TOP_VAR = '--mobile-map-toolbar-backdrop-top';
 const TOOLBAR_SELECTOR = '[data-mobile-family-map-toolbar="true"]';
+const GENERATION_OVERLAY_ID = 'mobile-generation-safe-overview-overlay';
+const PANEL_SELECTORS = [
+  `#${GENERATION_OVERLAY_ID}`,
+  '[data-mobile-family-map-inline-overview="true"]',
+  '[role="dialog"][aria-label="Filtros do mapa familiar"]',
+  '[data-tree-export-ignore="true"]',
+].join(',');
 
 let scheduled = false;
 
@@ -32,11 +39,10 @@ function ensureStyles() {
       html[data-mobile-map-toolbar-backdrop="true"] [data-mobile-family-map-inline-overview="true"],
       html[data-mobile-map-toolbar-backdrop="true"] #mobile-family-map-full-overview,
       html[data-mobile-map-toolbar-backdrop="true"] #mobile-generation-line-full-overview {
-        position: relative !important;
         z-index: 10001 !important;
       }
 
-      html[data-mobile-map-toolbar-backdrop="true"] #mobile-generation-safe-overview-overlay {
+      html[data-mobile-map-toolbar-backdrop="true"] #${GENERATION_OVERLAY_ID} {
         z-index: 10002 !important;
       }
     }
@@ -69,11 +75,58 @@ function getBottomNavigationOffset() {
   return Math.max(72, Math.ceil(window.innerHeight - bottomNav.rect.top));
 }
 
-function getToolbarBottom() {
-  const toolbar = document.querySelector<HTMLElement>(`${TOOLBAR_SELECTOR}[data-mobile-family-map-toolbar-active="true"]`)
+function getBottomNavigationTop() {
+  return window.innerHeight - getBottomNavigationOffset();
+}
+
+function getToolbar() {
+  return document.querySelector<HTMLElement>(`${TOOLBAR_SELECTOR}[data-mobile-family-map-toolbar-active="true"]`)
     ?? document.querySelector<HTMLElement>(TOOLBAR_SELECTOR);
-  const rect = toolbar?.getBoundingClientRect();
+}
+
+function getToolbarBottom() {
+  const rect = getToolbar()?.getBoundingClientRect();
   return rect ? Math.max(0, Math.ceil(rect.bottom)) : 0;
+}
+
+function isVisibleRect(rect: DOMRect) {
+  return rect.width >= 80
+    && rect.height >= 24
+    && rect.bottom > 0
+    && rect.top < window.innerHeight;
+}
+
+function isFullscreenMapPanel(element: HTMLElement) {
+  return element.matches('[data-mobile-family-map-inline-overview="true"][data-mobile-family-map-panel-mode="full"]')
+    || Boolean(element.querySelector('[data-mobile-family-map-inline-overview="true"][data-mobile-family-map-panel-mode="full"]'))
+    || element.id === 'mobile-family-map-full-overview'
+    || element.id === 'mobile-generation-line-full-overview';
+}
+
+function getActivePanelBottom(toolbarBottom: number) {
+  const bottomLimit = getBottomNavigationTop();
+  const candidates = Array.from(document.querySelectorAll<HTMLElement>(PANEL_SELECTORS))
+    .filter((element) => element.id !== BACKDROP_ID)
+    .map((element) => {
+      const rect = element.getBoundingClientRect();
+      return { element, rect };
+    })
+    .filter(({ element, rect }) => (
+      isVisibleRect(rect)
+      && rect.bottom > toolbarBottom + 4
+      && rect.top < bottomLimit - 8
+      && !element.matches(TOOLBAR_SELECTOR)
+    ));
+
+  const fullscreen = candidates.find(({ element }) => isFullscreenMapPanel(element));
+  if (fullscreen) return bottomLimit;
+
+  const relevant = candidates
+    .filter(({ rect }) => rect.top <= toolbarBottom + 210)
+    .sort((a, b) => b.rect.bottom - a.rect.bottom)[0];
+
+  if (!relevant) return toolbarBottom;
+  return Math.min(bottomLimit, Math.max(toolbarBottom, Math.ceil(relevant.rect.bottom)));
 }
 
 function syncBackdropLayer() {
@@ -84,8 +137,11 @@ function syncBackdropLayer() {
   const backdrop = document.getElementById(BACKDROP_ID);
   if (!backdrop) return;
 
+  const toolbarBottom = getToolbarBottom();
+  const panelBottom = getActivePanelBottom(toolbarBottom);
+
   document.documentElement.dataset.mobileMapToolbarBackdrop = 'true';
-  document.documentElement.style.setProperty(BACKDROP_TOP_VAR, `${getToolbarBottom()}px`);
+  document.documentElement.style.setProperty(BACKDROP_TOP_VAR, `${panelBottom}px`);
   document.documentElement.style.setProperty(BACKDROP_BOTTOM_VAR, `${getBottomNavigationOffset()}px`);
 }
 
@@ -112,6 +168,7 @@ if (typeof window !== 'undefined' && typeof document !== 'undefined') {
       'data-mobile-map-toolbar-backdrop',
       'data-mobile-family-map-toolbar-active',
       'data-mobile-family-map-toolbar-action',
+      'data-mobile-family-map-panel-mode',
       'class',
       'style',
     ],
