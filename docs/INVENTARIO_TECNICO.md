@@ -174,6 +174,20 @@ Migrations relacionadas:
 - `supabase/migrations/20260701143000_persist_full_admin_notification_catalog.sql`;
 - `supabase/migrations/20260701170000_add_variable_settings_to_admin_notification_config.sql`.
 
+Documentos relacionados:
+
+- contrato funcional: `docs/funcionalidades/NOTIFICACOES_ADMIN.md`;
+- QA: `docs/QA_MANUAL.md`;
+- não regressão: `docs/REGRAS_DE_NAO_REGRESSAO.md`;
+- migrations/tabelas: `docs/operacao/MIGRATIONS_SUPABASE.md`;
+- pendências: `docs/PLANO_PROXIMOS_PASSOS.md`.
+
+Regras de inventário:
+
+- novas chaves de `localStorage`, tokens técnicos, tabelas e migrations de notificações devem ser registradas nesta seção;
+- entregas reais em `notificacoes_usuario` não devem ser confundidas com catálogo administrativo;
+- `variable_settings` deve ser tratado como contrato técnico da configuração administrativa enquanto existir a UI de regras de variáveis.
+
 ## Configurações públicas e tema
 
 | Área | Arquivos principais |
@@ -301,3 +315,16 @@ A documentação operacional não deve manter arquivos de rodada, baseline antig
 O runtime `src/desktopTreeVisualizationPanelTextFix.ts` não deve ser listado como script ativo quando a correção textual já estiver aplicada nos componentes de origem.
 
 Arquivos temporários, patches de teste e módulos sem carregamento ativo devem ser removidos em limpeza técnica posterior, ou documentados explicitamente como pendência quando houver motivo para mantê-los no repositório.
+
+## Regra de manutenção do inventário
+
+Atualizar este arquivo sempre que houver:
+
+- nova rota, guard ou página canônica;
+- novo serviço em `src/app/services` com responsabilidade de domínio;
+- nova tabela, RPC, migration, bucket ou chave técnica persistida;
+- novo runtime carregado por `index.html`;
+- neutralização, remoção ou absorção de runtime defensivo;
+- mudança no contrato de `/admin/notificacoes`, especialmente tokens, eventos, variáveis, catálogo ou tabelas.
+
+O inventário deve descrever módulos ativos e pendências técnicas reais. Não deve listar scripts vazios, arquivos de teste, patches temporários ou documentação de rodada como se fossem contrato vigente.
