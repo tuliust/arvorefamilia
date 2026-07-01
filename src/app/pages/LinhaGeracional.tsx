@@ -33,6 +33,10 @@ import {
   setCachedTreeData,
 } from '../services/treeDataCache';
 import type { Pessoa, Relacionamento } from '../types';
+import {
+  useRegisterMobileTreeChrome,
+  type MobileTreeChromeConfig,
+} from './tree/MobileTreeChromeContext';
 
 type LinhaGeracionalLoadState = {
   loading: boolean;
@@ -40,6 +44,10 @@ type LinhaGeracionalLoadState = {
   centralPersonId: string;
   pessoas: Pessoa[];
   relacionamentos: Relacionamento[];
+};
+
+type LinhaGeracionalProps = {
+  mobileChromeMode?: 'standalone' | 'shared';
 };
 
 const FULL_HORIZONTAL_FILTERS: DirectRelativeFilters = {
@@ -157,7 +165,7 @@ function LinhaGeracionalError({ message, onRetry }: { message: string; onRetry: 
   );
 }
 
-export function LinhaGeracional() {
+export function LinhaGeracional({ mobileChromeMode = 'standalone' }: LinhaGeracionalProps = {}) {
   const { user, loading: authLoading } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
@@ -174,6 +182,7 @@ export function LinhaGeracional() {
     relacionamentos: [],
   });
   const searchInputRef = React.useRef<HTMLInputElement | null>(null);
+  const shouldUseSharedChrome = mobileChromeMode === 'shared';
 
   React.useEffect(() => {
     applyTreeColorPalette(getStoredTreeColorPalette());
@@ -280,41 +289,76 @@ export function LinhaGeracional() {
     navigate(`/pessoa/${pessoa.id}`);
   }, [navigate]);
 
+  const currentTreeViewLabel = centralPerson ? `Família de ${getFirstPersonName(centralPerson.nome_completo)}` : 'Árvore Familiar';
+  const mobileTreeChromeConfig = React.useMemo<MobileTreeChromeConfig>(() => ({
+    currentTreeViewLabel,
+    isSearchExpanded: searchExpanded,
+    searchExpanded,
+    onSearchExpandedChange: setSearchExpanded,
+    searchTerm,
+    onSearchTermChange: setSearchTerm,
+    onSearchSubmit: handleSearchSubmit,
+    searchInputRef,
+    pessoasFiltradas: filteredSearchPeople,
+    handleSearchSelect: handlePersonSearchSelect,
+    headerActionTextClassName: 'hidden sm:inline',
+    onCuriosities: () => navigate('/curiosidades'),
+    navigateFromHome: navigateFromLinhaGeracional,
+  }), [
+    currentTreeViewLabel,
+    filteredSearchPeople,
+    handlePersonSearchSelect,
+    handleSearchSubmit,
+    navigate,
+    navigateFromLinhaGeracional,
+    searchExpanded,
+    searchTerm,
+  ]);
+
+  useRegisterMobileTreeChrome(shouldUseSharedChrome ? mobileTreeChromeConfig : null);
+
   if (authLoading || state.loading) return <LinhaGeracionalLoading />;
   if (state.error) return <LinhaGeracionalError message={state.error} onRetry={() => setLoadRevision((current) => current + 1)} />;
 
   return (
     <>
       <main
-        className="flex min-h-[100dvh] flex-col overflow-hidden lg:hidden"
+        className={shouldUseSharedChrome
+          ? 'relative flex min-h-0 flex-1 flex-col overflow-hidden lg:hidden'
+          : 'flex min-h-[100dvh] flex-col overflow-hidden lg:hidden'}
         data-linha-geracional-mobile-root="true"
         data-family-map-horizontal-root="true"
+        data-tree-map-shared-content={shouldUseSharedChrome ? 'true' : undefined}
         style={{
           background: 'var(--tree-palette-canvas-bg)',
           color: 'var(--tree-palette-text-primary)',
         }}
       >
-        <HomeHeader
-          currentTreeViewLabel={centralPerson ? `Família de ${getFirstPersonName(centralPerson.nome_completo)}` : 'Árvore Familiar'}
-          isSearchExpanded={searchExpanded}
-          searchExpanded={searchExpanded}
-          onSearchExpandedChange={setSearchExpanded}
-          searchTerm={searchTerm}
-          onSearchTermChange={setSearchTerm}
-          onSearchSubmit={handleSearchSubmit}
-          searchInputRef={searchInputRef}
-          pessoasFiltradas={filteredSearchPeople}
-          handleSearchSelect={handlePersonSearchSelect}
-          headerActionTextClassName="hidden sm:inline"
-          onCuriosities={() => navigate('/curiosidades')}
-          navigateFromHome={navigateFromLinhaGeracional}
-        />
+        {!shouldUseSharedChrome && (
+          <HomeHeader
+            currentTreeViewLabel={currentTreeViewLabel}
+            isSearchExpanded={searchExpanded}
+            searchExpanded={searchExpanded}
+            onSearchExpandedChange={setSearchExpanded}
+            searchTerm={searchTerm}
+            onSearchTermChange={setSearchTerm}
+            onSearchSubmit={handleSearchSubmit}
+            searchInputRef={searchInputRef}
+            pessoasFiltradas={filteredSearchPeople}
+            handleSearchSelect={handlePersonSearchSelect}
+            headerActionTextClassName="hidden sm:inline"
+            onCuriosities={() => navigate('/curiosidades')}
+            navigateFromHome={navigateFromLinhaGeracional}
+          />
+        )}
 
-        <HomeMobileNav
-          legendOpen={mobileLegendOpen}
-          onToggleLegend={() => setMobileLegendOpen((current) => !current)}
-          navigateFromHome={navigateFromLinhaGeracional}
-        />
+        {!shouldUseSharedChrome && (
+          <HomeMobileNav
+            legendOpen={mobileLegendOpen}
+            onToggleLegend={() => setMobileLegendOpen((current) => !current)}
+            navigateFromHome={navigateFromLinhaGeracional}
+          />
+        )}
 
         <section
           className="relative min-h-0 flex-1 overflow-hidden pb-[calc(env(safe-area-inset-bottom,0px)+5.8rem)]"
@@ -330,7 +374,7 @@ export function LinhaGeracional() {
           />
         </section>
 
-        <LinhaGeracionalBottomNav navigateTo={navigateFromLinhaGeracional} />
+        {!shouldUseSharedChrome && <LinhaGeracionalBottomNav navigateTo={navigateFromLinhaGeracional} />}
       </main>
 
       <main className="hidden min-h-screen items-center justify-center bg-slate-50 px-6 text-slate-900 lg:flex">
