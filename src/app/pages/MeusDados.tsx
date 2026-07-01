@@ -291,6 +291,7 @@ export function MeusDados() {
   const [aiCustomTraits, setAiCustomTraits] = useState('');
   const [aiGeneratedQuestions, setAiGeneratedQuestions] = useState<AiGeneratedQuestion[]>([]);
   const [aiError, setAiError] = useState<string | null>(null);
+  const sobreMimSectionRef = useRef<HTMLElement | null>(null);
 
   useEffect(() => {
     let mounted = true;
@@ -487,6 +488,12 @@ export function MeusDados() {
   const markQuestionnaireDirty = () => {
     isDirtyRef.current = true;
     setAiError(null);
+  };
+
+  const scrollSobreMimToTop = () => {
+    window.requestAnimationFrame(() => {
+      sobreMimSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
   };
 
   const updateAiTone = (tone: AiTone) => {
@@ -780,10 +787,30 @@ export function MeusDados() {
     }
   };
 
+  const handleQuestionnairePrevious = () => {
+    if (aiStep <= 0) return;
+    updateAiStep(aiStep - 1);
+    scrollSobreMimToTop();
+  };
+
   const handleQuestionnaireNext = async () => {
     if (aiStep >= AI_STEPS.length - 1) return;
     await saveProfileQuestionnaire({ quiet: true });
     updateAiStep(aiStep + 1);
+    scrollSobreMimToTop();
+  };
+
+  const handleQuestionnaireFinish = async () => {
+    const questionnaireSave = await saveProfileQuestionnaire({ requireMinimum: isOnboarding, quiet: false });
+
+    if (!questionnaireSave.ok) {
+      toast.error(questionnaireSave.error || 'Não foi possível finalizar o questionário.');
+      scrollSobreMimToTop();
+      return;
+    }
+
+    window.dispatchEvent(new CustomEvent('meus-dados:questionnaire-finished'));
+    scrollSobreMimToTop();
   };
   const handleConfirm = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -1251,7 +1278,7 @@ export function MeusDados() {
           </section>
 
           {form.falecido !== true && (
-          <section className="mt-5 rounded-xl border border-gray-200 bg-gray-50 p-4">
+          <section ref={sobreMimSectionRef} className="mt-5 rounded-xl border border-gray-200 bg-gray-50 p-4">
             <SectionTitle icon={MapPin}>Contato, endereço e redes</SectionTitle>
             <div className="grid grid-cols-1 items-start gap-4 md:grid-cols-2">
               <Field label="WhatsApp">
@@ -1320,26 +1347,37 @@ export function MeusDados() {
                 </p>
               )}
 
-              <div className="flex flex-col gap-2 border-t border-gray-100 pt-4 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex items-center justify-between gap-2 border-t border-gray-100 pt-4">
                 <Button
                   type="button"
                   variant="outline"
-                  onClick={() => updateAiStep(aiStep - 1)}
+                  onClick={handleQuestionnairePrevious}
                   disabled={aiStep === 0 || questionnaireSaving}
-                  className="w-full sm:w-auto"
+                  className="h-12 w-20 shrink-0 px-0 sm:h-10 sm:w-auto sm:px-4"
+                  aria-label="Voltar para a etapa anterior"
                 >
-                  <ChevronLeft className="h-4 w-4" />
-                  Voltar
+                  <ChevronLeft className="h-5 w-5 sm:h-4 sm:w-4" />
+                  <span className="hidden sm:inline">Voltar</span>
                 </Button>
-                {aiStep < AI_STEPS.length - 1 && (
+                {aiStep < AI_STEPS.length - 1 ? (
                   <Button
                     type="button"
                     onClick={handleQuestionnaireNext}
                     disabled={questionnaireSaving}
-                    className="w-full sm:w-auto"
+                    className="h-12 w-20 shrink-0 px-0 sm:h-10 sm:w-auto sm:px-4"
+                    aria-label="Avançar para a próxima etapa"
                   >
-                    {questionnaireSaving ? 'Salvando...' : 'Avançar'}
-                    <ChevronRight className="h-4 w-4" />
+                    <span className="hidden sm:inline">{questionnaireSaving ? 'Salvando...' : 'Avançar'}</span>
+                    <ChevronRight className="h-5 w-5 sm:h-4 sm:w-4" />
+                  </Button>
+                ) : (
+                  <Button
+                    type="button"
+                    onClick={handleQuestionnaireFinish}
+                    disabled={questionnaireSaving}
+                    className="h-12 min-w-[9rem] shrink-0 px-4 sm:h-10"
+                  >
+                    {questionnaireSaving ? 'Salvando...' : 'Finalizar'}
                   </Button>
                 )}
               </div>

@@ -228,6 +228,7 @@ export function ArquivosHistoricos({
   const hasUploadedDraftFile = Boolean(novoArquivo.url);
   const [editingArquivoId, setEditingArquivoId] = useState<string | null>(null);
   const [participantSearch, setParticipantSearch] = useState('');
+  const [visibleParticipantSelectorKey, setVisibleParticipantSelectorKey] = useState<string | null>(null);
   const uploadFormRef = useRef<HTMLDivElement | null>(null);
   const shouldScrollToUploadRef = useRef(false);
   const selectedDraftParticipants = useMemo(
@@ -289,6 +290,7 @@ export function ArquivosHistoricos({
   const resetNovoArquivo = () => {
     setNovoArquivo(createEmptyDraftHistoricalFile());
     setParticipantSearch('');
+    setVisibleParticipantSelectorKey(null);
     if (draftStorageKey) {
       try {
         window.localStorage.removeItem(draftStorageKey);
@@ -450,6 +452,42 @@ export function ArquivosHistoricos({
           )}
         </div>
       </div>
+    );
+  };
+
+  const renderOptionalParticipantSelector = (
+    selectorKey: string,
+    selectedParticipants: HistoricalFileParticipant[],
+    selectedIds: string[],
+    onAdd: (personId: string) => void,
+    onRemove: (personId: string) => void,
+    searchValue: string,
+    onSearchChange: (value: string) => void
+  ) => {
+    const shouldShowSelector = visibleParticipantSelectorKey === selectorKey || selectedIds.length > 0;
+
+    if (!shouldShowSelector) {
+      return (
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          className="w-full justify-center sm:w-auto"
+          onClick={() => setVisibleParticipantSelectorKey(selectorKey)}
+        >
+          <Plus className="h-4 w-4" />
+          Adicionar outras pessoas
+        </Button>
+      );
+    }
+
+    return renderParticipantSelector(
+      selectedParticipants,
+      selectedIds,
+      onAdd,
+      onRemove,
+      searchValue,
+      onSearchChange
     );
   };
 
@@ -679,7 +717,8 @@ export function ArquivosHistoricos({
                     />
                   </div>
 
-                  {renderParticipantSelector(
+                  {renderOptionalParticipantSelector(
+                    'novo-arquivo',
                     selectedDraftParticipants,
                     novoArquivo.participante_ids,
                     handleAddDraftParticipant,
@@ -892,7 +931,8 @@ export function ArquivosHistoricos({
                             className="flex w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm"
                             placeholder="Descrição"
                           />
-                          {renderParticipantSelector(
+                          {renderOptionalParticipantSelector(
+                            `arquivo-${arquivo.id}`,
                             getArquivoParticipants(arquivo),
                             getArquivoParticipantIds(arquivo),
                             (personId) => {

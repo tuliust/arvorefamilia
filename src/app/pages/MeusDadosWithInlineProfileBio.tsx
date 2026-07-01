@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { ChevronRight, Loader2, Sparkles, UserCircle2 } from 'lucide-react';
+import { Loader2, Sparkles, UserCircle2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '../components/ui/button';
 import { Label } from '../components/ui/label';
@@ -699,8 +699,6 @@ function MeusDadosProfileBioResults() {
 function MeusDadosInlineProfileBioController() {
   const { resultHost, actionsHost, questionnaireCard, stepInfo } = useMeusDadosInlineHosts();
   const [showResults, setShowResults] = useState(false);
-  const finalStepReached = Boolean(stepInfo && stepInfo.current >= stepInfo.total);
-
   useHideConfirmUntilProfileResults(showResults);
 
   useEffect(() => {
@@ -716,12 +714,21 @@ function MeusDadosInlineProfileBioController() {
     });
   }, [questionnaireCard, showResults, stepInfo]);
 
-  const revealResults = () => {
+  const revealResults = useCallback(() => {
     setShowResults(true);
     window.setTimeout(() => {
       document.getElementById(PROFILE_RESULT_HOST_ID)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }, 80);
-  };
+  }, []);
+
+  useEffect(() => {
+    const handleQuestionnaireFinished = () => revealResults();
+    window.addEventListener('meus-dados:questionnaire-finished', handleQuestionnaireFinished);
+
+    return () => {
+      window.removeEventListener('meus-dados:questionnaire-finished', handleQuestionnaireFinished);
+    };
+  }, [revealResults]);
 
   return (
     <>
@@ -735,16 +742,6 @@ function MeusDadosInlineProfileBioController() {
           >
             Pular Tudo
           </Button>
-          {finalStepReached && (
-            <Button
-              type="button"
-              onClick={revealResults}
-              className="w-full sm:w-auto"
-            >
-              Avançar
-              <ChevronRight className="h-4 w-4" />
-            </Button>
-          )}
         </div>,
         actionsHost,
       ) : null}

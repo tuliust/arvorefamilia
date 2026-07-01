@@ -190,8 +190,9 @@ function getLifeStatusLabel(person: Pessoa, genderHint?: ReviewEntry['genderHint
   return gender === 'mulher' ? 'Viva' : 'Vivo';
 }
 
-function getStatusLabel(status: ReviewStatus) {
-  return status === 'removed' ? 'Remoção em análise' : 'Em análise';
+function getStatusLabel(entry: Pick<ReviewEntry, 'group' | 'status'>) {
+  if (entry.status === 'removed') return 'Remoção em análise';
+  return entry.group === 'pets' ? 'Em aprovação' : 'Em análise';
 }
 
 function findGroupCard(groupLabel: string) {
@@ -241,15 +242,15 @@ function ensureStatusContainer(row: HTMLElement) {
   return container;
 }
 
-function appendBadge(row: HTMLElement, status: ReviewStatus) {
-  const label = getStatusLabel(status);
+function appendBadge(row: HTMLElement, entry: ReviewEntry) {
+  const label = getStatusLabel(entry);
   if (row.textContent?.includes(label)) return;
-  if (row.querySelector(`[data-review-badge="${status}"]`)) return;
+  if (row.querySelector(`[data-review-badge="${entry.status}-${entry.group}"]`)) return;
 
   const statusContainer = ensureStatusContainer(row);
   const badge = document.createElement('span');
-  badge.dataset.reviewBadge = status;
-  badge.className = REVIEW_BADGE_CLASS_NAMES[status];
+  badge.dataset.reviewBadge = `${entry.status}-${entry.group}`;
+  badge.className = REVIEW_BADGE_CLASS_NAMES[entry.status];
   badge.textContent = label;
   statusContainer.appendChild(badge);
 }
@@ -282,7 +283,7 @@ function createReviewRow(entry: ReviewEntry) {
   content.appendChild(meta);
   row.appendChild(avatar);
   row.appendChild(content);
-  appendBadge(row, entry.status);
+  appendBadge(row, entry);
 
   return row;
 }
@@ -296,7 +297,7 @@ function applyReviewEntries(entries: ReviewEntry[]) {
     const existingRow = findPersonRow(list, entry.person);
 
     if (existingRow) {
-      appendBadge(existingRow, entry.status);
+      appendBadge(existingRow, entry);
       return;
     }
 

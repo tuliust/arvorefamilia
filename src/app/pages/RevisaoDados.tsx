@@ -120,6 +120,15 @@ function normalizeRelationshipGroups(groups: Partial<RelationshipGroups>): Relat
   };
 }
 
+function getPendingRelationshipIds(initialPeople: Pessoa[], currentPeople: Pessoa[]) {
+  const initialIds = new Set(initialPeople.map((person) => person.id));
+  return new Set(
+    currentPeople
+      .filter((person) => !initialIds.has(person.id) || String(person.id).startsWith('local-'))
+      .map((person) => person.id)
+  );
+}
+
 function valueOrEmpty(value: unknown) {
   const text = String(value ?? '').trim();
   return text || 'Não informado';
@@ -236,31 +245,45 @@ function SectionCard({
   );
 }
 
-function PeopleList({ people, genderHints = {} }: { people: Pessoa[]; genderHints?: Record<string, GenderHint> }) {
+function PeopleList({
+  people,
+  genderHints = {},
+  pendingIds = new Set<string>(),
+  pendingBadgeLabel = 'Em análise',
+}: {
+  people: Pessoa[];
+  genderHints?: Record<string, GenderHint>;
+  pendingIds?: Set<string>;
+  pendingBadgeLabel?: string;
+}) {
   if (people.length === 0) {
     return <p className="text-sm text-gray-500">Nenhum vínculo informado.</p>;
   }
 
   return (
     <div className="space-y-2">
-      {people.map((person) => (
-        <div key={person.id} className="flex items-center gap-3 rounded-xl border border-gray-100 bg-gray-50 px-3 py-2">
-          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-blue-50 text-xs font-semibold text-blue-700">
-            {getInitials(person.nome_completo)}
-          </div>
-          <div className="min-w-0">
-            <p className="truncate text-sm font-semibold text-gray-900">{person.nome_completo}</p>
-            <div className="mt-1 flex flex-wrap items-center gap-2">
-              <span className="text-xs text-gray-500">{getPersonStatusLabel(person, genderHints[person.id])}</span>
-              {String(person.id).startsWith('local-') && (
-                <span className="inline-flex rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-[11px] font-semibold text-amber-800">
-                  Em análise
-                </span>
-              )}
+      {people.map((person) => {
+        const isPending = pendingIds.has(person.id) || String(person.id).startsWith('local-');
+
+        return (
+          <div key={person.id} className="flex items-center gap-3 rounded-xl border border-gray-100 bg-gray-50 px-3 py-2">
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-blue-50 text-xs font-semibold text-blue-700">
+              {getInitials(person.nome_completo)}
+            </div>
+            <div className="min-w-0">
+              <p className="truncate text-sm font-semibold text-gray-900">{person.nome_completo}</p>
+              <div className="mt-1 flex flex-wrap items-center gap-2">
+                <span className="text-xs text-gray-500">{getPersonStatusLabel(person, genderHints[person.id])}</span>
+                {isPending && (
+                  <span className="inline-flex rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-[11px] font-semibold text-amber-800">
+                    {pendingBadgeLabel}
+                  </span>
+                )}
+              </div>
             </div>
           </div>
-        </div>
-      ))}
+        );
+      })}
     </div>
   );
 }
@@ -270,6 +293,7 @@ export function RevisaoDados() {
   const { user } = useAuth();
   const [link, setLink] = useState<(UserPersonLinkRecord & { pessoa: Pessoa | null }) | null>(null);
   const [relationships, setRelationships] = useState<RelationshipGroups>(EMPTY_RELATIONSHIPS);
+  const [initialRelationships, setInitialRelationships] = useState<RelationshipGroups>(EMPTY_RELATIONSHIPS);
   const [socialProfiles, setSocialProfiles] = useState<PessoaSocialProfile[]>([]);
   const [socialProfileForms, setSocialProfileForms] = useState<SocialProfileForm[]>([createSocialProfile()]);
   const [archives, setArchives] = useState<ArquivoHistorico[]>([]);
@@ -309,7 +333,9 @@ export function RevisaoDados() {
         listarPessoaSocialProfiles(pessoa.id),
       ]);
       if (!mounted) return;
-      setRelationships(normalizeRelationshipGroups(readDraftRelationships(user.id, pessoa.id) ?? storedRelationships));
+      const normalizedStoredRelationships = normalizeRelationshipGroups(storedRelationships);
+      setInitialRelationships(normalizedStoredRelationships);
+      setRelationships(readDraftRelationships(user.id, pessoa.id) ?? normalizedStoredRelationships);
       setArchives(storedArchives);
       setSocialProfiles(storedSocialProfiles);
       setSocialProfileForms(buildSocialProfilesFromRows(storedSocialProfiles, pessoa));
@@ -324,20 +350,55 @@ export function RevisaoDados() {
 
   const pessoa = link?.pessoa;
 
-  const relationshipSummary = useMemo(() => [
-    {
-      label: 'Pais',
-      people: uniquePeople([...relationships.pais, ...relationships.maes]),
-      genderHints: Object.fromEntries([
-        ...relationships.pais.map((person) => [person.id, 'homem'] as const),
-        ...relationships.maes.map((person) => [person.id, 'mulher'] as const),
-      ]) as Record<string, GenderHint>,
-    },
-    { label: 'Cônjuges', people: uniquePeople(relationships.conjuges), genderHints: {} as Record<string, GenderHint> },
-    { label: 'Filhos', people: uniquePeople(relationships.filhos), genderHints: {} as Record<string, GenderHint> },
-    { label: 'Pets', people: uniquePeople(relationships.pets), genderHints: {} as Record<string, GenderHint> },
-    { label: 'Irmãos', people: uniquePeople(relationships.irmaos), genderHints: {} as Record<string, GenderHint> },
-  ], [relationships]);
+  const relationshipSummary = useMemo(() => {
+    const currentParents = uniquePeople([...relationships.pais, ...relationships.maes]);
+    const initialParents = uniquePeople([...initialRelationships.pais, ...initialRelationships.maes]);
+    const currentSpouses = uniquePeople(relationships.conjuges);
+    const currentChildren = uniquePeople(relationships.filhos);
+    const currentPets = uniquePeople(relationships.pets);
+    const currentSiblings = uniquePeople(relationships.irmaos);
+
+    return [
+      {
+        label: 'Pais',
+        people: currentParents,
+        genderHints: Object.fromEntries([
+          ...relationships.pais.map((person) => [person.id, 'homem'] as const),
+          ...relationships.maes.map((person) => [person.id, 'mulher'] as const),
+        ]) as Record<string, GenderHint>,
+        pendingIds: getPendingRelationshipIds(initialParents, currentParents),
+        pendingBadgeLabel: 'Em análise',
+      },
+      {
+        label: 'Cônjuges',
+        people: currentSpouses,
+        genderHints: {} as Record<string, GenderHint>,
+        pendingIds: getPendingRelationshipIds(uniquePeople(initialRelationships.conjuges), currentSpouses),
+        pendingBadgeLabel: 'Em análise',
+      },
+      {
+        label: 'Filhos',
+        people: currentChildren,
+        genderHints: {} as Record<string, GenderHint>,
+        pendingIds: getPendingRelationshipIds(uniquePeople(initialRelationships.filhos), currentChildren),
+        pendingBadgeLabel: 'Em análise',
+      },
+      {
+        label: 'Pets',
+        people: currentPets,
+        genderHints: {} as Record<string, GenderHint>,
+        pendingIds: getPendingRelationshipIds(uniquePeople(initialRelationships.pets), currentPets),
+        pendingBadgeLabel: 'Em aprovação',
+      },
+      {
+        label: 'Irmãos',
+        people: currentSiblings,
+        genderHints: {} as Record<string, GenderHint>,
+        pendingIds: getPendingRelationshipIds(uniquePeople(initialRelationships.irmaos), currentSiblings),
+        pendingBadgeLabel: 'Em análise',
+      },
+    ];
+  }, [initialRelationships, relationships]);
 
   const socialProfilesSummary = useMemo(() => {
     if (socialProfiles.length > 0) {
@@ -474,7 +535,7 @@ export function RevisaoDados() {
               </div>
               <div className="min-w-0">
                 <div className="flex flex-wrap items-center gap-2">
-                  <h1 className="truncate text-2xl font-semibold text-gray-950">{pessoa.nome_completo}</h1>
+                  <h1 className="break-words text-xl font-semibold leading-tight text-gray-950 sm:text-2xl">{pessoa.nome_completo}</h1>
                   <span className="rounded-full border border-gray-200 bg-gray-50 px-2.5 py-1 text-xs font-medium text-gray-600">
                     {getPersonStatusLabel(pessoa)}
                   </span>
@@ -487,7 +548,7 @@ export function RevisaoDados() {
                 </div>
               </div>
             </div>
-            <div className="flex shrink-0 flex-wrap items-center gap-2">
+            <div className="hidden shrink-0 flex-wrap items-center gap-2 sm:flex">
               <Button type="button" variant="outline" size="sm" onClick={() => setEditingSection('personal')}>
                 <Pencil className="h-4 w-4" />
                 Editar perfil
@@ -600,7 +661,7 @@ export function RevisaoDados() {
                 {relationshipSummary.map((group) => (
                   <div key={group.label} className="rounded-xl border border-gray-100 p-3">
                     <p className="mb-2 text-sm font-semibold text-gray-900">{group.label}</p>
-                    <PeopleList people={group.people} genderHints={group.genderHints} />
+                    <PeopleList people={group.people} genderHints={group.genderHints} pendingIds={group.pendingIds} pendingBadgeLabel={group.pendingBadgeLabel} />
                   </div>
                 ))}
               </div>
@@ -750,7 +811,12 @@ export function RevisaoDados() {
           )}
         </div>
 
-
+        <div className="sm:hidden">
+          <Button type="button" className="w-full" onClick={handleFinish} disabled={finishing || savingSection !== null}>
+            <CheckCircle2 className="h-4 w-4" />
+            {finishing ? 'Finalizando...' : 'Finalizar e acessar árvore'}
+          </Button>
+        </div>
       </main>
     </div>
   );

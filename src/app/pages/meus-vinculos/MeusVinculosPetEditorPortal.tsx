@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { ImagePlus, PawPrint, Pencil, Plus, RefreshCcw } from 'lucide-react';
+import Cropper, { Area } from 'react-easy-crop';
+import { ImagePlus, PawPrint, Pencil, Plus, Trash2, UploadCloud } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '../../components/ui/button';
 import {
@@ -24,6 +25,9 @@ import {
 } from '../../services/memberProfileService';
 import { createRelationshipChangeRequest } from '../../services/relationshipChangeRequestService';
 import type { Pessoa, TipoRelacionamento } from '../../types';
+import { maskBirthDate, normalizeBirthDate, normalizeLocationByMode } from '../../utils/personFields';
+
+const PET_PHOTO_SIZE = 512;
 
 type PetFormState = {
   id?: string;
@@ -33,6 +37,7 @@ type PetFormState = {
   localNascimento: string;
   falecido: boolean;
   dataFalecimento: string;
+  localFalecimento: string;
   fotoPrincipalUrl: string;
   outroTutorId: string;
 };
@@ -51,6 +56,7 @@ const emptyPetForm: PetFormState = {
   localNascimento: '',
   falecido: false,
   dataFalecimento: '',
+  localFalecimento: '',
   fotoPrincipalUrl: '',
   outroTutorId: '',
 };
@@ -60,26 +66,90 @@ function normalizeText(value?: string | number | null) {
 }
 
 function normalizeDateInput(value: string) {
-  const trimmed = normalizeText(value);
-  if (!trimmed) return '';
-
-  const yearOnly = trimmed.match(/^(18|19|20|21)\d{2}$/);
-  if (yearOnly) return trimmed;
-
-  const brDate = trimmed.match(/^(\d{1,2})\/(\d{1,2})\/((18|19|20|21)\d{2})$/);
-  if (brDate) {
-    return `${brDate[1].padStart(2, '0')}/${brDate[2].padStart(2, '0')}/${brDate[3]}`;
-  }
-
-  return trimmed;
+  return normalizeBirthDate(normalizeText(value));
 }
 
-function readImageAsDataUrl(file: File) {
+function maskDateInput(value: string) {
+  return maskBirthDate(value);
+}
+
+function normalizeCityStateInput(value: string) {
+  return normalizeLocationByMode(value, { international: false });
+}
+
+function readImage(src: string) {
+  return new Promise<HTMLImageElement>((resolve, reject) => {
+    const image = new Image();
+    image.addEventListener('load', () => resolve(image));
+    image.addEventListener('error', reject);
+    image.src = src;
+  });
+}
+
+function blobToDataUrl(blob: Blob) {
   return new Promise<string>((resolve, reject) => {
     const reader = new FileReader();
-    reader.onload = () => resolve(String(reader.result ?? ''));
-    reader.onerror = () => reject(new Error('Não foi possível ler a imagem.'));
-    reader.readAsDataURL(file);
+    reader.addEventListener('load', () => resolve(String(reader.result ?? '')));
+    reader.addEventListener('error', () => reject(reader.error ?? new Error('Não foi possível preparar a imagem.')));
+    reader.readAsDataURL(blob);
+  });
+}
+
+async function createPersistablePhotoSource(file: File) {
+  const sourceDataUrl = await blobToDataUrl(file);
+  const image = await readImage(sourceDataUrl);
+  const maxDimension = 1600;
+
+  if (image.naturalWidth <= maxDimension && image.naturalHeight <= maxDimension) {
+    return sourceDataUrl;
+  }
+
+  const scale = maxDimension / Math.max(image.naturalWidth, image.naturalHeight);
+  const canvas = document.createElement('canvas');
+  canvas.width = Math.round(image.naturalWidth * scale);
+  canvas.height = Math.round(image.naturalHeight * scale);
+  const context = canvas.getContext('2d');
+
+  if (!context) return sourceDataUrl;
+
+  context.imageSmoothingQuality = 'high';
+  context.drawImage(image, 0, 0, canvas.width, canvas.height);
+  return canvas.toDataURL('image/jpeg', 0.9);
+}
+
+async function createCroppedPhotoDataUrl(imageSrc: string, cropPixels: Area) {
+  const image = await readImage(imageSrc);
+  const canvas = document.createElement('canvas');
+  const context = canvas.getContext('2d');
+
+  if (!context) {
+    throw new Error('Não foi possível preparar o corte da imagem.');
+  }
+
+  canvas.width = PET_PHOTO_SIZE;
+  canvas.height = PET_PHOTO_SIZE;
+  context.imageSmoothingQuality = 'high';
+  context.drawImage(
+    image,
+    cropPixels.x,
+    cropPixels.y,
+    cropPixels.width,
+    cropPixels.height,
+    0,
+    0,
+    PET_PHOTO_SIZE,
+    PET_PHOTO_SIZE,
+  );
+
+  return new Promise<string>((resolve, reject) => {
+    canvas.toBlob((blob) => {
+      if (!blob) {
+        reject(new Error('Não foi possível gerar a imagem final.'));
+        return;
+      }
+
+      blobToDataUrl(blob).then(resolve).catch(reject);
+    }, 'image/jpeg', 0.9);
   });
 }
 
@@ -122,6 +192,7 @@ function petToForm(pet: Pessoa): PetFormState {
     localNascimento: normalizeText(pet.local_nascimento),
     falecido: pet.falecido === true || Boolean(normalizeText(pet.data_falecimento)),
     dataFalecimento: normalizeText(pet.data_falecimento),
+    localFalecimento: normalizeText(pet.local_falecimento),
     fotoPrincipalUrl: normalizeText(pet.foto_principal_url),
     outroTutorId: '',
   };
@@ -131,8 +202,9 @@ function buildPetPayload(form: PetFormState, previousPet?: Pessoa | null): Omit<
   return {
     nome_completo: form.nome.trim(),
     data_nascimento: normalizeDateInput(form.dataNascimento) || undefined,
-    local_nascimento: normalizeText(form.localNascimento) || undefined,
+    local_nascimento: normalizeCityStateInput(form.localNascimento) || undefined,
     data_falecimento: form.falecido ? normalizeDateInput(form.dataFalecimento) || null : null,
+    local_falecimento: form.falecido ? normalizeCityStateInput(form.localFalecimento) || undefined : undefined,
     falecido: form.falecido,
     humano_ou_pet: 'Pet',
     genero: 'pet',
@@ -146,6 +218,8 @@ function getPetMeta(pet: Pessoa) {
     extractBreedFromCuriosities(pet.curiosidades),
     pet.data_nascimento ? `Nascimento: ${pet.data_nascimento}` : '',
     pet.local_nascimento ? `Local: ${pet.local_nascimento}` : '',
+    pet.data_falecimento ? `Falecimento: ${pet.data_falecimento}` : '',
+    pet.local_falecimento ? `Local de falecimento: ${pet.local_falecimento}` : '',
     pet.falecido || pet.data_falecimento ? 'Falecido' : '',
   ].filter(Boolean);
 }
@@ -173,6 +247,15 @@ async function createPetTutorRequest(args: {
   });
 }
 
+function notifyPetSaved(pet: Pessoa, action: 'created' | 'updated') {
+  window.dispatchEvent(new CustomEvent('meus-vinculos:pet-saved', {
+    detail: {
+      pet: { ...pet, humano_ou_pet: 'Pet' },
+      action,
+    },
+  }));
+}
+
 function MeusVinculosPetEditorDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (open: boolean) => void }) {
   const { user } = useAuth();
   const [ownPerson, setOwnPerson] = useState<Pessoa | null>(null);
@@ -180,6 +263,10 @@ function MeusVinculosPetEditorDialog({ open, onOpenChange }: { open: boolean; on
   const [pets, setPets] = useState<Pessoa[]>([]);
   const [spouses, setSpouses] = useState<Pessoa[]>([]);
   const [form, setForm] = useState<PetFormState>(emptyPetForm);
+  const [photoCropSource, setPhotoCropSource] = useState<string | null>(null);
+  const [crop, setCrop] = useState({ x: 0, y: 0 });
+  const [zoom, setZoom] = useState(1);
+  const [croppedAreaPixels, setCroppedAreaPixels] = useState<Area | null>(null);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
 
@@ -222,12 +309,26 @@ function MeusVinculosPetEditorDialog({ open, onOpenChange }: { open: boolean; on
     setForm((current) => ({ ...current, [field]: value }));
   }
 
+  function resetPhotoCrop() {
+    setPhotoCropSource(null);
+    setCrop({ x: 0, y: 0 });
+    setZoom(1);
+    setCroppedAreaPixels(null);
+  }
+
   function resetForm() {
     setForm(emptyPetForm);
+    resetPhotoCrop();
+  }
+
+  function selectPetForEditing(pet: Pessoa) {
+    setForm(petToForm(pet));
+    resetPhotoCrop();
   }
 
   async function handlePhotoChange(event: React.ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
+    event.target.value = '';
     if (!file) return;
 
     if (!file.type.startsWith('image/')) {
@@ -236,11 +337,47 @@ function MeusVinculosPetEditorDialog({ open, onOpenChange }: { open: boolean; on
     }
 
     try {
-      const dataUrl = await readImageAsDataUrl(file);
-      updateForm('fotoPrincipalUrl', dataUrl);
+      const dataUrl = await createPersistablePhotoSource(file);
+      setPhotoCropSource(dataUrl);
+      setCrop({ x: 0, y: 0 });
+      setZoom(1);
+      setCroppedAreaPixels(null);
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Não foi possível carregar a foto.');
     }
+  }
+
+  async function handleApplyCrop() {
+    if (!photoCropSource || !croppedAreaPixels) {
+      toast.error('Selecione e ajuste uma imagem antes de aplicar.');
+      return;
+    }
+
+    try {
+      const croppedDataUrl = await createCroppedPhotoDataUrl(photoCropSource, croppedAreaPixels);
+      updateForm('fotoPrincipalUrl', croppedDataUrl);
+      resetPhotoCrop();
+      toast.success('Corte aplicado à foto do pet.');
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Não foi possível aplicar o corte.');
+    }
+  }
+
+  function handleRemovePhoto() {
+    updateForm('fotoPrincipalUrl', '');
+    resetPhotoCrop();
+  }
+
+  function updateDateField(field: 'dataNascimento' | 'dataFalecimento', value: string) {
+    updateForm(field, maskDateInput(value));
+  }
+
+  function normalizeDateField(field: 'dataNascimento' | 'dataFalecimento') {
+    updateForm(field, normalizeDateInput(form[field]));
+  }
+
+  function normalizeLocationField(field: 'localNascimento' | 'localFalecimento') {
+    updateForm(field, normalizeCityStateInput(form[field]));
   }
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
@@ -264,13 +401,21 @@ function MeusVinculosPetEditorDialog({ open, onOpenChange }: { open: boolean; on
     setSaving(true);
 
     try {
-      const payload = buildPetPayload(form, selectedPet);
+      const normalizedForm: PetFormState = {
+        ...form,
+        dataNascimento: normalizeDateInput(form.dataNascimento),
+        localNascimento: normalizeCityStateInput(form.localNascimento),
+        dataFalecimento: form.falecido ? normalizeDateInput(form.dataFalecimento) : '',
+        localFalecimento: form.falecido ? normalizeCityStateInput(form.localFalecimento) : '',
+      };
+      const payload = buildPetPayload(normalizedForm, selectedPet);
 
       if (form.id) {
         const updatedPet = await atualizarPessoa(form.id, payload);
         if (!updatedPet) throw new Error('Não foi possível atualizar o pet.');
 
         setPets((current) => current.map((pet) => pet.id === updatedPet.id ? updatedPet : pet));
+        notifyPetSaved(updatedPet, 'updated');
         toast.success('Pet atualizado.');
         resetForm();
         onOpenChange(false);
@@ -306,6 +451,7 @@ function MeusVinculosPetEditorDialog({ open, onOpenChange }: { open: boolean; on
       }
 
       setPets((current) => [...current, createdPet]);
+      notifyPetSaved(createdPet, 'created');
       toast.success('Pet cadastrado. O vínculo com tutor ficará em análise antes de aparecer definitivamente na árvore.');
       resetForm();
       onOpenChange(false);
@@ -321,25 +467,18 @@ function MeusVinculosPetEditorDialog({ open, onOpenChange }: { open: boolean; on
       if (!nextOpen) resetForm();
       onOpenChange(nextOpen);
     }}>
-      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-5xl">
+      <DialogContent className="max-h-[90vh] overflow-y-auto bg-white sm:max-w-5xl">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-blue-700 ring-1 ring-blue-100">
               <PawPrint className="h-5 w-5" />
             </span>
-            Adicionar pet
+            {form.id ? 'Editar pet' : 'Adicionar pet'}
           </DialogTitle>
           <DialogDescription>
             Cadastre pets com nome, nascimento, raça, local, falecimento e foto.
           </DialogDescription>
         </DialogHeader>
-
-        <div className="flex justify-end">
-          <Button type="button" variant="outline" className="w-full shrink-0 sm:w-auto" onClick={() => void loadData()} disabled={loading || saving}>
-            <RefreshCcw className="h-4 w-4" />
-            Atualizar
-          </Button>
-        </div>
 
         {loading ? (
           <p className="rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-600">
@@ -360,22 +499,83 @@ function MeusVinculosPetEditorDialog({ open, onOpenChange }: { open: boolean; on
               </div>
 
               <div className="space-y-2 sm:col-span-2">
-                <Label htmlFor="meus-vinculos-pet-foto">Foto do pet</Label>
-                <div className="flex min-w-0 flex-col gap-3 rounded-xl border border-gray-200 bg-white p-3 sm:flex-row sm:items-center">
-                  <span className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-blue-50 text-blue-700 ring-1 ring-blue-100">
-                    {form.fotoPrincipalUrl ? (
-                      <img src={form.fotoPrincipalUrl} alt={form.nome || 'Foto do pet'} className="h-full w-full object-cover" />
-                    ) : (
-                      <ImagePlus className="h-6 w-6" />
-                    )}
-                  </span>
-                  <Input
-                    id="meus-vinculos-pet-foto"
-                    type="file"
-                    accept="image/*"
-                    onChange={handlePhotoChange}
-                    disabled={!canEdit || saving}
-                  />
+                <Label>Foto do pet</Label>
+                <div className="space-y-3 rounded-xl border border-gray-200 bg-white p-3">
+                  {photoCropSource ? (
+                    <>
+                      <div className="relative h-64 overflow-hidden rounded-xl bg-gray-950 sm:h-72">
+                        <Cropper
+                          image={photoCropSource}
+                          crop={crop}
+                          zoom={zoom}
+                          aspect={1}
+                          cropShape="rect"
+                          showGrid={false}
+                          onCropChange={setCrop}
+                          onZoomChange={setZoom}
+                          onCropComplete={(_, croppedPixels) => setCroppedAreaPixels(croppedPixels)}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="meus-vinculos-pet-zoom">Zoom</Label>
+                        <input
+                          id="meus-vinculos-pet-zoom"
+                          type="range"
+                          min={1}
+                          max={3}
+                          step={0.01}
+                          value={zoom}
+                          onChange={(event) => setZoom(Number(event.target.value))}
+                          className="w-full accent-blue-600"
+                        />
+                      </div>
+                      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                        <label className="inline-flex cursor-pointer items-center text-sm font-medium text-blue-700 hover:text-blue-800">
+                          <UploadCloud className="mr-2 h-4 w-4 shrink-0" />
+                          Escolher outra imagem
+                          <input
+                            type="file"
+                            accept="image/*"
+                            className="sr-only"
+                            onChange={handlePhotoChange}
+                            disabled={!canEdit || saving}
+                          />
+                        </label>
+                        <Button type="button" onClick={handleApplyCrop} disabled={!canEdit || saving} className="w-full sm:w-auto">
+                          Aplicar corte
+                        </Button>
+                      </div>
+                    </>
+                  ) : (
+                    <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-center">
+                      <span className="flex h-24 w-24 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-blue-50 text-blue-700 ring-1 ring-blue-100">
+                        {form.fotoPrincipalUrl ? (
+                          <img src={form.fotoPrincipalUrl} alt={form.nome || 'Foto do pet'} className="h-full w-full object-cover" />
+                        ) : (
+                          <ImagePlus className="h-6 w-6" />
+                        )}
+                      </span>
+                      <div className="flex min-w-0 flex-1 flex-col gap-2">
+                        <label className="inline-flex min-h-10 cursor-pointer items-center justify-center rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-900 hover:bg-gray-50">
+                          <UploadCloud className="mr-2 h-4 w-4 shrink-0" />
+                          Escolher foto
+                          <input
+                            type="file"
+                            accept="image/*"
+                            className="sr-only"
+                            onChange={handlePhotoChange}
+                            disabled={!canEdit || saving}
+                          />
+                        </label>
+                        {form.fotoPrincipalUrl && (
+                          <Button type="button" variant="ghost" onClick={handleRemovePhoto} className="w-full justify-center text-red-700 hover:bg-red-50" disabled={saving}>
+                            <Trash2 className="h-4 w-4" />
+                            Remover foto
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -384,7 +584,8 @@ function MeusVinculosPetEditorDialog({ open, onOpenChange }: { open: boolean; on
                 <Input
                   id="meus-vinculos-pet-nascimento"
                   value={form.dataNascimento}
-                  onChange={(event) => updateForm('dataNascimento', event.target.value)}
+                  onChange={(event) => updateDateField('dataNascimento', event.target.value)}
+                  onBlur={() => normalizeDateField('dataNascimento')}
                   placeholder="DD/MM/AAAA ou AAAA"
                   disabled={!canEdit || saving}
                 />
@@ -407,7 +608,8 @@ function MeusVinculosPetEditorDialog({ open, onOpenChange }: { open: boolean; on
                   id="meus-vinculos-pet-local-nascimento"
                   value={form.localNascimento}
                   onChange={(event) => updateForm('localNascimento', event.target.value)}
-                  placeholder="Cidade/UF ou cidade/país"
+                  onBlur={() => normalizeLocationField('localNascimento')}
+                  placeholder="Cidade/UF"
                   disabled={!canEdit || saving}
                 />
               </div>
@@ -423,16 +625,30 @@ function MeusVinculosPetEditorDialog({ open, onOpenChange }: { open: boolean; on
               </label>
 
               {form.falecido && (
-                <div className="space-y-2">
-                  <Label htmlFor="meus-vinculos-pet-falecimento">Data de falecimento</Label>
-                  <Input
-                    id="meus-vinculos-pet-falecimento"
-                    value={form.dataFalecimento}
-                    onChange={(event) => updateForm('dataFalecimento', event.target.value)}
-                    placeholder="DD/MM/AAAA ou AAAA"
-                    disabled={!canEdit || saving}
-                  />
-                </div>
+                <>
+                  <div className="space-y-2">
+                    <Label htmlFor="meus-vinculos-pet-falecimento">Data de falecimento</Label>
+                    <Input
+                      id="meus-vinculos-pet-falecimento"
+                      value={form.dataFalecimento}
+                      onChange={(event) => updateDateField('dataFalecimento', event.target.value)}
+                      onBlur={() => normalizeDateField('dataFalecimento')}
+                      placeholder="DD/MM/AAAA ou AAAA"
+                      disabled={!canEdit || saving}
+                    />
+                  </div>
+                  <div className="space-y-2 sm:col-span-2">
+                    <Label htmlFor="meus-vinculos-pet-local-falecimento">Local de falecimento</Label>
+                    <Input
+                      id="meus-vinculos-pet-local-falecimento"
+                      value={form.localFalecimento}
+                      onChange={(event) => updateForm('localFalecimento', event.target.value)}
+                      onBlur={() => normalizeLocationField('localFalecimento')}
+                      placeholder="Cidade/UF"
+                      disabled={!canEdit || saving}
+                    />
+                  </div>
+                </>
               )}
 
               <div className="flex flex-col gap-2 sm:col-span-2 sm:flex-row">
@@ -463,7 +679,7 @@ function MeusVinculosPetEditorDialog({ open, onOpenChange }: { open: boolean; on
                     <button
                       key={pet.id}
                       type="button"
-                      onClick={() => setForm(petToForm(pet))}
+                      onClick={() => selectPetForEditing(pet)}
                       className="flex w-full min-w-0 items-start gap-3 rounded-xl border border-gray-200 bg-white p-3 text-left transition hover:border-blue-200 hover:bg-blue-50/40"
                       disabled={saving}
                     >

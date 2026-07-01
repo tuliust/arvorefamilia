@@ -21,7 +21,6 @@ import {
   MarriageDetailsForm,
   normalizeMarriageDetails,
 } from '../components/relationships/MarriageDetailsEditor';
-import { isPersonDeceased } from '../utils/personFields';
 import { Button } from '../components/ui/button';
 import { Card, CardContent } from '../components/ui/card';
 import {
@@ -51,7 +50,7 @@ import {
 } from '../services/memberProfileService';
 import { Pessoa, Relacionamento } from '../types';
 import { createProfileControlRequest, listMyProfileControlRequests } from '../services/profileControlRequestService';
-import { normalizeLocationByMode, validateLocationByMode } from '../utils/personFields';
+import { isPersonDeceased, maskBirthDate, normalizeBirthDate, normalizeLocationByMode, validateLocationByMode } from '../utils/personFields';
 import { ProfileControlRequestDialog } from './meus-vinculos/ProfileControlRequestDialog';
 import { RelativeCard } from './meus-vinculos/RelativeCard';
 import { RelationshipGroupPanel } from './meus-vinculos/RelationshipGroupPanel';
@@ -105,6 +104,11 @@ type AddDialogState = {
   group: RelationshipGroupKey;
   title: string;
 } | null;
+
+type PetSavedEventDetail = {
+  pet?: Pessoa;
+  action?: 'created' | 'updated';
+};
 
 type MarriageDetails = Record<string, MarriageDetailsForm>;
 
@@ -184,6 +188,18 @@ function normalizeSpouseActivity(details: MarriageDetails, spouses: Pessoa[], cu
     };
     return next;
   }, {});
+}
+
+function maskRelationshipDate(value: string) {
+  return maskBirthDate(value);
+}
+
+function normalizeRelationshipDate(value: string) {
+  return normalizeBirthDate(value);
+}
+
+function normalizeRelationshipLocation(value: string) {
+  return normalizeLocationByMode(value, { international: false });
 }
 
 function createLocalPerson(form: AddRelativeForm, humanoOuPet: Pessoa['humano_ou_pet'] = 'Humano'): Pessoa {
@@ -485,6 +501,46 @@ export function MeusVinculos() {
   const markDraftDirty = () => {
     draftDirtyRef.current = true;
   };
+
+  useEffect(() => {
+    const handlePetSaved = (event: Event) => {
+      const detail = (event as CustomEvent<PetSavedEventDetail>).detail;
+      const pet = detail?.pet;
+
+      if (!pet?.id) return;
+
+      markDraftDirty();
+      const normalizedPet = { ...pet, humano_ou_pet: 'Pet' as Pessoa['humano_ou_pet'] };
+
+      setRelationships((current) => normalizeRelationshipGroups({
+        ...current,
+        filhos: current.filhos.filter((person) => person.id !== normalizedPet.id),
+        pets: uniquePeople([
+          ...current.pets.filter((person) => person.id !== normalizedPet.id),
+          normalizedPet,
+        ]),
+      }));
+
+      setRemovedRelationshipIds((current) => ({
+        ...current,
+        pets: current.pets.filter((id) => id !== normalizedPet.id),
+      }));
+
+      setLocalRelationshipRoles((current) => ({
+        ...current,
+        [normalizedPet.id]: current[normalizedPet.id] ?? 'pai',
+      }));
+
+      setHasLocalRelationshipChanges(true);
+      setHasPendingRelationshipRequest(true);
+    };
+
+    window.addEventListener('meus-vinculos:pet-saved', handlePetSaved);
+
+    return () => {
+      window.removeEventListener('meus-vinculos:pet-saved', handlePetSaved);
+    };
+  }, []);
 
   const resetAddRelativeFlow = () => {
     setAddDialog(null);
@@ -1608,16 +1664,17 @@ export function MeusVinculos() {
                     {status !== 'removed_pending' && (
                       <div className="space-y-3 rounded-lg border border-gray-200 bg-white/80 p-3">
                         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                          <label className="flex items-center gap-2 rounded-md border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700">
-                            <input
-                              type="checkbox"
-                              checked={details.ativo && !activeDisabled}
-                              disabled={activeDisabled}
-                              onChange={(event) => updateMarriageDetail(person.id, { ...details, ativo: event.target.checked })}
-                              className="h-4 w-4 disabled:cursor-not-allowed disabled:opacity-60"
-                            />
-                            Relacionamento ativo
-                          </label>
+                          {!activeDisabled && (
+                            <label className="flex items-center gap-2 rounded-md border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700">
+                              <input
+                                type="checkbox"
+                                checked={details.ativo}
+                                onChange={(event) => updateMarriageDetail(person.id, { ...details, ativo: event.target.checked })}
+                                className="h-4 w-4"
+                              />
+                              Relacionamento ativo
+                            </label>
+                          )}
                           {activeDisabled && (
                             <p className="text-sm text-gray-500">
                               Relacionamento inativo porque {spouseDeceased ? 'o cônjuge é falecido' : 'a pessoa em revisão é falecida'}.
@@ -1639,39 +1696,48 @@ export function MeusVinculos() {
                         {expanded && (
                           <div className="grid gap-3 sm:grid-cols-2">
                             <div>
-                              <Label htmlFor={`spouse wedding-date-${person.id}`}>Data de casamento</Label>
+                              <Label htmlFor={`spouse-wedding-date-${person.id}`}>Data de casamento</Label>
                               <Input
-                                id={`spouse wedding-date-${person.id}`}
+                                id={`spouse-wedding-date-${person.id}`}
                                 value={details.data_casamento}
-                                onChange={(event) => updateMarriageDetail(person.id, { ...details, data_casamento: event.target.value })}
+                                onChange={(event) => updateMarriageDetail(person.id, {
+                                  ...details,
+                                  data_casamento: maskRelationshipDate(event.target.value),
+                                })}
+                                onBlur={() => updateMarriageDetail(person.id, {
+                                  ...details,
+                                  data_casamento: normalizeRelationshipDate(details.data_casamento),
+                                })}
                                 placeholder="DD/MM/AAAA ou AAAA"
                               />
                             </div>
                             <div>
-                              <Label htmlFor={`spouse wedding-place-${person.id}`}>Local de casamento</Label>
+                              <Label htmlFor={`spouse-wedding-place-${person.id}`}>Local de casamento</Label>
                               <Input
-                                id={`spouse wedding-place-${person.id}`}
+                                id={`spouse-wedding-place-${person.id}`}
                                 value={details.local_casamento}
                                 onChange={(event) => updateMarriageDetail(person.id, { ...details, local_casamento: event.target.value })}
+                                onBlur={() => updateMarriageDetail(person.id, {
+                                  ...details,
+                                  local_casamento: normalizeRelationshipLocation(details.local_casamento),
+                                })}
                                 placeholder="Cidade/UF"
                               />
                             </div>
                             <div>
-                              <Label htmlFor={`spouse separation-date-${person.id}`}>Data de separação</Label>
+                              <Label htmlFor={`spouse-separation-date-${person.id}`}>Data de separação</Label>
                               <Input
-                                id={`spouse separation-date-${person.id}`}
+                                id={`spouse-separation-date-${person.id}`}
                                 value={details.data_separacao}
-                                onChange={(event) => updateMarriageDetail(person.id, { ...details, data_separacao: event.target.value })}
+                                onChange={(event) => updateMarriageDetail(person.id, {
+                                  ...details,
+                                  data_separacao: maskRelationshipDate(event.target.value),
+                                })}
+                                onBlur={() => updateMarriageDetail(person.id, {
+                                  ...details,
+                                  data_separacao: normalizeRelationshipDate(details.data_separacao),
+                                })}
                                 placeholder="DD/MM/AAAA ou AAAA"
-                              />
-                            </div>
-                            <div>
-                              <Label htmlFor={`spouse separation-place-${person.id}`}>Local de separação</Label>
-                              <Input
-                                id={`spouse separation-place-${person.id}`}
-                                value={details.local_separacao}
-                                onChange={(event) => updateMarriageDetail(person.id, { ...details, local_separacao: event.target.value })}
-                                placeholder="Cidade/UF"
                               />
                             </div>
                           </div>
