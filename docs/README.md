@@ -149,9 +149,47 @@ As rotas abaixo refletem `src/app/routes.tsx` na branch `main`.
 - `/admin/gestao-conteudo-pessoas`;
 - `/admin/duvidas`.
 
+## Contratos transversais recentes
+
+As mudanças recentes de mobile, administração e notificações ficam distribuídas nos documentos canônicos indicados no índice. Em caso de divergência, prevalecem:
+
+- `funcionalidades/NOTIFICACOES_ADMIN.md` para catálogo administrativo, eventos de gatilho, variáveis, destinatários, rascunho local e persistência Supabase de notificações;
+- `operacao/MIGRATIONS_SUPABASE.md` para migrations, RLS, tabelas e validação de banco;
+- `QA_MANUAL.md` para validação funcional antes de merge/deploy;
+- `REGRAS_DE_NAO_REGRESSAO.md` para contratos que não podem ser quebrados em novas alterações;
+- `INVENTARIO_TECNICO.md` para módulos, tabelas, scripts e arquivos ativos.
+
+### Notificações administrativas
+
+A frente `/admin/notificacoes` possui contrato próprio e não deve ser documentada apenas como funcionalidade complementar.
+
+Contratos vigentes:
+
+- catálogo completo editável persistido em `admin_notification_catalogs`;
+- overrides/configurações persistidos em `admin_notification_configurations`;
+- regras por variável persistidas em `admin_notification_configurations.variable_settings`;
+- eventos de gatilho representados por tokens `trigger_event:<evento>`;
+- usuários específicos representados por tokens `specific_user:<uuid>`;
+- rascunho local administrativo em `arvorefamilia:admin-notifications-console-config`;
+- aba ativa em `arvorefamilia:admin-notifications-active-tab`;
+- entregas reais permanecem separadas em `notificacoes_usuario`.
+
+Mudanças nessa frente devem atualizar, no mínimo:
+
+- `funcionalidades/NOTIFICACOES_ADMIN.md`;
+- `QA_MANUAL.md`;
+- `REGRAS_DE_NAO_REGRESSAO.md`;
+- `operacao/MIGRATIONS_SUPABASE.md`, quando houver alteração de schema/migration;
+- `INVENTARIO_TECNICO.md`, quando houver novo módulo, serviço, tabela, chave ou script ativo.
+
+### Mapa mobile e scripts defensivos
+
+A documentação deve diferenciar componentes React vigentes de scripts defensivos legados. Scripts carregados por `index.html` podem aparecer no inventário, mas regras absorvidas em componentes React devem ser documentadas preferencialmente no componente/rota de origem.
+
 ## Regra de manutenção
 
 - Alterações funcionais devem atualizar o documento funcional correspondente e, quando necessário, `GUIA_IMPLEMENTACOES.md`, `GUIA_COMPONENTES.md`, `GUIA_UX_LAYOUT.md`, `QA_MANUAL.md`, `REGRAS_DE_NAO_REGRESSAO.md` e `INVENTARIO_TECNICO.md`.
 - Alterações de rota ou guard devem atualizar `arquitetura/ROTAS_E_GUARDS.md` e `INVENTARIO_TECNICO.md`.
 - Alterações de schema, RLS, migrations, Edge Functions ou jobs devem atualizar `operacao/MIGRATIONS_SUPABASE.md`, `QA_MANUAL.md` e o documento funcional afetado.
+- Alterações em `/admin/notificacoes` devem atualizar `funcionalidades/NOTIFICACOES_ADMIN.md` e, quando houver mudança transversal, `REGRAS_DE_NAO_REGRESSAO.md` e `INVENTARIO_TECNICO.md`.
 - Não criar documentos datados de rodada quando o conteúdo couber nos documentos canônicos existentes.
