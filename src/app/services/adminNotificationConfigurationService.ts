@@ -18,10 +18,12 @@ import type { TipoCanalNotificacao } from '../types';
 import type {
   AdminNotificationContentOverride,
   AdminNotificationCustomDefinition,
+  AdminNotificationVariableSettings,
 } from '../components/admin/notifications/AdminNotificationConfiguration';
 
 const ADMIN_NOTIFICATION_CONFIG_KEY = 'default';
 const SPECIFIC_USER_PREFIX = 'specific_user:';
+const TRIGGER_EVENT_PREFIX = 'trigger_event:';
 
 const PERSISTED_EXTRA_RECIPIENT_GROUPS: AdminNotificationRecipientGroupDefinition[] = [
   {
@@ -55,6 +57,7 @@ export type PersistedAdminNotificationConfig = {
   channelOverrides?: Record<string, TipoCanalNotificacao[]>;
   recipientOverrides?: Record<string, string[]>;
   variableOverrides?: Record<string, string[]>;
+  variableSettings?: AdminNotificationVariableSettings;
   customDefinitions?: AdminNotificationCustomDefinition[];
 };
 
@@ -68,6 +71,10 @@ export type PersistedAdminNotificationCatalog = {
   suggestions: string[];
 };
 
+type TemplateWithVariableSettings = AdminNotificationTemplateDefinition & {
+  variableSettings?: AdminNotificationVariableSettings[string];
+};
+
 type AdminNotificationConfigurationRow = {
   frequency_overrides?: Record<string, AdminNotificationFrequencyId> | null;
   theme_overrides?: Record<string, AdminNotificationThemeId> | null;
@@ -76,6 +83,7 @@ type AdminNotificationConfigurationRow = {
   channel_overrides?: Record<string, TipoCanalNotificacao[]> | null;
   recipient_overrides?: Record<string, string[]> | null;
   variable_overrides?: Record<string, string[]> | null;
+  variable_settings?: AdminNotificationVariableSettings | null;
   custom_definitions?: AdminNotificationCustomDefinition[] | null;
 };
 
@@ -84,7 +92,7 @@ type AdminNotificationCatalogRow = {
   theme_options?: PersistedAdminNotificationCatalog['themeOptions'] | null;
   recipient_groups?: AdminNotificationRecipientGroupDefinition[] | null;
   notification_types?: AdminNotificationTypeDefinition[] | null;
-  notification_templates?: AdminNotificationTemplateDefinition[] | null;
+  notification_templates?: TemplateWithVariableSettings[] | null;
   automations?: AdminNotificationAutomationDefinition[] | null;
   suggestions?: string[] | null;
 };
@@ -100,6 +108,7 @@ function normalizeConfig(row?: AdminNotificationConfigurationRow | null): Persis
     channelOverrides: row.channel_overrides ?? {},
     recipientOverrides: row.recipient_overrides ?? {},
     variableOverrides: row.variable_overrides ?? {},
+    variableSettings: row.variable_settings ?? {},
     customDefinitions: row.custom_definitions ?? [],
   };
 }
@@ -153,9 +162,9 @@ function buildCatalogFromConfig(config: PersistedAdminNotificationConfig): Persi
     typeMap.set(type.id, cloneCatalogItem(type));
   });
 
-  const templateMap = new Map<string, AdminNotificationTemplateDefinition>();
+  const templateMap = new Map<string, TemplateWithVariableSettings>();
   [...defaultCatalog.templates, ...customDefinitions.map((definition) => definition.template)].forEach((template) => {
-    templateMap.set(template.id, cloneCatalogItem(template));
+    templateMap.set(template.id, cloneCatalogItem(template) as TemplateWithVariableSettings);
   });
 
   Object.entries(config.frequencyOverrides ?? {}).forEach(([typeId, frequency]) => {
@@ -177,7 +186,9 @@ function buildCatalogFromConfig(config: PersistedAdminNotificationConfig): Persi
     const type = typeMap.get(typeId) as (AdminNotificationTypeDefinition & { recipientGroupIds?: string[] }) | undefined;
     if (!type) return;
     type.recipientGroupIds = recipients;
-    const defaultAudience = recipients.find((recipientId) => !recipientId.startsWith(SPECIFIC_USER_PREFIX));
+    const defaultAudience = recipients.find((recipientId) => (
+      !recipientId.startsWith(SPECIFIC_USER_PREFIX) && !recipientId.startsWith(TRIGGER_EVENT_PREFIX)
+    ));
     if (defaultAudience) type.defaultAudience = defaultAudience;
   });
 
@@ -197,6 +208,11 @@ function buildCatalogFromConfig(config: PersistedAdminNotificationConfig): Persi
   Object.entries(config.variableOverrides ?? {}).forEach(([templateId, variables]) => {
     const template = templateMap.get(templateId);
     if (template) template.variables = variables;
+  });
+
+  Object.entries(config.variableSettings ?? {}).forEach(([templateId, settings]) => {
+    const template = templateMap.get(templateId);
+    if (template) template.variableSettings = settings;
   });
 
   return {
@@ -219,6 +235,7 @@ function buildConfigFromCatalog(catalog: PersistedAdminNotificationCatalog): Per
     channelOverrides: {},
     recipientOverrides: {},
     variableOverrides: {},
+    variableSettings: {},
     customDefinitions: [],
   };
 
@@ -245,6 +262,7 @@ function buildConfigFromCatalog(catalog: PersistedAdminNotificationCatalog): Per
 
   catalog.templates.forEach((template) => {
     const baseTemplate = baseTemplateMap.get(template.id);
+    const templateWithSettings = template as TemplateWithVariableSettings;
     if (!baseTemplate) return;
 
     const contentOverride: AdminNotificationContentOverride = {};
@@ -255,6 +273,9 @@ function buildConfigFromCatalog(catalog: PersistedAdminNotificationCatalog): Per
 
     if (baseTemplate.themeId !== template.themeId) config.themeOverrides![template.id] = template.themeId;
     if (!sameJson(baseTemplate.variables, template.variables)) config.variableOverrides![template.id] = template.variables;
+    if (templateWithSettings.variableSettings && Object.keys(templateWithSettings.variableSettings).length > 0) {
+      config.variableSettings![template.id] = templateWithSettings.variableSettings;
+    }
   });
 
   return config;
@@ -277,6 +298,7 @@ function mergeConfigs(
     channelOverrides: { ...(catalogConfig.channelOverrides ?? {}), ...(rowConfig.channelOverrides ?? {}) },
     recipientOverrides: { ...(catalogConfig.recipientOverrides ?? {}), ...(rowConfig.recipientOverrides ?? {}) },
     variableOverrides: { ...(catalogConfig.variableOverrides ?? {}), ...(rowConfig.variableOverrides ?? {}) },
+    variableSettings: { ...(catalogConfig.variableSettings ?? {}), ...(rowConfig.variableSettings ?? {}) },
     customDefinitions: Array.from(customDefinitionMap.values()),
   };
 }
@@ -376,6 +398,7 @@ export async function saveAdminNotificationConfiguration(config: PersistedAdminN
         channel_overrides: config.channelOverrides ?? {},
         recipient_overrides: config.recipientOverrides ?? {},
         variable_overrides: config.variableOverrides ?? {},
+        variable_settings: config.variableSettings ?? {},
         custom_definitions: config.customDefinitions ?? [],
         updated_by: userId,
         created_by: userId,
