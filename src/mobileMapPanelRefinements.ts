@@ -7,6 +7,42 @@ const BACKDROP_ID = 'mobile-map-toolbar-panel-backdrop';
 const PANEL_SELECTOR = '[data-mobile-family-map-inline-overview="true"][data-mobile-family-map-panel-mode="overview"]';
 const ACTIVE_TOOLBAR_SELECTOR = '[data-mobile-family-map-toolbar="true"][data-mobile-family-map-toolbar-active="true"]';
 
+type ManagedMapKind = 'family' | 'generation';
+type ManagedGestureState =
+  | { mode: 'pan'; x: number; y: number; translateX: number; translateY: number }
+  | { mode: 'pinch'; startDistance: number; startScale: number; anchorX: number; anchorY: number };
+
+type ManagedMapState = {
+  gesture: ManagedGestureState | null;
+  protectUntil: number;
+  restoreTimer: number | null;
+  scale: number;
+  translateX: number;
+  translateY: number;
+};
+
+const MANAGED_FULL_MAPS: Array<{
+  kind: ManagedMapKind;
+  viewportSelector: string;
+  stageSelector: string;
+}> = [
+  {
+    kind: 'family',
+    viewportSelector: '#mobile-family-map-full-overview .mobile-family-full-map-viewport',
+    stageSelector: '.mobile-family-full-map-stage',
+  },
+  {
+    kind: 'generation',
+    viewportSelector: '#mobile-generation-line-full-overview .mobile-generation-line-full-map-viewport',
+    stageSelector: '.mobile-generation-line-full-map-stage',
+  },
+];
+
+const managedMapStates: Record<ManagedMapKind, ManagedMapState> = {
+  family: { gesture: null, protectUntil: 0, restoreTimer: null, scale: 1, translateX: 0, translateY: 0 },
+  generation: { gesture: null, protectUntil: 0, restoreTimer: null, scale: 1, translateX: 0, translateY: 0 },
+};
+
 let scheduled = false;
 
 function isMobileViewport() {
@@ -83,6 +119,7 @@ function ensureStyles() {
         overscroll-behavior: contain !important;
         user-select: none !important;
         -webkit-user-select: none !important;
+        -webkit-user-drag: none !important;
       }
 
       #${OVERLAY_ID} {
@@ -350,6 +387,202 @@ function handleOverlayClick(event: Event) {
   }
 }
 
+function getManagedContext(target: EventTarget | null) {
+  if (!(target instanceof Element)) return null;
+
+  for (const map of MANAGED_FULL_MAPS) {
+    const viewport = target.closest<HTMLElement>(map.viewportSelector);
+    const stage = viewport?.querySelector<HTMLElement>(map.stageSelector);
+    if (viewport && stage) return { kind: map.kind, viewport, stage };
+  }
+
+  return null;
+}
+
+function readManagedTransform(stage: HTMLElement, state: ManagedMapState) {
+  const transform = stage.style.transform || window.getComputedStyle(stage).transform || '';
+  const translateScale = transform.match(/translate3d\((-?[0-9.]+)px,\s*(-?[0-9.]+)px,[^)]+\)\s*scale\((-?[0-9.]+)\)/);
+  if (translateScale) {
+    return {
+      translateX: Number.parseFloat(translateScale[1]),
+      translateY: Number.parseFloat(translateScale[2]),
+      scale: Number.parseFloat(translateScale[3]),
+    };
+  }
+
+  const matrix = transform.match(/matrix\((-?[0-9.]+),\s*(-?[0-9.]+),\s*(-?[0-9.]+),\s*(-?[0-9.]+),\s*(-?[0-9.]+),\s*(-?[0-9.]+)\)/);
+  if (matrix) {
+    return {
+      translateX: Number.parseFloat(matrix[5]),
+      translateY: Number.parseFloat(matrix[6]),
+      scale: Number.parseFloat(matrix[1]),
+    };
+  }
+
+  return {
+    translateX: state.translateX,
+    translateY: state.translateY,
+    scale: state.scale,
+  };
+}
+
+function managedDistance(first: Touch, second: Touch) {
+  return Math.hypot(first.clientX - second.clientX, first.clientY - second.clientY);
+}
+
+function managedMidpoint(first: Touch, second: Touch, viewport: HTMLElement) {
+  const rect = viewport.getBoundingClientRect();
+  return {
+    x: ((first.clientX + second.clientX) / 2) - rect.left,
+    y: ((first.clientY + second.clientY) / 2) - rect.top,
+  };
+}
+
+function managedClamp(value: number, min: number, max: number) {
+  return Math.min(max, Math.max(min, value));
+}
+
+function markManagedInteraction(state: ManagedMapState) {
+  state.protectUntil = Date.now() + 2500;
+  queueManagedRestore();
+}
+
+function applyManagedTransform(kind: ManagedMapKind) {
+  const map = MANAGED_FULL_MAPS.find((item) => item.kind === kind);
+  const state = managedMapStates[kind];
+  if (!map) return;
+
+  const stage = document.querySelector<HTMLElement>(`${map.viewportSelector} ${map.stageSelector}`);
+  if (!stage) return;
+
+  const nextTransform = `translate3d(${state.translateX}px, ${state.translateY}px, 0) scale(${state.scale})`;
+  if (stage.style.transform !== nextTransform) {
+    stage.style.setProperty('transform', nextTransform, 'important');
+  }
+}
+
+function restoreManagedTransforms() {
+  const now = Date.now();
+  (Object.keys(managedMapStates) as ManagedMapKind[]).forEach((kind) => {
+    const state = managedMapStates[kind];
+    if (state.protectUntil > now) applyManagedTransform(kind);
+  });
+}
+
+function queueManagedRestore() {
+  (Object.keys(managedMapStates) as ManagedMapKind[]).forEach((kind) => {
+    const state = managedMapStates[kind];
+    if (state.restoreTimer !== null) return;
+
+    state.restoreTimer = window.setTimeout(() => {
+      state.restoreTimer = null;
+      restoreManagedTransforms();
+      if (state.protectUntil > Date.now()) queueManagedRestore();
+    }, 48);
+  });
+}
+
+function stopManagedTouchEvent(event: TouchEvent) {
+  event.preventDefault();
+  event.stopPropagation();
+  event.stopImmediatePropagation?.();
+}
+
+function handleManagedTouchStart(event: TouchEvent) {
+  const context = getManagedContext(event.target);
+  if (!context) return;
+
+  const state = managedMapStates[context.kind];
+  const current = readManagedTransform(context.stage, state);
+  state.translateX = current.translateX;
+  state.translateY = current.translateY;
+  state.scale = Number.isFinite(current.scale) && current.scale > 0 ? current.scale : 1;
+
+  if (event.touches.length >= 2) {
+    const [first, second] = [event.touches[0], event.touches[1]];
+    const mid = managedMidpoint(first, second, context.viewport);
+    state.gesture = {
+      mode: 'pinch',
+      startDistance: managedDistance(first, second),
+      startScale: state.scale,
+      anchorX: (mid.x - state.translateX) / state.scale,
+      anchorY: (mid.y - state.translateY) / state.scale,
+    };
+    markManagedInteraction(state);
+    stopManagedTouchEvent(event);
+    return;
+  }
+
+  if (event.touches.length === 1) {
+    const touch = event.touches[0];
+    state.gesture = {
+      mode: 'pan',
+      x: touch.clientX,
+      y: touch.clientY,
+      translateX: state.translateX,
+      translateY: state.translateY,
+    };
+    markManagedInteraction(state);
+    stopManagedTouchEvent(event);
+  }
+}
+
+function handleManagedTouchMove(event: TouchEvent) {
+  const context = getManagedContext(event.target);
+  if (!context) return;
+
+  const state = managedMapStates[context.kind];
+  if (!state.gesture) return;
+
+  if (state.gesture.mode === 'pinch' && event.touches.length >= 2) {
+    const [first, second] = [event.touches[0], event.touches[1]];
+    const mid = managedMidpoint(first, second, context.viewport);
+    const nextDistance = managedDistance(first, second);
+    state.scale = managedClamp(state.gesture.startScale * (nextDistance / Math.max(1, state.gesture.startDistance)), 0.12, 3.4);
+    state.translateX = mid.x - (state.gesture.anchorX * state.scale);
+    state.translateY = mid.y - (state.gesture.anchorY * state.scale);
+    applyManagedTransform(context.kind);
+    markManagedInteraction(state);
+    stopManagedTouchEvent(event);
+    return;
+  }
+
+  if (state.gesture.mode === 'pan' && event.touches.length === 1) {
+    const touch = event.touches[0];
+    state.translateX = state.gesture.translateX + (touch.clientX - state.gesture.x);
+    state.translateY = state.gesture.translateY + (touch.clientY - state.gesture.y);
+    applyManagedTransform(context.kind);
+    markManagedInteraction(state);
+    stopManagedTouchEvent(event);
+  }
+}
+
+function handleManagedTouchEnd(event: TouchEvent) {
+  const context = getManagedContext(event.target);
+  if (!context) return;
+
+  const state = managedMapStates[context.kind];
+  if (event.touches.length === 0) {
+    state.gesture = null;
+    markManagedInteraction(state);
+    stopManagedTouchEvent(event);
+    return;
+  }
+
+  if (event.touches.length === 1) {
+    const touch = event.touches[0];
+    state.gesture = {
+      mode: 'pan',
+      x: touch.clientX,
+      y: touch.clientY,
+      translateX: state.translateX,
+      translateY: state.translateY,
+    };
+    markManagedInteraction(state);
+    stopManagedTouchEvent(event);
+  }
+}
+
 function scheduleRefinement() {
   if (scheduled) return;
   scheduled = true;
@@ -358,6 +591,7 @@ function scheduleRefinement() {
     ensureStyles();
     renderToolbarBackdrop();
     refineGenerationOverview();
+    restoreManagedTransforms();
   });
 }
 
@@ -367,6 +601,10 @@ if (typeof window !== 'undefined' && typeof document !== 'undefined') {
   [80, 180, 420, 900].forEach((delay) => window.setTimeout(scheduleRefinement, delay));
 
   document.addEventListener('click', handleOverlayClick, { capture: true });
+  document.addEventListener('touchstart', handleManagedTouchStart, { capture: true, passive: false });
+  document.addEventListener('touchmove', handleManagedTouchMove, { capture: true, passive: false });
+  document.addEventListener('touchend', handleManagedTouchEnd, { capture: true, passive: false });
+  document.addEventListener('touchcancel', handleManagedTouchEnd, { capture: true, passive: false });
 
   const observer = new MutationObserver(scheduleRefinement);
   observer.observe(document.documentElement, {
