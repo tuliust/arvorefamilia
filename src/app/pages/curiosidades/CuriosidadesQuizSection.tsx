@@ -238,7 +238,7 @@ export function CuriosidadesQuizSection({
 
       {!error && !loading && !completed && !currentQuestion && (
         <div className="mt-5 rounded-xl border border-dashed border-gray-200 bg-gray-50 px-4 py-5 text-sm text-gray-600">
-          Ainda não há dados suficientes para montar perguntas. Cadastre pelo menos quatro familiares com datas, cidades ou profissões.
+          Ainda não há dados suficientes para montar perguntas. Cadastre pelo menos seis familiares com datas, cidades ou profissões.
         </div>
       )}
 
