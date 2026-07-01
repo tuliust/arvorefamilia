@@ -32,6 +32,12 @@ type MobileTreeChromeContextValue = {
   clearChrome: (config: MobileTreeChromeConfig) => void;
 };
 
+const noopChromeContext: MobileTreeChromeContextValue = {
+  chromeConfig: null,
+  registerChrome: () => undefined,
+  clearChrome: () => undefined,
+};
+
 const MobileTreeChromeContext = createContext<MobileTreeChromeContextValue | null>(null);
 
 export function MobileTreeChromeProvider({ children }: { children: React.ReactNode }) {
@@ -53,11 +59,7 @@ export function MobileTreeChromeProvider({ children }: { children: React.ReactNo
 }
 
 export function useMobileTreeChrome() {
-  const context = useContext(MobileTreeChromeContext);
-  if (!context) {
-    throw new Error('useMobileTreeChrome deve ser usado dentro de MobileTreeChromeProvider.');
-  }
-  return context;
+  return useContext(MobileTreeChromeContext) ?? noopChromeContext;
 }
 
 export function useRegisterMobileTreeChrome(config: MobileTreeChromeConfig | null) {
