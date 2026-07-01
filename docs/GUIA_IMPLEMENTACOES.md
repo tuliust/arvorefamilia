@@ -70,6 +70,9 @@ Componentes relevantes:
 - Em `paternal-uncles` e `maternal-uncles`, a visualização mobile deve limitar inicialmente a lista a 8 cards e expor controle local `+`/`−` quando houver excedentes.
 - Em `paternal-cousins` e `maternal-cousins`, o scroll vertical interno deve ter prioridade sobre a navegação por swipe e funcionar com um dedo no iPhone.
 - O botão mobile `Mapa` abre a visão geral de grupos; zoom real é reservado ao mapa completo.
+- A toolbar mobile de mapa deve permanecer fixa abaixo do header ao abrir `Formato`, `Cor`, `Filtros`, `Mapa` ou `+`.
+- Backdrop/blur mobile deve ser calculado abaixo do painel ativo e antes da navegação inferior.
+- Painéis ativos, cards, CTA e mapas completos devem permanecer acima do backdrop.
 
 ## Scripts carregados por `index.html`
 
@@ -104,6 +107,7 @@ Scripts relevantes antes de alterar mapa, mobile, curiosidades, tutorial ou pain
 - `mobileFamilyMapFullOverview.ts`
 - `mobileFamilyMapFullOverviewConnectorFix.ts`
 - `mobileFamilyMapFullOverviewButtonGuard.ts`
+- `mobileMapToolbarBackdropLayerFix.ts`
 
 Handlers de `touchmove`/`touchend` devem mapear a ordem de captura (`window capture` antes de `document capture`) antes de chamar `preventDefault()` ou `stopImmediatePropagation()`. Scroll interno de listas deve ser avaliado antes de bloquear o gesto para navegação por swipe.
 
@@ -113,13 +117,15 @@ O mapa completo mobile não deve ser tratado como simples captura ou clone de DO
 
 Contrato:
 
-- a abertura parte do botão `Exibir mapa completo` no modal `Mapa da família`;
-- o mapa completo usa camada própria, com `z-index` superior ao modal anterior;
+- a abertura parte do botão `Exibir mapa completo` no painel `Mapa da família` ou no painel de gerações da linha geracional;
+- quando aberto dentro da shell mobile, header, toolbar superior e navegação inferior devem permanecer preservados conforme contrato da rota;
+- o mapa completo deve ficar acima do backdrop/blur e não pode ser escurecido, desfocado ou dessaturado;
 - a estrutura é montada por modelo declarativo com pessoas, nós e arestas;
 - conectores são SVGs gerados por âncoras dos nós;
 - pan e zoom devem usar eventos de toque sem permitir scroll da página por baixo;
+- reidratações e observers não podem sobrescrever o `transform` aplicado pelo usuário após pan ou pinça;
 - a ação `Reenquadrar` deve recalcular escala e posição conforme o viewport;
-- fechar o mapa deve remover a camada e liberar o scroll quando não houver outro overlay ativo.
+- fechar o mapa deve remover a camada ou retornar ao painel anterior sem deixar backdrop preso.
 
 ## Status conjugal
 

@@ -1,6 +1,6 @@
 # Rotas e guards
 
-> Última revisão: 2026-06-29
+> Última revisão: 2026-07-01
 > Escopo: rotas principais, guards e fluxos de navegação.
 > Status: canônico.
 
@@ -35,6 +35,8 @@ As rotas são declaradas em `src/app/routes.tsx`. Este documento deve citar apen
 - `LinhaGeracionalMobilePanelLayerTweaks` deve ser montado somente na rota `/linha-geracional`.
 - `/mapa-familiar` não deve carregar runtime específico da linha geracional.
 - O isolamento entre `/mapa-familiar` e `/linha-geracional` é regra de não regressão para evitar travamentos, overlays indevidos ou mudança de layout entre rotas.
+- Runtimes de mapa mobile importados por side effect devem permanecer isolados por rota, breakpoint e seletor explícito.
+- O backdrop/blur dos painéis de mapa é recurso visual da shell mobile e não deve mudar rota, guard ou estado de autenticação.
 
 ## Rotas de onboarding
 

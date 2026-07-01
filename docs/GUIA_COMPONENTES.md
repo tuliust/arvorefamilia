@@ -1,6 +1,6 @@
 # Guia de componentes
 
-> Última revisão: 2026-06-30
+> Última revisão: 2026-07-01
 > Escopo: componentes relevantes para rotas e fluxos funcionais da branch `main`.
 > Status: canônico.
 
@@ -10,7 +10,7 @@
 |---|---|
 | `Home.tsx` | Orquestra carregamento de pessoas/relacionamentos, pessoa vinculada, filtros, busca, IA, curiosidades, navegação para perfil e recolhimento do painel desktop. |
 | `HomeHeader.tsx` | Cabeçalho da experiência de mapa. No mobile deve exibir `Árvore Familiar`. |
-| `HomeMobileNav.tsx` | Navegação e ações mobile da home, incluindo botão `+`, painel de visualização, filtros e ações de mapa. |
+| `HomeMobileNav.tsx` | Navegação e ações mobile da home, incluindo toolbar `Formato`/`Cor`/`Filtros`/`Mapa`/`+`, painéis inline, filtros e ações de mapa dentro da shell mobile. |
 | `MobileFamilyMapToolbar.tsx` | Toolbar mobile do mapa familiar; no mobile o botão `Mapa` abre a visão geral de grupos e não representa zoom real. |
 | `HomeTreeSection.tsx` | Área de renderização da árvore, roteamento de ações vindas do painel, modal de instruções de `Salvar Imagem`, captura/impressão e helpers internos de preview quando necessários. |
 | `DesktopTreeVisualizationPanel.tsx` | Painel desktop de visualização, temas, grupos, filtros, seção `Exportar` com `Salvar Imagem` e `Imprimir`, títulos `Grupos de Familiares`/`Exportar` e ação interna de recolher. |
@@ -88,6 +88,7 @@ Esses scripts devem ser conferidos antes de alterar mobile, mapa familiar, curio
 - `mobileFamilyMapFullOverview.ts`
 - `mobileFamilyMapFullOverviewConnectorFix.ts`
 - `mobileFamilyMapFullOverviewButtonGuard.ts`
+- `mobileMapToolbarBackdropLayerFix.ts`
 
 Regras:
 
@@ -95,6 +96,23 @@ Regras:
 - evitar observar atributos quando o runtime altera `style`, `dataset` ou classes;
 - usar `requestAnimationFrame` e `try/catch` para evitar travamento;
 - migrar regra para componente de origem quando o comportamento estiver estabilizado.
+
+## Seletores funcionais do mapa mobile
+
+Os seletores abaixo funcionam como contrato entre componentes React, runtimes defensivos e QA mobile. Alterações nesses atributos exigem revisar os runtimes relacionados e a documentação canônica de mapa.
+
+| Seletor / atributo | Uso |
+|---|---|
+| `data-mobile-family-map-toolbar` | Identifica a toolbar mobile de mapa. |
+| `data-mobile-family-map-toolbar-active` | Indica que há painel da toolbar ativo. |
+| `data-mobile-family-map-toolbar-action` | Expõe a ação ativa (`formato`, `cor`, `grupos`, `zoom`/`Mapa`, etc.). |
+| `data-mobile-family-map-inline-overview` | Identifica painel inline de visão geral/mapa. |
+| `data-mobile-family-map-panel-mode` | Diferencia painel em modo `overview` ou `full`. |
+| `data-mobile-family-full-map-button` | Identifica o CTA de mapa completo de `/mapa-familiar`. |
+| `mobile-map-toolbar-panel-backdrop` | Backdrop/blur calculado para ficar atrás do painel ativo. |
+| `mobile-family-map-full-overview` | Container do mapa completo mobile de `/mapa-familiar`. |
+| `mobile-generation-line-full-overview` | Container da visualização completa de `/linha-geracional`. |
+| `mobile-generation-safe-overview-overlay` | Overlay seguro do painel de gerações. |
 
 ## Componentes e utilitários de exportação
 

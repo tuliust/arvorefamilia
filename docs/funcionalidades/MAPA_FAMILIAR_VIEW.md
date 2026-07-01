@@ -1,6 +1,6 @@
 # Mapa familiar
 
-> Última revisão: 2026-06-30
+> Última revisão: 2026-07-01
 > Escopo: `/mapa-familiar`, `/mapa-familiar-horizontal`, `/linha-geracional`, `Home.tsx` e componentes `FamilyTree`.
 > Status: canônico.
 
@@ -92,6 +92,9 @@ Contrato visual:
 ## Layout mobile de `/mapa-familiar`
 
 - A visualização mobile usa telas/grupos navegáveis por gesto, sem herdar o painel fixo desktop.
+- A shell mobile das rotas de mapa preserva header, toolbar superior, área de conteúdo e navegação inferior como estrutura principal da página.
+- A toolbar mobile de mapa expõe `Formato`, `Cor`, `Filtros`, `Mapa` e `+`; abrir qualquer painel por esses botões não pode deslocar a toolbar para a parte inferior nem ocultar a navegação inferior.
+- Backdrop/blur mobile, quando usado, deve afetar apenas o conteúdo atrás do painel ativo, sem cobrir header, toolbar, painel, cards, CTA, mapa completo ou menu inferior.
 - O painel aberto pelo botão `+` deve aparecer na camada mais alta da página, acima de header, toolbar, notificações, busca e conteúdo da árvore.
 - O painel de visualização deve reconhecer corretamente os familiares da pessoa ativa: pais, cônjuges, irmãos, filhos, pets, avós, bisavós, tataravós, tios, primos e sobrinhos.
 - Os itens expandidos do painel devem exibir primeiro e segundo nome completos, evitando truncamentos como duas letras ou reticências prematuras.
@@ -109,7 +112,7 @@ Contrato visual:
 
 ### Visão geral/Mapa mobile
 
-O botão `Mapa` da tela central de `/mapa-familiar` abre um modal de visão geral com nove grupos navegáveis:
+O botão `Mapa` da toolbar mobile de `/mapa-familiar` abre a visão geral com nove grupos navegáveis dentro da shell mobile da própria página, preservando header, toolbar superior e navegação inferior:
 
 - `Ancestrais paternos`;
 - `Avós`;
@@ -129,8 +132,9 @@ Contrato visual e funcional:
 - os ícones devem permanecer maiores que o padrão inicial da visão geral, sem cortar título ou contador;
 - títulos em caixa alta podem usar `letter-spacing` reduzido para preservar legibilidade em telas estreitas;
 - tocar em um grupo deve navegar para a tela do grupo dentro de `/mapa-familiar`, sem abrir `/pessoa/:id`;
-- o guard contra ghost click deve impedir que o toque no modal vaze para cards posicionados por baixo;
-- o modal deve ficar acima do header, toolbar, canvas e painéis.
+- o guard contra ghost click deve impedir que o toque no painel vaze para cards posicionados por baixo;
+- o painel deve ficar acima do backdrop/blur e abaixo da toolbar dentro da estrutura mobile;
+- o backdrop/blur deve começar abaixo do painel ativo e terminar antes da navegação inferior;
 - o botão da toolbar mobile deve se chamar `Mapa`, não `Zoom`, porque sua função é abrir a visão geral de grupos;
 - o zoom real deve permanecer associado ao fluxo `Exibir mapa completo`;
 - a barra mobile deve manter botões compactos, arredondados, com estado ativo evidente e sem herdar visual desktop;
@@ -139,15 +143,17 @@ Contrato visual e funcional:
 
 ### Mapa completo mobile
 
-O botão `Exibir mapa completo` abre uma camada própria do mapa completo no mobile.
+O botão `Exibir mapa completo` abre a visualização completa da árvore no mobile dentro da experiência da rota, preservando a estrutura de navegação da página quando esse contrato estiver ativo: header, toolbar superior e menu inferior continuam visíveis e utilizáveis.
 
 Contrato atual:
 
-- o mapa completo deve abrir acima do modal `Mapa da família`;
-- o modal anterior deve ser removido ou ficar inerte quando o mapa completo estiver ativo;
-- o body deve permanecer com scroll bloqueado enquanto o mapa completo estiver aberto;
-- a camada deve ter botão de fechar e ação de reenquadrar;
-- o usuário pode usar pan e zoom por gesto de pinça;
+- a abertura parte do painel `Mapa`/`Mapa da família`;
+- o mapa completo deve ficar acima do backdrop/blur e não pode ser escurecido, desfocado ou dessaturado pela camada de fundo;
+- header, toolbar superior, painel ativo e navegação inferior não podem ser cobertos pelo mapa ou pelo backdrop;
+- o mapa completo deve ter área própria de viewport, com botão de fechar e ação de reenquadrar quando aplicável;
+- o usuário pode usar pan com um dedo e zoom por gesto de pinça;
+- pan e zoom não podem resetar automaticamente após o usuário soltar o dedo ou encerrar a pinça;
+- reidratações, `MutationObserver`, resize ou ajustes defensivos não podem sobrescrever o `transform` aplicado pelo usuário, salvo em ação explícita de reenquadrar ou reconstrução real do stage;
 - a implementação não deve depender de clone visual frágil de seções posicionadas na tela;
 - a renderização deve usar modelo próprio de nós, cards e conectores;
 - cards devem usar estrutura única com variantes como `ancestor`, `mini`, `parent`, `central` e `core`;
@@ -182,16 +188,18 @@ Regras específicas:
 
 ### Painel mobile da linha geracional
 
-O painel acionado por `Mapa`/visualização em `/linha-geracional` deve ser isolado da rota `/mapa-familiar`.
+O painel acionado por `Mapa` em `/linha-geracional` deve ser isolado da rota `/mapa-familiar` e exibido dentro da shell mobile da própria página.
 
 Contrato:
 
 - o runtime específico da linha geracional só deve ser montado em `/linha-geracional`;
-- o painel deve ficar acima do header no mobile;
-- deve existir apenas um botão `X` visível para fechar;
-- o botão de fechar deve permanecer no canto superior direito, sem duplicação no DOM;
+- header, toolbar superior e navegação inferior devem permanecer visíveis;
+- o painel de gerações deve ficar acima do backdrop/blur, sem ser escurecido ou desfocado;
+- o painel deve exibir cards de `Geração 1` a `Geração 6` quando houver dados suficientes ou quando a estrutura de navegação exigir atalhos fixos;
+- o botão `Exibir visualização completa` deve ficar dentro da área branca do painel e acima do backdrop;
+- o backdrop/blur deve começar abaixo do container completo de `Gerações`, incluindo o botão inferior;
+- a visualização completa deve montar colunas geracionais lado a lado e preservar pan/zoom sem reset automático após o gesto;
 - grupos devem ser calculados a partir dos dados reais de pessoas e relacionamentos;
-- a listagem deve contemplar pais, cônjuges, irmãos, filhos, pets, avós, bisavós, tataravós, tios, primos e sobrinhos;
 - nomes de pessoas devem exibir primeiro e segundo nome completos quando disponíveis;
 - botões de pessoas devem manter altura compacta, texto alinhado à esquerda e centralização vertical;
 - a navegação por pessoa deve preservar a query `pessoa` e não afetar desktop.

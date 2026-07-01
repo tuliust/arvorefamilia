@@ -98,17 +98,66 @@ Validar a direção física do dedo em iPhone/Safari real sempre que possível:
 - em `descendants`, no topo do scroll, deslizar para baixo deve voltar para `core`;
 - gestos bloqueados não devem causar tremor, bounce elástico perceptível, deslocamento do stage ou tela branca.
 
-### QA mobile do botão `Mapa` e mapa completo
+### QA mobile dos botões superiores, backdrop e mapa completo
 
-- Tocar no botão `Mapa` deve abrir o modal `Mapa da família` acima do header e da toolbar.
-- O modal deve exibir 9 botões de grupos, cada um com ícone único.
+Validar em 320px, 375px, 390px e 430px, preferencialmente em iPhone/Safari real ou device mode equivalente.
+
+#### Toolbar mobile
+
+- Header deve continuar exibindo `Árvore Familiar`.
+- Toolbar deve manter `Formato`, `Cor`, `Filtros`, `Mapa` e `+` abaixo do header.
+- Abrir qualquer botão da toolbar não pode deslocar a toolbar para a parte inferior da página.
+- A navegação inferior deve permanecer visível.
+- O backdrop/blur não pode cobrir header, toolbar, painel ativo, mapa completo ou navegação inferior.
+
+#### `Formato`
+
+- Tocar em `Formato` deve abrir os cards `Linha Geracional` e `Árvore Familiar` dentro da shell mobile.
+- O blur deve começar abaixo do container completo dos cards.
+- Os cards não podem ficar escurecidos, desfocados ou dessaturados.
+
+#### `Cor`
+
+- Tocar em `Cor` deve abrir a faixa de paletas acima do backdrop.
+- As opções de cor devem permanecer clicáveis e sem blur.
+
+#### `Filtros`
+
+- Tocar em `Filtros` deve abrir o container de filtros acima do backdrop.
+- O blur deve começar abaixo do painel de filtros.
+- A área branca do painel não pode ficar cortada.
+
+#### `Mapa` em `/mapa-familiar`
+
+- Tocar no botão `Mapa` deve abrir o painel `Mapa da família` dentro da estrutura mobile da rota.
+- O painel deve exibir 9 botões de grupos, cada um com ícone único.
+- Cards e CTA devem ficar acima do backdrop/blur.
 - Tocar em grupos deve navegar dentro do mapa e não abrir `/pessoa/:id`.
 - Repetir o teste a partir de `Tios Paternos`, `Primos Paternos`, `Tios Maternos`, `Primos Maternos` e `Descendentes`.
 - Cada botão da visão geral deve navegar para a tela correta independentemente da tela de origem.
-- `Exibir mapa completo` deve abrir camada acima do modal anterior.
-- `Reenquadrar` deve reposicionar o palco.
-- Pan e zoom por pinça devem funcionar.
-- Fechar pelo `X` deve liberar scroll e restaurar o estado anterior.
+
+#### `Exibir mapa completo` em `/mapa-familiar`
+
+- `Exibir mapa completo` deve abrir a visualização completa sem cobrir indevidamente header, toolbar ou navegação inferior quando a shell mobile estiver contratada.
+- A árvore completa não pode ficar por baixo do backdrop/blur.
+- `Reenquadrar` deve reposicionar o palco quando disponível.
+- Pan com um dedo deve mover o mapa.
+- Zoom por pinça deve alterar a escala.
+- Após soltar o dedo ou encerrar a pinça, zoom e posição não podem voltar automaticamente.
+- Fechar pelo `X` deve restaurar o estado anterior.
+
+#### `Mapa` e visualização completa em `/linha-geracional`
+
+- Tocar em `Mapa` deve abrir o container `Gerações` acima do backdrop.
+- Os cards de geração e o botão `Exibir visualização completa` devem ficar dentro da área branca e acima do blur.
+- O blur deve começar abaixo do botão inferior do container.
+- `Exibir visualização completa` deve abrir as colunas geracionais completas sem blur por cima.
+- Pan com um dedo deve mover a visualização completa.
+- Zoom por pinça deve alterar a escala.
+- Após o gesto, o mapa não pode voltar automaticamente ao enquadramento inicial.
+
+#### Conectores do mapa completo
+
 - Conectores devem ligar bisavós a avós, tios a pai/mãe, pessoa central a pai/mãe, pessoa central a irmãos/cônjuge, irmãos a sobrinhos e tios maternos a primos maternos.
 - Rótulos `Pai` e `Mãe` não podem ficar cortados.
 
@@ -165,7 +214,7 @@ Validar em `/mapa-familiar` e `/mapa-familiar-horizontal`:
 - Gerações vazias não devem aparecer como primeira tela quando houver geração seguinte com conteúdo.
 - Cards de cônjuges devem ficar empilhados quando o layout mobile exigir.
 - Linhas laterais devem conectar apenas relações reais.
-- O painel de visualização deve ficar acima do header, exibir apenas um botão `X`, listar familiares reais e preservar a query `pessoa` ao selecionar uma pessoa.
+- O painel `Mapa` deve preservar header, toolbar superior e navegação inferior, exibir `Gerações` acima do backdrop e manter o CTA `Exibir visualização completa` dentro da área branca do painel.
 - `/mapa-familiar` não deve carregar runtime específico da linha geracional.
 
 ## Onboarding de membro

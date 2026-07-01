@@ -143,6 +143,18 @@ Notas técnicas:
 - Wrappers ativos: `AdminDashboardWithTweaks`, `AdminHomeSettingsWithSaveBar`, `MeusDadosWithInlineProfileBio`, `MeusVinculosWithProfileBio` e `MeusVinculosMobileShortcutsPage`.
 - Componentes auxiliares do primeiro acesso: `MeusVinculosPetEditorPortal`, `RelationshipGroupPanel`, `RelativeCard`, `RelationshipOverview` e `ProfileControlRequestDialog`.
 
+### Runtimes de mapa mobile estabilizados
+
+| Arquivo | Responsabilidade |
+|---|---|
+| `src/mobileMapPanelRefinements.ts` | Backdrop, overlay seguro de gerações e refinamentos de gestos/camadas dos mapas mobile. |
+| `src/mobileMapToolbarBackdropLayerFix.ts` | Ajusta limites superior/inferior do blur para ficar atrás do painel ativo e fora da navegação inferior. |
+| `src/mobileFamilyMapFullOverviewButtonGuard.ts` | Guarda ativações do mapa completo de `/mapa-familiar` e carrega side effects relacionados. |
+| `src/mobileFamilyMapFullOverview.ts` | Renderiza o mapa completo mobile de `/mapa-familiar`. |
+| `src/mobileFamilyMapFullOverviewConnectorFix.ts` | Refinamentos de conectores do mapa completo mobile. |
+| `src/mobileGenerationLineFullOverview.ts` | Renderiza a visualização completa de `/linha-geracional` e preserva pan/zoom após gestos. |
+| `src/mobileFamilyMapFilterButtonsBehaviorFix.ts` | Isola comportamento de filtros mobile, incluindo regra de cônjuges colaterais na linha geracional. |
+
 ## Scripts carregados por `index.html`
 
 Além de `src/main.tsx`, `index.html` carrega os seguintes scripts defensivos:
@@ -176,6 +188,7 @@ Além de `src/main.tsx`, `index.html` carrega os seguintes scripts defensivos:
 - `src/mobileFamilyMapFullOverview.ts`
 - `src/mobileFamilyMapFullOverviewConnectorFix.ts`
 - `src/mobileFamilyMapFullOverviewButtonGuard.ts`
+- `src/mobileMapToolbarBackdropLayerFix.ts`
 
 Scripts defensivos devem ser tratados como camada de transição, sempre isolados por rota e breakpoint. Quando um comportamento estabilizar, a preferência é migrar para o componente React de origem.
 

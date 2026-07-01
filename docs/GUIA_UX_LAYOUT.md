@@ -98,14 +98,30 @@ Os botões da visão geral mobile devem seguir contrato visual próprio:
 - o botão `Mapa` deve ter semântica de visão geral, com `aria-label` equivalente a abrir a visão geral do mapa familiar;
 - os cards da visão geral devem ter destino explícito por grupo e não depender da tela em que o usuário abriu o modal;
 - o controle local `+`/`−` de tios deve ser visualmente distinto do botão `+` global da toolbar.
+- o painel `Mapa` deve abrir dentro da shell mobile da rota, preservando header, toolbar superior e navegação inferior.
+- os cards e o botão de mapa completo devem permanecer acima do backdrop/blur.
 
 #### Mapa completo mobile
 
-- A camada deve ocupar a tela inteira e ficar acima do modal `Mapa da família`.
-- O header interno deve ter título, subtítulo curto, botão `Reenquadrar` e botão `X`.
-- O palco do mapa deve permitir pan e zoom por pinça.
+- A visualização completa deve permanecer integrada à shell mobile quando aberta a partir das rotas de mapa: header, toolbar superior e navegação inferior continuam visíveis.
+- O palco do mapa deve permitir pan com um dedo e zoom por pinça.
+- Após pan ou pinch, o `transform` aplicado pelo usuário deve ser preservado e não pode voltar automaticamente ao enquadramento inicial.
+- A ação `Reenquadrar`, quando disponível, é a única forma explícita de recalcular escala e posição sem reconstrução do stage.
 - Cards e grupos devem seguir uma estrutura única para evitar diferenças visuais entre grupos clonados.
 - Conectores devem tocar as bordas dos grupos/cards e não podem atravessar badges ou títulos.
+- Backdrop/blur nunca pode ficar acima da árvore completa.
+
+#### Camadas e backdrop dos painéis mobile de mapa
+
+- Header, toolbar superior, painel ativo, cards, CTA, mapa completo e navegação inferior devem ficar acima do backdrop.
+- O backdrop/blur deve começar abaixo do painel ativo, não apenas abaixo da toolbar.
+- Em `Formato`, o blur começa abaixo dos cards de escolha de visualização.
+- Em `Cor`, o blur começa abaixo da faixa de paletas.
+- Em `Filtros`, o blur começa abaixo do container de filtros.
+- Em `Mapa` de `/mapa-familiar`, o blur começa abaixo dos cards de grupos e do CTA.
+- Em `Mapa` de `/linha-geracional`, o blur começa abaixo do container `Gerações`, incluindo o botão `Exibir visualização completa`.
+- O backdrop deve terminar antes da navegação inferior e nunca pode ocultá-la.
+- A toolbar não pode mudar de posição quando qualquer painel é aberto.
 
 ### `/linha-geracional`
 

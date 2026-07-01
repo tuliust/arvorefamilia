@@ -1,6 +1,6 @@
 # Decisões arquiteturais
 
-> Última revisão: 2026-06-29
+> Última revisão: 2026-07-01
 > Escopo: arquitetura final documentada após consolidação dos documentos técnicos anteriores.
 > Status: canônico.
 
@@ -96,7 +96,10 @@ Decisão vigente:
 - a renderização deve usar modelo próprio de pessoas, nós e arestas;
 - cards devem ser renderizados por estrutura comum, com variantes visuais declaradas;
 - conectores devem ser derivados de âncoras e bordas reais dos nós;
-- ajustes de conector por runtime são aceitos como etapa de estabilização, mas devem preservar rota e breakpoint;
+- a experiência mobile pode preservar a shell da rota, mantendo header, toolbar superior e navegação inferior visíveis quando esse for o contrato visual vigente;
+- backdrop/blur é camada auxiliar atrás do painel ativo e não pode cobrir mapa completo, cards, CTA, toolbar ou navegação inferior;
+- pan/zoom devem preservar o `transform` aplicado pelo usuário após o gesto, sem reset automático por reidratação ou observer;
+- ajustes de conector, camada ou gesto por runtime são aceitos como etapa de estabilização, mas devem preservar rota e breakpoint;
 - a evolução desejável é mover a regra para componentes React definitivos quando o comportamento visual estiver validado.
 
 Motivação:
@@ -104,6 +107,7 @@ Motivação:
 - reduzir divergência entre grupos;
 - impedir conectores soltos ou duplicados;
 - evitar ghost clicks e vazamento de eventos para cards abaixo de overlays;
+- manter a navegação mobile consistente durante painéis e mapas completos;
 - permitir pan/zoom estável sem depender do DOM de telas secundárias.
 
 ## Administração

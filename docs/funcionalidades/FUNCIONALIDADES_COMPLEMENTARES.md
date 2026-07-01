@@ -32,6 +32,7 @@ Regras:
 - o botão `Ver todos os resultados` deve enviar para `/busca?q=...`;
 - páginas internas como `/curiosidades`, `/forum` e `/calendario-familiar` devem usar o mesmo componente compartilhado de busca do header;
 - no mobile, o dropdown de sugestões deve aparecer acima de headers, toolbars sticky, painéis da árvore, menus e conteúdo da página.
+- em rotas de mapa, busca e notificações devem continuar acima dos painéis da árvore, mas sem alterar os limites do backdrop/blur documentados em `MAPA_FAMILIAR_VIEW.md`.
 
 ## Menu do avatar
 
@@ -55,6 +56,7 @@ O botão de notificações/alertas no header deve abrir dropdown de notificaçõ
 Regras:
 
 - no mobile, o dropdown deve aparecer na camada mais alta da página, acima de toolbar, canvas, painéis, busca e conteúdo;
+- em rotas de mapa, abrir notificações não deve deslocar a toolbar mobile nem deixar backdrop preso;
 - o rodapé do dropdown usa ações curtas com largura equivalente: `Ver todas` e `Preferências`;
 - estado vazio deve permanecer legível, sem cortar botões;
 - abrir o dropdown não deve deslocar indevidamente o layout da página.

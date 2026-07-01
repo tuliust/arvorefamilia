@@ -56,6 +56,9 @@
 - O botão da toolbar mobile deve se chamar `Mapa`; `Zoom` não deve ser usado para abrir a visão geral de grupos.
 - O botão `Mapa` deve abrir a visão geral em `/mapa-familiar` e cada card deve navegar para sua tela correta, sem depender da tela atual do usuário.
 - O zoom real no mobile deve permanecer no fluxo `Exibir mapa completo`, com pan e pinça próprios.
+- Ao abrir `Formato`, `Cor`, `Filtros`, `Mapa` ou `+`, a toolbar mobile não pode mudar de posição e a navegação inferior não pode desaparecer.
+- Backdrop/blur mobile deve ficar atrás do painel ativo e nunca cobrir header, toolbar, cards, CTA, mapa completo ou navegação inferior.
+- Em `Formato`, `Mapa da família` e `Gerações`, o blur deve começar abaixo do container completo do painel, incluindo botões inferiores.
 - `Tios Paternos` e `Tios Maternos` devem exibir inicialmente no máximo 8 cards no mobile quando houver muitos registros.
 - O botão local `+` dos tios deve revelar os demais cards e alternar para `−` para recolher; ele não pode acionar o painel global da toolbar.
 - `Primos Paternos` e `Primos Maternos` devem rolar com um dedo em iPhone/Safari.
@@ -64,10 +67,14 @@
 
 ### Mapa completo mobile
 
-- O botão `Exibir mapa completo` deve abrir uma camada própria acima do modal `Mapa da família`.
-- O modal anterior não pode permanecer por cima do mapa completo.
-- O mapa completo deve ter botão `X` e ação `Reenquadrar`.
+- O botão `Exibir mapa completo` deve abrir a visualização completa sem sair da estrutura mobile contratada para a rota.
+- Header, toolbar superior e navegação inferior devem permanecer visíveis quando o contrato visual da rota exigir shell preservada.
+- O mapa completo não pode ficar por baixo de backdrop/blur.
+- O modal/painel anterior não pode permanecer por cima do mapa completo.
+- O mapa completo deve ter botão `X` e ação `Reenquadrar` quando aplicável.
 - Pan e zoom por pinça devem funcionar sem rolar a página por baixo.
+- Pan e zoom não podem resetar automaticamente após o usuário soltar o dedo ou encerrar a pinça.
+- Reidratação, `MutationObserver`, resize ou runtime defensivo não podem sobrescrever o `transform` do usuário, salvo por `Reenquadrar` ou reconstrução real do stage.
 - O mapa completo deve ser renderizado por modelo próprio de nós/cards/conectores, não por clone visual frágil de seções.
 - Cada card de pessoa deve usar estrutura visual comum, com variantes controladas.
 - Conectores devem partir da borda real de grupos/cards.
@@ -86,6 +93,9 @@
 - Cards de cônjuges devem ficar empilhados quando necessário.
 - Linhas laterais devem conectar apenas relações reais, não todos os cards da geração.
 - Mudanças na linha geracional mobile não devem alterar o layout desktop de `/mapa-familiar-horizontal`.
+- O painel `Mapa` de `/linha-geracional` deve preservar header, toolbar superior e navegação inferior.
+- O container `Gerações`, seus cards e o botão `Exibir visualização completa` devem ficar acima do backdrop/blur.
+- A visualização completa de `/linha-geracional` deve preservar o `transform` após pan ou pinch.
 
 ## Overlays mobile de header
 
