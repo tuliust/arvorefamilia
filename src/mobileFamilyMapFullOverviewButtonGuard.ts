@@ -1,4 +1,5 @@
 import './mobileMapPanelRefinements';
+import './mobileMapToolbarBackdropLayerFix';
 
 const MOBILE_QUERY = '(max-width: 767px)';
 const DIRECT_MAP_PATH = '/mapa-familiar';
