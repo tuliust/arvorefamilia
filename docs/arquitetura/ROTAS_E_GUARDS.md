@@ -112,6 +112,13 @@ Rotas de onboarding usam header simplificado. No mobile, a navegação inferior 
 - `resolveFirstAccessLinkForUser` deve ser chamado antes de carregar dados principais.
 - Pendências de primeiro acesso em localStorage/sessionStorage devem ser resolvidas.
 
+- Usuário autenticado com vínculo `linked` e `dados_confirmados = false` deve acessar apenas as etapas do onboarding: `/meus-dados`, `/meus-vinculos`, `/arquivos-historicos`, `/preferencias` e `/revisao-dados`.
+- Qualquer tentativa de acessar rota interna de membro fora do onboarding durante primeiro acesso incompleto deve redirecionar para `/meus-dados`.
+- `TreeAccessRoute` deve impedir acesso a `/`, `/mapa-familiar`, `/mapa-familiar-horizontal`, `/linha-geracional` e `/busca` enquanto `dados_confirmados = false`.
+- `MemberRoute` deve aplicar a mesma restrição para `/curiosidades`, `/forum`, `/forum/novo`, `/forum/topico/:id`, `/forum/topico/:id/editar`, `/calendario-familiar`, `/meus-favoritos`, `/notificacoes`, `/ajustar-notificacoes`, `/pessoa/:id` e `/pessoas/:id`.
+- O retorno para `/mapa-familiar` só é permitido depois de `/revisao-dados` confirmar o cadastro e persistir `dados_confirmados = true`.
+- Dados já salvos em etapas anteriores não devem ser descartados pelo redirecionamento de segurança.
+
 ### Pessoa falecida
 
 - Sem preferências de notificação pessoais.

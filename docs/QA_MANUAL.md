@@ -20,6 +20,7 @@ Executar antes de merge:
 git status --short
 git diff --check
 grep -R $'\xEF\xBF\xBD' docs || true
+npm run test
 npm run typecheck
 npm run build
 ```
@@ -234,6 +235,21 @@ Validar em `/mapa-familiar` e `/mapa-familiar-horizontal`:
 
 ## Onboarding de membro
 
+
+### Bloqueio de rotas com onboarding incompleto
+
+Pré-condição:
+
+- Usuário autenticado com pessoa vinculada e `dados_confirmados = false`.
+
+Validar:
+
+- `/meus-dados`, `/meus-vinculos`, `/arquivos-historicos`, `/preferencias` e `/revisao-dados` continuam acessíveis.
+- `/mapa-familiar`, `/mapa-familiar-horizontal`, `/linha-geracional` e `/busca` redirecionam para `/meus-dados`.
+- `/curiosidades`, `/forum`, `/forum/novo`, `/forum/topico/:id`, `/forum/topico/:id/editar`, `/calendario-familiar`, `/meus-favoritos`, `/notificacoes`, `/ajustar-notificacoes`, `/pessoa/:id` e `/pessoas/:id` redirecionam para `/meus-dados`.
+- Dados já preenchidos nas etapas anteriores continuam carregados após retorno ao fluxo.
+- Após finalizar `/revisao-dados`, `/mapa-familiar` passa a abrir normalmente.
+
 ### `/meus-dados`
 
 - Salva dados básicos e respeita preferências de privacidade.
@@ -380,3 +396,7 @@ Validar com usuário vinculado:
 - A barra superior de atalhos fica sticky quando alcança o topo da página.
 - No mobile, os botões superiores devem permanecer visíveis e roláveis lateralmente.
 - `Pergunte à IA` usa placeholder `Faça aqui sua pergunta…`.
+
+- O quiz deve montar perguntas com seis alternativas quando houver dados suficientes.
+- Quando não houver base suficiente, a mensagem deve orientar cadastrar pelo menos seis familiares.
+- Rodar `npm run test` deve manter `curiosidadesUtils.test.ts` passando com seis opções por pergunta.

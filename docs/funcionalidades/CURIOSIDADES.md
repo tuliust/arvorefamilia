@@ -1,6 +1,6 @@
 # Curiosidades
 
-> Última revisão: 2026-06-27
+> Última revisão: 2026-07-01
 > Escopo: `/curiosidades`, exploração visual e textual dos dados familiares, rankings, IA, quiz, mural, fotos, relacionamentos, rota, gerações e abas de descoberta.
 > Status: canônico.
 
@@ -90,6 +90,10 @@ Regras:
 
 - cada rodada deve exibir até cinco perguntas;
 - cada pergunta deve exibir até seis opções quando houver dados suficientes;
+
+- a base mínima para gerar perguntas completas é de seis pessoas humanas elegíveis;
+- o estado vazio deve orientar cadastrar pelo menos seis familiares com datas, cidades ou profissões;
+- testes unitários devem validar seis opções por pergunta quando o dataset de teste contém seis pessoas elegíveis;
 - opções de pessoas devem usar nome curto sempre que possível;
 - quando houver homônimos, a opção deve ser desambiguada com último sobrenome ou nome completo, evitando duas respostas visualmente idênticas;
 - perguntas de profissão, localidade, longevidade e quantidade de filhos devem variar candidatos quando houver base suficiente, evitando repetir sempre o mesmo bloco de alternativas;
@@ -254,6 +258,7 @@ Validar:
 - ranking de profissões sem corte visual nos círculos;
 - IA com placeholder e limite visual de sugestões no mobile;
 - quiz com homônimos desambiguados, alternativas variadas, feedback animado na área das opções e resultado final consolidado;
+- quiz com seis alternativas quando houver dados suficientes e estado vazio citando seis familiares;
 - mural publicando com usuário logado, limite de 200 caracteres, scroll vertical e exclusão restrita ao autor;
 - rota com textos acentuados em UTF-8 válido e ilustração `mapa.png` no tamanho desktop documentado;
 - comparação de interesses com pluralização correta de `ponto/pontos` e badges do questionário quando disponíveis;

@@ -19,6 +19,12 @@
 - Rascunhos de `/meus-dados` e `/meus-vinculos` podem usar `sessionStorage` com chave segmentada por `user.id` e `pessoa.id`.
 - Rascunhos são proteção auxiliar de UX; falhas de storage não devem bloquear salvamento nem navegação.
 - O fluxo deve preservar a ordem `/meus-dados` → `/meus-vinculos` → `/arquivos-historicos` → `/preferencias` → `/revisao-dados` → `/mapa-familiar`.
+
+- `MemberRoute` valida `resolveFirstAccessLinkForUser` para bloquear rotas internas quando `dados_confirmados = false`.
+- Durante onboarding incompleto, a whitelist funcional é `/meus-dados`, `/meus-vinculos`, `/arquivos-historicos`, `/preferencias` e `/revisao-dados`.
+- Rotas internas como `/curiosidades`, `/forum`, `/calendario-familiar`, `/meus-favoritos`, `/notificacoes`, `/ajustar-notificacoes`, `/pessoa/:id` e `/pessoas/:id` devem redirecionar para `/meus-dados` até a confirmação final.
+- `TreeAccessRoute` aplica a mesma restrição para árvore, busca e visualizações de mapa enquanto o onboarding estiver incompleto.
+- O redirecionamento de segurança não deve apagar rascunhos nem impedir que dados já persistidos sejam recarregados nas etapas do fluxo.
 - Pessoa marcada como falecida em `/meus-dados` deve pular `/preferencias`.
 - Alterações de vínculos que dependem de aprovação devem ser representadas como pendência, não como gravação definitiva.
 - Eventos customizados entre componentes de primeiro acesso devem ter escopo local da página e não podem virar substitutos de serviço de dados ou autenticação.

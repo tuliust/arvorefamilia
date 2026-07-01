@@ -126,13 +126,17 @@
 | Modal de pet | `src/app/pages/meus-vinculos/MeusVinculosPetEditorPortal.tsx` |
 | Fatos e arquivos históricos | `src/app/components/ArquivosHistoricos.tsx`, `src/app/pages/ArquivosHistoricosPage.tsx` |
 | Revisão final | `src/app/pages/RevisaoDados.tsx`, `src/app/pages/RevisaoDadosFlowPage.tsx` |
+| Guards de primeiro acesso | `src/app/components/MemberRoute.tsx`, `src/app/components/TreeAccessRoute.tsx`, `src/app/services/memberProfileService.ts` |
 
 Notas técnicas:
 
 - rascunhos de primeiro acesso são auxiliares e podem usar `sessionStorage` segmentado por usuário/pessoa;
 - pets salvos por modal devem sincronizar com a página principal antes da revisão final;
 - badges de pendência em vínculos e revisão representam solicitações ou estados aguardando aprovação;
-- ajustes documentais dessa frente não alteram Supabase, autenticação, migrations ou guards.
+- ajustes exclusivamente documentais dessa frente não alteram Supabase, autenticação, migrations ou guards;
+- o controle de acesso do primeiro acesso depende de `MemberRoute`, `TreeAccessRoute` e `resolveFirstAccessLinkForUser`;
+- `dados_confirmados = false` mantém o usuário restrito às etapas de onboarding até a confirmação final em `/revisao-dados`;
+- rotas internas e rotas de árvore só devem abrir depois que `dados_confirmados = true` estiver persistido.
 
 ## Notificações administrativas: arquivos de implementação
 

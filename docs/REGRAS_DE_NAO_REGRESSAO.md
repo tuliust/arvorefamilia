@@ -18,6 +18,11 @@
 - `/aprovacoes` e `/admin/aprovacoes` devem permanecer protegidas por `ProtectedRoute`.
 - Rotas administrativas, exceto `/admin/login`, devem continuar protegidas por `ProtectedRoute`.
 
+- Usuário com primeiro acesso incompleto (`dados_confirmados = false`) não pode acessar rotas internas de membro fora do fluxo de onboarding.
+- As únicas rotas permitidas durante onboarding incompleto são `/meus-dados`, `/meus-vinculos`, `/arquivos-historicos`, `/preferencias` e `/revisao-dados`.
+- Tentativas de acessar `/mapa-familiar`, `/mapa-familiar-horizontal`, `/linha-geracional`, `/busca`, `/curiosidades`, `/forum`, `/forum/novo`, `/forum/topico/:id`, `/forum/topico/:id/editar`, `/calendario-familiar`, `/notificacoes`, `/meus-favoritos`, `/ajustar-notificacoes`, `/pessoa/:id` ou `/pessoas/:id` antes da confirmação final devem redirecionar para `/meus-dados`.
+- O bloqueio de primeiro acesso não pode descartar dados já salvos nas etapas de onboarding.
+
 ## Mapa familiar
 
 - A alternância entre mapa familiar e linha geracional deve preservar query string.
@@ -224,6 +229,10 @@
 - Bodas devem respeitar apenas marcos exatos permitidos para casais ativos e sem separação registrada.
 - Marcadores `+N` em gerações devem ser acionáveis quando houver pessoas ocultas.
 - O quiz deve preservar até cinco perguntas por rodada, feedback animado na área das opções e resultado final consolidado.
+
+- O quiz deve exigir base mínima de seis pessoas humanas elegíveis para montar perguntas com seis alternativas.
+- A mensagem de estado vazio do quiz deve citar seis familiares, não quatro ou cinco.
+- O teste unitário de `buildCuriosityQuizQuestions` deve permanecer alinhado ao contrato de seis opções por pergunta quando houver dataset suficiente.
 - O menu do avatar não deve ficar atrás da navegação sticky ou dos botões superiores de `/curiosidades`.
 - No mobile, botões superiores de `/curiosidades` devem permanecer visíveis e roláveis lateralmente.
 

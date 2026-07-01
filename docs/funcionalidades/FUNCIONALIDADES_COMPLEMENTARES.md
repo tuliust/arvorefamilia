@@ -202,6 +202,13 @@ Função:
 
 O onboarding deve respeitar sessão, perfil e vínculo familiar disponível.
 
+
+Durante o primeiro acesso, o usuário pode salvar dados parcialmente em cada etapa, mas não deve acessar a experiência interna principal até finalizar `/revisao-dados`.
+
+Se abandonar o fluxo antes da confirmação final, ao retornar autenticado deve ser direcionado para `/meus-dados`. Dados já salvos devem continuar carregados nos formulários existentes.
+
+Rotas internas de membro e árvore ficam bloqueadas até `dados_confirmados = true`. Esse bloqueio cobre `/mapa-familiar`, `/mapa-familiar-horizontal`, `/linha-geracional`, `/busca`, `/curiosidades`, `/forum`, `/calendario-familiar`, `/meus-favoritos`, `/notificacoes`, `/ajustar-notificacoes`, `/pessoa/:id` e `/pessoas/:id`.
+
 Fluxo funcional:
 
 - `/meus-dados` revisa dados pessoais, privacidade, avatar e questionário `Sobre Mim`;

@@ -10,6 +10,10 @@
 - Validar manualmente `/mapa-familiar`, `/mapa-familiar-horizontal`, `/curiosidades`, `/forum`, `/calendario-familiar`, `/meus-dados`, `/admin/duvidas`, `/admin/atividades`, `/admin/notificacoes` e `/admin/gestao-conteudo-pessoas` no ambiente publicado.
 - Confirmar que o ambiente remoto do Supabase recebeu as migrations necessárias.
 - Confirmar que variáveis de ambiente de IA e demais chaves operacionais estão disponíveis quando exigidas.
+
+- Validar no ambiente publicado o bloqueio de rotas internas para usuário com `dados_confirmados = false`.
+- Validar que usuário com onboarding incompleto retorna para `/meus-dados` e mantém dados salvos nas etapas já preenchidas.
+- Validar que usuário com onboarding finalizado acessa `/mapa-familiar` e rotas internas normalmente.
 - Em `/admin/notificacoes`, abrir a aba `Configuração`, clicar em `Salvar` e confirmar registros em `admin_notification_configurations`, `admin_notification_catalogs` e a coluna `variable_settings`.
 
 ## Pendências de produto e QA visual
