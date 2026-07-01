@@ -132,10 +132,17 @@ export const MobileFamilyMapContextTray = React.forwardRef<HTMLDivElement, Mobil
       hiddenFullMapButton?.click();
     }, []);
 
+    const trayInsetClassName = action === 'formato'
+      ? 'inset-x-0 px-2'
+      : action === 'cor'
+        ? 'inset-x-3'
+        : 'inset-x-2';
+
     const trayClassName = [
       'fixed z-[10001] md:hidden',
-      action === 'cor' ? 'inset-x-3' : 'inset-x-2',
+      trayInsetClassName,
       'top-[calc(env(safe-area-inset-top,0px)+8.15rem)]',
+      action === 'formato' ? 'bg-white/95 backdrop-blur' : '',
       className,
     ].filter(Boolean).join(' ');
 
@@ -210,13 +217,6 @@ export const MobileFamilyMapContextTray = React.forwardRef<HTMLDivElement, Mobil
         data-mobile-family-map-context-action={action}
         data-tree-export-ignore="true"
       >
-        {action === 'formato' && (
-          <div
-            className="pointer-events-none absolute bottom-[-1.35rem] left-1/2 h-8 w-full max-w-md -translate-x-1/2 rounded-b-xl border-x border-b border-slate-200 bg-white/95 shadow-sm backdrop-blur"
-            aria-hidden="true"
-            data-mobile-family-map-format-tray-extension="true"
-          />
-        )}
         {children}
       </div>
     );
