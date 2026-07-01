@@ -5,8 +5,37 @@ import {
   SiteVisualSettings,
 } from '../services/siteVisualSettingsService';
 
+const SITE_VISUAL_SETTINGS_CACHE_KEY = 'arvorefamilia:site-visual-settings:public';
+
+function readCachedSiteVisualSettings() {
+  if (typeof window === 'undefined') return DEFAULT_SITE_VISUAL_SETTINGS;
+
+  try {
+    const raw = window.localStorage.getItem(SITE_VISUAL_SETTINGS_CACHE_KEY);
+    if (!raw) return DEFAULT_SITE_VISUAL_SETTINGS;
+
+    const parsed = JSON.parse(raw) as Partial<SiteVisualSettings>;
+    return {
+      ...DEFAULT_SITE_VISUAL_SETTINGS,
+      ...parsed,
+    };
+  } catch {
+    return DEFAULT_SITE_VISUAL_SETTINGS;
+  }
+}
+
+function cacheSiteVisualSettings(settings: SiteVisualSettings) {
+  if (typeof window === 'undefined') return;
+
+  try {
+    window.localStorage.setItem(SITE_VISUAL_SETTINGS_CACHE_KEY, JSON.stringify(settings));
+  } catch {
+    // Cache is best effort. Public settings still load from Supabase on every mount.
+  }
+}
+
 export function useSiteVisualSettings() {
-  const [settings, setSettings] = useState<SiteVisualSettings>(DEFAULT_SITE_VISUAL_SETTINGS);
+  const [settings, setSettings] = useState<SiteVisualSettings>(() => readCachedSiteVisualSettings());
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -16,6 +45,7 @@ export function useSiteVisualSettings() {
 
     try {
       const data = await getSiteVisualSettings();
+      cacheSiteVisualSettings(data);
       setSettings(data);
       return data;
     } catch (nextError) {
@@ -23,8 +53,9 @@ export function useSiteVisualSettings() {
         ? nextError.message
         : 'Não foi possível carregar as configurações públicas.';
       setError(message);
-      setSettings(DEFAULT_SITE_VISUAL_SETTINGS);
-      return DEFAULT_SITE_VISUAL_SETTINGS;
+      const cachedSettings = readCachedSiteVisualSettings();
+      setSettings(cachedSettings);
+      return cachedSettings;
     } finally {
       setLoading(false);
     }
@@ -39,6 +70,7 @@ export function useSiteVisualSettings() {
 
       try {
         const data = await getSiteVisualSettings();
+        cacheSiteVisualSettings(data);
         if (mounted) {
           setSettings(data);
         }
@@ -48,7 +80,7 @@ export function useSiteVisualSettings() {
             ? nextError.message
             : 'Não foi possível carregar as configurações públicas.';
           setError(message);
-          setSettings(DEFAULT_SITE_VISUAL_SETTINGS);
+          setSettings(readCachedSiteVisualSettings());
         }
       } finally {
         if (mounted) {
