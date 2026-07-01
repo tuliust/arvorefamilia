@@ -1,4 +1,4 @@
-﻿alter table public.pessoas
+alter table public.pessoas
   add column if not exists genero text;
 
 comment on column public.pessoas.genero is
