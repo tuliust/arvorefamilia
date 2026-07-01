@@ -30,6 +30,16 @@ export type AdminNotificationContentOverride = {
   cta?: string;
 };
 
+export type AdminNotificationVariableSetting = {
+  source?: 'auto' | 'fixed' | 'trigger_context' | 'profile' | 'date';
+  value?: string;
+  dateFormat?: 'short' | 'long' | 'relative' | 'custom';
+  customFormat?: string;
+  description?: string;
+};
+
+export type AdminNotificationVariableSettings = Record<string, Record<string, AdminNotificationVariableSetting>>;
+
 export type AdminNotificationCustomDefinition = {
   type: AdminNotificationTypeDefinition;
   template: AdminNotificationTemplateDefinition;
@@ -38,6 +48,34 @@ export type AdminNotificationCustomDefinition = {
 const CHANNEL_OPTIONS: TipoCanalNotificacao[] = ['interna', 'email', 'push', 'whatsapp'];
 const EDITABLE_FIELDS = ['title', 'longMessage', 'cta'] as const;
 const SPECIFIC_USER_PREFIX = 'specific_user:';
+const TRIGGER_EVENT_PREFIX = 'trigger_event:';
+
+const TRIGGER_EVENT_OPTIONS = [
+  {
+    id: 'first_map_access',
+    label: 'Primeiro acesso ao mapa familiar',
+    description: 'Dispara quando o usuário acessa /mapa-familiar pela primeira vez. Este é o gatilho já implementado.',
+    status: 'implementado',
+  },
+  {
+    id: 'first_login',
+    label: 'Primeiro login',
+    description: 'Prepara a regra para primeiro login autenticado. Depende de conexão posterior ao fluxo de autenticação.',
+    status: 'preparado',
+  },
+  {
+    id: 'onboarding_completed',
+    label: 'Conclusão do primeiro acesso',
+    description: 'Prepara a regra para conclusão de revisão/onboarding antes de entrar na árvore.',
+    status: 'preparado',
+  },
+  {
+    id: 'profile_updated',
+    label: 'Atualização própria de perfil',
+    description: 'Prepara a regra para ações feitas pelo próprio usuário em seus dados.',
+    status: 'preparado',
+  },
+] as const;
 
 const EXTRA_RECIPIENT_GROUPS: AdminNotificationRecipientGroupDefinition[] = [
   {
@@ -67,7 +105,7 @@ type EditableField = typeof EDITABLE_FIELDS[number];
 
 function getDraftContent(
   template: AdminNotificationTemplateDefinition | undefined,
-  override: AdminNotificationContentOverride | undefined,
+  override: AdminNotificationContentOverride | undefined
 ) {
   return {
     title: override?.title ?? template?.title ?? '',
@@ -138,6 +176,14 @@ function getSpecificUserIdFromToken(token: string) {
   return token.startsWith(SPECIFIC_USER_PREFIX) ? token.slice(SPECIFIC_USER_PREFIX.length) : null;
 }
 
+function getTriggerEventToken(eventId: string) {
+  return `${TRIGGER_EVENT_PREFIX}${eventId}`;
+}
+
+function getTriggerEventIdFromToken(token: string) {
+  return token.startsWith(TRIGGER_EVENT_PREFIX) ? token.slice(TRIGGER_EVENT_PREFIX.length) : null;
+}
+
 function getProfileLabel(profile: AdminLinkableProfile) {
   return String(profile.nome_exibicao || profile.email || profile.id).trim();
 }
@@ -146,6 +192,11 @@ function mergeRecipientGroups(groups: AdminNotificationRecipientGroupDefinition[
   const map = new Map<string, AdminNotificationRecipientGroupDefinition>();
   [...groups, ...EXTRA_RECIPIENT_GROUPS].forEach((group) => map.set(group.id, group));
   return Array.from(map.values());
+}
+
+function cleanDisplayTitle(value: string, fallback: string) {
+  const normalized = value.trim();
+  return normalized || fallback;
 }
 
 export function AdminNotificationConfiguration(props: {
@@ -158,6 +209,7 @@ export function AdminNotificationConfiguration(props: {
   recipientOverrides: Record<string, string[]>;
   activeOverrides: Record<string, boolean>;
   variableOverrides: Record<string, string[]>;
+  variableSettings: AdminNotificationVariableSettings;
   customTypeCount: number;
   onFrequencyChange: (typeId: string, frequency: AdminNotificationFrequencyId) => void;
   onContentChange: (templateId: string, content: AdminNotificationContentOverride) => void;
@@ -165,6 +217,7 @@ export function AdminNotificationConfiguration(props: {
   onRecipientsChange: (typeId: string, recipientGroupIds: string[]) => void;
   onActiveChange: (typeId: string, active: boolean) => void;
   onVariablesChange: (templateId: string, variables: string[]) => void;
+  onVariableSettingsChange: (templateId: string, settings: Record<string, AdminNotificationVariableSetting>) => void;
   onCreateType: (definition: AdminNotificationCustomDefinition) => void;
   onSave: () => void;
 }) {
@@ -203,6 +256,9 @@ export function AdminNotificationConfiguration(props: {
   const selectedSpecificUserIds = selectedRecipients
     .map(getSpecificUserIdFromToken)
     .filter((userId): userId is string => Boolean(userId));
+  const selectedTriggerEventIds = selectedRecipients
+    .map(getTriggerEventIdFromToken)
+    .filter((eventId): eventId is string => Boolean(eventId));
   const selectedFrequency = selectedType
     ? props.frequencyOverrides[selectedType.id] ?? selectedType.defaultFrequency
     : 'manual';
@@ -212,6 +268,13 @@ export function AdminNotificationConfiguration(props: {
   const variables = selectedTemplate
     ? props.variableOverrides[selectedTemplate.id] ?? selectedTemplate.variables
     : [];
+  const selectedVariableSettings = templateId ? props.variableSettings[templateId] ?? {} : {};
+
+  const getTypeDisplayName = (type: AdminNotificationTypeDefinition) => {
+    const template = props.templates.find((item) => item.typeId === type.id);
+    const content = getDraftContent(template, template ? props.contentOverrides[template.id] : undefined);
+    return cleanDisplayTitle(content.title, type.administrativeName);
+  };
 
   useEffect(() => {
     if (!selectedTypeId && props.types[0]?.id) {
@@ -260,6 +323,7 @@ export function AdminNotificationConfiguration(props: {
         Object.entries(config.recipientOverrides ?? {}).forEach(([typeId, recipients]) => props.onRecipientsChange(typeId, recipients));
         Object.entries(config.activeOverrides ?? {}).forEach(([typeId, active]) => props.onActiveChange(typeId, active));
         Object.entries(config.variableOverrides ?? {}).forEach(([templateIdKey, nextVariables]) => props.onVariablesChange(templateIdKey, nextVariables));
+        Object.entries(config.variableSettings ?? {}).forEach(([templateIdKey, settings]) => props.onVariableSettingsChange(templateIdKey, settings));
 
         (config.customDefinitions ?? [])
           .filter((definition) => !props.types.some((type) => type.id === definition.type.id))
@@ -317,9 +381,17 @@ export function AdminNotificationConfiguration(props: {
     const withoutSpecificUsers = recipientId === 'specific_users'
       ? selectedRecipients.filter((item) => !item.startsWith(SPECIFIC_USER_PREFIX))
       : selectedRecipients;
+    const withoutTriggerEvents = recipientId === 'trigger_user'
+      ? withoutSpecificUsers.filter((item) => !item.startsWith(TRIGGER_EVENT_PREFIX))
+      : withoutSpecificUsers;
+    const base = withoutTriggerEvents;
     const next = checked
-      ? Array.from(new Set([...withoutSpecificUsers, recipientId]))
-      : withoutSpecificUsers.filter((item) => item !== recipientId);
+      ? Array.from(new Set([
+        ...base,
+        recipientId,
+        ...(recipientId === 'trigger_user' ? [getTriggerEventToken('first_map_access')] : []),
+      ]))
+      : base.filter((item) => item !== recipientId);
     props.onRecipientsChange(selectedType.id, next);
   };
 
@@ -333,6 +405,29 @@ export function AdminNotificationConfiguration(props: {
       ? Array.from(new Set([...baseRecipients, token]))
       : baseRecipients.filter((item) => item !== token);
     props.onRecipientsChange(selectedType.id, next);
+  };
+
+  const toggleTriggerEvent = (eventId: string, checked: boolean) => {
+    if (!selectedType) return;
+    const token = getTriggerEventToken(eventId);
+    const baseRecipients = selectedRecipients.includes('trigger_user')
+      ? selectedRecipients
+      : [...selectedRecipients, 'trigger_user'];
+    const next = checked
+      ? Array.from(new Set([...baseRecipients, token]))
+      : baseRecipients.filter((item) => item !== token);
+    props.onRecipientsChange(selectedType.id, next);
+  };
+
+  const updateVariableSetting = (variable: string, patch: AdminNotificationVariableSetting) => {
+    if (!templateId) return;
+    props.onVariableSettingsChange(templateId, {
+      ...selectedVariableSettings,
+      [variable]: {
+        ...(selectedVariableSettings[variable] ?? {}),
+        ...patch,
+      },
+    });
   };
 
   const handleCreateType = () => {
@@ -349,6 +444,42 @@ export function AdminNotificationConfiguration(props: {
     setNewVariableName('');
   };
 
+  const buildCustomDefinitionsForSave = (): AdminNotificationCustomDefinition[] => {
+    return props.types
+      .filter((type) => type.id.startsWith('custom_notification_'))
+      .map((type) => {
+        const template = props.templates.find((item) => item.typeId === type.id);
+        if (!template) return null;
+        const content = getDraftContent(template, props.contentOverrides[template.id]);
+        const title = cleanDisplayTitle(content.title, type.administrativeName);
+        const variablesForTemplate = props.variableOverrides[template.id] ?? template.variables;
+        const settingsForTemplate = props.variableSettings[template.id] ?? {};
+        const linkSetting = settingsForTemplate['{{link}}'];
+        const link = String(linkSetting?.value || template.defaultLink || type.defaultLink || '/notificacoes').trim();
+
+        return {
+          type: {
+            ...type,
+            administrativeName: title,
+            shortName: title,
+            shortTemplate: content.longMessage || template.shortMessage || type.shortTemplate,
+            longTemplate: content.longMessage || type.longTemplate,
+            defaultLink: link,
+          },
+          template: {
+            ...template,
+            title,
+            longMessage: content.longMessage,
+            cta: content.cta,
+            defaultLink: link,
+            variables: variablesForTemplate,
+            variableSettings: settingsForTemplate,
+          } as AdminNotificationTemplateDefinition,
+        };
+      })
+      .filter((definition): definition is AdminNotificationCustomDefinition => Boolean(definition));
+  };
+
   const handleSave = async () => {
     try {
       setSavingConfig(true);
@@ -359,13 +490,8 @@ export function AdminNotificationConfiguration(props: {
         recipientOverrides: props.recipientOverrides,
         activeOverrides: props.activeOverrides,
         variableOverrides: props.variableOverrides,
-        customDefinitions: props.types
-          .filter((type) => type.id.startsWith('custom_notification_'))
-          .map((type) => {
-            const template = props.templates.find((item) => item.typeId === type.id);
-            return template ? { type, template } : null;
-          })
-          .filter((definition): definition is AdminNotificationCustomDefinition => Boolean(definition)),
+        variableSettings: props.variableSettings,
+        customDefinitions: buildCustomDefinitionsForSave(),
       });
       props.onSave();
     } catch (error) {
@@ -412,7 +538,7 @@ export function AdminNotificationConfiguration(props: {
               <SelectContent>
                 {props.types.map((item) => (
                   <SelectItem key={item.id} value={item.id}>
-                    {item.administrativeName}
+                    {getTypeDisplayName(item)}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -451,7 +577,7 @@ export function AdminNotificationConfiguration(props: {
         </CardContent>
       </Card>
 
-      <div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_360px]">
+      <div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_420px]">
         <Card>
           <CardHeader>
             <CardTitle className="text-base">Título, texto e CTA</CardTitle>
@@ -466,6 +592,9 @@ export function AdminNotificationConfiguration(props: {
                 onFocus={() => setActiveField('title')}
                 onChange={(event) => updateDraft('title', event.target.value)}
               />
+              {selectedType.id.startsWith('custom_notification_') && (
+                <p className="text-xs text-gray-500">Este título também será usado como nome administrativo da notificação após salvar.</p>
+              )}
             </div>
             <div className="space-y-2">
               <Label htmlFor="notification-long">Texto</Label>
@@ -513,7 +642,7 @@ export function AdminNotificationConfiguration(props: {
                 </Button>
               </div>
             </CardHeader>
-            <CardContent className="space-y-3">
+            <CardContent className="space-y-4">
               <p className="text-sm text-gray-600">
                 Clique para inserir no cursor do campo ativo: {formatAdminNotificationLabel(activeField)}.
               </p>
@@ -524,6 +653,78 @@ export function AdminNotificationConfiguration(props: {
                   </Button>
                 ))}
               </div>
+
+              <details className="rounded-md border border-gray-200 bg-gray-50 p-3">
+                <summary className="cursor-pointer text-sm font-semibold text-gray-900">Editar regras das variáveis</summary>
+                <div className="mt-3 space-y-3">
+                  {variables.map((variable) => {
+                    const setting = selectedVariableSettings[variable] ?? {};
+                    return (
+                      <div key={variable} className="space-y-3 rounded-md border border-gray-200 bg-white p-3">
+                        <div className="flex flex-wrap items-center justify-between gap-2">
+                          <span className="font-mono text-xs font-semibold text-gray-900">{variable}</span>
+                          <Badge variant="outline">{setting.source ? formatAdminNotificationLabel(setting.source) : 'Automático'}</Badge>
+                        </div>
+                        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                          <div className="space-y-1">
+                            <Label>Origem</Label>
+                            <Select
+                              value={setting.source ?? 'auto'}
+                              onValueChange={(value) => updateVariableSetting(variable, { source: value as AdminNotificationVariableSetting['source'] })}
+                            >
+                              <SelectTrigger>
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="auto">Automática</SelectItem>
+                                <SelectItem value="fixed">Valor fixo</SelectItem>
+                                <SelectItem value="trigger_context">Contexto do gatilho</SelectItem>
+                                <SelectItem value="profile">Perfil do usuário</SelectItem>
+                                <SelectItem value="date">Data formatada</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          <div className="space-y-1">
+                            <Label>{variable === '{{link}}' ? 'Link considerado' : 'Valor fixo ou fallback'}</Label>
+                            <Input
+                              value={setting.value ?? ''}
+                              onChange={(event) => updateVariableSetting(variable, { value: event.target.value })}
+                              placeholder={variable === '{{link}}' ? '/mapa-familiar' : 'Valor opcional'}
+                            />
+                          </div>
+                        </div>
+                        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                          <div className="space-y-1">
+                            <Label>Formato de data</Label>
+                            <Select
+                              value={setting.dateFormat ?? 'short'}
+                              onValueChange={(value) => updateVariableSetting(variable, { dateFormat: value as AdminNotificationVariableSetting['dateFormat'] })}
+                            >
+                              <SelectTrigger>
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="short">Curto: 01/07/2026</SelectItem>
+                                <SelectItem value="long">Longo: 1 de julho de 2026</SelectItem>
+                                <SelectItem value="relative">Relativo: hoje, amanhã</SelectItem>
+                                <SelectItem value="custom">Personalizado</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          <div className="space-y-1">
+                            <Label>Formato personalizado</Label>
+                            <Input
+                              value={setting.customFormat ?? ''}
+                              onChange={(event) => updateVariableSetting(variable, { customFormat: event.target.value })}
+                              placeholder="dd/MM/yyyy, d 'de' MMMM..."
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </details>
             </CardContent>
           </Card>
 
@@ -573,6 +774,35 @@ export function AdminNotificationConfiguration(props: {
               </Label>
             ))}
           </div>
+
+          {selectedRecipients.includes('trigger_user') && (
+            <div className="rounded-md border border-gray-200 bg-gray-50 p-3">
+              <details open>
+                <summary className="cursor-pointer text-sm font-semibold text-gray-900">
+                  Selecionar gatilhos que definem o usuário destinatário
+                  {selectedTriggerEventIds.length > 0 ? ` (${selectedTriggerEventIds.length})` : ''}
+                </summary>
+                <div className="mt-3 grid grid-cols-1 gap-2 md:grid-cols-2">
+                  {TRIGGER_EVENT_OPTIONS.map((eventOption) => (
+                    <Label key={eventOption.id} className="flex items-start gap-3 rounded-md border border-gray-200 bg-white p-3">
+                      <Checkbox
+                        checked={selectedTriggerEventIds.includes(eventOption.id)}
+                        onCheckedChange={(checked) => toggleTriggerEvent(eventOption.id, checked === true)}
+                        className="mt-0.5"
+                      />
+                      <span className="min-w-0">
+                        <span className="block text-sm font-medium text-gray-900">{eventOption.label}</span>
+                        <span className="mt-1 block text-xs leading-5 text-gray-600">{eventOption.description}</span>
+                        <Badge className="mt-2" variant={eventOption.status === 'implementado' ? 'outline' : 'secondary'}>
+                          {eventOption.status === 'implementado' ? 'Implementado' : 'Preparado'}
+                        </Badge>
+                      </span>
+                    </Label>
+                  ))}
+                </div>
+              </details>
+            </div>
+          )}
 
           {selectedRecipients.includes('specific_users') && (
             <div className="rounded-md border border-gray-200 bg-gray-50 p-3">
