@@ -97,11 +97,19 @@ function ensureStyles() {
   if (document.head.lastElementChild !== style) document.head.appendChild(style);
 }
 
+function setAttributeIfChanged(element: HTMLElement, name: string, value: string) {
+  if (element.getAttribute(name) !== value) element.setAttribute(name, value);
+}
+
+function removeAttributeIfPresent(element: HTMLElement, name: string) {
+  if (element.hasAttribute(name)) element.removeAttribute(name);
+}
+
 function ensureReactGroupIsExpanded(screen: HTMLElement) {
   const nativeToggle = getNativeToggle(screen);
   if (!nativeToggle) return false;
 
-  nativeToggle.setAttribute('data-mobile-family-tree-native-uncle-toggle', 'true');
+  setAttributeIfChanged(nativeToggle, 'data-mobile-family-tree-native-uncle-toggle', 'true');
 
   const text = (nativeToggle.textContent ?? '').trim().toLowerCase();
   if (!text.includes('ver todos')) return false;
@@ -133,27 +141,30 @@ function applyLimitToScreen(screenName: UncleScreenName, root: HTMLElement) {
   const screen = getScreen(screenName, root);
   if (!screen) return;
 
+  setAttributeIfChanged(screen, 'data-mobile-family-tree-uncle-limit-managed', 'true');
   ensureReactGroupIsExpanded(screen);
 
   const cards = getCards(screen);
   if (cards.length <= CARD_LIMIT) {
-    cards.forEach((card) => card.removeAttribute('data-mobile-family-tree-uncle-hidden'));
+    cards.forEach((card) => removeAttributeIfPresent(card, 'data-mobile-family-tree-uncle-hidden'));
     removeToggle(screen);
     return;
   }
 
   const expanded = screen.dataset.mobileFamilyTreeUncleLimitExpanded === 'true';
   cards.forEach((card, index) => {
-    if (!expanded && index >= CARD_LIMIT) card.setAttribute('data-mobile-family-tree-uncle-hidden', 'true');
-    else card.removeAttribute('data-mobile-family-tree-uncle-hidden');
+    if (!expanded && index >= CARD_LIMIT) setAttributeIfChanged(card, 'data-mobile-family-tree-uncle-hidden', 'true');
+    else removeAttributeIfPresent(card, 'data-mobile-family-tree-uncle-hidden');
   });
 
   const panel = getGroupPanel(screen);
   if (!panel) return;
 
   const button = getOrCreateToggle(panel);
-  button.textContent = expanded ? '−' : '+';
-  button.setAttribute(
+  const text = expanded ? '−' : '+';
+  if (button.textContent !== text) button.textContent = text;
+  setAttributeIfChanged(
+    button,
     'aria-label',
     expanded
       ? `Ocultar cards adicionais de ${screenName === 'paternal-uncles' ? 'tios paternos' : 'tios maternos'}`
@@ -190,7 +201,7 @@ if (typeof window !== 'undefined' && typeof document !== 'undefined') {
   [80, 240, 520, 1000, 1800].forEach((delay) => window.setTimeout(applyLimits, delay));
 
   const observer = new MutationObserver(scheduleApplyLimits);
-  observer.observe(document.documentElement, { childList: true, subtree: true, attributes: true });
+  observer.observe(document.documentElement, { childList: true, subtree: true });
 
   window.addEventListener('resize', applyLimits, { passive: true });
   window.addEventListener('orientationchange', applyLimits, { passive: true });
