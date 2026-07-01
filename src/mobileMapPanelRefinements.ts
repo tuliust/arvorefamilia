@@ -1,8 +1,11 @@
 const MOBILE_QUERY = '(max-width: 767px)';
+const FAMILY_MAP_PATHS = new Set(['/mapa-familiar', '/linha-geracional']);
 const GENERATION_LINE_PATH = '/linha-geracional';
 const STYLE_ID = 'mobile-map-panel-refinements-style';
 const OVERLAY_ID = 'mobile-generation-safe-overview-overlay';
+const BACKDROP_ID = 'mobile-map-toolbar-panel-backdrop';
 const PANEL_SELECTOR = '[data-mobile-family-map-inline-overview="true"][data-mobile-family-map-panel-mode="overview"]';
+const ACTIVE_TOOLBAR_SELECTOR = '[data-mobile-family-map-toolbar="true"][data-mobile-family-map-toolbar-active="true"]';
 
 let scheduled = false;
 
@@ -16,6 +19,13 @@ function getPathname() {
   return typeof window === 'undefined' ? '' : window.location.pathname.replace(/\/$/, '');
 }
 
+function isFamilyMapToolbarPath() {
+  return typeof window !== 'undefined'
+    && typeof document !== 'undefined'
+    && isMobileViewport()
+    && FAMILY_MAP_PATHS.has(getPathname());
+}
+
 function isGenerationLineEnabled() {
   return typeof window !== 'undefined'
     && typeof document !== 'undefined'
@@ -26,6 +36,16 @@ function isGenerationLineEnabled() {
 function ensureStyles() {
   const css = `
     @media (max-width: 767px) {
+      #${BACKDROP_ID} {
+        position: fixed !important;
+        inset: 0 !important;
+        z-index: 9999 !important;
+        background: rgba(15, 23, 42, 0.38) !important;
+        backdrop-filter: blur(5px) saturate(0.86) !important;
+        -webkit-backdrop-filter: blur(5px) saturate(0.86) !important;
+        pointer-events: none !important;
+      }
+
       [data-mobile-family-tree-screen="paternal-uncles"],
       [data-mobile-family-tree-screen="maternal-uncles"] {
         overflow: hidden !important;
@@ -187,6 +207,35 @@ function ensureStyles() {
   if (!style.parentElement) document.head.appendChild(style);
 }
 
+function removeToolbarBackdrop() {
+  document.getElementById(BACKDROP_ID)?.remove();
+}
+
+function shouldShowToolbarBackdrop() {
+  if (!isFamilyMapToolbarPath()) return false;
+
+  const toolbar = document.querySelector<HTMLElement>(ACTIVE_TOOLBAR_SELECTOR);
+  if (!toolbar) return false;
+
+  const action = toolbar.dataset.mobileFamilyMapToolbarAction;
+  return Boolean(action && ['visualizacao', 'formato', 'cor', 'grupos', 'zoom', 'exportar'].includes(action));
+}
+
+function renderToolbarBackdrop() {
+  if (!shouldShowToolbarBackdrop()) {
+    removeToolbarBackdrop();
+    return;
+  }
+
+  let backdrop = document.getElementById(BACKDROP_ID) as HTMLDivElement | null;
+  if (!backdrop) {
+    backdrop = document.createElement('div');
+    backdrop.id = BACKDROP_ID;
+    backdrop.setAttribute('aria-hidden', 'true');
+    document.body.appendChild(backdrop);
+  }
+}
+
 function getActiveGeneration() {
   return Number(
     Array.from(document.querySelectorAll<HTMLButtonElement>('[data-family-map-horizontal-mobile-root="true"] nav[aria-label^="Gera"] button'))
@@ -306,6 +355,8 @@ function scheduleRefinement() {
   scheduled = true;
   window.requestAnimationFrame(() => {
     scheduled = false;
+    ensureStyles();
+    renderToolbarBackdrop();
     refineGenerationOverview();
   });
 }
@@ -318,7 +369,19 @@ if (typeof window !== 'undefined' && typeof document !== 'undefined') {
   document.addEventListener('click', handleOverlayClick, { capture: true });
 
   const observer = new MutationObserver(scheduleRefinement);
-  observer.observe(document.documentElement, { childList: true, subtree: true, attributes: true, attributeFilter: ['data-mobile-family-map-panel-mode', 'style', 'aria-current', 'aria-pressed'] });
+  observer.observe(document.documentElement, {
+    childList: true,
+    subtree: true,
+    attributes: true,
+    attributeFilter: [
+      'data-mobile-family-map-panel-mode',
+      'data-mobile-family-map-toolbar-active',
+      'data-mobile-family-map-toolbar-action',
+      'style',
+      'aria-current',
+      'aria-pressed',
+    ],
+  });
 
   window.addEventListener('resize', scheduleRefinement, { passive: true });
   window.addEventListener('orientationchange', () => window.setTimeout(scheduleRefinement, 180), { passive: true });
