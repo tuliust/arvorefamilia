@@ -13,6 +13,12 @@ import {
   type AdminNotificationThemeId,
   type AdminNotificationTypeDefinition,
 } from '../constants/adminNotificationCatalog';
+import {
+  RUNTIME_NOTIFICATION_RECIPIENT_GROUPS,
+  RUNTIME_NOTIFICATION_SUGGESTIONS,
+  RUNTIME_NOTIFICATION_TEMPLATES,
+  RUNTIME_NOTIFICATION_TYPES,
+} from '../constants/adminNotificationCatalogRuntimeExtensions';
 import { supabase } from '../lib/supabaseClient';
 import type { TipoCanalNotificacao } from '../types';
 import type {
@@ -119,6 +125,17 @@ function mergeById<T extends { id: string }>(items: T[]) {
   return Array.from(map.values());
 }
 
+function mergePreservingExisting<T extends { id: string }>(fallbackItems: T[], existingItems: T[]) {
+  const map = new Map<string, T>();
+  fallbackItems.forEach((item) => map.set(item.id, cloneCatalogItem(item)));
+  existingItems.forEach((item) => map.set(item.id, cloneCatalogItem(item)));
+  return Array.from(map.values());
+}
+
+function mergeSuggestions(fallbackItems: string[], existingItems: string[]) {
+  return Array.from(new Set([...fallbackItems, ...existingItems].map((item) => String(item))));
+}
+
 function cloneCatalogItem<T>(item: T): T {
   return JSON.parse(JSON.stringify(item)) as T;
 }
@@ -145,11 +162,30 @@ function buildDefaultCatalog(): PersistedAdminNotificationCatalog {
   return {
     frequencyOptions: ADMIN_NOTIFICATION_FREQUENCY_OPTIONS.map(cloneCatalogItem),
     themeOptions: ADMIN_NOTIFICATION_THEME_OPTIONS.map(cloneCatalogItem),
-    recipientGroups: mergeById([...ADMIN_NOTIFICATION_RECIPIENT_GROUPS, ...PERSISTED_EXTRA_RECIPIENT_GROUPS]).map(cloneCatalogItem),
-    types: ADMIN_NOTIFICATION_TYPES.map(cloneCatalogItem),
-    templates: ADMIN_NOTIFICATION_TEMPLATES.map(cloneCatalogItem),
+    recipientGroups: mergeById([
+      ...ADMIN_NOTIFICATION_RECIPIENT_GROUPS,
+      ...PERSISTED_EXTRA_RECIPIENT_GROUPS,
+      ...RUNTIME_NOTIFICATION_RECIPIENT_GROUPS,
+    ]).map(cloneCatalogItem),
+    types: mergeById([...ADMIN_NOTIFICATION_TYPES, ...RUNTIME_NOTIFICATION_TYPES]).map(cloneCatalogItem),
+    templates: mergeById([...ADMIN_NOTIFICATION_TEMPLATES, ...RUNTIME_NOTIFICATION_TEMPLATES]).map(cloneCatalogItem),
     automations: ADMIN_NOTIFICATION_AUTOMATIONS.map(cloneCatalogItem),
-    suggestions: ADMIN_NOTIFICATION_SUGGESTIONS.map((suggestion) => String(suggestion)),
+    suggestions: mergeSuggestions(ADMIN_NOTIFICATION_SUGGESTIONS, RUNTIME_NOTIFICATION_SUGGESTIONS),
+  };
+}
+
+function reconcileCatalogWithDefaults(
+  existingCatalog: PersistedAdminNotificationCatalog,
+  defaultCatalog: PersistedAdminNotificationCatalog,
+): PersistedAdminNotificationCatalog {
+  return {
+    frequencyOptions: mergePreservingExisting(defaultCatalog.frequencyOptions, existingCatalog.frequencyOptions),
+    themeOptions: mergePreservingExisting(defaultCatalog.themeOptions, existingCatalog.themeOptions),
+    recipientGroups: mergePreservingExisting(defaultCatalog.recipientGroups, existingCatalog.recipientGroups),
+    types: mergePreservingExisting(defaultCatalog.types, existingCatalog.types),
+    templates: mergePreservingExisting(defaultCatalog.templates, existingCatalog.templates),
+    automations: mergePreservingExisting(defaultCatalog.automations, existingCatalog.automations),
+    suggestions: mergeSuggestions(defaultCatalog.suggestions, existingCatalog.suggestions),
   };
 }
 
@@ -263,6 +299,7 @@ function buildConfigFromCatalog(catalog: PersistedAdminNotificationCatalog): Per
   catalog.templates.forEach((template) => {
     const baseTemplate = baseTemplateMap.get(template.id);
     const templateWithSettings = template as TemplateWithVariableSettings;
+
     if (!baseTemplate) return;
 
     const contentOverride: AdminNotificationContentOverride = {};
@@ -348,12 +385,26 @@ export async function saveAdminNotificationCatalog(
 }
 
 async function loadOrSeedAdminNotificationCatalog(): Promise<PersistedAdminNotificationCatalog | null> {
+  const defaultCatalog = buildDefaultCatalog();
   const existingCatalog = await loadAdminNotificationCatalog();
-  if (existingCatalog) return existingCatalog;
+
+  if (existingCatalog) {
+    const reconciledCatalog = reconcileCatalogWithDefaults(existingCatalog, defaultCatalog);
+
+    if (!sameJson(existingCatalog, reconciledCatalog)) {
+      try {
+        const { data: authData } = await supabase.auth.getUser();
+        await saveAdminNotificationCatalog(reconciledCatalog, authData.user?.id ?? null);
+      } catch (error) {
+        console.warn('[Supabase] Não foi possível reconciliar catálogo administrativo de notificações:', error);
+      }
+    }
+
+    return reconciledCatalog;
+  }
 
   try {
     const { data: authData } = await supabase.auth.getUser();
-    const defaultCatalog = buildDefaultCatalog();
     await saveAdminNotificationCatalog(defaultCatalog, authData.user?.id ?? null);
     return defaultCatalog;
   } catch (error) {
