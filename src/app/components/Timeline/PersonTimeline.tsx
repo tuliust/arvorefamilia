@@ -6,13 +6,16 @@ import {
   CalendarDays,
   CalendarX,
   Circle,
+  Download,
+  ExternalLink,
   FileText,
   Heart,
   HeartCrack,
+  Image,
   Users,
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
-import type { PersonTimelineItem, PersonTimelineItemType } from '../../utils/buildPersonTimeline';
+import type { PersonTimelineAttachment, PersonTimelineItem, PersonTimelineItemType } from '../../utils/buildPersonTimeline';
 
 type PersonTimelineProps = {
   items?: PersonTimelineItem[];
@@ -99,6 +102,87 @@ function getDateLabel(item: PersonTimelineItem) {
   return undefined;
 }
 
+function getAttachmentIcon(attachment: PersonTimelineAttachment) {
+  if (attachment.kind === 'image') return <Image className="h-4 w-4 text-emerald-600" />;
+  if (attachment.kind === 'pdf') return <FileText className="h-4 w-4 text-red-600" />;
+  return <BookOpen className="h-4 w-4 text-blue-600" />;
+}
+
+function getAttachmentKindLabel(attachment: PersonTimelineAttachment) {
+  if (attachment.kind === 'image') return 'Imagem';
+  if (attachment.kind === 'pdf') return 'PDF';
+  return 'Registro';
+}
+
+function getAttachmentDownloadName(attachment: PersonTimelineAttachment) {
+  const cleanTitle = attachment.title
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-zA-Z0-9._-]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .toLowerCase() || 'arquivo-historico';
+  const extension = attachment.kind === 'pdf' ? 'pdf' : attachment.kind === 'image' ? 'jpg' : 'txt';
+  return cleanTitle.endsWith(`.${extension}`) ? cleanTitle : `${cleanTitle}.${extension}`;
+}
+
+function TimelineAttachments({ attachments }: { attachments?: PersonTimelineAttachment[] }) {
+  if (!attachments?.length) return null;
+
+  return (
+    <div className="mt-4 space-y-2 border-t border-gray-100 pt-3">
+      <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">
+        Arquivos e registros vinculados
+      </p>
+      <div className="space-y-2">
+        {attachments.map((attachment) => (
+          <div key={attachment.id} className="rounded-lg border border-gray-100 bg-gray-50 p-3">
+            <div className="flex min-w-0 items-start gap-2">
+              <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-white shadow-sm">
+                {getAttachmentIcon(attachment)}
+              </span>
+              <div className="min-w-0 flex-1">
+                <div className="flex flex-wrap items-center gap-2">
+                  <p className="break-words text-sm font-semibold text-gray-900">{attachment.title}</p>
+                  <span className="rounded-full bg-white px-2 py-0.5 text-[11px] font-medium text-gray-500 ring-1 ring-gray-200">
+                    {getAttachmentKindLabel(attachment)}
+                  </span>
+                  {attachment.year && (
+                    <span className="text-[11px] font-medium text-gray-400">{attachment.year}</span>
+                  )}
+                </div>
+                {attachment.description && (
+                  <p className="mt-1 whitespace-pre-line break-words text-xs leading-5 text-gray-600">{attachment.description}</p>
+                )}
+                {attachment.url && (
+                  <div className="mt-2 flex flex-wrap items-center gap-3 text-xs font-semibold">
+                    <a
+                      href={attachment.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1 text-blue-700 hover:text-blue-900"
+                    >
+                      <ExternalLink className="h-3.5 w-3.5" />
+                      Abrir
+                    </a>
+                    <a
+                      href={attachment.url}
+                      download={getAttachmentDownloadName(attachment)}
+                      className="inline-flex items-center gap-1 text-gray-600 hover:text-gray-900"
+                    >
+                      <Download className="h-3.5 w-3.5" />
+                      Baixar
+                    </a>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export function PersonTimeline({
   items = [],
   isAdmin = false,
@@ -159,6 +243,7 @@ export function PersonTimeline({
                     {item.description && (
                       <p className="mt-2 whitespace-pre-line text-sm leading-6 text-gray-600">{item.description}</p>
                     )}
+                    <TimelineAttachments attachments={item.attachments} />
                   </div>
                 </article>
               );
