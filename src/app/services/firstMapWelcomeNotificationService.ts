@@ -6,6 +6,7 @@ function isDuplicateKeyError(error: { code?: string; message?: string } | null) 
   return error.code === '23505' || String(error.message ?? '').toLowerCase().includes('duplicate key');
 }
 
+// Primeiro acesso ao mapa familiar.
 export async function ensureFirstMapWelcomeNotification(userId: string, pessoaId?: string | null) {
   if (!userId) return;
 
