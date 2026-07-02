@@ -3,6 +3,7 @@ const TUTORIAL_SELECTOR = '[data-first-login-tutorial="true"]';
 const MASK_SELECTOR = 'mask#first-login-tutorial-mask rect[fill="black"]';
 const VIEWPORT_MARGIN = 14;
 const DESKTOP_GAP = 18;
+const PANEL_VERTICAL_OFFSET = 96;
 
 const MERGED_SPOTLIGHT_STEPS = new Set([
   'Aqui é o seu menu',
@@ -13,12 +14,18 @@ const RIGHT_SIDE_PANEL_STEPS = new Set([
   'Modos de exibição e controles da árvore',
 ]);
 
+const SKIPPED_DESKTOP_STEPS = new Set([
+  'Controle quem aparece na árvore',
+]);
+
 type RectLike = {
   left: number;
   top: number;
   width: number;
   height: number;
 };
+
+let lastSkippedStepTitle = '';
 
 function isDesktopViewport() {
   return typeof window !== 'undefined'
@@ -27,7 +34,7 @@ function isDesktopViewport() {
 }
 
 function clamp(value: number, min: number, max: number) {
-  return Math.min(Math.max(value, min), max);
+  return Math.min(Math.max(value, min), Math.max(min, max));
 }
 
 function getTutorialRoot() {
@@ -120,10 +127,31 @@ function positionPanelOnRight(root: HTMLElement) {
   const currentWidth = panelRect.width || 430;
   const width = Math.max(320, Math.min(currentWidth, availableRight));
   const panelHeight = panelRect.height || 330;
+  const maxTop = Math.max(VIEWPORT_MARGIN, window.innerHeight - panelHeight - VIEWPORT_MARGIN);
 
   panel.style.width = `${width}px`;
   panel.style.left = `${reference.left + reference.width + DESKTOP_GAP}px`;
-  panel.style.top = `${clamp(reference.top, VIEWPORT_MARGIN, window.innerHeight - panelHeight - VIEWPORT_MARGIN)}px`;
+  panel.style.top = `${clamp(reference.top - PANEL_VERTICAL_OFFSET, VIEWPORT_MARGIN, maxTop)}px`;
+}
+
+function skipCurrentStepIfNeeded(root: HTMLElement, stepTitle: string) {
+  if (!SKIPPED_DESKTOP_STEPS.has(stepTitle)) {
+    lastSkippedStepTitle = '';
+    return false;
+  }
+
+  if (lastSkippedStepTitle === stepTitle) return true;
+  lastSkippedStepTitle = stepTitle;
+
+  const panel = getPanel(root);
+  const nextButton = Array.from(panel?.querySelectorAll<HTMLButtonElement>('button') ?? [])
+    .find((button) => button.textContent?.trim() === 'Próximo');
+
+  if (nextButton) {
+    window.setTimeout(() => nextButton.click(), 0);
+  }
+
+  return true;
 }
 
 function applyDesktopTutorialFixes() {
@@ -133,6 +161,7 @@ function applyDesktopTutorialFixes() {
   if (!root) return;
 
   const stepTitle = getCurrentStepTitle(root);
+  if (skipCurrentStepIfNeeded(root, stepTitle)) return;
   if (MERGED_SPOTLIGHT_STEPS.has(stepTitle)) mergeStepSpotlights(root);
   if (RIGHT_SIDE_PANEL_STEPS.has(stepTitle)) positionPanelOnRight(root);
 }
