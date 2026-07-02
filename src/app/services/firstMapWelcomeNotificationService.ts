@@ -10,6 +10,27 @@ function isDuplicateKeyError(error: { code?: string; message?: string } | null) 
   return error.code === '23505' || String(error.message ?? '').toLowerCase().includes('duplicate key');
 }
 
+function getFirstName(value: string) {
+  return value.trim().split(/\s+/).filter(Boolean)[0] || 'familiar';
+}
+
+async function getPersonDisplayName(pessoaId?: string | null) {
+  if (!pessoaId) return 'familiar';
+
+  try {
+    const { data, error } = await supabase
+      .from('pessoas')
+      .select('nome_completo')
+      .eq('id', pessoaId)
+      .maybeSingle();
+
+    if (error) return 'familiar';
+    return String(data?.nome_completo ?? '').trim() || 'familiar';
+  } catch {
+    return 'familiar';
+  }
+}
+
 export async function ensureFirstMapWelcomeNotification(userId: string, pessoaId?: string | null) {
   if (!userId) return;
 
@@ -42,10 +63,11 @@ export async function ensureFirstMapWelcomeNotification(userId: string, pessoaId
     return;
   }
 
+  const personName = await getPersonDisplayName(pessoaId);
   const variables = {
-    nome: 'familiar',
-    nome_curto: 'familiar',
-    nome_completo: 'familiar',
+    nome: personName,
+    nome_curto: getFirstName(personName),
+    nome_completo: personName,
     data: new Intl.DateTimeFormat('pt-BR').format(new Date()),
     link: template.link,
   };
