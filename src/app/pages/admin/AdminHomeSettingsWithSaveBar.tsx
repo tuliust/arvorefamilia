@@ -52,3 +52,5 @@ export function AdminHomeSettingsWithSaveBar() {
     </div>
   );
 }
+
+export { AdminHomeSettingsWithSaveBar as AdminHomeSettings };
