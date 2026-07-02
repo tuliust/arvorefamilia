@@ -50,7 +50,9 @@ function TreeMapSharedLayoutContent() {
       className="fixed inset-0 flex flex-col overflow-hidden overscroll-none bg-gray-50"
       data-tree-map-shared-layout="true"
     >
-      <HomeHeader {...activeChromeConfig} />
+      <div className="contents md:hidden" data-tree-map-shared-mobile-header="true">
+        <HomeHeader {...activeChromeConfig} />
+      </div>
 
       <main
         className="relative flex min-h-0 flex-1 overflow-hidden overscroll-none"
@@ -59,11 +61,13 @@ function TreeMapSharedLayoutContent() {
         <Outlet />
       </main>
 
-      <HomeMobileNav
-        legendOpen={legendOpen}
-        onToggleLegend={() => setLegendOpen((open) => !open)}
-        navigateFromHome={activeChromeConfig.navigateFromHome}
-      />
+      <div className="contents md:hidden" data-tree-map-shared-mobile-nav="true">
+        <HomeMobileNav
+          legendOpen={legendOpen}
+          onToggleLegend={() => setLegendOpen((open) => !open)}
+          navigateFromHome={activeChromeConfig.navigateFromHome}
+        />
+      </div>
     </div>
   );
 }
