@@ -222,6 +222,37 @@ function desktopHorizontalMapFilteredViewPatch(code: string) {
 
   nextCode = replaceExact(
     nextCode,
+    `    const directScopeIds = collectDirectFamilyScopePersonIds(graph, {
+      centralPersonId,
+      filters: directRelativeFilters,
+    });
+
+    if (directScopeIds.size === 0) return visiblePersonIds;`,
+    `    const directScopeIds = collectDirectFamilyScopePersonIds(graph, {
+      centralPersonId,
+      filters: directRelativeFilters,
+    });
+
+    if (directRelativeFilters.conjuge) {
+      const currentScopeIds = Array.from(directScopeIds);
+      currentScopeIds.forEach((personId) => {
+        relacionamentos.forEach((relacionamento) => {
+          if (relacionamento.tipo_relacionamento !== 'conjuge') return;
+          if (relacionamento.pessoa_origem_id === personId && relacionamento.pessoa_destino_id) {
+            directScopeIds.add(relacionamento.pessoa_destino_id);
+          }
+          if (relacionamento.pessoa_destino_id === personId && relacionamento.pessoa_origem_id) {
+            directScopeIds.add(relacionamento.pessoa_origem_id);
+          }
+        });
+      });
+    }
+
+    if (directScopeIds.size === 0) return visiblePersonIds;`,
+  );
+
+  nextCode = replaceExact(
+    nextCode,
     `  }, [centralPersonId, directRelativeFilters, onPersonClick, pessoas, relacionamentos, visiblePersonIds]);`,
     `  }, [centralPersonId, directFamilyOnly, directRelativeFilters, onPersonClick, pessoas, relacionamentos, visiblePersonIds]);`,
   );
