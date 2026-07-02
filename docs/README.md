@@ -1,14 +1,12 @@
 # Documentação do produto — arvorefamilia
 
 > Última revisão: 2026-07-01
-> Escopo: documentação canônica mantida em `docs/` após auditoria, limpeza final e ajustes mobile/admin de 2026-07-01.
+> Escopo: documentação canônica mantida em `docs/` após auditoria, limpeza final, ajustes mobile/admin e refatoração do layout compartilhado de mapas de 2026-07-01.
 > Status: canônico.
 
 Este diretório concentra a documentação fundamental do produto. A fonte de verdade para comportamento continua sendo o código da branch `main`, especialmente `src/app/routes.tsx`, `src/app/pages`, `src/app/components`, `src/app/components/FamilyTree`, `src/app/services`, `src/app/types`, `src/app/utils`, `index.html`, `api/ai.ts` e os arquivos SQL/Supabase versionados.
 
 ## Estrutura canônica
-
-A estrutura canônica de leitura e manutenção é:
 
 ```text
 docs/
@@ -50,6 +48,7 @@ docs/
     AUDITORIA_DOCUMENTACAO_FINAL_20260623.md
     LEGADO_TECNICO.md
     LIMPEZA_DOCUMENTACAO_FINAL_20260623.md
+    REVISAO_DOCUMENTACAO_MAPA_MOBILE_20260701.md
 ```
 
 Arquivos residuais fora desse índice não devem ser usados como contrato operacional. Checklists datados, baselines antigos ou documentos de rodada devem ser removidos ou absorvidos pelos documentos canônicos, preservando histórico apenas quando houver valor real de manutenção.
@@ -86,6 +85,7 @@ Arquivos residuais fora desse índice não devem ser usados como contrato operac
 | Auditoria documental | `historico/AUDITORIA_DOCUMENTACAO_FINAL_20260623.md` |
 | Legado técnico consolidado | `historico/LEGADO_TECNICO.md` |
 | Limpeza documental final | `historico/LIMPEZA_DOCUMENTACAO_FINAL_20260623.md` |
+| Revisão documental do mapa mobile | `historico/REVISAO_DOCUMENTACAO_MAPA_MOBILE_20260701.md` |
 
 ## Rotas funcionais cobertas
 
@@ -101,7 +101,8 @@ As rotas abaixo refletem `src/app/routes.tsx` na branch `main`.
 ### Árvore, busca e perfil
 
 - `/` redireciona para `/mapa-familiar`;
-- `/mapa-familiar`, `/mapa-familiar-horizontal` e `/linha-geracional`;
+- `/mapa-familiar` e `/linha-geracional` compartilham, no mobile, `TreeMapSharedLayout` com `<Outlet />`;
+- `/mapa-familiar-horizontal` continua usando a shell `Home`/`TreeHomeShell`;
 - `/busca`;
 - `/pessoa/:id` e `/pessoas/:id`.
 
@@ -151,45 +152,30 @@ As rotas abaixo refletem `src/app/routes.tsx` na branch `main`.
 
 ## Contratos transversais recentes
 
-As mudanças recentes de mobile, administração e notificações ficam distribuídas nos documentos canônicos indicados no índice. Em caso de divergência, prevalecem:
-
-- `funcionalidades/NOTIFICACOES_ADMIN.md` para catálogo administrativo, eventos de gatilho, variáveis, destinatários, rascunho local e persistência Supabase de notificações;
-- `operacao/MIGRATIONS_SUPABASE.md` para migrations, RLS, tabelas e validação de banco;
-- `QA_MANUAL.md` para validação funcional antes de merge/deploy;
-- `REGRAS_DE_NAO_REGRESSAO.md` para contratos que não podem ser quebrados em novas alterações;
-- `INVENTARIO_TECNICO.md` para módulos, tabelas, scripts e arquivos ativos.
-
 ### Notificações administrativas
 
-A frente `/admin/notificacoes` possui contrato próprio e não deve ser documentada apenas como funcionalidade complementar.
+A frente `/admin/notificacoes` possui contrato próprio e não deve ser documentada apenas como funcionalidade complementar. Mudanças nessa frente devem atualizar `funcionalidades/NOTIFICACOES_ADMIN.md`, `QA_MANUAL.md`, `REGRAS_DE_NAO_REGRESSAO.md`, `operacao/MIGRATIONS_SUPABASE.md` quando houver schema/migration e `INVENTARIO_TECNICO.md` quando houver novo módulo, serviço, tabela, chave ou script ativo.
+
+### Mapa mobile, layout compartilhado e scripts defensivos
+
+A documentação deve diferenciar componentes React vigentes de scripts defensivos legados. Scripts carregados por `index.html` podem aparecer no inventário, mas regras absorvidas em componentes React devem ser documentadas preferencialmente no componente/rota de origem.
 
 Contratos vigentes:
 
-- catálogo completo editável persistido em `admin_notification_catalogs`;
-- overrides/configurações persistidos em `admin_notification_configurations`;
-- regras por variável persistidas em `admin_notification_configurations.variable_settings`;
-- eventos de gatilho representados por tokens `trigger_event:<evento>`;
-- usuários específicos representados por tokens `specific_user:<uuid>`;
-- rascunho local administrativo em `arvorefamilia:admin-notifications-console-config`;
-- aba ativa em `arvorefamilia:admin-notifications-active-tab`;
-- entregas reais permanecem separadas em `notificacoes_usuario`.
+- `/mapa-familiar` e `/linha-geracional` compartilham o chrome mobile via `TreeMapSharedLayout`;
+- o header, a toolbar superior e a navegação inferior ficam fora da área trocada pelo `<Outlet />`;
+- `MobileTreeChromeContext` recebe o registro de dados do header e navegação feito pela rota filha ativa;
+- `MapaFamiliarSharedRoute` é camada transitória de compatibilidade para encaixar `Home` no layout compartilhado;
+- `LinhaGeracional` aceita `mobileChromeMode="shared"`;
+- `MobileFamilyMapFullLayer` renderiza o mapa completo abaixo da toolbar e sem botão `X` próprio;
+- novos runtimes em `index.html` devem constar no inventário técnico e ser tratados como camada defensiva de transição.
 
-Mudanças nessa frente devem atualizar, no mínimo:
-
-- `funcionalidades/NOTIFICACOES_ADMIN.md`;
-- `QA_MANUAL.md`;
-- `REGRAS_DE_NAO_REGRESSAO.md`;
-- `operacao/MIGRATIONS_SUPABASE.md`, quando houver alteração de schema/migration;
-- `INVENTARIO_TECNICO.md`, quando houver novo módulo, serviço, tabela, chave ou script ativo.
-
-### Mapa mobile e scripts defensivos
-
-A documentação deve diferenciar componentes React vigentes de scripts defensivos legados. Scripts carregados por `index.html` podem aparecer no inventário, mas regras absorvidas em componentes React devem ser documentadas preferencialmente no componente/rota de origem.
+Mudanças nessa frente devem atualizar, no mínimo, `funcionalidades/MAPA_FAMILIAR_VIEW.md`, `arquitetura/ROTAS_E_GUARDS.md`, `arquitetura/DECISOES_ARQUITETURAIS.md`, `GUIA_COMPONENTES.md`, `GUIA_IMPLEMENTACOES.md`, `GUIA_UX_LAYOUT.md`, `QA_MANUAL.md`, `REGRAS_DE_NAO_REGRESSAO.md` e `INVENTARIO_TECNICO.md`.
 
 ## Regra de manutenção
 
 - Alterações funcionais devem atualizar o documento funcional correspondente e, quando necessário, `GUIA_IMPLEMENTACOES.md`, `GUIA_COMPONENTES.md`, `GUIA_UX_LAYOUT.md`, `QA_MANUAL.md`, `REGRAS_DE_NAO_REGRESSAO.md` e `INVENTARIO_TECNICO.md`.
-- Alterações de rota ou guard devem atualizar `arquitetura/ROTAS_E_GUARDS.md` e `INVENTARIO_TECNICO.md`.
+- Alterações de rota, layout compartilhado ou guard devem atualizar `arquitetura/ROTAS_E_GUARDS.md`, `arquitetura/DECISOES_ARQUITETURAIS.md` e `INVENTARIO_TECNICO.md`.
 - Alterações de schema, RLS, migrations, Edge Functions ou jobs devem atualizar `operacao/MIGRATIONS_SUPABASE.md`, `QA_MANUAL.md` e o documento funcional afetado.
 - Alterações em `/admin/notificacoes` devem atualizar `funcionalidades/NOTIFICACOES_ADMIN.md` e, quando houver mudança transversal, `REGRAS_DE_NAO_REGRESSAO.md` e `INVENTARIO_TECNICO.md`.
 - Não criar documentos datados de rodada quando o conteúdo couber nos documentos canônicos existentes.

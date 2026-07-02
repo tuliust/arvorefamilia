@@ -1,26 +1,32 @@
 # Mapa familiar
 
 > Última revisão: 2026-07-01
-> Escopo: `/mapa-familiar`, `/mapa-familiar-horizontal`, `/linha-geracional`, `Home.tsx` e componentes `FamilyTree`.
+> Escopo: `/mapa-familiar`, `/mapa-familiar-horizontal`, `/linha-geracional`, shell mobile compartilhada, `Home.tsx`, `LinhaGeracional.tsx` e componentes `FamilyTree`.
 > Status: canônico.
 
 ## Rotas
 
-- `/mapa-familiar`: visualização principal por grupos familiares.
-- `/mapa-familiar-horizontal`: visualização geracional horizontal.
-- `/linha-geracional`: experiência mobile dedicada baseada na leitura horizontal geracional.
-- `/mapa-familiar` e `/mapa-familiar-horizontal` usam a mesma shell `Home`.
-- A rota raiz `/` redireciona para `/mapa-familiar`.
+- `/mapa-familiar`: visualização principal por grupos familiares; no mobile é filha de `TreeMapSharedLayout` por meio de `MapaFamiliarSharedRoute`.
+- `/linha-geracional`: experiência mobile geracional baseada na leitura horizontal; no mobile é filha do mesmo layout compartilhado e usa `mobileChromeMode="shared"`.
+- `/mapa-familiar-horizontal`: visualização geracional horizontal baseada na shell `Home`/`TreeHomeShell`, fora do chrome compartilhado mobile.
+- `/` redireciona para `/mapa-familiar`.
+
+## Shell mobile compartilhada
+
+No mobile, `/mapa-familiar` e `/linha-geracional` compartilham a mesma estrutura de chrome:
+
+- `TreeMapSharedLayout` renderiza `HomeHeader`, `<Outlet />` e `HomeMobileNav`;
+- o header, a toolbar superior e a navegação inferior permanecem fora da área trocada pelo `<Outlet />`;
+- alternar `Formato` troca apenas o conteúdo central do mapa;
+- `MobileTreeChromeContext` recebe os dados de header, busca, sugestões e navegação da rota filha ativa;
+- `MapaFamiliarSharedRoute` adapta temporariamente `Home` ao layout compartilhado, escondendo o shell mobile antigo para evitar duplicidade;
+- `LinhaGeracional` usa `mobileChromeMode="shared"` para operar dentro do mesmo chrome.
+
+A experiência desktop continua separada: `/mapa-familiar-horizontal` não deve herdar o chrome compartilhado mobile.
 
 ## Dados
 
-`Home.tsx` carrega:
-
-- pessoas por `obterTodasPessoas`;
-- relacionamentos por `obterTodosRelacionamentos`;
-- pessoa principal vinculada por `getPrimaryLinkedPerson`/serviço equivalente do perfil de membro;
-- perfil do membro por `getMemberProfile`;
-- contagem de pessoas cadastradas por `getLinkedPersonIds`.
+`Home.tsx` carrega pessoas, relacionamentos, pessoa vinculada, perfil de membro e contagens. `LinhaGeracional.tsx` carrega a mesma base de pessoas/relacionamentos, resolve a pessoa central por query `pessoa` ou vínculo primário e reaproveita cache de árvore quando disponível.
 
 ## Pessoa de referência
 
@@ -37,12 +43,13 @@ Ao navegar para perfil, o retorno é preservado em `?voltar=` quando o fluxo de 
 ## Visualizações
 
 - `treeViewMode.ts` converte rota em modo.
-- A troca entre visualizações preserva a query string.
+- A troca entre visualizações deve preservar a query string.
 - O painel desktop permite selecionar outra pessoa para visualizar a árvore.
 - Em visualização por `?pessoa=`, a árvore deve adotar a pessoa da query como perspectiva e ocultar cônjuges colaterais por padrão.
-- No mobile, o header das telas de mapa deve usar o título curto `Árvore Familiar`.
+- No mobile, o header das telas de mapa deve usar `Árvore Familiar`.
 - O título `Visualização` e labels como `Família de X` devem permanecer em UTF-8 válido.
 - Ajustes defensivos de runtime devem permanecer isolados por rota/breakpoint e não substituir a correção dos textos de origem.
+
 ## Layout desktop por grupos
 
 - `DesktopFamilyMapView.tsx` define coordenadas dos grupos no mapa vertical.
@@ -54,76 +61,38 @@ Ao navegar para perfil, o retorno é preservado em `?voltar=` quando o fluxo de 
 - O painel desktop deve exibir `Grupos de Familiares` e subtítulo `Clique para exibir/ocultar grupos de parentes na árvore`.
 - Títulos `Resumo`, `Grupos de Familiares` e `Exportar` devem ter tratamento tipográfico equivalente.
 - Cards `Núcleo`, `Ascendentes` e `Colaterais` devem ocupar o espaço vertical disponível sem cortar a seção `Exportar`.
-- Em perspectiva por `?pessoa=`, o controle de cônjuges colaterais pode ficar indisponível para evitar exibir parentes por afinidade fora da perspectiva atual.
+
 ## Exportação no painel desktop
 
-A seção `Exportar` do painel desktop das rotas `/mapa-familiar` e `/mapa-familiar-horizontal` deve expor somente as ações principais estabilizadas:
+A seção `Exportar` do painel desktop das rotas `/mapa-familiar` e `/mapa-familiar-horizontal` deve expor somente:
 
 - `Salvar Imagem`;
 - `Imprimir`.
 
-Contrato visual:
+Contrato:
 
-- os dois botões devem ficar em uma linha com duas colunas;
-- os botões devem ser compactos e não podem extrapolar a altura do painel;
-- a nomenclatura `Salvar Imagem` substitui a ação antiga `Área`;
-- os botões diretos `Imagem` e `PDF` não devem aparecer no painel principal;
-- o painel compacto/flyout deve preservar a mesma semântica quando expuser exportação.
-
-### `Salvar Imagem`
-
-- Abre modal de instruções antes de acionar captura real.
-- O modal explica permissão da guia, seleção da área e salvamento do arquivo.
-- O usuário deve selecionar a aba atual no prompt do navegador.
-- A captura é feita sobre a área visível da página e salva em PNG.
-- Durante a seleção, controles de zoom, favorito e botão flutuante `?` devem ficar ocultos.
-- O modal deve ter fundo opaco nas duas rotas de mapa.
-
-### `Imprimir`
-
-- Abre a janela nativa de impressão do navegador.
-- A página de impressão deve ser limpa e conter apenas título superior e árvore.
-- O título deve usar o padrão `Árvore Familiar de X` mesmo quando a rota atual for `/mapa-familiar-horizontal`.
-- A árvore deve ficar centralizada horizontalmente.
-- A árvore deve caber em uma única página por dimensionamento proporcional.
-- O usuário pode alternar `Retrato` e `Paisagem`, e ambos os modos devem ser validados.
-- Header, painel lateral, zoom, favorito, botão `?` e overlays não podem aparecer na impressão.
+- os dois botões ficam em linha com duas colunas;
+- os botões são compactos e não extrapolam a altura do painel;
+- `Salvar Imagem` substitui a ação antiga `Área`;
+- `Imagem` e `PDF` não aparecem como ações diretas no painel principal;
+- `Salvar Imagem` abre modal de instruções antes de solicitar captura;
+- `Imprimir` abre a janela nativa de impressão com página limpa, título superior e árvore centralizada.
 
 ## Layout mobile de `/mapa-familiar`
 
 - A visualização mobile usa telas/grupos navegáveis por gesto, sem herdar o painel fixo desktop.
-- A shell mobile das rotas de mapa preserva header, toolbar superior, área de conteúdo e navegação inferior como estrutura principal da página.
-- A toolbar mobile de mapa expõe `Formato`, `Cor`, `Filtros`, `Mapa` e `+`; abrir qualquer painel por esses botões não pode deslocar a toolbar para a parte inferior nem ocultar a navegação inferior.
-- Backdrop/blur mobile, quando usado em painéis parciais, deve afetar apenas o conteúdo atrás do painel ativo, sem cobrir header, toolbar, painel, cards, CTA ou menu inferior.
-- O backdrop parcial deve calcular o limite inferior pelo topo real da navegação inferior (`nav[data-tree-export-ignore="true"]`) e usar `safe-area` apenas como fallback.
-- O backdrop parcial não deve deixar faixa desfocada acima do menu inferior nem cobrir a área clicável da navegação.
-- O modo imersivo é reservado a camadas completas, especialmente `Exibir mapa completo` e o painel do botão `+`: ele cobre a shell da página atrás da camada ativa, enquanto o mapa completo, o painel aberto e seus controles próprios permanecem acima do blur.
+- A shell mobile preserva header, toolbar superior, área de conteúdo e navegação inferior.
+- A toolbar mobile expõe `Formato`, `Cor`, `Filtros`, `Mapa` e `+`.
+- Abrir qualquer painel por esses botões não pode deslocar a toolbar para baixo nem ocultar a navegação inferior.
+- Botões ativos na toolbar superior usam azul principal do site.
+- No tray `Formato`, os cards `Linha Geracional` e `Árvore Familiar` usam ícones azuis e ordem visual controlada pelo componente.
+- Em `Filtros`, controles inativos devem usar leitura cinza uniforme.
+- Backdrop/blur parcial afeta apenas conteúdo atrás do painel ativo e nunca cobre header, toolbar, painel, cards, CTA ou menu inferior.
+- O modo imersivo é reservado a camadas completas, mas o mapa completo atual preserva a área superior compartilhada visível.
 
-### Camadas mobile: tray parcial e modo imersivo
+## Painel `Mapa` de `/mapa-familiar`
 
-- `Formato`, `Cor`, `Filtros` e `Mapa` em modo visão geral usam tray contextual e blur parcial.
-- No blur parcial, header, toolbar, tray, cards, CTA e navegação inferior permanecem acima da camada desfocada.
-- `Exibir mapa completo` e o painel do botão `+` usam blur imersivo.
-- No blur imersivo, a shell da página fica atrás do blur; apenas a camada principal aberta e seus controles próprios ficam acima dele.
-
-- O painel aberto pelo botão `+` deve aparecer na camada mais alta da página, acima de header, toolbar, notificações, busca e conteúdo da árvore.
-- O painel de visualização deve reconhecer corretamente os familiares da pessoa ativa: pais, cônjuges, irmãos, filhos, pets, avós, bisavós, tataravós, tios, primos e sobrinhos.
-- Os itens expandidos do painel devem exibir primeiro e segundo nome completos, evitando truncamentos como duas letras ou reticências prematuras.
-- Ao tocar em um familiar listado no painel, a visualização deve mudar para aquela pessoa preservando a query `pessoa`.
-- Quando a tela central não tiver conteúdo abaixo, o mobile não deve permitir arrasto vertical para baixo.
-- Quando a tela de tios não tiver primos abaixo, o mobile não deve permitir arrasto para baixo a partir de tios paternos ou maternos.
-- Linhas verticais abaixo de tios devem aparecer apenas quando houver primos reais naquele lado.
-- Avós paternos e maternos devem permanecer nos lados corretos para a pessoa de referência.
-- A visão geral/Mapa mobile deve evitar ícones duplicados, ghost click após toque e conectores desalinhados.
-- As telas `paternal-uncles` e `maternal-uncles` devem exibir inicialmente até 8 cards no mobile; quando houver mais cards, um botão local `+` revela os demais e alterna para `−` para recolher.
-- A limitação de 8 cards é visual e local das telas de tios; contagens da visão geral, filtros e dados da árvore devem continuar usando o total real de pessoas do grupo.
-- As telas `paternal-cousins` e `maternal-cousins` devem permitir scroll vertical com um dedo em iPhone/Safari.
-- A navegação de retorno de `paternal-cousins` para `paternal-uncles` e de `maternal-cousins` para `maternal-uncles` só deve ocorrer quando a lista de primos estiver no topo e o usuário puxar para baixo.
-- Handlers de gesto em `window capture` devem priorizar scroll interno de listas antes de bloquear o evento ou disparar navegação por swipe.
-
-### Visão geral/Mapa mobile
-
-O botão `Mapa` da toolbar mobile de `/mapa-familiar` abre a visão geral com nove grupos navegáveis dentro da shell mobile da própria página, preservando header, toolbar superior e navegação inferior:
+O botão `Mapa` abre a visão geral com nove grupos navegáveis:
 
 - `Ancestrais paternos`;
 - `Avós`;
@@ -135,95 +104,78 @@ O botão `Mapa` da toolbar mobile de `/mapa-familiar` abre a visão geral com no
 - `Descendentes`;
 - `Primos maternos`.
 
-Contrato visual e funcional:
+Contrato:
 
-- cada botão deve ter padding uniforme de `8px`;
-- todo o conteúdo do botão deve ficar centralizado;
-- cada grupo deve exibir um único ícone, diferente dos demais, sem ícone legado duplicado;
-- os ícones devem permanecer maiores que o padrão inicial da visão geral, sem cortar título ou contador;
-- títulos em caixa alta podem usar `letter-spacing` reduzido para preservar legibilidade em telas estreitas;
-- tocar em um grupo deve navegar para a tela do grupo dentro de `/mapa-familiar`, sem abrir `/pessoa/:id`;
-- o guard contra ghost click deve impedir que o toque no painel vaze para cards posicionados por baixo;
-- o painel deve ficar acima do backdrop/blur e abaixo da toolbar dentro da estrutura mobile;
-- a área branca do painel deve envolver a grade de grupos e o CTA `Exibir mapa completo`, sem corte visual abaixo do botão;
-- os círculos e ícones centrais dos cards podem ser levemente reduzidos em telas estreitas para preservar margem, título e contador;
-- a partir de 390px, os ícones podem recuperar tamanho moderado sem comprometer o encaixe;
-- o backdrop/blur deve começar abaixo do painel ativo e terminar antes da navegação inferior;
-- o botão da toolbar mobile deve se chamar `Mapa`, não `Zoom`, porque sua função é abrir a visão geral de grupos;
-- o zoom real deve permanecer associado ao fluxo `Exibir mapa completo`;
-- a barra mobile deve manter botões compactos, arredondados, com estado ativo evidente e sem herdar visual desktop;
-- os botões da visão geral devem navegar por `data-screen`/tela de destino explícita, sem depender da tela atual ou de estado residual da rota;
-- abrir `Mapa` a partir de qualquer tela de `/mapa-familiar` deve sempre manter o usuário dentro de `/mapa-familiar`.
+- cada botão tem padding uniforme e conteúdo centralizado;
+- cada grupo tem ícone único;
+- tocar em grupo navega para a tela do grupo dentro de `/mapa-familiar`;
+- o guard de ghost click impede vazamento para cards posicionados por baixo;
+- a área branca envolve grade e CTA `Exibir mapa completo`, sem corte nem sobra excessiva abaixo do botão;
+- abrir `Mapa` a partir de qualquer tela deve manter o usuário dentro de `/mapa-familiar`.
 
-### Mapa completo mobile
+## Telas de tios, primos e descendentes
 
-O botão `Exibir mapa completo` abre uma camada própria de mapa completo no mobile. Essa camada fica acima do blur imersivo e da shell da página; o blur imersivo cobre tudo que fica atrás do mapa, incluindo header, toolbar, tray, conteúdo e navegação inferior.
+- `Tios Paternos` e `Tios Maternos` exibem inicialmente até 8 cards no mobile.
+- Quando houver mais cards, um botão local `+` revela os demais e alterna para `−` para recolher.
+- A limitação de 8 cards é visual e local; contagens e dados reais continuam usando o total do grupo.
+- O sizing dos grupos de tios deve ser estável e não pode piscar alternando quantidade de cards.
+- `Primos Paternos` e `Primos Maternos` permitem scroll vertical com um dedo em iPhone/Safari.
+- A navegação de primos para tios só ocorre quando a lista de primos está no topo e o usuário puxa para baixo.
+- Em `Descendentes`, as linhas verticais superiores acima do card de cônjuge e do grupo de irmãos devem ter altura equivalente à linha que conecta irmãos e sobrinhos.
+
+## Mapa completo mobile
+
+O botão `Exibir mapa completo` abre uma camada própria de mapa completo no mobile.
 
 Contrato atual:
 
 - a abertura parte do painel `Mapa`/`Mapa da família` ou do painel `Mapa` da linha geracional;
-- o blur imersivo pode cobrir a shell da página atrás da camada completa;
-- o mapa completo, seus controles internos e o botão `X` não podem ficar por baixo do blur;
-- a camada completa usa viewport própria, respeitando `safe-area` superior, inferior e laterais;
-- o botão `X` deve ficar no canto superior direito, acima do mapa, com área de toque confortável e `z-index` superior ao palco;
-- fechar pelo `X` deve remover o blur imersivo, desmontar a camada completa e retornar ao estado anterior da shell, preferencialmente com o tray `Mapa` restaurável;
-- o usuário pode usar pan com um dedo e zoom por gesto de pinça;
-- pan e zoom não podem resetar automaticamente após o usuário soltar o dedo ou encerrar a pinça;
-- reidratações, `MutationObserver`, resize ou ajustes defensivos não podem sobrescrever o `transform` aplicado pelo usuário, salvo em ação explícita de reenquadrar ou reconstrução real do stage;
-- a implementação não deve depender de clone visual frágil de seções posicionadas na tela;
-- a renderização deve usar modelo próprio de nós, cards e conectores;
-- cards devem usar estrutura única com variantes como `ancestor`, `mini`, `parent`, `central` e `core`;
-- os dados podem ser extraídos das telas mobile existentes, mas devem ser normalizados antes da renderização;
-- conectores devem ser gerados a partir de âncoras dos nós, não de paths fixos desconectados da geometria real.
+- o container arredondado inicia logo abaixo da toolbar superior, sem espaçamento extra;
+- a base branca reta atrás do container acompanha a altura da área arredondada até o fim;
+- a versão atual de `MobileFamilyMapFullLayer` não renderiza botão `X` próprio;
+- o retorno/fechamento é controlado pelo estado da toolbar/rota, sem deixar blur, overlay ou tray preso;
+- pan com um dedo e zoom por pinça devem funcionar;
+- pan e zoom não podem resetar automaticamente após o gesto;
+- reidratações, observers, resize ou runtimes defensivos não podem sobrescrever o `transform` do usuário, salvo por `Reenquadrar` ou reconstrução real do stage;
+- a renderização usa modelo próprio de nós, cards e conectores;
+- cards exibem somente os dois primeiros termos do nome, sem datas/status ao lado do nome;
+- `Tios maternos` deve ser compactado quando houver sobra vertical abaixo da última linha de cards;
+- conectores devem ser reconstruídos após compactações para manter âncoras corretas.
 
-### Conectores do mapa completo mobile
+## Conectores do mapa completo mobile
 
-Regras específicas:
-
-- linhas devem iniciar e terminar na borda real do grupo ou card;
-- `Bisavós paternos` deve conectar-se a `Avós paternos` por uma única linha saindo da lateral direita do grupo de bisavós;
-- `Bisavós maternos` deve conectar-se a `Avós maternos` por uma única linha saindo da lateral esquerda do grupo de bisavós;
-- `Tios paternos` deve conectar-se horizontalmente ao card `Pai`;
-- `Tios maternos` deve conectar-se horizontalmente ao card `Mãe`;
-- os títulos dos cards `Pai` e `Mãe` não podem ficar cortados;
-- acima do card da pessoa principal deve sair uma única linha vertical que se ramifica para `Pai` e `Mãe`;
-- abaixo do card da pessoa principal deve sair uma única linha vertical que se ramifica para `Irmãos` e `Cônjuge`;
-- `Irmãos` deve conectar-se verticalmente a `Sobrinhos`;
-- `Tios maternos` deve conectar-se verticalmente a `Primos maternos`;
-- conectores não podem ficar soltos, duplicados, atravessar títulos ou depender de offsets manuais sem relação com o box real.
+- Linhas devem iniciar e terminar na borda real do grupo ou card.
+- `Bisavós paternos` conecta-se a `Avós paternos` por uma única linha saindo da lateral direita do grupo de bisavós.
+- `Bisavós maternos` conecta-se a `Avós maternos` por uma única linha saindo da lateral esquerda do grupo de bisavós.
+- `Tios paternos` conecta-se horizontalmente ao card `Pai`.
+- `Tios maternos` conecta-se horizontalmente ao card `Mãe`.
+- Acima da pessoa principal sai uma única linha vertical que se ramifica para `Pai` e `Mãe`.
+- Abaixo da pessoa principal sai uma única linha vertical que se ramifica para `Irmãos` e `Cônjuge`.
+- `Irmãos` conecta-se verticalmente a `Sobrinhos`.
+- `Tios maternos` conecta-se verticalmente a `Primos maternos`.
+- Conectores não podem ficar soltos, duplicados, atravessar títulos ou depender de offsets sem relação com o box real.
 
 ## `/linha-geracional` mobile
 
-- A rota `/linha-geracional` deve manter o header `Árvore Familiar` no mobile.
-- A experiência mobile deve reaproveitar a lógica visual horizontal sempre que possível: colunas por geração, conectores de cônjuges, conectores entre casais e filhos e cores por geração.
-- Cabeçalhos `Geração 1`, `Geração 2`, etc. devem ter espaçamento superior suficiente em relação à toolbar e ao topo da área rolável.
-- Cabeçalhos de geração no mobile devem usar peso e tamanho moderados para não competir com o header principal.
-- Gerações sem pessoas não devem ser exibidas como tela vazia inicial quando houver geração seguinte com conteúdo.
-- Cards de cônjuges devem ficar um acima do outro quando o layout mobile exigir empilhamento.
-- Linhas laterais devem conectar apenas os pares ou relações que justificam conexão visual; não devem conectar todos os cards indiscriminadamente.
+- A rota mantém header `Árvore Familiar` no mobile.
+- A experiência reaproveita a leitura horizontal por gerações.
+- Cabeçalhos `Geração N` têm espaçamento superior suficiente em relação à toolbar.
+- Cards de cônjuges empilham quando necessário.
+- Linhas laterais conectam apenas pares ou relações justificadas por dados reais.
 
-### Painel mobile da linha geracional
+### Painel `Mapa` da linha geracional
 
-O painel acionado por `Mapa` em `/linha-geracional` deve ser isolado da rota `/mapa-familiar` e exibido dentro da shell mobile da própria página.
-
-Contrato:
-
-- o tray/fluxo específico da linha geracional só deve ser montado em `/linha-geracional`;
-- header, toolbar superior e navegação inferior devem permanecer visíveis durante o painel parcial;
-- o painel de gerações deve ficar acima do backdrop/blur, sem ser escurecido ou desfocado;
-- o fundo branco do painel deve envolver toda a grade de gerações e o CTA inferior;
-- o painel deve exibir atalhos compactos `GER. 1`, `GER. 2`, `GER. 3`, `GER. 4`, `GER. 5` e `GER. 6`;
-- os cards devem preferencialmente formar grid `3x2`, com contador de pessoas por geração quando disponível;
-- a geração ativa deve ter estado visual evidente e atributo de estado/acessibilidade equivalente;
-- tocar em um card `GER. N` deve acionar a navegação real da geração correspondente, atualizar o estado ativo e fechar o tray sem trocar de rota;
-- quando uma geração não tiver cards renderizados, o contador pode exibir `0 pessoas`, preservando o atalho fixo quando a navegação exigir;
-- o botão `Exibir mapa completo` deve ficar dentro da área branca do painel e acima do backdrop;
-- o backdrop/blur parcial deve começar abaixo do container completo de `Gerações`, incluindo o botão inferior, e terminar no topo real da navegação inferior;
-- a visualização completa deve montar colunas geracionais lado a lado e preservar pan/zoom sem reset automático após o gesto;
-- grupos devem ser calculados a partir dos dados reais de pessoas e relacionamentos;
-- nomes de pessoas devem exibir primeiro e segundo nome completos quando disponíveis;
-- botões de pessoas devem manter altura compacta, texto alinhado à esquerda e centralização vertical;
-- a navegação por pessoa deve preservar a query `pessoa` e não afetar desktop.
+- O painel é isolado da rota `/mapa-familiar` e exibido dentro da shell mobile compartilhada.
+- Header, toolbar superior e navegação inferior permanecem visíveis.
+- O painel fica acima do backdrop/blur.
+- O painel exibe cards compactos com label `GERAÇÃO`, numerados de 1 a 6.
+- O layout preferencial é grid `3x2`.
+- A geração ativa tem estado visual evidente, borda azul e acessibilidade equivalente.
+- O badge de contagem e o CTA `Exibir mapa completo` usam azul alinhado à cor principal do site.
+- Tocar em geração navega para a geração correspondente e fecha o tray sem trocar rota.
+- O botão `Exibir mapa completo` fica dentro da área branca do painel.
+- A visualização completa monta colunas geracionais lado a lado e preserva pan/zoom.
+- Nomes exibem primeiro e segundo nome completos; no mapa completo não devem aparecer datas/status junto ao nome.
 
 ## Filtros
 
@@ -234,62 +186,20 @@ Contrato:
 
 ## Paletas
 
-A árvore pode usar paletas visuais de leitura familiar.
+- A paleta branca permanece limpa e neutra.
+- A paleta azul permanece moderna/digital.
+- A paleta laranja deve ter atmosfera quente, solar e familiar.
+- A paleta marrom deve preservar caráter sépia, documental e de memória.
 
-Regras atuais:
+## Runtimes defensivos vigentes nesta frente
 
-- a paleta branca permanece limpa e neutra;
-- a paleta azul permanece moderna/digital;
-- a paleta laranja deve ter atmosfera quente, solar e familiar, com fundo e linhas mais quentes do que a paleta branca;
-- a paleta marrom deve preservar caráter sépia, documental e de memória;
-- a paleta laranja não deve voltar ao visual bege-amarelado semelhante à branca.
+- `mobileFamilyMapUncleCardLimit.ts`: limite visual local de tios e coordenação de expansão.
+- `mobileFamilyTreeUncleSizingFix.ts`: sizing estável de telas de tios.
+- `mobileFamilyMapDescendantConnectorHeightFix.ts`: altura dos conectores superiores de `Descendentes`.
+- `mobileFamilyMapFullOverviewCompactFix.ts`: compactação de `Tios maternos`, nomes de dois termos e reconstrução de conectores no mapa completo.
+- `mobileFamilyMapZoomTrayHeightFix.ts`: redução da base branca reta do tray `Mapa`.
+- `mobileFamilyMapFullOverviewConnectorFix.ts`: refinamento de conectores do mapa completo.
+- `mobileGenerationLineFullOverview.ts`: visualização completa da linha geracional.
+- `mobileFamilyMapFilterButtonsBehaviorFix.ts`: comportamento defensivo dos filtros mobile.
 
-## Ações
-
-- Abrir perfil de pessoa.
-- Abrir detalhes de casamento.
-- Abrir modal de conexão.
-- Alternar tema visual.
-- Restaurar visualização.
-- Exportar imagem, PDF, impressão ou área selecionada, quando a ação estiver disponível no painel.
-
-## Exportação
-
-As ações de exportação são disparadas pelo painel lateral e executadas em `HomeTreeSection.tsx`.
-
-Comportamento atual:
-
-- `Salvar Imagem` é a ação pública de captura de área real da tela;
-- `Salvar Imagem` abre modal de instruções antes de acionar `getDisplayMedia`;
-- o usuário seleciona uma área visível da árvore e salva o resultado como PNG;
-- durante a seleção, controles de zoom, favorito e botão flutuante `?` ficam ocultos;
-- `Imprimir` abre a janela nativa do navegador a partir de uma página limpa de impressão;
-- a impressão deve exibir título superior, árvore centralizada e caber em uma única página;
-- a impressão não deve exibir header, painel lateral, zoom, favorito, botão `?`, modais ou overlays;
-- fluxos internos de preview/PNG/PDF podem existir como compatibilidade técnica, mas não são ações principais expostas no painel desktop atual.
-
-QA mínimo:
-
-- validar `Salvar Imagem` e `Imprimir` em `/mapa-familiar` e `/mapa-familiar-horizontal`;
-- validar impressão em `Retrato` e `Paisagem`;
-- confirmar que a saída não contém elementos auxiliares da interface;
-- confirmar que erros de captura/impressão usam `toast` e não diálogos nativos.
-
-## Busca e notificações no header
-
-As páginas de mapa usam busca no header com sugestões de pessoas e páginas. As páginas internas que usam `MemberPageHeader` devem manter comportamento equivalente por meio do componente compartilhado `HeaderGlobalSearch`.
-
-No mobile:
-
-- sugestões de busca devem aparecer na camada mais alta da interface, acima da toolbar e dos painéis da árvore;
-- o dropdown de notificações deve aparecer acima da toolbar, do canvas e de qualquer painel flutuante;
-- fechar busca ou notificações não deve deixar overlay preso na página.
-
-## Contratos de UX
-
-- Desktop deve preservar painel compacto sem cortar a área de exportação.
-- O botão de recolher do painel deve ficar dentro do container do painel.
-- Botões de exportação não devem cortar texto.
-- Mobile deve iniciar com painéis fechados quando aplicável.
-- A visualização horizontal não substitui a visualização principal; é rota própria.
-- Exportações diretas longas devem preparar o preview em aba/janela dedicada, sem bloquear visualmente a página principal.
+Esses runtimes devem permanecer isolados por rota, breakpoint e seletor. Quando o comportamento estabilizar no componente React de origem, o runtime correspondente deve ser removido ou neutralizado com documentação.
