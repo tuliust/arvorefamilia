@@ -1,6 +1,6 @@
 # Curiosidades
 
-> Última revisão: 2026-07-01
+> Última revisão: 2026-07-02
 > Escopo: `/curiosidades`, exploração visual e textual dos dados familiares, rankings, IA, quiz, mural, fotos, relacionamentos, rota, gerações e abas de descoberta.
 > Status: canônico.
 
@@ -130,6 +130,20 @@ Regras:
 - o botão de apagar deve aparecer apenas para o autor da lembrança;
 - estado vazio deve indicar que nenhuma lembrança foi publicada.
 
+
+## Perspectiva memorial
+
+Quando a perspectiva ativa for de pessoa falecida administrada por responsável, `/curiosidades` deve funcionar em modo leitura.
+
+Regras:
+
+- blocos informativos, gráficos, fotos, rankings, rota, gerações e relacionamentos continuam visíveis quando houver dados;
+- `Pergunte à IA` deve bloquear digitação, sugestões rápidas e envio de perguntas;
+- `Mural da família` deve bloquear publicação de novas lembranças nessa perspectiva;
+- o bloqueio deve exibir aviso legível de modo memorial;
+- ações bloqueadas não devem usar diálogo nativo do navegador;
+- a regra depende da perspectiva ativa, não apenas do usuário autenticado.
+
 ## Gráficos da família
 
 A área de gráficos deve priorizar visualizações simples e legíveis.
@@ -244,6 +258,8 @@ A página pode apresentar rankings, agrupamentos por local, aniversários, estat
 
 Validar:
 
+- em perspectiva memorial, perguntas à IA e publicação no mural ficam bloqueadas;
+- em perspectiva memorial, leitura de estatísticas e conteúdos existentes continua disponível;
 - carregamento com dados completos;
 - carregamento com dados incompletos;
 - ausência de quebra quando não houver data, local, profissão, relacionamento ou foto;

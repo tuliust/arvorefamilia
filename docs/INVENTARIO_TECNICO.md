@@ -1,7 +1,7 @@
 # Inventário técnico
 
-> Última revisão: 2026-07-01
-> Escopo: rotas, módulos, documentos finais e referências técnicas preservadas após limpeza documental, ajustes mobile/admin e layout compartilhado mobile de mapas de 2026-07-01.
+> Última revisão: 2026-07-02
+> Escopo: rotas, módulos, documentos finais e referências técnicas preservadas após limpeza documental, ajustes mobile/admin, layout compartilhado mobile de mapas e complementos de notificações, vínculos, tutorial e perspectiva memorial de 2026-07-02.
 > Status: canônico.
 
 ## Stack
@@ -11,7 +11,7 @@
 - Guards: `ProtectedRoute`, `MemberRoute` e `TreeAccessRoute`.
 - Dados via Supabase, com serviços em `src/app/services` e tipos em `src/app/types`.
 - IA por endpoint serverless `api/ai.ts`.
-- Scripts de runtime mobile e defensivo carregados por `index.html`.
+- Scripts de runtime mobile e defensivo carregados por `index.html` ou importados por side effect em `src/main.tsx`.
 - Validação esperada: `npm run typecheck` e `npm run build`.
 
 ## Documentos canônicos por área
@@ -149,9 +149,11 @@ Essa arquitetura é mobile-first. Desktop continua sendo responsabilidade das p�
 | Configuração | `src/app/components/admin/notifications/AdminNotificationConfiguration.tsx` |
 | Formatadores | `src/app/components/admin/notifications/adminNotificationFormatters.ts` |
 | Catálogo base | `src/app/constants/adminNotificationCatalog.ts` |
-| Persistência | `src/app/services/adminNotificationConfigurationService.ts` |
+| Extensões runtime de catálogo | `src/app/constants/adminNotificationCatalogRuntimeExtensions.ts` |
+| Persistência e reconciliação | `src/app/services/adminNotificationConfigurationService.ts` |
 | Destinatários | `src/app/services/notificationRecipientsService.ts` |
 | Primeiro acesso ao mapa | `src/app/services/firstMapWelcomeNotificationService.ts`, `src/app/components/TreeAccessRoute.tsx` |
+| Modelos runtime catalogados | `first_access_welcome`, `admin_new_link_confirmed` e respectivos templates |
 | Dispatch | `src/app/services/notificationDispatchService.ts`, `src/app/services/notificationAdminService.ts`, `src/app/services/notificationScheduledService.ts` |
 | Header/dropdown | `src/app/components/layout/HeaderNotificationsDropdown.tsx` |
 
@@ -165,6 +167,7 @@ Essa arquitetura é mobile-first. Desktop continua sendo responsabilidade das p�
 - `src/app/components/FamilyTree/MobileFamilyMapFullLayer.tsx`
 - `src/app/components/FirstLoginTutorialRuntimeTweaks.tsx`
 - `src/app/components/person/PersonProfileRuntimeTweaks.tsx`
+- `src/memberInteractionLayoutRuntimeFixes.ts`
 - Wrappers ativos: `AdminDashboardWithTweaks`, `AdminHomeSettingsWithSaveBar`, `MeusDadosWithInlineProfileBio`, `MeusVinculosWithProfileBio` e `MeusVinculosMobileShortcutsPage`.
 
 ## Mapa mobile: componentes React vigentes
@@ -228,6 +231,26 @@ Essa arquitetura é mobile-first. Desktop continua sendo responsabilidade das p�
 | `src/mobileFamilyMapFullOverviewButtonGuard.ts` | Se estiver carregado mas vazio, é compatibilidade/no-op. |
 | `src/desktopTreeVisualizationPanelTextFix.ts` | Não listar como ativo quando a correção textual já estiver no componente de origem. |
 | `src/visualPatchA.ts` | Se existir sem carregamento, tratar como resíduo técnico. |
+
+
+## Runtimes importados por `src/main.tsx`
+
+| Arquivo | Situação documental |
+|---|---|
+| `src/memberInteractionLayoutRuntimeFixes.ts` | Runtime defensivo transitório para perspectiva memorial em `/forum` e `/curiosidades`, ajuste de layout em `/meus-dados` e ajuste de modal de pet em `/meus-vinculos`. |
+| `src/memberUiRuntimeFixes.ts` | Ajustes defensivos de UI de membro já existentes; manter isolado por rota e seletor. |
+| `src/familyMapDesktopRuntimeFixes.ts` | Ajustes defensivos de mapa desktop; não substituir contratos React de origem. |
+| `src/mobileFamilyMapFullPanelStyleFix.ts` | Compatibilidade visual mobile importada por side effect; revisar se ainda é necessária antes de remover. |
+
+Esses runtimes não substituem regra de domínio, RLS ou componente React de origem. Quando o comportamento estabilizar, migrar a regra para componentes ou serviços tipados e remover a manipulação direta de DOM.
+
+## Migrations recentes não documentadas antes desta revisão
+
+| Migration | Uso |
+|---|---|
+| `supabase/migrations/20260701090000_allow_member_link_status_lookup.sql` | Cria função `current_user_has_person_link()` e policy para que membros autenticados consigam resolver status de vínculo exibido nos badges de `/meus-vinculos`. |
+
+Revisão de segurança recomendada: substituir leitura ampla de `user_person_links` por RPC que retorne apenas `pessoa_id` quando o dispatch/serviço estiver estabilizado.
 
 ## Regra de manutenção do inventário
 

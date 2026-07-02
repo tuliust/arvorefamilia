@@ -1,6 +1,6 @@
 # Plano de próximos passos
 
-> Última revisão: 2026-07-01
+> Última revisão: 2026-07-02
 > Escopo: pendências reais após auditoria documental da branch `main` e rodadas recentes de implementação.
 > Status: canônico.
 
@@ -23,7 +23,7 @@
 - Revisar eventual texto com caracteres corrompidos fora de `docs/`, especialmente em componentes de mapa/exportação, se for detectado em QA visual ou validação de código.
 - Implementar, quando aprovado, os ajustes de `/calendario-familiar` para nomes curtos dentro dos dias, texto curto de falecimento/casamento e card lateral `Datas de Casamento`.
 - Implementar, quando aprovado, a renomeação dos botões em `/meus-dados`: `Ajustar Meus Vínculos` para `Meus Vínculos` e `Ajustar Fatos e Arquivos Históricos` para `Fatos e Arquivos Históricos`.
-- Aplicar e validar a área nova de cadastro e edição de pets em `/meus-vinculos`; os arquivos foram preparados fora da `main`, mas ainda não foram commitados no repositório.
+- Validar o modal atual de pet em `/meus-vinculos` com layout em coluna única e decidir se o runtime defensivo deve ser absorvido pelo componente React de origem.
 
 ## Pendências de produto administrativo
 
@@ -47,6 +47,17 @@
 - Confirmar políticas RLS de `admin_notification_configurations`, `admin_notification_catalogs` e `user_first_map_accesses` em ambiente remoto.
 - Confirmar que `admin_notification_configurations.variable_settings` existe e aceita objeto JSONB no ambiente remoto.
 - Criar documentação administrativa mais detalhada apenas quando novas rotas/abas administrativas forem implementadas no código.
+
+
+## Pendências pós-revisão de 2026-07-02
+
+- Validar em ambiente publicado se os badges `Cadastrado` e `Pré-cadastrado` de `/meus-vinculos` refletem vínculos reais depois da migration `20260701090000_allow_member_link_status_lookup.sql`.
+- Revisar a policy de `user_person_links` e planejar RPC restrita que retorne apenas `pessoa_id` para status de badge, reduzindo exposição de colunas não necessárias.
+- Conectar os disparos reais de `first_access_welcome` e `admin_new_link_confirmed` aos templates persistidos em `admin_notification_catalogs`/`admin_notification_configurations`.
+- Validar que a reconciliação do catálogo administrativo adiciona modelos novos sem sobrescrever customizações existentes do admin.
+- Migrar, quando estável, `src/memberInteractionLayoutRuntimeFixes.ts` para componentes React/serviços tipados e remover manipulações diretas de DOM.
+- Testar perspectiva memorial em `/forum` e `/curiosidades` com usuário responsável por perfil falecido.
+- Testar retomada do tutorial de primeiro acesso no meio do fluxo e fallback quando alvo visual não existir.
 
 ## Regra de manutenção
 

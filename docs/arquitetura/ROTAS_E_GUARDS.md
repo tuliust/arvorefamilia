@@ -1,6 +1,6 @@
 # Rotas e guards
 
-> Última revisão: 2026-07-01
+> Última revisão: 2026-07-02
 > Escopo: rotas principais, guards, layout compartilhado mobile dos mapas e fluxos de navegação.
 > Status: canônico.
 
@@ -103,6 +103,19 @@ Pessoa falecida:
 | `/forum/topico/:id` | Tópico individual. | `MemberRoute` |
 | `/forum/topico/:id/editar` | Edição de tópico. | `MemberRoute` |
 
+
+## Perspectiva memorial
+
+A perspectiva memorial não é uma rota separada. É um modo funcional aplicado quando o usuário responsável seleciona pessoa falecida em perfis gerenciados.
+
+Contratos:
+
+- rotas de leitura continuam acessíveis quando o usuário tem permissão;
+- `/forum` e `/forum/*` bloqueiam criação, resposta, edição de resposta e reações nessa perspectiva;
+- `/curiosidades` bloqueia perguntas à IA, sugestões de IA e publicação no mural nessa perspectiva;
+- o bloqueio é funcional/transversal, não substitui `MemberRoute` ou `TreeAccessRoute`;
+- a implementação atual é runtime defensivo em `src/memberInteractionLayoutRuntimeFixes.ts`, importado por `src/main.tsx`.
+
 ## Guards principais
 
 ### Usuário não autenticado
@@ -164,6 +177,7 @@ Não aceitar URL externa.
 ## Não regressões
 
 - Não remover preservação de query string onde o fluxo depende dela.
+- Não permitir escrita social em fórum/curiosidades quando a perspectiva ativa for memorial.
 - Não reintroduzir ações no header do onboarding quando a rota exigir header simplificado.
 - Não tratar `/preferencias` como obrigatória para pessoa falecida.
 - Não expor rotas admin para membro sem guard.

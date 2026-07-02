@@ -1,7 +1,7 @@
 # Meus dados, IA, Mini Bio e Curiosidades
 
-> Última revisão: 2026-06-27  
-> Escopo: `/meus-dados`, `/pessoa/:id`, textos de perfil, geração assistida por IA, mini bio e curiosidades individuais.  
+> Última revisão: 2026-07-02
+> Escopo: `/meus-dados`, `/pessoa/:id`, textos de perfil, geração assistida por IA, mini bio, curiosidades individuais e ajustes de layout dos campos de dados pessoais.
 > Status: canônico.
 
 ## Objetivo
@@ -44,6 +44,17 @@ Regras específicas de mobile:
 - o botão `Avançar` deve exibir apenas ícone de seta para direita;
 - `Voltar`, `Pular Tudo` e `Avançar` devem ficar na mesma linha;
 - ajustes mobile devem ser isolados por breakpoint e não alterar desktop.
+
+
+## Layout desktop em `/meus-dados`
+
+Regras complementares:
+
+- `Dia ou Ano de Nascimento` deve manter largura compacta em desktop para preservar a hierarquia do formulário;
+- quando a pessoa estiver marcada como falecida, `Local de falecimento` e `Falecimento no exterior` devem permanecer legíveis no mesmo grupo visual quando houver espaço;
+- labels importantes não devem quebrar de forma a prejudicar leitura;
+- ajustes atuais podem existir em runtime defensivo, mas o destino preferencial é o componente React de origem;
+- mudanças visuais em desktop não podem alterar o contrato mobile do questionário e dos botões.
 
 ## Redes sociais
 
@@ -112,6 +123,8 @@ Validar:
 - tratamento de erro quando IA falhar;
 - ausência dos campos de Mini Bio/Curiosidades em `/meus-vinculos`;
 - presença da tela final `Seu Perfil` ao concluir ou pular o questionário.
+- layout legível de nascimento e falecimento em desktop;
+- ausência de regressão mobile ao ajustar campos de desktop.
 
 ## Regra de manutenção
 

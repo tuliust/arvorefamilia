@@ -1,6 +1,6 @@
 # Guia de componentes
 
-> Última revisão: 2026-07-01
+> Última revisão: 2026-07-02
 > Escopo: componentes relevantes para rotas e fluxos funcionais da branch `main`, incluindo layout compartilhado mobile dos mapas.
 > Status: canônico.
 
@@ -20,7 +20,7 @@
 | `DesktopTreeVisualizationPanel.tsx` | Painel desktop de visualização, temas, grupos, filtros e exportação. |
 | `SidebarPanelTabs.tsx` | Abas auxiliares do painel lateral. |
 | `HomeCuriositiesDialog.tsx` | Diálogo de curiosidades e perguntas assistidas na home. |
-| `FirstLoginTutorial.tsx` | Tutorial de primeiro acesso. |
+| `FirstLoginTutorial.tsx` | Tutorial de primeiro acesso; persiste a etapa corrente em `sessionStorage`, ignora alvos ausentes e usa fallback centralizado quando o spotlight não pode ser calculado. |
 
 ## FamilyTree
 
@@ -31,7 +31,7 @@
 | `FamilyTreeVisualCards.tsx` | Cards visuais dos grupos, incluindo ordenação de pares conjugais. |
 | `MobileFamilyTreeView.tsx` | Mapa familiar mobile por telas/grupos. |
 | `DesktopFamilyHorizontalMapView.tsx` | Linha geracional desktop. |
-| `DesktopFamilyHorizontalMapFilteredView.tsx` | Linha geracional desktop filtrada. |
+| `DesktopFamilyHorizontalMapFilteredView.tsx` | Linha geracional desktop filtrada; o escopo de pessoas visíveis deve respeitar `directRelativeFilters`, inclusive `conjuge`. |
 | `MobileFamilyHorizontalMapView.tsx` | Linha geracional mobile/horizontal. |
 | `MobileFamilyHorizontalMapFilteredView.tsx` | Linha geracional mobile filtrada. |
 | `MobileFamilyMapBackdrop.tsx` | Backdrop mobile parcial ou imersivo; no modo parcial calcula limite inferior pelo menu inferior real. |
@@ -58,6 +58,7 @@
 | `MobileTopLayerTweaks.tsx` | Ajustes de camada mobile para painéis, busca, notificações e menu do avatar. |
 | `LinhaGeracionalMobilePanelLayerTweaks.tsx` | Isolamento de camada e comportamento do painel mobile da linha geracional; no layout compartilhado deve se isolar por `pathname`. |
 | `FirstLoginTutorialRuntimeTweaks.tsx` | Ajustes defensivos do tutorial e compatibilidade mobile. |
+| `src/memberInteractionLayoutRuntimeFixes.ts` | Runtime transitório importado em `src/main.tsx`; bloqueia ações sociais em perspectiva memorial e ajusta layout de `/meus-dados` e do modal de pet. |
 | `PersonProfileRuntimeTweaks.tsx` | Ocultações e reposicionamentos defensivos em `/pessoa/:id`. |
 | `AdminDashboardRuntimeTweaks.tsx` | Ajustes defensivos do dashboard administrativo. |
 | `MeusVinculosEnhancements.tsx` | Ajustes progressivos de `/meus-vinculos`. |
@@ -150,6 +151,19 @@ Seletores legados que não devem voltar como contrato vigente:
 | `AreaCaptureInstructionsDialog` | Modal local de `HomeTreeSection.tsx`. |
 | `screenAreaCapture.ts` | Captura real da tela/aba, overlay de seleção, PNG e salvamento. |
 | `exportColorSanitizer.ts` | Sanitização de CSS moderno para fluxos que usam `html2canvas`. |
+
+
+## Administração de notificações
+
+| Componente / módulo | Papel |
+|---|---|
+| `AdminNotificacoes.tsx` | Página administrativa de notificações. |
+| `AdminNotificationConfiguration.tsx` | Aba de configuração de tipos, conteúdo, canais, destinatários, variáveis e status. |
+| `adminNotificationCatalog.ts` | Catálogo base/fallback versionado no frontend. |
+| `adminNotificationCatalogRuntimeExtensions.ts` | Extensões runtime catalogadas em 2026-07-02, incluindo `first_access_welcome`, `admin_new_link_confirmed`, `trigger_user`, `specific_users` e `close_family`. |
+| `adminNotificationConfigurationService.ts` | Carrega, reconcilia e salva catálogo/configurações persistidas em Supabase sem sobrescrever customizações existentes. |
+
+A UI administrativa deve consumir preferencialmente o catálogo carregado/reconciliado pelo serviço, não apenas arrays estáticos importados diretamente.
 
 ## Regra de manutenção
 

@@ -1,7 +1,7 @@
 # Meus vínculos
 
-> Última revisão: 2026-06-27
-> Escopo: `/meus-vinculos`, vínculos familiares, pets, responsáveis por edição familiar e solicitações de alteração.
+> Última revisão: 2026-07-02
+> Escopo: `/meus-vinculos`, vínculos familiares, pets, responsáveis por edição familiar, solicitações de alteração e badges de status baseados em vínculo real.
 > Status: canônico.
 
 ## Objetivo
@@ -31,6 +31,20 @@ No mobile, os atalhos de grupos devem ficar compactos, na mesma linha/grade, sem
 - Pessoa sem vínculo de usuário aparece como pré-cadastrada quando o fluxo assim indicar.
 - Alterações que dependem de aprovação devem ser registradas como solicitação, não como gravação definitiva direta.
 - Parentes adicionados ou removidos no fluxo devem ficar marcados como pendentes ou `Em análise` até revisão.
+
+## Badges de cadastro
+
+A página usa o status de vínculo de usuário para diferenciar pessoas com conta vinculada de pessoas apenas cadastradas na árvore.
+
+Contrato:
+
+- `Cadastrado` deve aparecer quando houver vínculo real em `user_person_links` para a pessoa exibida;
+- `Pré-cadastrado` deve aparecer quando não houver vínculo de usuário detectado para aquela pessoa;
+- a leitura dos IDs vinculados depende de RLS compatível no Supabase;
+- a migration `supabase/migrations/20260701090000_allow_member_link_status_lookup.sql` habilita a consulta necessária para status de badge;
+- a UI deve continuar defensiva: falha de leitura não pode quebrar `/meus-vinculos`.
+
+Revisão técnica recomendada: substituir, em etapa futura, a policy ampla de leitura por RPC `security definer` que retorne apenas `pessoa_id` dos IDs consultados.
 
 ## Pais
 
@@ -70,6 +84,7 @@ No mobile, os atalhos de grupos devem ficar compactos, na mesma linha/grade, sem
   - data de falecimento quando marcado como falecido;
   - upload de foto.
 - Pets não devem ser tratados como filhos humanos.
+- A experiência atual do modal deve priorizar formulário em coluna única; listas laterais redundantes de `Pets cadastrados` não devem comprimir o formulário principal.
 
 ## Mobile
 
@@ -91,8 +106,11 @@ No mobile, os atalhos de grupos devem ficar compactos, na mesma linha/grade, sem
 - Criar ou selecionar vínculo humano.
 - Criar ou selecionar pet.
 - Verificar badges de cadastrado/pré-cadastrado/vivo/falecido.
+- Confirmar que pessoa com vínculo real em `user_person_links` aparece como `Cadastrado`.
+- Confirmar que pessoa sem vínculo real aparece como `Pré-cadastrado` quando aplicável.
+- Confirmar que a migration/policy de leitura de status foi aplicada no ambiente remoto.
 - Confirmar que cônjuges aparecem antes de filhos.
 - Confirmar que filhos exigem contexto conjugal quando a regra estiver ativa.
-- Confirmar que pets abrem modal próprio e não aparecem como filhos.
+- Confirmar que pets abrem modal próprio, em coluna única, e não aparecem como filhos.
 - Confirmar que alterações pendentes são exibidas como `Em análise`.
 - Confirmar que a seleção de filho, cônjuge, irmão ou pet não trava o mobile.

@@ -1,6 +1,6 @@
 # Decisões arquiteturais
 
-> Última revisão: 2026-07-01
+> Última revisão: 2026-07-02
 > Escopo: arquitetura final documentada após consolidação dos documentos técnicos, ajustes mobile/admin e layout compartilhado de mapas.
 > Status: canônico.
 
@@ -23,7 +23,7 @@ APIs serverless
 - Services: `src/app/services`.
 - Tipos centrais: `src/app/types`.
 - Utilitários: `src/app/utils` quando aplicável.
-- Scripts defensivos carregados por `index.html` são aceitos apenas como camada de compatibilidade ou transição; a fonte preferencial para comportamento estabilizado deve ser o componente React de origem.
+- Scripts defensivos carregados por `index.html` ou importados por side effect em `src/main.tsx` são aceitos apenas como camada de compatibilidade ou transição; a fonte preferencial para comportamento estabilizado deve ser o componente React de origem.
 
 ## Rotas e guards
 
@@ -85,6 +85,21 @@ Decisão vigente:
 - `src/app/constants/adminNotificationCatalog.ts` permanece fallback/base técnica;
 - entregas reais não devem ser confundidas com catálogo.
 
+
+### Catálogo runtime de notificações
+
+Decisão vigente:
+
+- novos modelos administrativos podem ser adicionados em `adminNotificationCatalogRuntimeExtensions.ts` quando a alteração precisar ser entregue sem reescrever o catálogo base;
+- o serviço de configuração deve reconciliar catálogo base, extensões runtime e catálogo persistido;
+- a reconciliação preserva customizações administrativas e adiciona apenas itens ausentes;
+- catalogação/editabilidade de modelo não equivale automaticamente a disparo real pelo dispatcher.
+
+Modelos runtime atuais:
+
+- `first_access_welcome`;
+- `admin_new_link_confirmed`.
+
 ## Configurações públicas e cache local
 
 - `site_visual_settings` é fonte remota definitiva da versão publicada, rascunho e agendamento.
@@ -105,6 +120,17 @@ Decisão vigente:
 - falhas devem ser capturadas com `try/catch`;
 - componentes de origem devem ser corrigidos quando o ajuste deixar de ser pontual;
 - scripts vazios ou neutralizados devem ser removidos quando não houver dependência real.
+
+
+### Perspectiva memorial
+
+Decisão vigente:
+
+- responsáveis podem alternar para perspectiva de pessoa falecida;
+- em perspectiva memorial, leitura de conteúdo continua permitida;
+- ações sociais de escrita/interação em fórum, mural e IA devem ficar bloqueadas;
+- a implementação atual usa runtime defensivo transitório em `src/memberInteractionLayoutRuntimeFixes.ts`;
+- a regra definitiva deve migrar para componentes e serviços tipados quando estabilizada.
 
 ## Mapa familiar e árvore
 

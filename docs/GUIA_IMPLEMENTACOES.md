@@ -1,6 +1,6 @@
 # Guia de implementações
 
-> Última revisão: 2026-07-01
+> Última revisão: 2026-07-02
 > Escopo: comportamento implementado na branch `main`, incluindo layout compartilhado mobile dos mapas.
 > Status: canônico.
 
@@ -150,6 +150,37 @@ Contrato:
 - `Salvar Imagem` é captura de área real da tela.
 - `Imprimir` abre janela nativa a partir de página limpa.
 - `Imagem` e `PDF` não são ações diretas expostas no painel principal.
+
+
+## Tutorial de primeiro acesso
+
+- `FirstLoginTutorial.tsx` deve armazenar o índice da etapa em `sessionStorage` com chave de versão.
+- Ao reabrir o tutorial na mesma sessão, a etapa corrente pode ser restaurada.
+- Seletores inválidos, elementos ausentes, targets não visíveis e falhas de cálculo de layout não podem quebrar a rota.
+- Quando nenhum alvo válido for encontrado, o painel deve cair para posição centralizada/segura, preservando o avanço do tutorial.
+- A finalização limpa a etapa armazenada e chama o fluxo normal de conclusão.
+
+## Perspectiva memorial e interações sociais
+
+- `src/memberInteractionLayoutRuntimeFixes.ts` é camada defensiva transitória para perfis memoriais gerenciados por responsáveis.
+- Quando a perspectiva ativa tiver `falecido = true`, `/forum` e `/curiosidades` devem continuar acessíveis para leitura.
+- Ações de escrita, criação de tópico, resposta, reação, pergunta à IA e publicação no mural devem ser bloqueadas nessa perspectiva.
+- O bloqueio deve exibir aviso claro e não depender de `alert`, `confirm` ou `prompt` nativos.
+- A regra definitiva deve migrar para componentes/serviços tipados quando a experiência estabilizar.
+
+## Catálogo administrativo de notificações
+
+- `adminNotificationCatalogRuntimeExtensions.ts` adiciona modelos runtime sem alterar o catálogo base original.
+- `adminNotificationConfigurationService.ts` deve mesclar catálogo base, extensões runtime e catálogo persistido.
+- A reconciliação deve preservar itens customizados pelo admin e adicionar apenas definições ausentes.
+- Modelos catalogados nesta etapa: `first_access_welcome` e `admin_new_link_confirmed`.
+- A catalogação/editabilidade não implica, por si só, que todos os gatilhos reais já usem o template persistido; a conexão do dispatch deve ser etapa separada e testada.
+
+## Badges de vínculos e RLS
+
+- `/meus-vinculos` depende de `user_person_links` para distinguir `Cadastrado` de `Pré-cadastrado`.
+- A migration `20260701090000_allow_member_link_status_lookup.sql` viabiliza a leitura necessária por membros autenticados.
+- Qualquer endurecimento futuro deve preferir RPC que retorne apenas `pessoa_id`, evitando expor colunas não necessárias de `user_person_links`.
 
 ## Validação técnica esperada
 
