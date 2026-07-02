@@ -4,6 +4,7 @@ import {
   ensureMemberProfile,
   getCurrentUserLinkedPeople,
   updateOwnLinkedPerson,
+  type EditableOwnPersonPayload,
 } from './app/services/memberProfileService';
 
 type InputElement = HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement;
@@ -43,9 +44,9 @@ function getFieldValue(label: string) {
   return String(findFieldByLabel(label)?.value ?? '').trim();
 }
 
-function buildOptionalProfilePayload() {
-  const payload: Record<string, string> = {};
-  const fields: Array<[string, string]> = [
+function buildOptionalProfilePayload(): EditableOwnPersonPayload {
+  const payload: EditableOwnPersonPayload = {};
+  const fields: Array<[keyof EditableOwnPersonPayload, string]> = [
     ['nome_completo', 'Nome completo'],
     ['profissao', 'Profissão'],
     ['local_nascimento', 'Local de nascimento'],
@@ -58,7 +59,9 @@ function buildOptionalProfilePayload() {
 
   fields.forEach(([field, label]) => {
     const value = getFieldValue(label);
-    if (value) payload[field] = value;
+    if (value) {
+      (payload as Record<string, string>)[field] = value;
+    }
   });
 
   return payload;
