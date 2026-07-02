@@ -65,6 +65,7 @@ export type PersistedAdminNotificationConfig = {
   variableOverrides?: Record<string, string[]>;
   variableSettings?: AdminNotificationVariableSettings;
   customDefinitions?: AdminNotificationCustomDefinition[];
+  deletedTypeIds?: string[];
 };
 
 export type PersistedAdminNotificationCatalog = {
@@ -91,6 +92,7 @@ type AdminNotificationConfigurationRow = {
   variable_overrides?: Record<string, string[]> | null;
   variable_settings?: AdminNotificationVariableSettings | null;
   custom_definitions?: AdminNotificationCustomDefinition[] | null;
+  deleted_type_ids?: string[] | null;
 };
 
 type AdminNotificationCatalogRow = {
@@ -102,6 +104,10 @@ type AdminNotificationCatalogRow = {
   automations?: AdminNotificationAutomationDefinition[] | null;
   suggestions?: string[] | null;
 };
+
+function normalizeDeletedTypeIds(value?: string[] | null) {
+  return Array.isArray(value) ? Array.from(new Set(value.map((item) => String(item)).filter(Boolean))) : [];
+}
 
 function normalizeConfig(row?: AdminNotificationConfigurationRow | null): PersistedAdminNotificationConfig {
   if (!row) return {};
@@ -116,6 +122,7 @@ function normalizeConfig(row?: AdminNotificationConfigurationRow | null): Persis
     variableOverrides: row.variable_overrides ?? {},
     variableSettings: row.variable_settings ?? {},
     customDefinitions: row.custom_definitions ?? [],
+    deletedTypeIds: normalizeDeletedTypeIds(row.deleted_type_ids),
   };
 }
 
@@ -191,17 +198,22 @@ function reconcileCatalogWithDefaults(
 
 function buildCatalogFromConfig(config: PersistedAdminNotificationConfig): PersistedAdminNotificationCatalog {
   const defaultCatalog = buildDefaultCatalog();
-  const customDefinitions = config.customDefinitions ?? [];
+  const deletedTypeIds = new Set(config.deletedTypeIds ?? []);
+  const customDefinitions = (config.customDefinitions ?? []).filter((definition) => !deletedTypeIds.has(definition.type.id));
 
   const typeMap = new Map<string, AdminNotificationTypeDefinition>();
-  [...defaultCatalog.types, ...customDefinitions.map((definition) => definition.type)].forEach((type) => {
-    typeMap.set(type.id, cloneCatalogItem(type));
-  });
+  [...defaultCatalog.types, ...customDefinitions.map((definition) => definition.type)]
+    .filter((type) => !deletedTypeIds.has(type.id))
+    .forEach((type) => {
+      typeMap.set(type.id, cloneCatalogItem(type));
+    });
 
   const templateMap = new Map<string, TemplateWithVariableSettings>();
-  [...defaultCatalog.templates, ...customDefinitions.map((definition) => definition.template)].forEach((template) => {
-    templateMap.set(template.id, cloneCatalogItem(template) as TemplateWithVariableSettings);
-  });
+  [...defaultCatalog.templates, ...customDefinitions.map((definition) => definition.template)]
+    .filter((template) => !deletedTypeIds.has(template.typeId))
+    .forEach((template) => {
+      templateMap.set(template.id, cloneCatalogItem(template) as TemplateWithVariableSettings);
+    });
 
   Object.entries(config.frequencyOverrides ?? {}).forEach(([typeId, frequency]) => {
     const type = typeMap.get(typeId);
@@ -273,6 +285,7 @@ function buildConfigFromCatalog(catalog: PersistedAdminNotificationCatalog): Per
     variableOverrides: {},
     variableSettings: {},
     customDefinitions: [],
+    deletedTypeIds: [],
   };
 
   catalog.types.forEach((type) => {
@@ -322,10 +335,14 @@ function mergeConfigs(
   catalogConfig: PersistedAdminNotificationConfig,
   rowConfig: PersistedAdminNotificationConfig,
 ): PersistedAdminNotificationConfig {
+  const deletedTypeIds = Array.from(new Set([...(catalogConfig.deletedTypeIds ?? []), ...(rowConfig.deletedTypeIds ?? [])]));
+  const deletedTypeIdsSet = new Set(deletedTypeIds);
   const customDefinitionMap = new Map<string, AdminNotificationCustomDefinition>();
-  [...(catalogConfig.customDefinitions ?? []), ...(rowConfig.customDefinitions ?? [])].forEach((definition) => {
-    customDefinitionMap.set(definition.type.id, definition);
-  });
+  [...(catalogConfig.customDefinitions ?? []), ...(rowConfig.customDefinitions ?? [])]
+    .filter((definition) => !deletedTypeIdsSet.has(definition.type.id))
+    .forEach((definition) => {
+      customDefinitionMap.set(definition.type.id, definition);
+    });
 
   return {
     frequencyOverrides: { ...(catalogConfig.frequencyOverrides ?? {}), ...(rowConfig.frequencyOverrides ?? {}) },
@@ -337,6 +354,7 @@ function mergeConfigs(
     variableOverrides: { ...(catalogConfig.variableOverrides ?? {}), ...(rowConfig.variableOverrides ?? {}) },
     variableSettings: { ...(catalogConfig.variableSettings ?? {}), ...(rowConfig.variableSettings ?? {}) },
     customDefinitions: Array.from(customDefinitionMap.values()),
+    deletedTypeIds,
   };
 }
 
@@ -450,7 +468,8 @@ export async function saveAdminNotificationConfiguration(config: PersistedAdminN
         recipient_overrides: config.recipientOverrides ?? {},
         variable_overrides: config.variableOverrides ?? {},
         variable_settings: config.variableSettings ?? {},
-        custom_definitions: config.customDefinitions ?? [],
+        custom_definitions: (config.customDefinitions ?? []).filter((definition) => !(config.deletedTypeIds ?? []).includes(definition.type.id)),
+        deleted_type_ids: config.deletedTypeIds ?? [],
         updated_by: userId,
         created_by: userId,
       },
