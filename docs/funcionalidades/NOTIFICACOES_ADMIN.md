@@ -1,6 +1,6 @@
 # Notificações administrativas
 
-> Última revisão: 2026-07-01
+> Última revisão: 2026-07-02
 > Escopo: `/admin/notificacoes`, catálogo administrativo, configuração persistida, destinatários, eventos de gatilho, canais, variáveis, regras de variáveis, rascunho local e primeiro acesso real a `/mapa-familiar`.
 > Status: canônico.
 
@@ -18,6 +18,7 @@ Este documento cobre a administração do catálogo e das regras de envio. A exp
 | Aba de configuração | `src/app/components/admin/notifications/AdminNotificationConfiguration.tsx` |
 | Formatadores de labels e variáveis | `src/app/components/admin/notifications/adminNotificationFormatters.ts` |
 | Catálogo base/fallback | `src/app/constants/adminNotificationCatalog.ts` |
+| Extensões runtime do catálogo | `src/app/constants/adminNotificationCatalogRuntimeExtensions.ts` |
 | Persistência da configuração, catálogo e regras de variáveis | `src/app/services/adminNotificationConfigurationService.ts` |
 | Resolução de destinatários | `src/app/services/notificationRecipientsService.ts` |
 | Registro do primeiro acesso ao mapa | `src/app/services/firstMapWelcomeNotificationService.ts`, `src/app/components/TreeAccessRoute.tsx` |
@@ -34,7 +35,7 @@ A arquitetura separa três camadas:
 | `preferencias_notificacao` | Preferências individuais do usuário. |
 | `admin_notification_configurations` e `admin_notification_catalogs` | Administração do catálogo, overrides, templates, canais, frequências, grupos, sugestões e regras de variáveis. |
 
-`src/app/constants/adminNotificationCatalog.ts` permanece como base técnica e fallback. Quando houver catálogo persistido válido, a UI administrativa deve preferir os serviços de carregamento do catálogo em vez de depender exclusivamente de imports estáticos.
+`src/app/constants/adminNotificationCatalog.ts` permanece como base técnica e fallback. `src/app/constants/adminNotificationCatalogRuntimeExtensions.ts` adiciona modelos runtime catalogados sem alterar diretamente o arquivo-base original. Quando houver catálogo persistido válido, a UI administrativa deve preferir os serviços de carregamento do catálogo em vez de depender exclusivamente de imports estáticos.
 
 ## Aba `Configuração`
 
@@ -53,6 +54,24 @@ Regras implementadas:
 - rascunhos ainda não salvos devem ser preservados localmente em `arvorefamilia:admin-notifications-console-config`;
 - erros de salvamento devem usar `toast`, não diálogo nativo;
 - estado de carregamento deve bloquear duplo clique e mostrar feedback textual.
+
+
+## Modelos runtime catalogados
+
+Modelos adicionados em 2026-07-02:
+
+| Tipo | Template | Nome administrativo | Status |
+|---|---|---|---|
+| `first_access_welcome` | `first_access_welcome_template` | `Boas-vindas de primeiro acesso` | Catalogado/editável; conexão total do dispatch deve ser validada separadamente. |
+| `admin_new_link_confirmed` | `admin_new_link_confirmed_template` | `Novo vínculo confirmado` | Catalogado/editável; conexão total do dispatch deve ser validada separadamente. |
+
+Grupos runtime adicionados:
+
+- `trigger_user`;
+- `specific_users`;
+- `close_family`.
+
+A existência desses modelos na aba `Configuração` significa que o admin pode editar título, texto, CTA, canais, destinatários e variáveis. Não significa, por si só, que todos os gatilhos reais já renderizam a mensagem a partir do catálogo persistido.
 
 ## Variáveis
 
@@ -157,6 +176,19 @@ Ao salvar um tipo customizado, o título visível do formulário deve atualizar 
 
 O rascunho local em `localStorage` é mecanismo de recuperação de edição, não substitui persistência remota. A fonte remota para configuração continua sendo Supabase.
 
+
+### Reconciliação do catálogo
+
+Ao carregar a configuração, o serviço deve:
+
+1. montar o catálogo default com base técnica e extensões runtime;
+2. carregar o catálogo salvo em `admin_notification_catalogs` quando existir;
+3. adicionar itens default/runtime ausentes;
+4. preservar itens já existentes e customizados pelo admin;
+5. salvar de volta apenas quando houver diferença real.
+
+Essa reconciliação evita perda de customizações e permite que novos modelos versionados apareçam na UI sem migration adicional de conteúdo.
+
 ## Primeiro acesso real ao mapa
 
 O primeiro acesso real de um usuário autenticado a `/mapa-familiar` pode gerar notificação interna de boas-vindas.
@@ -206,6 +238,13 @@ Se a migration não existir no ambiente remoto, a UI deve falhar de forma defens
 24. Testar falha de rede/serviço e confirmar uso de `toast` sem diálogo nativo.
 25. Em usuário membro, acessar `/mapa-familiar` pela primeira vez e verificar deduplicação da notificação quando a migration estiver aplicada.
 
+
+26. Confirmar que `Boas-vindas de primeiro acesso` aparece no seletor de tipo.
+27. Confirmar que `Novo vínculo confirmado` aparece no seletor de tipo.
+28. Editar e salvar um desses modelos, recarregar a página e confirmar que a customização não foi sobrescrita pela reconciliação.
+29. Criar tipo customizado, recarregar e confirmar que a reconciliação não removeu o tipo.
+30. Validar que a UI não promete disparo real por template persistido quando o gatilho ainda estiver apenas preparado.
+
 ## Não regressão
 
 - Slugs crus não devem aparecer como texto principal de leitura quando houver label humano.
@@ -219,4 +258,6 @@ Se a migration não existir no ambiente remoto, a UI deve falhar de forma defens
 - Trocar de aba do navegador não deve levar o admin de volta para `Visão geral` nem apagar rascunhos da aba `Configuração`.
 - A inserção de variável não deve sempre ir para o fim do campo quando o cursor estiver no meio do texto.
 - A configuração administrativa não deve criar notificação real em `notificacoes_usuario` por si só; entrega continua sendo responsabilidade do fluxo de dispatch.
+- A reconciliação do catálogo não deve apagar `customDefinitions`, templates editados ou labels alterados pelo admin.
+- Os modelos `first_access_welcome` e `admin_new_link_confirmed` devem permanecer editáveis na aba `Configuração`.
 - Entrega real e catálogo administrativo devem permanecer separados.

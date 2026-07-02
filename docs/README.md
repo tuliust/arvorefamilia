@@ -1,7 +1,7 @@
 # Documentação do produto — arvorefamilia
 
-> Última revisão: 2026-07-01
-> Escopo: documentação canônica mantida em `docs/` após auditoria, limpeza final, ajustes mobile/admin e refatoração do layout compartilhado de mapas de 2026-07-01.
+> Última revisão: 2026-07-02
+> Escopo: documentação canônica mantida em `docs/` após auditoria, limpeza final, ajustes mobile/admin, refatoração do layout compartilhado de mapas e complementos de 2026-07-02 sobre notificações, primeiro acesso, vínculos e perspectiva memorial.
 > Status: canônico.
 
 Este diretório concentra a documentação fundamental do produto. A fonte de verdade para comportamento continua sendo o código da branch `main`, especialmente `src/app/routes.tsx`, `src/app/pages`, `src/app/components`, `src/app/components/FamilyTree`, `src/app/services`, `src/app/types`, `src/app/utils`, `index.html`, `api/ai.ts` e os arquivos SQL/Supabase versionados.
@@ -172,10 +172,25 @@ Contratos vigentes:
 
 Mudanças nessa frente devem atualizar, no mínimo, `funcionalidades/MAPA_FAMILIAR_VIEW.md`, `arquitetura/ROTAS_E_GUARDS.md`, `arquitetura/DECISOES_ARQUITETURAIS.md`, `GUIA_COMPONENTES.md`, `GUIA_IMPLEMENTACOES.md`, `GUIA_UX_LAYOUT.md`, `QA_MANUAL.md`, `REGRAS_DE_NAO_REGRESSAO.md` e `INVENTARIO_TECNICO.md`.
 
+
+### Primeiro acesso, vínculos e perspectiva memorial
+
+Contratos vigentes adicionados em 2026-07-02:
+
+- o tutorial de primeiro acesso deve preservar a etapa corrente em `sessionStorage` e continuar mesmo quando um alvo visual não estiver disponível;
+- `/meus-vinculos` usa status real de `user_person_links` para exibir `Cadastrado` ou `Pré-cadastrado`, dependendo de RLS/migration compatível;
+- o filtro de cônjuges deve ser respeitado também no escopo da linha geracional horizontal filtrada;
+- quando a perspectiva ativa for de pessoa falecida, rotas sociais como `/forum` e `/curiosidades` permanecem legíveis, mas ações de escrita, reação, publicação e perguntas à IA devem ficar bloqueadas;
+- `src/memberInteractionLayoutRuntimeFixes.ts` é runtime defensivo transitório carregado por `src/main.tsx` e deve ser absorvido por componentes React definitivos quando estabilizado.
+
+Mudanças nessa frente devem atualizar `funcionalidades/MEUS_VINCULOS.md`, `funcionalidades/CURIOSIDADES.md`, `funcionalidades/FUNCIONALIDADES_COMPLEMENTARES.md`, `funcionalidades/MINI_BIO_CURIOSIDADES_IA.md`, `arquitetura/ROTAS_E_GUARDS.md`, `REGRAS_DE_NAO_REGRESSAO.md`, `QA_MANUAL.md`, `INVENTARIO_TECNICO.md` e `operacao/MIGRATIONS_SUPABASE.md` quando houver schema/RLS/RPC.
+
 ## Regra de manutenção
 
 - Alterações funcionais devem atualizar o documento funcional correspondente e, quando necessário, `GUIA_IMPLEMENTACOES.md`, `GUIA_COMPONENTES.md`, `GUIA_UX_LAYOUT.md`, `QA_MANUAL.md`, `REGRAS_DE_NAO_REGRESSAO.md` e `INVENTARIO_TECNICO.md`.
 - Alterações de rota, layout compartilhado ou guard devem atualizar `arquitetura/ROTAS_E_GUARDS.md`, `arquitetura/DECISOES_ARQUITETURAIS.md` e `INVENTARIO_TECNICO.md`.
 - Alterações de schema, RLS, migrations, Edge Functions ou jobs devem atualizar `operacao/MIGRATIONS_SUPABASE.md`, `QA_MANUAL.md` e o documento funcional afetado.
+- Alterações em comportamento por perspectiva memorial devem atualizar os documentos de fórum/curiosidades, rotas/guards, QA e não regressão.
+- Alterações em badges de vínculos ou RLS de `user_person_links` devem atualizar `funcionalidades/MEUS_VINCULOS.md` e `operacao/MIGRATIONS_SUPABASE.md`.
 - Alterações em `/admin/notificacoes` devem atualizar `funcionalidades/NOTIFICACOES_ADMIN.md` e, quando houver mudança transversal, `REGRAS_DE_NAO_REGRESSAO.md` e `INVENTARIO_TECNICO.md`.
 - Não criar documentos datados de rodada quando o conteúdo couber nos documentos canônicos existentes.

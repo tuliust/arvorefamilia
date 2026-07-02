@@ -1,6 +1,6 @@
 # Guia de UX e layout
 
-> Última revisão: 2026-07-01
+> Última revisão: 2026-07-02
 > Escopo: experiência visual das rotas principais da branch `main`, com foco em mapa mobile, linha geracional e layout compartilhado.
 > Status: canônico.
 
@@ -129,6 +129,21 @@ Os botões da visão geral mobile seguem contrato visual próprio:
 ```
 
 Pessoa marcada como falecida em `/meus-dados` pula `/preferencias` e segue para `/revisao-dados`.
+
+
+## Perspectiva memorial
+
+- Em perspectiva de pessoa falecida administrada por responsável, áreas sociais permanecem em modo leitura.
+- O fórum deve bloquear criação de tópico, resposta, edição de resposta e reações nessa perspectiva.
+- `/curiosidades` deve bloquear perguntas à IA, uso de sugestões rápidas e publicação no mural nessa perspectiva.
+- O aviso de modo memorial deve ser discreto, legível e não bloquear a leitura do conteúdo já existente.
+- Controles desabilitados devem usar `aria-disabled`, texto de apoio ou estado visual consistente, sem abrir teclado ou iniciar fluxo de escrita.
+
+## Ajustes de `/meus-dados` e pet
+
+- Em desktop, o campo `Dia ou Ano de Nascimento` deve manter largura compacta para não competir com o restante do formulário.
+- O grupo `Local de falecimento` e `Falecimento no exterior` deve preservar leitura em linha quando houver espaço, sem quebrar labels importantes.
+- No modal de pet em `/meus-vinculos`, a experiência atual deve priorizar formulário em coluna única; listas laterais redundantes de pets cadastrados não devem comprimir o formulário principal.
 
 ## Regra de manutenção visual
 

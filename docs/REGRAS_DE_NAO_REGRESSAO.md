@@ -1,6 +1,6 @@
 # Regras de não regressão
 
-> Última revisão: 2026-07-01
+> Última revisão: 2026-07-02
 > Escopo: contratos que não devem ser quebrados em novas alterações, incluindo layout compartilhado mobile dos mapas.
 > Status: canônico.
 
@@ -58,6 +58,28 @@
 - Cada card navega para a geração correspondente, atualiza estado ativo e fecha o tray sem trocar rota.
 - O fundo branco do painel envolve grade e CTA inferior.
 - A visualização completa preserva `transform` após pan ou pinch.
+
+
+## Primeiro acesso e vínculos
+
+- O tutorial de primeiro acesso não pode quebrar a rota quando um alvo visual não existir.
+- A etapa corrente do tutorial deve ser preservada durante a sessão e limpa ao finalizar.
+- Badges de `/meus-vinculos` não podem regredir para `Pré-cadastrado` quando há vínculo real em `user_person_links`.
+- O modal de pet não deve voltar a comprimir o formulário principal com lista lateral redundante.
+
+## Perspectiva memorial
+
+- Perfis memoriais gerenciados por responsáveis podem navegar e ler conteúdo em `/forum` e `/curiosidades`.
+- Perfis memoriais não podem criar tópico, responder, editar resposta, reagir, publicar no mural ou perguntar à IA.
+- O bloqueio de ações memoriais não pode usar `alert`, `confirm` ou `prompt` nativos.
+- A seleção de perfil memorial no menu de avatar não deve exibir sufixo visual `— memorial`, mas deve aplicar as restrições funcionais.
+
+## Notificações administrativas
+
+- O catálogo persistido em `admin_notification_catalogs` não pode sobrescrever customizações do admin durante reconciliação.
+- Novos modelos runtime devem ser adicionados ao catálogo salvo apenas quando ausentes.
+- `Boas-vindas de primeiro acesso` e `Novo vínculo confirmado` devem aparecer na aba `Configuração`.
+- A presença de modelo editável não deve ser confundida com disparo real até que o dispatch correspondente esteja conectado e testado.
 
 ## Escopo documental
 

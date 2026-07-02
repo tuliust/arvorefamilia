@@ -1,6 +1,6 @@
 # Mapa familiar
 
-> Última revisão: 2026-07-01
+> Última revisão: 2026-07-02
 > Escopo: `/mapa-familiar`, `/mapa-familiar-horizontal`, `/linha-geracional`, shell mobile compartilhada, `Home.tsx`, `LinhaGeracional.tsx` e componentes `FamilyTree`.
 > Status: canônico.
 
@@ -61,6 +61,19 @@ Ao navegar para perfil, o retorno é preservado em `?voltar=` quando o fluxo de 
 - O painel desktop deve exibir `Grupos de Familiares` e subtítulo `Clique para exibir/ocultar grupos de parentes na árvore`.
 - Títulos `Resumo`, `Grupos de Familiares` e `Exportar` devem ter tratamento tipográfico equivalente.
 - Cards `Núcleo`, `Ascendentes` e `Colaterais` devem ocupar o espaço vertical disponível sem cortar a seção `Exportar`.
+
+
+## Linha geracional desktop filtrada
+
+`DesktopFamilyHorizontalMapFilteredView.tsx` deve calcular o escopo visível a partir de `collectDirectFamilyScopePersonIds` usando os `directRelativeFilters` reais da UI.
+
+Contrato:
+
+- `directRelativeFilters.conjuge` deve ser respeitado no desktop horizontal;
+- quando o filtro de cônjuges estiver inativo, cônjuges colaterais não devem continuar visíveis por expansão forçada de escopo;
+- a pessoa central deve permanecer visível mesmo quando filtros externos reduzirem o conjunto;
+- `visiblePersonIds` continua sendo intersectado com o escopo direto calculado;
+- alterações nessa lógica devem validar `/mapa-familiar-horizontal` em desktop e não apenas a experiência mobile.
 
 ## Exportação no painel desktop
 
@@ -180,6 +193,7 @@ Contrato atual:
 ## Filtros
 
 - Parentes diretos: pais, filhos, netos, irmãos, avós, bisavós, tataravós, tios, primos, sobrinhos e cônjuges de parentes colaterais.
+- Na linha geracional desktop filtrada, o filtro `conjuge` deve afetar o cálculo do escopo direto e não apenas a renderização final.
 - Status: vivos, falecidos e pets.
 - Preferências de parentes diretos são persistidas por usuário.
 - O subtipo legado `sangue` não deve ser usado como critério visual ou formulário de parentesco.

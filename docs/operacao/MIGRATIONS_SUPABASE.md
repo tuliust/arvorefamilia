@@ -1,7 +1,7 @@
 # Migrations Supabase
 
-> Última revisão: 2026-07-01
-> Escopo: fontes SQL e orientação de validação do Supabase na branch `main`.
+> Última revisão: 2026-07-02
+> Escopo: fontes SQL, RLS, RPCs e orientação de validação do Supabase na branch `main`.
 > Status: canônico.
 
 ## Estado versionado
@@ -12,6 +12,7 @@ A branch atual possui diretório versionado `supabase/migrations`. As fontes SQL
 - `supabase/migrations/20260622143000_deepen_admin_reset_and_profile_badges.sql`, que cria a RPC `get_person_profile_selected_badges(uuid)` e ajustes correlatos de perfil/admin;
 - `supabase/migrations/20260627143000_create_person_responsible_links.sql`, que cria vínculos pessoa-a-pessoa de responsáveis por perfis legados ou crianças;
 - `supabase/migrations/20260627152000_allow_responsible_people_perspective.sql`, que permite a perspectiva de pessoas sob responsabilidade quando aplicável;
+- `supabase/migrations/20260701090000_allow_member_link_status_lookup.sql`, que cria a função `current_user_has_person_link()` e policy de leitura para resolver badges `Cadastrado`/`Pré-cadastrado` em `/meus-vinculos`;
 - `supabase/migrations/20260701120000_persist_admin_notification_config_and_first_map_access.sql`, que cria persistência de configuração administrativa de notificações e deduplicação do primeiro acesso a `/mapa-familiar`;
 - `supabase/migrations/20260701143000_persist_full_admin_notification_catalog.sql`, que cria persistência do catálogo administrativo completo de notificações;
 - `supabase/migrations/20260701170000_add_variable_settings_to_admin_notification_config.sql`, que adiciona `variable_settings` para origem, link, fallback e formato de variáveis administrativas;
@@ -25,7 +26,7 @@ A branch atual possui diretório versionado `supabase/migrations`. As fontes SQL
 - Não aplicar SQL diretamente sem revisão.
 - Não copiar SQL legado para produção sem adaptar ao estado atual do banco.
 - Sempre validar RLS depois de criar ou alterar tabela.
-- Manter migrations numeradas em `supabase/migrations` quando houver alteração de schema ou RPC.
+- Manter migrations numeradas em `supabase/migrations` quando houver alteração de schema, RLS, policy, view ou RPC.
 - Timestamps de migrations devem ser únicos; versões duplicadas quebram o registro em `supabase_migrations.schema_migrations`.
 - Arquivos SQL devem permanecer em UTF-8 sem BOM. Erro de sintaxe no primeiro caractere do arquivo pode indicar BOM invisível antes do SQL.
 - Status conjugal permanece inferido pelos campos existentes; não criar migration de `status_conjugal` sem decisão explícita de schema.
@@ -55,6 +56,18 @@ A documentação funcional depende de tabelas ou estruturas equivalentes para:
 - logs de atividade;
 - permissões administrativas;
 - configurações públicas de site e auditoria de `/admin/home`.
+
+## Vínculos de usuário e status de badges
+
+| Elemento | Uso |
+|---|---|
+| `user_person_links` | Vínculo real entre `auth.users.id` e `pessoas.id`. |
+| `current_user_has_person_link()` | Função `security definer` que verifica se o usuário autenticado tem ao menos um vínculo. |
+| Policy `members can read linked person ids for status badges` | Permite leitura necessária para resolver status de cadastro em `/meus-vinculos`. |
+
+A migration `20260701090000_allow_member_link_status_lookup.sql` foi criada para viabilizar o badge `Cadastrado` em familiares que já possuem conta vinculada.
+
+Revisão de segurança recomendada: em etapa futura, substituir a policy ampla por RPC que receba lista de `pessoa_id` e retorne somente IDs vinculados, evitando exposição desnecessária de colunas como `user_id`.
 
 ## Tabelas de notificações administrativas
 
@@ -103,6 +116,7 @@ Resultado esperado: uma linha `variable_settings`, `jsonb`, `NO` e default `{}`.
 5. Confirmar que dados sensíveis não são expostos em views públicas.
 6. Confirmar RPC `get_person_profile_selected_badges(uuid)` ou fallback da aplicação.
 7. Confirmar RPCs de `/admin/home` quando configuração pública ou auditoria visual estiverem em validação.
-8. Quando houver mudanças em notificações administrativas, confirmar `admin_notification_configurations`, `admin_notification_catalogs`, `user_first_map_accesses` e `admin_notification_configurations.variable_settings`.
-9. Rodar `npx supabase db push` antes do build quando houver migration nova.
-10. Rodar a aplicação e validar as rotas documentadas em `QA_MANUAL.md`.
+8. Confirmar `current_user_has_person_link()` e a policy de leitura de status de vínculos quando `/meus-vinculos` exibir badges.
+9. Quando houver mudanças em notificações administrativas, confirmar `admin_notification_configurations`, `admin_notification_catalogs`, `user_first_map_accesses` e `admin_notification_configurations.variable_settings`.
+10. Rodar `npx supabase db push` antes do build quando houver migration nova.
+11. Rodar a aplicação e validar as rotas documentadas em `QA_MANUAL.md`.

@@ -1,7 +1,7 @@
 # QA manual
 
-> Última revisão: 2026-07-01
-> Escopo: validação manual das rotas e contratos documentados, incluindo layout compartilhado mobile dos mapas.
+> Última revisão: 2026-07-02
+> Escopo: validação manual das rotas e contratos documentados, incluindo layout compartilhado mobile dos mapas, tutorial inicial, vínculos, notificações administrativas e perspectiva memorial.
 > Status: canônico.
 
 ## Pré-condições
@@ -153,6 +153,49 @@ Validar em 320px, 375px, 390px e 430px.
 - Renderiza linha geracional horizontal.
 - Mantém filtros e contadores coerentes.
 - Não é afetado pelo chrome compartilhado mobile de `/mapa-familiar` e `/linha-geracional`.
+
+
+## Tutorial de primeiro acesso
+
+- Abrir o tutorial de primeiro acesso em desktop e mobile.
+- Avançar até uma etapa intermediária e recarregar a página na mesma sessão.
+- Confirmar que o tutorial retoma a etapa armazenada em `sessionStorage`.
+- Simular ausência de alvo visual de uma etapa e confirmar que a rota não quebra.
+- Confirmar que o painel cai para posição segura quando não houver spotlight disponível.
+- Finalizar o tutorial e confirmar que a etapa armazenada é limpa.
+
+## `/meus-vinculos`
+
+- Confirmar que pessoas com vínculo real em `user_person_links` aparecem como `Cadastrado`.
+- Confirmar que pessoas sem vínculo real aparecem como `Pré-cadastrado` quando aplicável.
+- Validar que a migration de leitura de status de vínculo existe no ambiente remoto.
+- Abrir o modal de pet e confirmar que o formulário principal fica em coluna única, sem lateral redundante comprimindo os campos.
+- Confirmar que o modal de pet não abre teclado automaticamente antes de foco explícito.
+
+## `/meus-dados`
+
+- Em desktop, confirmar que `Dia ou Ano de Nascimento` mantém largura compacta.
+- Em desktop, confirmar que `Local de falecimento` e `Falecimento no exterior` permanecem legíveis quando a pessoa está marcada como falecida.
+- Em mobile, confirmar que os ajustes não alteram o contrato já documentado de botões e questionário.
+
+## Perspectiva memorial
+
+- Selecionar, pelo menu de perfis gerenciados, uma pessoa falecida.
+- Abrir `/forum` e confirmar aviso de modo memorial.
+- Confirmar que criação de tópico, resposta, edição de resposta e reações ficam bloqueadas.
+- Abrir `/curiosidades` e confirmar aviso de modo memorial.
+- Confirmar que perguntas à IA, sugestões rápidas e publicação no mural ficam bloqueadas.
+- Confirmar que leitura de conteúdo existente em fórum e curiosidades permanece disponível.
+
+## `/admin/notificacoes`
+
+- Abrir `/admin/notificacoes` como admin.
+- Entrar na aba `Configuração`.
+- Confirmar que aparecem os modelos `Boas-vindas de primeiro acesso` e `Novo vínculo confirmado`.
+- Editar título/texto/CTA de um modelo e salvar.
+- Recarregar a página e confirmar que a customização permanece.
+- Confirmar que a reconciliação do catálogo não remove tipos customizados já existentes.
+- Confirmar que `Usuário do gatilho`, `Usuários específicos` e `Familiares próximos` aparecem como destinatários quando disponíveis.
 
 ## Administração e demais rotas
 
