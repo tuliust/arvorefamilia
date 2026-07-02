@@ -8,6 +8,7 @@ import "./styles/mobile-member-pages.css";
 import "./mobileFamilyMapFullPanelStyleFix";
 import "./familyMapDesktopRuntimeFixes";
 import "./memberUiRuntimeFixes";
+import "./memberInteractionLayoutRuntimeFixes";
 
 const DYNAMIC_IMPORT_RELOAD_KEY = "arvorefamilia:dynamic-import-reload";
 const CSS_RELOAD_KEY = "arvorefamilia:css-reload";
