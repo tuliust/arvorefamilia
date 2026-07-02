@@ -9,3 +9,5 @@ export function AdminDashboardWithTweaks() {
     </>
   );
 }
+
+export { AdminDashboardWithTweaks as AdminDashboard };
