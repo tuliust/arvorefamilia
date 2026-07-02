@@ -124,7 +124,7 @@ function homePageDirectFamilyOnlyPatch(code: string) {
     nextCode,
     `                    directRelationCounts={effectiveDirectRelationCounts}
                     onToggleDirectRelative={toggleDirectRelativeFilter}
-                    onCollapse={() => setSidebarOpen(false)}`, 
+                    onCollapse={() => setSidebarOpen(false)}`,
     `                    directRelationCounts={effectiveDirectRelationCounts}
                     onToggleDirectRelative={toggleDirectRelativeFilter}
                     directFamilyOnly={directFamilyOnly}
@@ -135,7 +135,7 @@ function homePageDirectFamilyOnlyPatch(code: string) {
   nextCode = replaceExact(
     nextCode,
     `          directRelativeFilters={directRelativeFilters}
-          isMobile={isMobile}`, 
+          isMobile={isMobile}`,
     `          directRelativeFilters={directRelativeFilters}
           directFamilyOnly={directFamilyOnly}
           isMobile={isMobile}`,
@@ -167,9 +167,21 @@ function homeTreeSectionDirectFamilyOnlyPatch(code: string) {
 
   nextCode = replaceExact(
     nextCode,
-    `          directRelativeFilters={directRelativeFilters}
-          onPersonClick={onPersonClick}`, 
-    `          directRelativeFilters={directRelativeFilters}
+    `        <DesktopFamilyHorizontalMapFilteredView
+          ref={familyTreeRef}
+          pessoas={pessoas}
+          visiblePersonIds={effectiveVisiblePersonIds}
+          relacionamentos={relacionamentos}
+          centralPersonId={centralReferencePersonId}
+          directRelativeFilters={directRelativeFilters}
+          onPersonClick={onPersonClick}`,
+    `        <DesktopFamilyHorizontalMapFilteredView
+          ref={familyTreeRef}
+          pessoas={pessoas}
+          visiblePersonIds={effectiveVisiblePersonIds}
+          relacionamentos={relacionamentos}
+          centralPersonId={centralReferencePersonId}
+          directRelativeFilters={directRelativeFilters}
           directFamilyOnly={directFamilyOnly}
           onPersonClick={onPersonClick}`,
   );
@@ -217,7 +229,7 @@ function desktopHorizontalMapFilteredViewPatch(code: string) {
   nextCode = replaceExact(
     nextCode,
     `      directRelativeFilters={directRelativeFilters}
-      onPersonClick={onPersonClick}`, 
+      onPersonClick={onPersonClick}`,
     `      directRelativeFilters={directRelativeFilters}
       directFamilyOnly={directFamilyOnly}
       onPersonClick={onPersonClick}`,
