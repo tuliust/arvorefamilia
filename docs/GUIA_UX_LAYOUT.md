@@ -1,7 +1,7 @@
 # Guia de UX e layout
 
 > Última revisão: 2026-07-01
-> Escopo: experiência visual das rotas principais da branch `main`.
+> Escopo: experiência visual das rotas principais da branch `main`, com foco em mapa mobile, linha geracional e layout compartilhado.
 > Status: canônico.
 
 ## Princípios
@@ -20,139 +20,104 @@
 - `/mapa-familiar` usa visualização por grupos de parentesco.
 - `/mapa-familiar-horizontal` usa visualização geracional horizontal.
 - O painel lateral apresenta seleção de pessoa de referência, temas, métricas, filtros e exportação.
-- O seletor de visualização deve manter label fechado do tipo `Família de X` quando houver pessoa de referência.
+- O seletor de visualização mantém label fechado do tipo `Família de X` quando houver pessoa de referência.
 - O placeholder aberto é `Visualize a árvore como...`.
-- O cabeçalho do painel deve manter o título `Visualização`, ícone de olho sem borda visual e ação de recolher alinhada dentro da mesma linha do título.
-- `Visualização` deve usar hierarquia menor que o header global, com `font-size` próximo de `1.1rem`.
-- Botões `Árvore Familiar` e `Linha Geracional` devem ter títulos com `font-size: clamp(0.8125rem, 1.6vh, 1.125rem)` e subtítulos curtos: `Visão por grupos` e `Por gerações`.
-- Títulos `Resumo`, `Grupos de Familiares` e `Exportar` devem compartilhar formatação compacta: `font-size: clamp(0.76rem, 1.5vh, 0.9rem)`, `font-weight: 720`, `letter-spacing: -0.005em`, `line-height: 1.05`.
-- Cards `Núcleo`, `Ascendentes` e `Colaterais` devem preservar largura e gap gerais, com títulos e linhas legíveis em uma linha, sem reticências ou quebra forçada.
-- Títulos `Núcleo`, `Ascendentes` e `Colaterais` devem usar peso moderado e tamanho compacto, sem competir com os títulos de seção.
-- Os itens internos desses cards podem aumentar ocupação vertical e espaçamento entre linhas desde que a altura geral do painel não gere corte da área `Exportar`.
-- A seção `Grupos de Familiares` deve exibir subtítulo `Clique para exibir/ocultar grupos de parentes na árvore`.
-- A área `Exportar` deve permanecer visível e conter apenas dois botões: `Salvar Imagem` e `Imprimir`.
-- O painel compacto deve preservar acesso aos botões de exportação.
-- No mapa por grupos, o card `Pai` e o card `Mãe` são referências de alinhamento visual: `Irmãos` deve alinhar à esquerda com `Pai`, enquanto `Cônjuge` e `Pets` devem alinhar à direita com `Mãe`.
-- `Filhos` e `Netos` podem ocupar faixa mais à direita, desde que a leitura geracional e os conectores permaneçam claros.
-- Grupos com pares conjugais devem evitar terceira linha desnecessária quando houver espaço para manter solteiros e pares em duas colunas.
-- Os botões `Salvar Imagem` e `Imprimir` devem aparecer em uma linha com duas colunas, com ícone acima, texto centralizado e altura compacta.
-- `Salvar Imagem` deve abrir modal de instruções com fundo opaco, cards das três etapas e botões `Cancelar`/`Continuar`.
-- Durante a seleção de área, zoom, favorito e botão flutuante `?` devem desaparecer para não contaminar a captura.
-- A impressão deve usar página limpa, com título superior, árvore centralizada e ajuste proporcional para uma única página em retrato ou paisagem.
+- O cabeçalho do painel mantém título `Visualização`, ícone de olho sem borda visual e ação de recolher na mesma linha.
+- `Visualização` usa hierarquia menor que o header global.
+- Botões `Árvore Familiar` e `Linha Geracional` devem ter títulos compactos e subtítulos `Visão por grupos` e `Por gerações`.
+- Títulos `Resumo`, `Grupos de Familiares` e `Exportar` compartilham formatação compacta.
+- Cards `Núcleo`, `Ascendentes` e `Colaterais` preservam largura, gap, labels e botões de exportação.
+- `Pai` e `Mãe` são referências de alinhamento visual no mapa por grupos.
+- `Salvar Imagem` e `Imprimir` aparecem em uma linha com duas colunas.
 
 ### Exportação desktop
 
-Contrato visual da seção `Exportar`:
+- A seção `Exportar` mostra apenas `Salvar Imagem` e `Imprimir`.
+- `Salvar Imagem` abre modal de instruções com fundo opaco, três etapas e botões `Cancelar`/`Continuar`.
+- Durante seleção de área, zoom, favorito e botão `?` desaparecem.
+- A impressão usa página limpa, título superior, árvore centralizada e uma página em retrato ou paisagem.
 
-- título `Exportar` alinhado aos demais títulos compactos do painel;
-- dois botões em grid de duas colunas;
-- botões com altura compacta para não sair do painel;
-- rótulos públicos: `Salvar Imagem` e `Imprimir`;
-- não exibir `Imagem` e `PDF` como ações diretas;
-- ícones devem ser legíveis mesmo em telas com menor altura;
-- texto deve permanecer em UTF-8 válido, sem mojibake.
+### Mobile compartilhado
 
-Contrato visual do modal de `Salvar Imagem`:
-
-- overlay com fundo opaco;
-- container branco;
-- três cards de instrução;
-- aviso destacado sobre usar zoom antes de capturar;
-- botões de rodapé `Cancelar` e `Continuar`.
-
-Contrato visual da impressão:
-
-- título superior em formato de chip;
-- árvore centralizada horizontalmente;
-- uma página;
-- sem header, painel lateral, controles de zoom, favorito ou botão `?`.
-
-### Mobile
-
+- Em `/mapa-familiar` e `/linha-geracional`, o mobile usa chrome compartilhado: header, toolbar superior e navegação inferior ficam fora da área central trocada pelo `<Outlet />`.
+- Alternar `Formato` entre mapa familiar e linha geracional preserva visualmente header, toolbar e menu inferior.
 - A navegação mobile evita manter painéis abertos por padrão.
-- O header das páginas de árvore deve usar `Árvore Familiar`.
-- Legenda e grupos devem poder ser abertos sem bloquear permanentemente a rolagem.
-- O modal/painel aberto pelo botão `+` deve ficar na camada mais alta, acima de header, toolbar, busca, notificações e canvas.
-- O painel de visualização deve mostrar contadores e familiares reais por grupo.
-- A visão geral/Mapa mobile deve evitar ghost click, ícones duplicados e conectores deslocados.
-- A toolbar mobile deve usar o rótulo `Mapa` para abrir a visão geral; `Zoom` não deve ser usado para essa função.
-- O zoom real deve estar no fluxo `Exibir mapa completo`, não no botão `Mapa`.
-- As telas de tios no mobile devem mostrar até 8 cards inicialmente e usar botão local `+`/`−` quando houver mais pessoas.
-- As telas de primos devem permitir scroll vertical com um dedo antes de qualquer navegação por swipe.
-- Nomes de familiares em listas mobile devem usar primeiro e segundo nome completos.
-- Se uma área inferior não tiver conteúdo, o gesto vertical para baixo deve ser bloqueado.
-- O modal de dica desktop/mobile deve respeitar chave de sessão e não reaparecer continuamente.
+- O header das páginas de árvore usa `Árvore Familiar`.
+- O painel aberto pelo botão `+` fica na camada mais alta, acima de header, toolbar, busca, notificações e canvas.
+- O painel de visualização mostra contadores e familiares reais por grupo.
+- A toolbar mobile usa o rótulo `Mapa`; `Zoom` não deve ser usado para visão geral.
+- O zoom real fica no fluxo `Exibir mapa completo`.
+- Botões ativos da toolbar superior usam azul principal do site.
+- Controles inativos em `Filtros` usam cinza uniforme.
+- Ícones do tray `Formato` usam azul principal.
 
-#### Tray `Mapa da família`
+## Tray `Mapa da família`
 
-Os botões da visão geral mobile devem seguir contrato visual próprio:
+Os botões da visão geral mobile seguem contrato visual próprio:
 
-- padding lateral, superior e inferior de `8px`;
-- conteúdo centralizado no eixo horizontal e vertical;
+- padding uniforme de `8px`;
+- conteúdo centralizado nos eixos horizontal e vertical;
 - apenas um ícone por botão;
 - ícone diferente para cada grupo;
-- ícones em tamanho ampliado, sem reaparecimento de ícone antigo;
-- títulos com `letter-spacing` reduzido para caber em cards estreitos;
-- contador centralizado e sem deslocamento vertical.
-- a barra mobile deve ter container branco, borda sutil, botões arredondados e estado ativo destacado;
-- o botão `Mapa` deve ter semântica de visão geral, com `aria-label` equivalente a abrir a visão geral do mapa familiar;
-- os cards da visão geral devem ter destino explícito por grupo e não depender da tela em que o usuário abriu o modal;
-- o controle local `+`/`−` de tios deve ser visualmente distinto do botão `+` global da toolbar.
-- o painel `Mapa` deve abrir dentro da shell mobile da rota, preservando header, toolbar superior e navegação inferior.
-- os cards e o botão de mapa completo devem permanecer acima do backdrop/blur;
-- a área branca do painel deve se estender até abaixo do botão `Exibir mapa completo`;
-- círculos e ícones centrais podem ser levemente compactados em 320px/375px para preservar margens internas, com recuperação moderada a partir de 390px.
+- títulos com `letter-spacing` reduzido em cards estreitos;
+- contador centralizado;
+- container branco, borda sutil, botões arredondados e estado ativo destacado;
+- o botão `Mapa` tem semântica de visão geral;
+- cards da visão geral têm destino explícito por grupo;
+- controle local `+`/`−` de tios é distinto do botão `+` global;
+- painel abre dentro da shell mobile preservando header, toolbar e navegação inferior;
+- cards e CTA permanecem acima do backdrop/blur;
+- base branca reta envolve cards e `Exibir mapa completo` sem sobra excessiva abaixo do CTA.
 
-#### Mapa completo mobile
+## Mapa completo mobile
 
-- A visualização completa é uma camada própria acima da shell mobile e do blur imersivo.
-- O blur imersivo cobre tudo que fica atrás do mapa completo, incluindo header, toolbar, tray, conteúdo e navegação inferior.
-- O palco do mapa deve permitir pan com um dedo e zoom por pinça.
-- Após pan ou pinch, o `transform` aplicado pelo usuário deve ser preservado e não pode voltar automaticamente ao enquadramento inicial.
-- A ação `Reenquadrar`, quando disponível, é a única forma explícita de recalcular escala e posição sem reconstrução do stage.
-- Cards e grupos devem seguir uma estrutura única para evitar diferenças visuais entre grupos clonados.
-- Conectores devem tocar as bordas dos grupos/cards e não podem atravessar badges ou títulos.
-- Backdrop/blur imersivo nunca pode ficar acima da árvore completa nem do botão `X`.
-- O botão `X` deve ficar no canto superior direito, respeitar `safe-area`, ter área de toque confortável e ficar visualmente acima do mapa.
-- Fechar pelo `X` deve restaurar a shell mobile sem deixar blur, overlay ou tray preso.
+- A visualização completa é camada própria posicionada abaixo da área superior compartilhada.
+- Header, toolbar superior e área de botões permanecem visíveis.
+- O container arredondado inicia logo abaixo da toolbar, sem espaçamento extra.
+- A base branca reta acompanha a altura do container arredondado.
+- O palco permite pan com um dedo e zoom por pinça.
+- Pan/pinch preservam o `transform` aplicado pelo usuário.
+- `Reenquadrar`, quando disponível, é a ação explícita para recalcular escala e posição.
+- Cards e grupos seguem estrutura única.
+- Conectores tocam bordas de grupos/cards e não atravessam badges ou títulos.
+- A versão atual não renderiza botão `X` próprio; retorno/fechamento deve ser controlado pelo fluxo de toolbar/estado da rota sem deixar blur, overlay ou tray preso.
+- Nomes no mapa completo mostram somente dois primeiros termos e não exibem datas/status ao lado do nome.
+- `Tios maternos` não deve deixar espaço vazio excessivo abaixo da última linha de cards.
 
-#### Camadas e backdrop dos painéis mobile de mapa
+## Camadas e backdrop dos painéis mobile
 
-- Header, toolbar superior, painel ativo, cards, CTA e navegação inferior devem ficar acima do backdrop parcial.
-- O backdrop/blur parcial deve começar abaixo do painel ativo, não apenas abaixo da toolbar.
-- Em `Formato`, o blur parcial começa abaixo dos cards de escolha de visualização.
-- Em `Cor`, o blur parcial começa abaixo da faixa de paletas.
-- Em `Filtros`, o blur parcial começa abaixo do container de filtros.
-- Em `Mapa` de `/mapa-familiar`, o blur parcial começa abaixo dos cards de grupos e do CTA.
-- Em `Mapa` de `/linha-geracional`, o blur parcial começa abaixo do container `Gerações`, incluindo o botão `Exibir mapa completo`.
-- O backdrop parcial deve terminar no topo real da navegação inferior e nunca pode ocultá-la.
-- O modo imersivo é reservado a camadas completas, especialmente mapa completo e painel do botão `+`: cobre a shell atrás da camada ativa, mas nunca cobre a camada completa nem seus controles próprios, como o botão `X`.
-- A toolbar não pode mudar de posição quando qualquer painel é aberto.
+- Header, toolbar superior, painel ativo, cards, CTA e navegação inferior ficam acima do backdrop parcial.
+- O backdrop parcial começa abaixo do painel ativo, não apenas abaixo da toolbar.
+- Em `Formato`, o blur começa abaixo dos cards de escolha de visualização.
+- Em `Cor`, o blur começa abaixo da faixa de paletas.
+- Em `Filtros`, o blur começa abaixo do container de filtros.
+- Em `Mapa` de `/mapa-familiar`, o blur começa abaixo dos cards de grupos e do CTA.
+- Em `Mapa` de `/linha-geracional`, o blur começa abaixo do container `Gerações`, incluindo `Exibir mapa completo`.
+- O backdrop parcial termina no topo real da navegação inferior.
+- A toolbar não muda de posição quando qualquer painel é aberto.
 
-### `/linha-geracional`
+## `/linha-geracional`
 
-- A versão mobile deve ter leitura geracional equivalente à visualização horizontal.
-- Cabeçalhos `Geração N` precisam de margem superior suficiente para não colar na toolbar.
-- Títulos de geração devem ter fonte e peso moderados.
-- Cards conjugais devem empilhar quando necessário.
-- Conectores devem representar relações reais e não criar ligação lateral em todos os cards.
-- Ajustes de camada da linha geracional mobile devem ser isolados para não afetar `/mapa-familiar`.
-- O painel `Mapa` deve usar grid compacto preferencialmente `3x2`, com atalhos `GER. 1` a `GER. 6`.
-- Cada card `GER. N` deve ter área de toque confortável, label curto, contador quando disponível e estado ativo evidente.
-- O CTA `Exibir mapa completo` deve permanecer dentro da área branca do painel.
-- Tocar em um card de geração deve navegar para a geração correspondente e fechar o tray sem alterar rota.
-- O fundo branco do painel deve se estender até abaixo do CTA inferior.
+- A versão mobile tem leitura geracional equivalente à visualização horizontal.
+- Cabeçalhos `Geração N` têm margem superior suficiente para não colar na toolbar.
+- Títulos de geração têm fonte e peso moderados.
+- Cards conjugais empilham quando necessário.
+- Conectores representam relações reais e não criam ligação lateral em todos os cards.
+- Ajustes de camada da linha geracional são isolados para não afetar `/mapa-familiar`.
+- O painel `Mapa` usa grid compacto preferencialmente `3x2`.
+- Cada card usa label `GERAÇÃO`, número central, contador e estado ativo evidente.
+- A geração ativa, badge e CTA usam azul principal do site.
+- O CTA `Exibir mapa completo` permanece dentro da área branca do painel.
+- Tocar em uma geração navega para a geração correspondente e fecha o tray sem alterar rota.
 
 ## Overlays de header no mobile
 
-- Dropdown de notificações deve ficar acima de todo conteúdo, inclusive toolbars e painéis de árvore.
-- Sugestões de busca devem ficar acima de todo conteúdo, inclusive teclado/sugestões nativas quando possível.
-- Menu do avatar deve ficar alto o suficiente para exibir conteúdo sem scroll vertical excessivo.
-- A área `Perfis gerenciados`, quando existir, deve ficar dentro do menu do avatar em bloco visual separado, com subtítulo `Familiares vinculados à sua conta`, e o menu deve aparecer acima do botão flutuante `?`.
+- Dropdown de notificações fica acima de todo conteúdo, inclusive toolbars e painéis.
+- Sugestões de busca ficam acima de todo conteúdo.
+- Menu do avatar fica alto o suficiente para exibir conteúdo sem scroll vertical excessivo.
+- A área `Perfis gerenciados`, quando existir, fica dentro do menu do avatar.
 
 ## Fluxo de onboarding
-
-Fluxo principal:
 
 ```text
 /meus-dados
@@ -165,107 +130,6 @@ Fluxo principal:
 
 Pessoa marcada como falecida em `/meus-dados` pula `/preferencias` e segue para `/revisao-dados`.
 
-## Meus dados
+## Regra de manutenção visual
 
-- O formulário coleta dados pessoais, preferências de privacidade, questionário e insumos para Mini Bio/Curiosidades.
-- O modo memorial depende de toggle explícito, não do tom textual.
-- Textos de IA devem caber em até 500 caracteres por campo.
-- No mobile, a área `Outros ajustes` não deve aparecer.
-- No mobile, o botão de foto deve usar `Adicionar foto`.
-- No mobile, o toggle `Vivo/Falecido` deve ser compacto.
-- O questionário `Sobre Mim` deve terminar em tela `Seu Perfil`, com Mini Bio e Curiosidades editáveis.
-- Ao avançar, voltar ou finalizar etapas do questionário `Sobre Mim`, a página deve reposicionar no topo da própria seção `Sobre Mim`, não no bloco anterior de contato/endereço nem no meio do formulário.
-- No mobile, os botões de navegação do questionário devem preservar largura mínima confortável; `Voltar` e `Avançar` podem usar apenas ícones para evitar texto espremido.
-- Nas etapas intermediárias, `Voltar`, `Pular Tudo` e `Avançar` podem ficar lado a lado quando houver espaço.
-- Na última etapa do questionário, `Pular Tudo` não deve aparecer, porque sua função já seria levar ao encerramento do fluxo.
-- Na última etapa do questionário, o CTA principal deve ser `Finalizar`, com largura suficiente para não cortar o texto no mobile.
-
-## Meus vínculos
-
-- Pessoas e pets são grupos distintos.
-- Cônjuges aparecem antes de filhos.
-- O bloco de textos pessoais não fica nos blocos de vínculos.
-- Alterações em vínculos são tratadas como solicitações quando aplicável.
-- Pets são cadastrados por modal próprio acionado na seção `Pets`.
-- Pets adicionados pelo modal devem aparecer na seção `Pets` com estado pendente quando a alteração depender de aprovação.
-- O modal de pet deve usar o mesmo padrão de upload de foto com zoom/crop usado no avatar do usuário.
-- O dropdown `Outros tutores` de pet deve listar apenas `Sou o único tutor` e cônjuges cadastrados; não deve listar pais, mães, filhos, irmãos ou parentes genéricos.
-- Cards mobile devem manter lixeira no topo direito e badges alinhadas.
-- Modais de adicionar parentes não devem abrir teclado automaticamente.
-- Quando a pessoa em revisão ou o cônjuge for falecido, não exibir `Relacionamento ativo`, `Data de separação` ou `Local de separação` no bloco de relacionamento conjugal.
-- Campos de datas de pet e relacionamento conjugal devem aceitar `DD/MM/AAAA` ou `AAAA`.
-- Campos de local/cidade usados nesse fluxo devem seguir o padrão `Cidade/UF` quando não forem marcados como exterior.
-
-## Arquivos históricos
-
-- A etapa aceita fatos sem arquivo e arquivos vinculados.
-- Upload é opcional.
-- O termo funcional é `Fatos e Arquivos Históricos`.
-- O campo `Pessoas participantes` deve ficar oculto por padrão para reduzir ruído no primeiro acesso.
-- O botão compacto `Adicionar outras pessoas` deve revelar o seletor de participantes.
-- Se já houver participantes selecionados, o seletor pode permanecer visível para preservar contexto e edição.
-
-## Revisão de dados
-
-- Deve resumir os dados antes do envio final.
-- Deve deixar claro o que será mantido, atualizado ou solicitado.
-- Não deve prometer gravação direta quando a regra implementada gerar solicitação pendente.
-- Parentes pendentes devem aparecer como `Em análise`.
-- Pets pendentes vindos de `/meus-vinculos` devem aparecer no resumo final; para pets, a badge pública pode usar `Em aprovação` como estado equivalente de pendência.
-- No mobile, o topo deve priorizar o nome completo do usuário e não deve exibir o botão `Editar perfil` no card inicial.
-- No mobile, o botão `Finalizar e acessar árvore` deve ficar no final da página, depois do resumo.
-- Se houver perfis sob responsabilidade do usuário, o modal final deve oferecer editar agora ou depois.
-
-## Perfil de pessoa
-
-- Cards vazios sem utilidade, como `Irmãos` sem irmãos, devem ser ocultados.
-- `Administração do perfil` não deve aparecer em `/pessoa/:id`; a administração de responsáveis fica fora da página pública do perfil.
-- `Discussões relacionadas` deve aparecer abaixo da linha do tempo.
-- O CTA superior duplicado de criar discussão deve ser removido quando já houver CTA interno.
-- No mobile, o conteúdo inferior deve ter respiro para não ficar sob a navegação inferior.
-
-## Curiosidades
-
-- A rota `/curiosidades` substitui a experiência de modal isolado para exploração de dados.
-- A página usa navegação interna sticky por atalhos. No mobile, os atalhos rolam horizontalmente com botões circulares laterais.
-- Os cards numéricos superiores de Pessoas, Localização, In memoriam, Pets e Casais não fazem parte da estrutura final da página.
-- O topo combina `Hoje na família`, slide de fotos e `Pergunte à IA`. O slide exibe miniaturas no desktop e uma foto por vez no mobile.
-- `Pergunte à IA` deve usar contraste azul, sugestões rápidas legíveis e campo de pergunta com placeholder curto.
-- `Teste seus conhecimentos` e `Mural da família` devem ter composição equilibrada em desktop e leitura confortável no mobile.
-- No quiz, botões de resposta devem ocupar a área disponível, com conteúdo legível e sem truncamento desnecessário.
-- Ao selecionar resposta no quiz, o feedback deve aparecer na própria área das opções, com animação de entrada, antes de avançar para a próxima pergunta.
-- Ao concluir a rodada do quiz, a página deve exibir mensagem final consolidada de desempenho.
-- O mural deve priorizar a pergunta da lembrança e evitar campos redundantes de autoria e visibilidade.
-- `Gráficos da família` deve manter leitura simples: barras verticais para aniversários, círculos para profissões e barras horizontais para faixas etárias.
-- Círculos de profissões devem preservar proporção e não cortar título, número ou ícone.
-- `Gerações da família` inicia com cards recolhidos, exibindo contador por categoria; a expansão revela as pessoas apenas no card aberto.
-- `Relacionamentos` consolida métricas de Uniões, Média e Faixa, com Uniões como primeiro card métrico.
-- `Rota da família` usa leitura visual de percurso, com pins, linha pontilhada, badges de distância e chegada.
-- O card inferior usa abas para `Descubra mais sobre...`, `Qual a minha conexão?`, `Comparar interesses` e `Astrologia da família`.
-- No mobile, as abas inferiores devem caber em uma linha, com ícones acima dos títulos e títulos em até duas linhas.
-- Dropdowns iniciam em estado neutro quando dependem de seleção do usuário, salvo quando o código usa pessoa vinculada como contexto inicial.
-- A área `Descubra mais sobre...` deve iniciar com `Selecione` e não selecionar uma pessoa automaticamente.
-- Bodas devem ser exibidas apenas para casais ativos, sem falecidos, em marcos exatos documentados em `funcionalidades/CURIOSIDADES.md`.
-
-## Fórum, favoritos e notificações
-
-- `/forum` mantém busca e filtros visíveis no desktop.
-- No desktop, a busca do fórum deve iniciar alinhada a `Categorias` e a ação `Criar novo` deve permanecer alinhada à margem direita do container.
-- `/forum/topico/:id` deve usar largura compatível com `/forum`, com tópico principal e coluna lateral de `Tópicos recentes` no desktop.
-- Em `/forum/topico/:id`, reações aparecem apenas para o tópico principal, não para respostas.
-- `/forum/novo` deve preservar menções legíveis no campo de conteúdo; quando destacado visualmente, o nome mencionado deve aparecer em azul e negrito.
-- `/meus-favoritos` deve usar layout amplo para busca/filtros no desktop.
-- O botão de notificações nos headers de mapa e páginas de membro deve abrir o dropdown, sem redirecionar diretamente para `/notificacoes` no desktop.
-- Notificações devem ter dropdown responsivo e rodapé em duas colunas iguais, com ações curtas sem quebra de linha.
-- O menu do avatar mantém primeiro e segundo nome no topo, subtítulo `Editar perfil`, atalhos de dúvidas e saída; o painel deve ficar acima de elementos sticky ou botões superiores.
-
-## Administração
-
-- Nas rotas `/admin/*`, o header global deve manter apenas navegação essencial: `Painel Administrativo`, `Principal` e menu do usuário.
-- O botão `Principal` não deve exibir seta; o retorno ao painel administrativo usa `Painel Administrativo`.
-- Ações administrativas secundárias, como membros, conteúdo e responsáveis, devem permanecer nas páginas correspondentes ou em cards internos, não no header global.
-- Páginas administrativas devem manter acentuação correta em títulos, labels, botões e mensagens.
-- Cards superiores de `/admin` devem priorizar número principal; `Relações` deve exibir o total de relacionamentos e pode manter o subtítulo de casamentos quando couber.
-- `/admin/responsaveis` deve priorizar solicitação pendente quando houver e ocultar essa seção quando vazia.
-- `/admin/notificacoes` deve humanizar canais, tipos, status, disponibilidade, frequência e categorias em todas as abas, sem slugs crus.
-- `/admin/relacionamentos` deve permitir leitura por filtros de cards, busca por pessoa e sugestões de nomes, sem exibir a classificação legada `sangue`/`adotivo`.
+Mudanças em mapa mobile devem validar 320px, 375px, 390px e 430px, preferencialmente em iPhone/Safari real ou device mode equivalente. Nenhum ajuste mobile deve alterar desktop por herança.

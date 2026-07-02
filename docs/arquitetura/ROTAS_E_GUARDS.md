@@ -1,7 +1,7 @@
 # Rotas e guards
 
 > Última revisão: 2026-07-01
-> Escopo: rotas principais, guards e fluxos de navegação.
+> Escopo: rotas principais, guards, layout compartilhado mobile dos mapas e fluxos de navegação.
 > Status: canônico.
 
 ## Fonte de verdade
@@ -22,61 +22,72 @@ As rotas são declaradas em `src/app/routes.tsx`. Este documento deve citar apen
 | Rota | Uso | Guard |
 |---|---|---|
 | `/` | Redireciona para `/mapa-familiar`. | `TreeAccessRoute` |
-| `/mapa-familiar` | Mapa vertical e principal. | `TreeAccessRoute` |
-| `/mapa-familiar-horizontal` | Visualização horizontal. | `TreeAccessRoute` |
-| `/linha-geracional` | Visualização geracional mobile/dedicada. | `TreeAccessRoute` |
+| `/mapa-familiar` | Mapa vertical e principal; no mobile é filha de `TreeMapSharedLayout` via `MapaFamiliarSharedRoute`. | `TreeAccessRoute` |
+| `/mapa-familiar-horizontal` | Visualização horizontal baseada na shell `Home`/`TreeHomeShell`. | `TreeAccessRoute` |
+| `/linha-geracional` | Visualização geracional mobile/dedicada; filha de `TreeMapSharedLayout` com `mobileChromeMode="shared"`. | `TreeAccessRoute` |
 | `/busca` | Resultados da busca global. | `TreeAccessRoute` |
 | `/pessoa/:id` | Perfil individual com dados, vínculos, fórum, arquivos e timeline. | `MemberRoute` |
 | `/pessoas/:id` | Alias de perfil individual. | `MemberRoute` |
 
-### Montagem de runtimes mobile
+## Layout compartilhado mobile dos mapas
+
+`/mapa-familiar` e `/linha-geracional` compartilham um route element pai no mobile:
+
+```text
+TreeAccessRoute
+  TreeMapSharedLayout
+    /mapa-familiar -> MapaFamiliarSharedRoute
+    /linha-geracional -> LinhaGeracional mobileChromeMode="shared"
+```
+
+`TreeMapSharedLayout` mantém `HomeHeader`, `<Outlet />` e `HomeMobileNav` montados. A troca de rota deve substituir apenas o conteúdo central. `/mapa-familiar-horizontal` permanece fora desse layout compartilhado.
+
+Contratos:
+
+- header, toolbar superior e navegação inferior ficam fora do `<Outlet />`;
+- alternar `Formato` não pode remontar visualmente o chrome;
+- `MobileTreeChromeContext` recebe dados da rota filha ativa;
+- `MapaFamiliarSharedRoute` é adaptador de transição para `Home`;
+- `LinhaGeracional` usa `mobileChromeMode="shared"` para não duplicar shell;
+- desktop deve continuar controlado pelas páginas originais.
+
+## Montagem de runtimes mobile
 
 - `MobileTopLayerTweaks` pode ser montado globalmente em rotas renderizadas por `lazyRoute`, desde que suas regras internas sejam defensivas por rota/breakpoint.
-- `LinhaGeracionalMobilePanelLayerTweaks` deve ser montado somente na rota `/linha-geracional`.
-- `/mapa-familiar` não deve carregar runtime específico da linha geracional.
-- O isolamento entre `/mapa-familiar` e `/linha-geracional` é regra de não regressão para evitar travamentos, overlays indevidos ou mudança de layout entre rotas.
+- `LinhaGeracionalMobilePanelLayerTweaks` pode estar montado no route element compartilhado desde que se isole internamente por `pathname`, breakpoint e seletores da linha geracional.
+- O isolamento entre `/mapa-familiar` e `/linha-geracional` continua obrigatório para evitar travamentos, overlays indevidos ou mudança de layout entre rotas.
 - Runtimes de mapa mobile importados por side effect devem permanecer isolados por rota, breakpoint e seletor explícito.
-- Componentes React de mapa mobile (`MobileFamilyMapBackdrop`, `MobileFamilyMapContextTray` e `MobileFamilyMapFullLayer`) não alteram rota, guard ou estado de autenticação.
-- O backdrop/blur parcial dos painéis de mapa é recurso visual da shell mobile e não deve mudar rota, guard ou estado de autenticação.
-- O mapa completo é camada visual temporária acima da rota atual; fechar pelo `X` deve restaurar a mesma rota e a mesma perspectiva de pessoa.
+- Componentes React de mapa mobile não alteram rota, guard ou estado de autenticação.
+- O mapa completo é camada visual temporária da rota atual; a versão vigente não renderiza botão `X` próprio e deve retornar/fechar sem perder rota, perspectiva de pessoa, header, toolbar ou menu inferior.
 
 ## Rotas de onboarding
 
 | Rota | Etapa | Observações |
 |---|---:|---|
 | `/minha-arvore/editar` | Alias | Redireciona para `/meus-dados`. |
-| `/meus-dados` | 1 | Dados pessoais, status vivo/falecido, redes sociais e questionário IA com tela final `Seu Perfil`. |
-| `/meus-vinculos` | 2 | Vínculos familiares, cônjuges, filhos, irmãos e pets. Mini Bio/Curiosidades não ficam mais nesta página. |
+| `/meus-dados` | 1 | Dados pessoais, status vivo/falecido, redes sociais e questionário IA. |
+| `/meus-vinculos` | 2 | Vínculos familiares, cônjuges, filhos, irmãos e pets. |
 | `/arquivos-historicos` | 3 | Fatos e arquivos históricos. |
 | `/preferencias` | 4 | Apenas pessoa viva. |
-| `/revisao-dados` | 5 | Revisão final e eventuais pendências de edição/responsabilidade. |
+| `/revisao-dados` | 5 | Revisão final e pendências. |
 | `/vincular-perfil` | Apoio | Vinculação de usuário a perfil. |
 | `/mapa-familiar` | Pós-onboarding | Visualização da árvore. |
 
-## Fluxo para pessoa viva
+## Fluxos de onboarding
+
+Pessoa viva:
 
 ```text
-/meus-dados
-  → /meus-vinculos
-  → /arquivos-historicos
-  → /preferencias
-  → /revisao-dados
-  → /mapa-familiar
+/meus-dados -> /meus-vinculos -> /arquivos-historicos -> /preferencias -> /revisao-dados -> /mapa-familiar
 ```
 
-## Fluxo para pessoa falecida
+Pessoa falecida:
 
 ```text
-/meus-dados
-  → /meus-vinculos
-  → /arquivos-historicos
-  → /revisao-dados
-  → /mapa-familiar
+/meus-dados -> /meus-vinculos -> /arquivos-historicos -> /revisao-dados -> /mapa-familiar
 ```
 
 `/preferencias` deve redirecionar pessoa falecida para `/revisao-dados` após aplicar defaults seguros.
-
-Antes de finalizar `/revisao-dados`, se o usuário logado for responsável por outros perfis, o fluxo pode exibir modal de escolha para editar essas páginas agora ou seguir para a árvore.
 
 ## Rotas de membro autônomas
 
@@ -92,10 +103,6 @@ Antes de finalizar `/revisao-dados`, se o usuário logado for responsável por o
 | `/forum/topico/:id` | Tópico individual. | `MemberRoute` |
 | `/forum/topico/:id/editar` | Edição de tópico. | `MemberRoute` |
 
-## Header nessas rotas
-
-Rotas de onboarding usam header simplificado. No mobile, a navegação inferior pode permanecer disponível quando o contrato visual da experiência principal exigir.
-
 ## Guards principais
 
 ### Usuário não autenticado
@@ -110,26 +117,15 @@ Rotas de onboarding usam header simplificado. No mobile, a navegação inferior 
 ### Primeiro acesso
 
 - `resolveFirstAccessLinkForUser` deve ser chamado antes de carregar dados principais.
-- Pendências de primeiro acesso em localStorage/sessionStorage devem ser resolvidas.
-
-- Usuário autenticado com vínculo `linked` e `dados_confirmados = false` deve acessar apenas as etapas do onboarding: `/meus-dados`, `/meus-vinculos`, `/arquivos-historicos`, `/preferencias` e `/revisao-dados`.
-- Qualquer tentativa de acessar rota interna de membro fora do onboarding durante primeiro acesso incompleto deve redirecionar para `/meus-dados`.
-- `TreeAccessRoute` deve impedir acesso a `/`, `/mapa-familiar`, `/mapa-familiar-horizontal`, `/linha-geracional` e `/busca` enquanto `dados_confirmados = false`.
-- `MemberRoute` deve aplicar a mesma restrição para `/curiosidades`, `/forum`, `/forum/novo`, `/forum/topico/:id`, `/forum/topico/:id/editar`, `/calendario-familiar`, `/meus-favoritos`, `/notificacoes`, `/ajustar-notificacoes`, `/pessoa/:id` e `/pessoas/:id`.
-- O retorno para `/mapa-familiar` só é permitido depois de `/revisao-dados` confirmar o cadastro e persistir `dados_confirmados = true`.
-- Dados já salvos em etapas anteriores não devem ser descartados pelo redirecionamento de segurança.
-
-### Pessoa falecida
-
-- Sem preferências de notificação pessoais.
-- Sem WhatsApp ativo.
-- Local atual não deve ser tratado como dado vivo.
-- IA deve gerar memorial quando toggle for marcado.
-- Pessoa falecida administrada por responsável não deve criar conteúdo social em nome próprio quando a regra do fluxo proibir.
+- Usuário autenticado com vínculo `linked` e `dados_confirmados = false` deve acessar apenas etapas do onboarding.
+- `TreeAccessRoute` impede acesso a `/`, `/mapa-familiar`, `/mapa-familiar-horizontal`, `/linha-geracional` e `/busca` enquanto `dados_confirmados = false`.
+- `MemberRoute` aplica a mesma restrição para demais rotas internas.
+- O retorno para `/mapa-familiar` só é permitido depois de `/revisao-dados` confirmar cadastro e persistir `dados_confirmados = true`.
+- Dados já salvos não devem ser descartados pelo redirecionamento de segurança.
 
 ## Retorno seguro para árvore
 
-Parâmetros de retorno devem aceitar apenas paths internos permitidos, como:
+Parâmetros de retorno aceitam apenas paths internos permitidos:
 
 - `/`;
 - `/mapa-familiar`;
@@ -172,3 +168,4 @@ Não aceitar URL externa.
 - Não tratar `/preferencias` como obrigatória para pessoa falecida.
 - Não expor rotas admin para membro sem guard.
 - Não remover `/aprovacoes` quando o card do dashboard apontar para essa rota.
+- Não mover header, toolbar ou menu inferior para dentro do `<Outlet />` do layout compartilhado mobile.

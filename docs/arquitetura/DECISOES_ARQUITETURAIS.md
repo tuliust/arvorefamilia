@@ -1,7 +1,7 @@
 # Decisões arquiteturais
 
 > Última revisão: 2026-07-01
-> Escopo: arquitetura final documentada após consolidação dos documentos técnicos anteriores e ajustes mobile/admin de 2026-07-01.
+> Escopo: arquitetura final documentada após consolidação dos documentos técnicos, ajustes mobile/admin e layout compartilhado de mapas.
 > Status: canônico.
 
 ## Camadas
@@ -29,212 +29,138 @@ APIs serverless
 
 A fonte de verdade é `src/app/routes.tsx`.
 
-- Rotas públicas: home, login, termos, privacidade e dúvidas.
-- Rotas de membro: mapa, árvore, dados, vínculos, revisão, curiosidades, fórum, favoritos, notificações, preferências e calendário.
+- Rotas públicas: login, termos, privacidade e dúvidas.
+- Rotas de membro: mapas, árvore, dados, vínculos, revisão, curiosidades, fórum, favoritos, notificações, preferências e calendário.
 - Rotas administrativas: `/admin`, `/aprovacoes` e subrotas administrativas.
 - Guards principais: `ProtectedRoute`, `MemberRoute`, `TreeAccessRoute` e checagens administrativas.
 
 Detalhes operacionais ficam em `arquitetura/ROTAS_E_GUARDS.md`.
 
+## Layout compartilhado mobile dos mapas
+
+Decisão vigente:
+
+- `/mapa-familiar` e `/linha-geracional` compartilham, no mobile, um shell baseado em `TreeMapSharedLayout`.
+- O shell renderiza `HomeHeader`, `<Outlet />` e `HomeMobileNav`, mantendo header, toolbar superior e navegação inferior fora da área central trocada.
+- `MobileTreeChromeContext` desacopla o header da implementação específica da rota filha, permitindo que cada rota registre label, busca, sugestões e navegação.
+- `MapaFamiliarSharedRoute` é adaptador de transição para encaixar `Home` no layout compartilhado sem duplicar header/nav no mobile.
+- `LinhaGeracional` aceita `mobileChromeMode="shared"` para não montar header/nav próprios.
+- O evento `arvorefamilia:tree-map-route-change` pode ser usado por runtimes defensivos para reagir à troca de rota sem depender de remount visual do chrome.
+- Desktop continua separado: `/mapa-familiar-horizontal` permanece fora desse chrome compartilhado.
+
+Motivação:
+
+- alternar entre `Árvore Familiar` e `Linha Geracional` sem flicker de header, toolbar ou menu inferior;
+- reduzir duplicação de shell mobile entre páginas;
+- preservar estado e camadas comuns de toolbar;
+- criar caminho progressivo para mover regras de compatibilidade para componentes React definitivos.
+
 ## Supabase e dados
 
 A aplicação usa Supabase para autenticação, pessoas, relacionamentos, solicitações de vínculo, responsáveis por perfis, arquivos históricos, favoritos, notificações, fórum, preferências e storage.
 
-Regras de banco e migrations ficam em `operacao/MIGRATIONS_SUPABASE.md`. SQLs antigos foram consolidados em `historico/LEGADO_TECNICO.md` apenas para rastreabilidade.
+Regras de banco e migrations ficam em `operacao/MIGRATIONS_SUPABASE.md`.
 
 ### Vínculos entre usuários, pessoas e responsáveis
 
-A arquitetura separa dois tipos de vínculo:
+- `user_person_links`: vínculo entre usuário autenticado (`auth.users.id`) e pessoa da árvore (`pessoas.id`).
+- `person_responsible_links`: vínculo pessoa-a-pessoa entre pessoa administrada (`managed_pessoa_id`) e pessoa responsável (`responsible_pessoa_id`).
 
-- `user_person_links`: vínculo entre um usuário autenticado (`auth.users.id`) e uma pessoa da árvore (`pessoas.id`). Deve ser usado quando o vínculo concede acesso, edição, perfil principal ou permissões associadas a login.
-- `person_responsible_links`: vínculo pessoa-a-pessoa entre uma pessoa administrada (`managed_pessoa_id`) e uma pessoa responsável (`responsible_pessoa_id`). Deve ser usado para indicar responsáveis familiares por perfis legados ou crianças quando o responsável vem da tabela `pessoas`, mesmo que não tenha usuário autenticado.
-
-Essa separação evita gravar `pessoas.id` em campos que referenciam `auth.users.id` e preserva a integridade referencial de `user_person_links`.
-
-A página `/admin/responsaveis` usa `person_responsible_links` para o seletor inline de responsáveis em perfis legados e crianças. As solicitações de administração continuam sendo tratadas pelo fluxo próprio de solicitações e, quando aprovadas, podem gerar vínculo com usuário autenticado.
+Essa separação evita gravar `pessoas.id` em campos que referenciam `auth.users.id`.
 
 ### Notificações administrativas
 
-A arquitetura separa três camadas de notificações:
+A arquitetura separa três camadas:
 
-- entrega real ao usuário, persistida em `notificacoes_usuario`;
-- preferências individuais, persistidas em `preferencias_notificacao`;
-- administração de catálogo e configuração, persistida em `admin_notification_configurations` e `admin_notification_catalogs`.
+- entrega real ao usuário em `notificacoes_usuario`;
+- preferências individuais em `preferencias_notificacao`;
+- administração de catálogo e configuração em `admin_notification_configurations` e `admin_notification_catalogs`.
 
 Decisão vigente:
 
-- o catálogo administrativo de notificações deve ser editável e persistido no Supabase;
-- `admin_notification_catalogs` guarda snapshot completo em JSONB com frequências, temas, grupos, tipos, templates, automações e sugestões;
-- `admin_notification_configurations` guarda overrides e configurações da tela administrativa;
-- `admin_notification_configurations.variable_settings` guarda regras por variável de template, como origem, valor/fallback, link considerado e formato de data;
-- `admin_notification_catalogs.notification_templates` pode persistir `variableSettings` como metadado do template salvo;
-- `src/app/constants/adminNotificationCatalog.ts` permanece como fallback/base técnica enquanto a UI termina a migração para consumo integral do catálogo persistido;
-- novas evoluções devem preferir `loadAdminNotificationCatalog()` e serviços correlatos em vez de imports diretos do catálogo base;
-- entregas reais não devem ser confundidas com catálogo; dispatch continua responsável por criar notificações em `notificacoes_usuario`.
-
-Destinatários avançados aceitos:
-
-- usuário do gatilho;
-- usuários específicos;
-- familiares próximos: pai, mãe, irmãos, cônjuge ativo, filhos, netos e sobrinhos.
-
-A seleção `Usuário do gatilho` é composta por dois níveis:
-
-1. grupo dinâmico `trigger_user`, que indica que o destinatário será o usuário que realizou a ação;
-2. tokens `trigger_event:<evento>`, que indicam quais eventos administrativos podem acionar essa regra.
-
-Eventos conhecidos:
-
-- `trigger_event:first_map_access`: evento já implementado, baseado no primeiro acesso real a `/mapa-familiar`;
-- `trigger_event:first_login`: evento preparado, ainda dependente de conexão com o fluxo de autenticação;
-- `trigger_event:onboarding_completed`: evento preparado, ainda dependente de conexão com a conclusão do primeiro acesso;
-- `trigger_event:profile_updated`: evento preparado, ainda dependente de conexão com o fluxo de atualização própria de perfil.
-
-O primeiro acesso real a `/mapa-familiar` pode gerar notificação interna de boas-vindas, deduplicada por `user_first_map_accesses`.
-
-A configuração de variáveis é metadado administrativo. A substituição real de variáveis deve ocorrer no dispatch ou no serviço do gatilho, validando contexto, permissões e fallback antes de entregar a notificação ao usuário.
-
-A UI administrativa pode usar `localStorage` para preservar rascunho e aba ativa da página `/admin/notificacoes`, mas a fonte remota definitiva após `Salvar` permanece o Supabase.
-
-A documentação funcional canônica dessa frente é `funcionalidades/NOTIFICACOES_ADMIN.md`. O resumo de notificações do usuário permanece em `funcionalidades/FUNCIONALIDADES_COMPLEMENTARES.md`.
+- catálogo administrativo deve ser editável e persistido no Supabase;
+- `admin_notification_catalogs` guarda snapshot completo em JSONB;
+- `admin_notification_configurations` guarda overrides e configurações da UI administrativa;
+- `admin_notification_configurations.variable_settings` guarda regras por variável;
+- `src/app/constants/adminNotificationCatalog.ts` permanece fallback/base técnica;
+- entregas reais não devem ser confundidas com catálogo.
 
 ## Configurações públicas e cache local
 
-As configurações públicas de identidade visual continuam sendo persistidas no Supabase pela área `/admin/home`.
-
-Decisão vigente:
-
-- `site_visual_settings` permanece como fonte remota definitiva da versão publicada, rascunho e agendamento;
-- `useSiteVisualSettings.ts` pode usar `localStorage` como cache best-effort da versão pública para reduzir flicker visual e servir fallback quando a leitura remota falhar;
-- a chave de cache deve ser tratada como implementação de UI, não como fonte canônica de dados;
-- leitura de cache não substitui validações, auditoria, publicação manual, rascunho ou agendamento;
-- falha de cache local nunca deve bloquear carregamento da página pública.
+- `site_visual_settings` é fonte remota definitiva da versão publicada, rascunho e agendamento.
+- `useSiteVisualSettings.ts` pode usar `localStorage` como cache best-effort.
+- Cache local não substitui auditoria, publicação, rascunho ou agendamento.
+- Falha de cache nunca bloqueia carregamento da página pública.
 
 ## Runtimes defensivos de UI
 
-A aplicação admite componentes de runtime para compatibilidade visual temporária, desde que o escopo seja controlado.
+A aplicação admite runtimes para compatibilidade visual temporária, desde que o escopo seja controlado.
 
 Decisão vigente:
 
-- runtime de UI não deve substituir lógica de domínio ou regra de banco;
-- ajustes de DOM devem ser isolados por rota, breakpoint e seletor explícito;
-- `MutationObserver` não deve observar `attributes` quando o próprio runtime altera `style`, `dataset` ou classes;
-- a execução deve ser agrupada via `requestAnimationFrame`;
-- falhas devem ser capturadas com `try/catch` para não bloquear a página;
+- runtime de UI não substitui lógica de domínio ou regra de banco;
+- ajustes de DOM são isolados por rota, breakpoint e seletor explícito;
+- `MutationObserver` não observa `attributes` quando o runtime altera `style`, `dataset` ou classes;
+- execução deve ser agrupada via `requestAnimationFrame`;
+- falhas devem ser capturadas com `try/catch`;
 - componentes de origem devem ser corrigidos quando o ajuste deixar de ser pontual;
-- scripts vazios ou neutralizados devem ser removidos do carregamento quando não houver dependência operacional real.
-
-Casos aceitos nesta fase:
-
-- sobreposição de dropdowns do header mobile;
-- compatibilidade visual temporária em `/meus-dados` e `/meus-vinculos` mobile;
-- ajustes de camadas no painel mobile da árvore enquanto não absorvidos pelos componentes React;
-- ocultações condicionais em `/pessoa/:id` enquanto o layout definitivo não absorve a regra;
-- patches visuais pequenos carregados por `index.html` quando forem isolados, documentados e substituíveis por correção de origem.
-
-## IA
-
-A IA é funcionalidade de apoio e não substitui revisão humana dos dados.
-
-- Endpoint principal: `api/ai.ts`.
-- Textos de perfil: `purpose === "profile_text"`.
-- Conteúdos automáticos de pessoas: serviço e Edge Function específicos quando aplicável.
-- Documentação funcional: `funcionalidades/MINI_BIO_CURIOSIDADES_IA.md`.
+- scripts vazios ou neutralizados devem ser removidos quando não houver dependência real.
 
 ## Mapa familiar e árvore
 
 - `funcionalidades/MAPA_FAMILIAR_VIEW.md`: contrato das views `/mapa-familiar`, `/mapa-familiar-horizontal` e `/linha-geracional`.
 - `funcionalidades/ARVORE_LEGENDAS_CONECTORES_PAINEL.md`: painéis, conectores, legendas, seletor de visualização e edição da árvore.
 
-Documentos antigos de mobile, baseline e ajustes por rodada foram removidos porque o contrato vigente passou a estar nos documentos canônicos.
-
 ### Mapa completo mobile por modelo de nós
 
 Decisão vigente:
 
-- o mapa completo mobile não deve ser mantido como clone visual frágil de seções já renderizadas;
-- a renderização deve usar modelo próprio de pessoas, nós e arestas;
-- cards devem ser renderizados por estrutura comum, com variantes visuais declaradas;
-- conectores devem ser derivados de âncoras e bordas reais dos nós;
-- pan/zoom devem preservar o `transform` aplicado pelo usuário após o gesto, sem reset automático por reidratação, observer, resize ou rotina defensiva;
-- a ação `Reenquadrar`, quando disponível, é a forma explícita de recalcular escala e posição, salvo reconstrução real do stage;
-- o botão `X` do mapa completo deve pertencer à camada React de mapa completo, respeitar `safe-area`, ter área de toque confortável e encerrar corretamente o modo imersivo;
-- ajustes de conector, camada ou gesto por runtime são aceitos como etapa de estabilização, mas devem preservar rota e breakpoint;
-- a evolução desejável é mover a regra para componentes React definitivos quando o comportamento visual estiver validado.
+- o mapa completo mobile não deve ser clone visual frágil de seções renderizadas;
+- a renderização usa modelo próprio de pessoas, nós e arestas;
+- cards são renderizados por estrutura comum, com variantes visuais declaradas;
+- conectores são derivados de âncoras e bordas reais dos nós;
+- pan/zoom preservam o `transform` aplicado pelo usuário após o gesto;
+- `Reenquadrar`, quando disponível, é forma explícita de recalcular escala e posição;
+- a versão atual não renderiza botão `X` próprio; retorno/fechamento é controlado pelo fluxo de toolbar/estado da rota sem deixar overlay preso;
+- ajustes de conector, camada ou gesto por runtime são aceitos como etapa de estabilização;
+- comportamento estabilizado deve migrar para componentes React definitivos quando possível.
 
 ### Trays mobile e backdrop por componentes React
 
 Decisão vigente:
 
-- `HomeMobileNav.tsx` centraliza o estado dos botões `Formato`, `Cor`, `Filtros`, `Mapa` e `+` nas rotas de mapa mobile;
-- `MobileFamilyMapBackdrop.tsx` é a fonte preferencial para backdrop parcial/imersivo dos mapas mobile;
-- `MobileFamilyMapContextTray.tsx` é a fonte preferencial para trays contextuais da toolbar;
-- `MobileFamilyMapFullLayer.tsx` é a fonte preferencial para a camada completa e o botão `X`;
+- `HomeMobileNav.tsx` centraliza estado dos botões `Formato`, `Cor`, `Filtros`, `Mapa` e `+` nas rotas de mapa mobile;
+- no layout compartilhado, `HomeMobileNav` fica fora do `<Outlet />`;
+- `MobileFamilyMapBackdrop.tsx` é fonte preferencial para backdrop parcial/imersivo;
+- `MobileFamilyMapContextTray.tsx` é fonte preferencial para trays contextuais;
+- `MobileFamilyMapFullLayer.tsx` é fonte preferencial para a camada completa, base branca e container arredondado abaixo da toolbar;
 - novos ajustes não devem recriar scripts globais de backdrop nem depender de `MutationObserver` para posicionamento de blur;
 - seletores legados de backdrop de toolbar não devem voltar como contrato operacional.
 
 ### Modelo de camadas mobile
 
-Existem dois estados de camada diferentes:
-
-1. **Tray contextual com blur parcial**
+1. Tray contextual com blur parcial:
    - usado por `Formato`, `Cor`, `Filtros` e `Mapa` em modo overview;
    - preserva header, toolbar superior, tray ativo e navegação inferior visíveis e sem blur;
-   - o blur começa abaixo do tray completo, incluindo CTA quando existir;
-   - o blur termina no topo real da navegação inferior, com `safe-area` apenas como fallback;
-   - cards e CTA do tray ficam acima do blur.
+   - blur começa abaixo do tray completo, incluindo CTA quando existir;
+   - blur termina no topo real da navegação inferior.
 
-2. **Mapa completo ou painel `+` com blur imersivo**
-   - usado para o mapa completo e para a camada de controles globais quando aberta;
-   - o blur imersivo cobre a shell da página atrás da camada ativa;
-   - a camada ativa, o palco do mapa completo e o botão `X` ficam acima do blur;
-   - fechar deve remover a camada e o blur sem deixar overlay preso.
-
-Motivação:
-
-- reduzir divergência entre grupos;
-- impedir conectores soltos ou duplicados;
-- evitar ghost clicks e vazamento de eventos para cards abaixo de overlays;
-- manter a navegação mobile consistente durante painéis e mapas completos;
-- permitir pan/zoom estável sem depender do DOM de telas secundárias;
-- reduzir disputa entre scripts globais e estado React.
+2. Mapa completo ou painel `+`:
+   - usado para camadas completas;
+   - no mapa completo atual, container inicia abaixo da toolbar compartilhada e não renderiza botão `X` próprio;
+   - a camada ativa e o palco do mapa ficam acima do blur;
+   - retorno/fechamento remove camada e blur sem deixar overlay preso.
 
 ## Scripts neutralizados ou absorvidos
 
-Arquivos de transição que não devem ser tratados como fonte arquitetural vigente quando estiverem vazios, sem carregamento ativo ou absorvidos por componentes React:
+Arquivos de transição que não devem ser tratados como fonte arquitetural vigente quando vazios, sem carregamento ativo ou absorvidos:
 
 - `src/mobileMapPanelRefinements.ts`;
 - `src/mobileMapToolbarBackdropLayerFix.ts`;
 - `src/mobileFamilyMapFullPanelStyleFix.ts`;
-- `src/mobileFamilyMapFullOverviewButtonGuard.ts`, quando seu conteúdo for apenas `export {};`;
-- `src/desktopTreeVisualizationPanelTextFix.ts`, quando a correção textual já tiver sido aplicada nos componentes de origem.
-
-Se qualquer um desses arquivos voltar a ter comportamento ativo, a documentação deve explicar escopo, rota, breakpoint, seletor e motivo para não estar no componente React de origem.
+- `src/mobileFamilyMapFullOverviewButtonGuard.ts`, quando apenas `export {};`;
+- `src/desktopTreeVisualizationPanelTextFix.ts`, quando correção textual já estiver aplicada nos componentes.
 
 ## Administração
 
-A área administrativa deve manter rotas protegidas, header reduzido e páginas especializadas.
-
-- `/admin` concentra dashboard e ações rápidas.
-- `/aprovacoes` e `/admin/aprovacoes` concentram solicitações pendentes.
-- `/admin/home` concentra configurações públicas salváveis.
-- `/admin/responsaveis` concentra responsáveis por perfis legados e crianças.
-- `/admin/notificacoes` concentra visão geral, configuração, preferências, automações, métricas e diagnóstico de notificações.
-- `/admin/gestao-conteudo-pessoas` concentra textos automáticos, visibilidade e conteúdos de pessoas.
-
-## Decisões de documentação
-
-- Documentos datados de rodada não são contrato operacional.
-- Histórico técnico fragmentado fica em `historico/LEGADO_TECNICO.md`.
-- Funcionalidades menores ficam em `funcionalidades/FUNCIONALIDADES_COMPLEMENTARES.md`.
-- Funcionalidades com contrato técnico extenso podem ganhar documento próprio em `funcionalidades/`, como `NOTIFICACOES_ADMIN.md`.
-- `docs/README.md` e `docs/INVENTARIO_TECNICO.md` são as fontes de navegação documental.
-- Arquivos residuais criados durante testes ou patches temporários devem ser removidos, ou documentados como pendência técnica quando ainda existirem no repositório sem carregamento ativo.
-
-## Regra de atualização
-
-Sempre que uma decisão arquitetural mudar, atualizar este documento e, quando afetar rota, também atualizar `arquitetura/ROTAS_E_GUARDS.md` e `INVENTARIO_TECNICO.md`.
-
-Quando uma alteração criar ou alterar tabelas, vínculos, permissões, policies ou fluxos administrativos, atualizar também `QA_MANUAL.md` e `REGRAS_DE_NAO_REGRESSAO.md`.
-
-Quando uma alteração migrar comportamento de script defensivo para componente React, atualizar também `GUIA_COMPONENTES.md`, `GUIA_IMPLEMENTACOES.md`, `GUIA_UX_LAYOUT.md` e a lista de scripts ativos em `INVENTARIO_TECNICO.md`.
+A área administrativa deve manter rotas protegidas, header reduzido e páginas especializadas. Alterações nessa frente devem preservar guards, auditoria, tabelas de configuração e documentação funcional correspondente.
