@@ -33,9 +33,9 @@ const ForumTopico = React.lazy(() => import('./pages/forum/ForumTopico').then((m
 const ForumNovoTopico = React.lazy(() => import('./pages/forum/ForumNovoTopico').then((module) => ({ default: module.ForumNovoTopico })));
 const ForumEditarTopico = React.lazy(() => import('./pages/forum/ForumEditarTopico').then((module) => ({ default: module.ForumEditarTopico })));
 const AdminLogin = React.lazy(() => import('./pages/admin/AdminLogin').then((module) => ({ default: module.AdminLogin })));
-const AdminDashboard = React.lazy(() => import('./pages/admin/AdminDashboardWithTweaks').then((module) => ({ default: module.AdminDashboardWithTweaks })));
+const AdminDashboard = React.lazy(() => import('./pages/admin/AdminDashboardWithTweaks').then((module) => ({ default: module.AdminDashboard })));
 const AdminAprovacoes = React.lazy(() => import('./pages/admin/AdminAprovacoes').then((module) => ({ default: module.AdminAprovacoes })));
-const AdminHomeSettings = React.lazy(() => import('./pages/admin/AdminHomeSettingsWithSaveBar').then((module) => ({ default: module.AdminHomeSettingsWithSaveBar })));
+const AdminHomeSettings = React.lazy(() => import('./pages/admin/AdminHomeSettingsWithSaveBar').then((module) => ({ default: module.AdminHomeSettings })));
 const AdminPessoas = React.lazy(() => import('./pages/admin/AdminPessoas').then((module) => ({ default: module.AdminPessoas })));
 const AdminPessoaForm = React.lazy(() => import('./pages/admin/AdminPessoaForm').then((module) => ({ default: module.AdminPessoaForm })));
 const AdminPessoaEditWorkspace = React.lazy(() => import('./pages/admin/AdminPessoaEditWorkspace').then((module) => ({ default: module.AdminPessoaEditWorkspace })));
@@ -48,9 +48,11 @@ const AdminIntegridade = React.lazy(() => import('./pages/admin/AdminIntegridade
 const AdminAtividades = React.lazy(() => import('./pages/admin/AdminAtividades').then((module) => ({ default: module.AdminAtividades })));
 const AdminResponsaveis = React.lazy(() => import('./pages/admin/AdminResponsaveis').then((module) => ({ default: module.AdminResponsaveis })));
 const AdminNotificacoes = React.lazy(() => import('./pages/admin/AdminNotificacoes').then((module) => ({ default: module.AdminNotificacoes })));
-const AdminDuvidas = React.lazy(() => import('./pages/admin/AdminDuvidasRefined').then((module) => ({ default: module.AdminDuvidasRefined })));
+const AdminDuvidas = React.lazy(() => import('./pages/admin/AdminDuvidasRefined').then((module) => ({ default: module.AdminDuvidas })));
 const AdminPeopleContentSettings = React.lazy(() => import('./pages/admin/AdminPeopleContentSettings').then((module) => ({ default: module.AdminPeopleContentSettings })));
 const LinhaGeracionalLazy = React.lazy(() => import('./pages/LinhaGeracional').then((module) => ({ default: module.LinhaGeracional })));
+const TreeMapSharedLayout = React.lazy(() => import('./pages/tree/TreeMapSharedLayout').then((module) => ({ default: module.TreeMapSharedLayout })));
+const MapaFamiliarSharedRoute = React.lazy(() => import('./pages/tree/MapaFamiliarSharedRoute').then((module) => ({ default: module.MapaFamiliarSharedRoute })));
 
 function RouteFallback() {
   return (
@@ -148,19 +150,21 @@ function TreeHomeShell() {
 
 const adminMigrationPath = '/admin/migrar-dados';
 const treeHomeRouteElement = lazyRoute(<TreeAccessRoute><TreeHomeShell /></TreeAccessRoute>);
-const linhaGeracionalRouteElement = lazyRoute(
-  <TreeAccessRoute><LinhaGeracionalLazy /></TreeAccessRoute>,
-  {
-    disableMobileGlobalTweaks: true,
-    enableLinhaGeracionalMobilePanelLayerTweaks: true,
-  },
+const treeMapSharedRouteElement = lazyRoute(
+  <TreeAccessRoute><TreeMapSharedLayout /></TreeAccessRoute>,
+  { enableLinhaGeracionalMobilePanelLayerTweaks: true },
 );
 
 export const router = createBrowserRouter([
   { path: '/', element: lazyRoute(<TreeAccessRoute><RedirectToMapaFamiliar /></TreeAccessRoute>) },
-  { path: '/mapa-familiar', element: treeHomeRouteElement },
+  {
+    element: treeMapSharedRouteElement,
+    children: [
+      { path: 'mapa-familiar', element: <MapaFamiliarSharedRoute /> },
+      { path: 'linha-geracional', element: <LinhaGeracionalLazy mobileChromeMode="shared" /> },
+    ],
+  },
   { path: '/mapa-familiar-horizontal', element: treeHomeRouteElement },
-  { path: '/linha-geracional', element: linhaGeracionalRouteElement },
   { path: '/busca', element: lazyRoute(<TreeAccessRoute><BuscaResultados /></TreeAccessRoute>) },
   { path: '/entrar', element: lazyRoute(<Entrar />) },
   { path: '/termos', element: lazyRoute(<Termos />) },
