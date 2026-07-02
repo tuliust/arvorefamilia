@@ -22,6 +22,16 @@ export type PersonTimelineSource =
   | 'person_event'
   | 'family_event';
 
+export interface PersonTimelineAttachment {
+  id: string;
+  title: string;
+  description?: string;
+  kind: 'pdf' | 'image' | 'record';
+  url?: string;
+  year?: string;
+  category?: string | null;
+}
+
 export interface PersonTimelineItem {
   id: string;
   type: PersonTimelineItemType;
@@ -38,6 +48,7 @@ export interface PersonTimelineItem {
   sourceId?: string;
   relatedPersonIds?: string[];
   link?: string;
+  attachments?: PersonTimelineAttachment[];
   metadata?: Record<string, unknown>;
 }
 
@@ -544,6 +555,80 @@ function createHistoricalFileItem(arquivo: ArquivoHistorico, linkedTo: 'person' 
   }, parsedDate);
 }
 
+function createTimelineAttachment(arquivo: ArquivoHistorico): PersonTimelineAttachment {
+  const hasFile = arquivoHistoricoHasFile(arquivo);
+  return {
+    id: arquivo.id,
+    title: arquivo.titulo?.trim() || getHistoricalRecordFallbackTitle(arquivo),
+    description: arquivo.descricao?.trim() || undefined,
+    kind: hasFile ? (arquivo.tipo === 'pdf' || arquivo.mime_type === 'application/pdf' ? 'pdf' : 'image') : 'record',
+    url: hasFile ? String(arquivo.url ?? '').trim() : undefined,
+    year: arquivo.ano,
+    category: arquivo.categoria_evento ?? null,
+  };
+}
+
+function isDateCompatible(item: PersonTimelineItem, arquivo: ArquivoHistorico) {
+  const arquivoDate = parseTimelineDate(arquivo.ano);
+  if (arquivoDate.precision === 'unknown' || item.precision === 'unknown') return true;
+  if (!arquivoDate.year || !item.year) return true;
+  if (arquivoDate.year !== item.year) return false;
+  if (arquivoDate.month && item.month && arquivoDate.month !== item.month) return false;
+  if (arquivoDate.day && item.day && arquivoDate.day !== item.day) return false;
+  return true;
+}
+
+function getTargetTypesForHistoricalFile(arquivo: ArquivoHistorico): PersonTimelineItemType[] {
+  switch (arquivo.categoria_evento) {
+    case 'certidao_nascimento':
+      return ['birth'];
+    case 'certidao_obito':
+      return ['death'];
+    case 'certidao_casamento':
+      return ['marriage', 'union'];
+    case 'divorcio':
+      return ['separation'];
+    default:
+      return [];
+  }
+}
+
+function findAttachmentTarget(items: PersonTimelineItem[], arquivo: ArquivoHistorico) {
+  const targetTypes = getTargetTypesForHistoricalFile(arquivo);
+  if (targetTypes.length === 0) return undefined;
+
+  const relationshipId = String(arquivo.relacionamento_id ?? '').trim();
+  if (relationshipId) {
+    const relationshipTarget = items.find((item) => (
+      targetTypes.includes(item.type)
+      && item.source === 'relationship'
+      && item.sourceId === relationshipId
+      && isDateCompatible(item, arquivo)
+    ));
+    if (relationshipTarget) return relationshipTarget;
+  }
+
+  return items.find((item) => targetTypes.includes(item.type) && isDateCompatible(item, arquivo));
+}
+
+function attachHistoricalFileToTimelineItem(item: PersonTimelineItem, arquivo: ArquivoHistorico) {
+  const attachment = createTimelineAttachment(arquivo);
+  const currentAttachments = item.attachments ?? [];
+  if (currentAttachments.some((current) => current.id === attachment.id)) return;
+  item.attachments = [...currentAttachments, attachment];
+}
+
+function integrateHistoricalFiles(items: PersonTimelineItem[], arquivos: ArquivoHistorico[], linkedTo: 'person' | 'relationship') {
+  for (const arquivo of arquivos) {
+    const target = findAttachmentTarget(items, arquivo);
+    if (target) {
+      attachHistoricalFileToTimelineItem(target, arquivo);
+    } else {
+      items.push(createHistoricalFileItem(arquivo, linkedTo));
+    }
+  }
+}
+
 function createPersonEventItem(evento: PersonEvent) {
   const parsedDate = parseTimelineDate(evento.data_evento);
   const type: PersonTimelineItemType = evento.tipo === 'memoria' ? 'memory' : 'person_event';
@@ -576,8 +661,8 @@ export function buildPersonTimeline(input: BuildPersonTimelineInput): PersonTime
     if (childBirthItem) items.push(childBirthItem);
   });
 
-  for (const arquivo of arquivosHistoricosPessoa) items.push(createHistoricalFileItem(arquivo, 'person'));
-  for (const arquivo of arquivosHistoricosRelacionamentos) items.push(createHistoricalFileItem(arquivo, 'relationship'));
+  integrateHistoricalFiles(items, arquivosHistoricosPessoa, 'person');
+  integrateHistoricalFiles(items, arquivosHistoricosRelacionamentos, 'relationship');
   for (const evento of eventosPessoais) items.push(createPersonEventItem(evento));
   for (const evento of eventosFamiliares) items.push(createFamilyEventItem(evento));
 
