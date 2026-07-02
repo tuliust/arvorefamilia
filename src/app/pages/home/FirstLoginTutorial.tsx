@@ -23,12 +23,8 @@ type TutorialStep = {
   description?: string;
   icon: React.ComponentType<{ className?: string }>;
   bullets?: string[];
-  tip?: string;
   targets?: TutorialTarget[];
   panelPlacement?: 'auto' | 'right' | 'left' | 'above' | 'below' | 'center';
-  panelReference?: 'all' | 'first' | 'last';
-  mergeSpotlights?: boolean;
-  panelGap?: number;
 };
 
 type FirstLoginTutorialProps = {
@@ -40,8 +36,6 @@ type FirstLoginTutorialProps = {
 type SpotlightRect = {
   left: number;
   top: number;
-  right: number;
-  bottom: number;
   width: number;
   height: number;
   radius: number;
@@ -53,27 +47,21 @@ type PanelPosition = {
   width: number;
 };
 
-type TourLayout = {
-  spotlights: SpotlightRect[];
-  panel: PanelPosition;
-};
-
-const PANEL_MAX_WIDTH = 430;
-const MOBILE_PANEL_MAX_WIDTH = 330;
-const PANEL_ESTIMATED_HEIGHT = 315;
-const MOBILE_PANEL_ESTIMATED_HEIGHT = 196;
+const PANEL_WIDTH = 430;
+const MOBILE_PANEL_WIDTH = 330;
+const PANEL_ESTIMATED_HEIGHT = 330;
 const VIEWPORT_MARGIN = 14;
 const SPOTLIGHT_RADIUS = 18;
-const PANEL_GAP = 18;
+const DEFAULT_TARGET_PADDING = 10;
+const STEP_STORAGE_KEY = 'arvorefamilia:first-login-tutorial-step:v1';
 const MOBILE_BREAKPOINT_QUERY = '(max-width: 767px)';
 
-const TUTORIAL_STEPS: TutorialStep[] = [
+const DESKTOP_STEPS: TutorialStep[] = [
   {
     eyebrow: 'GUIA RÁPIDO',
     title: 'Aqui é o seu menu',
     icon: Network,
     panelPlacement: 'left',
-    mergeSpotlights: true,
     targets: [
       { selectors: ['[data-tour-target="alerts"]'], padding: 10 },
       { selectors: ['[data-tour-target="search"]'], padding: 10 },
@@ -83,7 +71,7 @@ const TUTORIAL_STEPS: TutorialStep[] = [
       'Não perca datas importantes e avisos na área de Alertas e configure suas preferências de notificações.',
       'Utilize o botão de busca para procurar por pessoas, páginas do site ou histórias.',
       'No menu, tenha acesso rápido a todas as áreas do site.',
-      'Edite e complemente seus dados e altere a sua foto do perfil ou a sua senha de acesso.',
+      'Edite e complemente seus dados, altere sua foto do perfil ou sua senha de acesso.',
       'Personalize o que pode ser visualizado por outras pessoas.',
       'Saia da plataforma pelo logout.',
     ],
@@ -100,8 +88,7 @@ const TUTORIAL_STEPS: TutorialStep[] = [
     bullets: [
       'Feche o painel no botão de seta para expandir a área de visualização.',
       'Escolha o modo de visualização da árvore genealógica.',
-      'Mude a paleta de cores de exibição da sua tela de mapa familiar.',
-      'Configure o zoom e a exibição de linhas, bordas, cards e grupos.',
+      'Mude a paleta de cores de exibição do mapa familiar.',
       'Imprima ou salve em imagem ou PDF, destacando a área desejada da tela.',
     ],
   },
@@ -113,7 +100,7 @@ const TUTORIAL_STEPS: TutorialStep[] = [
     targets: [{ selectors: ['[data-tour-target="groups-filters"]'], padding: 12 }],
     bullets: [
       'Clique nos botões coloridos para ocultar ou exibir grupos de parentes.',
-      'Use os filtros para visualizar na árvore apenas pessoas vivas ou falecidas.',
+      'Use os filtros para visualizar apenas pessoas vivas ou falecidas.',
       'Ative o botão de cônjuges para exibir os cards de pessoas que se juntaram à família.',
       'O botão de Pet faz aparecer na árvore os animais de estimação cadastrados.',
     ],
@@ -123,14 +110,12 @@ const TUTORIAL_STEPS: TutorialStep[] = [
     title: 'Perfis, vínculos e memórias',
     icon: UserRound,
     panelPlacement: 'auto',
-    panelReference: 'first',
-    panelGap: 18,
     targets: [{ selectors: ['[data-family-map-central-card="true"]', '[data-family-map-mobile-card="true"]'], padding: 12 }],
     bullets: [
       'Clique nos cards para acessar informações pessoais, biografia e contatos de familiares.',
       'Descubra seu grau de parentesco e a linha genealógica que conecta vocês.',
       'Acesse arquivos históricos, certidões e uma linha do tempo de memórias.',
-      'Confira ainda o que diz a astrologia e os fatos do dia do nascimento desta pessoa.',
+      'Confira também fatos do dia do nascimento desta pessoa.',
     ],
   },
   {
@@ -138,14 +123,14 @@ const TUTORIAL_STEPS: TutorialStep[] = [
     title: 'Inteligência artificial e datas importantes',
     icon: Sparkles,
     panelPlacement: 'below',
-    mergeSpotlights: true,
     targets: [
       { selectors: ['[data-tour-target="curiosities"]'], padding: 10 },
       { selectors: ['[data-tour-target="calendar"]'], padding: 10 },
     ],
     bullets: [
-      'Em Curiosidades, surpreenda-se com fatos e números. Faça perguntas para a inteligência artificial para descobrir conexões e buscar dados sobre você e seus familiares.',
-      'Veja aniversários, datas de memória e comemorações no Calendário. Você pode integrar também ao Google Agenda.',
+      'Em Curiosidades, veja fatos, números e conexões da família.',
+      'Faça perguntas para a inteligência artificial sobre você e seus familiares.',
+      'Veja aniversários, datas de memória e comemorações no Calendário.',
     ],
   },
   {
@@ -153,14 +138,13 @@ const TUTORIAL_STEPS: TutorialStep[] = [
     title: 'Guarde os seus destaques',
     icon: Star,
     panelPlacement: 'auto',
-    mergeSpotlights: true,
     targets: [
       { selectors: ['[data-tour-target="favorites"]'], padding: 10 },
       { selectors: ['[data-tour-target="tree-favorite"]'], padding: 10 },
     ],
     bullets: [
-      'Favorite páginas e atalhos importantes para acessar rapidamente depois.',
-      'Use Favoritos no menu superior e o botão de estrela na árvore para guardar o que quiser consultar novamente.',
+      'Acesse páginas, arquivos e dados marcados como importantes.',
+      'Use o botão de estrela nas páginas do site para guardar o conteúdo que desejar.',
     ],
   },
   {
@@ -170,26 +154,23 @@ const TUTORIAL_STEPS: TutorialStep[] = [
     panelPlacement: 'below',
     targets: [{ selectors: ['[data-tour-target="forum"]'], textIncludes: ['Fórum'], padding: 10 }],
     bullets: [
-      'Interaja com todos criando tópicos de debate e compartilhando histórias, lembranças e dúvidas.',
-      'Crie tópicos para organizar conversas.',
+      'Interaja criando tópicos de debate e compartilhando histórias, lembranças e dúvidas.',
       'Responda mensagens e engaje com curtidas e outras reações.',
     ],
   },
 ];
 
-const MOBILE_TUTORIAL_STEPS: TutorialStep[] = [
+const MOBILE_STEPS: TutorialStep[] = [
   {
     eyebrow: 'GUIA RÁPIDO',
     title: 'Busca e perfil',
     icon: UserRound,
     panelPlacement: 'below',
-    mergeSpotlights: true,
     targets: [
       { selectors: ['[data-tour-target="search"]'], padding: 8 },
       { selectors: ['[data-tour-target="profile-menu"]'], padding: 8 },
     ],
-    description:
-      'Use a busca para encontrar pessoas e páginas. Edite seus dados, altere a sua foto do perfil e ajuste suas preferências.',
+    description: 'Use a busca para encontrar pessoas e páginas. Edite seus dados, foto do perfil e preferências.',
   },
   {
     eyebrow: 'GUIA RÁPIDO',
@@ -197,15 +178,13 @@ const MOBILE_TUTORIAL_STEPS: TutorialStep[] = [
     icon: Eye,
     panelPlacement: 'below',
     targets: [{ selectors: ['[data-tour-target="mobile-tree-action-bar"]', '[data-mobile-family-map-toolbar="true"]'], padding: 8 }],
-    description:
-      'Escolha o modo de visualização e as cores da sua árvore. Imprima ou salve em imagem ou PDF.',
+    description: 'Escolha o modo de visualização, ajuste as cores da árvore e salve ou imprima o mapa.',
   },
   {
     eyebrow: 'GUIA RÁPIDO',
     title: 'Cards de pessoas',
     icon: UserRound,
     panelPlacement: 'below',
-    panelGap: 14,
     targets: [
       {
         selectors: [
@@ -224,8 +203,7 @@ const MOBILE_TUTORIAL_STEPS: TutorialStep[] = [
     icon: Sparkles,
     panelPlacement: 'above',
     targets: [{ selectors: ['[data-tour-target="curiosities"]'], textIncludes: ['Curiosidades'], padding: 8 }],
-    description:
-      'Surpreenda-se com conexões e histórias. Faça perguntas para a inteligência artificial. Veja datas e vincule ao Google Agenda.',
+    description: 'Veja conexões, faça perguntas para a inteligência artificial e acompanhe datas importantes.',
   },
   {
     eyebrow: 'GUIA RÁPIDO',
@@ -233,8 +211,7 @@ const MOBILE_TUTORIAL_STEPS: TutorialStep[] = [
     icon: MessageCircle,
     panelPlacement: 'above',
     targets: [{ selectors: ['[data-tour-target="forum"]'], textIncludes: ['Fórum'], padding: 8 }],
-    description:
-      'Crie tópicos, comente e reaja a publicações sobre lembranças, histórias ou dúvidas relacionadas a sua família.',
+    description: 'Crie tópicos, comente e reaja a publicações sobre lembranças, histórias ou dúvidas.',
   },
 ];
 
@@ -260,26 +237,22 @@ function isVisibleElement(element: HTMLElement) {
   const rect = element.getBoundingClientRect();
   const style = window.getComputedStyle(element);
 
-  return (
-    rect.width > 0 &&
-    rect.height > 0 &&
-    style.display !== 'none' &&
-    style.visibility !== 'hidden' &&
-    style.opacity !== '0'
-  );
+  return rect.width > 0
+    && rect.height > 0
+    && style.display !== 'none'
+    && style.visibility !== 'hidden'
+    && style.opacity !== '0';
 }
 
 function getElementSearchText(element: HTMLElement) {
   const input = element instanceof HTMLInputElement ? element.placeholder : '';
 
-  return normalizeText(
-    [
-      element.textContent ?? '',
-      element.getAttribute('aria-label') ?? '',
-      element.getAttribute('title') ?? '',
-      input,
-    ].join(' ')
-  );
+  return normalizeText([
+    element.textContent ?? '',
+    element.getAttribute('aria-label') ?? '',
+    element.getAttribute('title') ?? '',
+    input,
+  ].join(' '));
 }
 
 function queryVisibleElement(selectors: string[] = []) {
@@ -289,7 +262,7 @@ function queryVisibleElement(selectors: string[] = []) {
       const visibleElement = elements.find(isVisibleElement);
       if (visibleElement) return visibleElement;
     } catch {
-      // Ignora seletores não suportados.
+      // Ignora seletores inválidos sem quebrar a rota.
     }
   }
 
@@ -301,18 +274,14 @@ function queryVisibleElementByText(textIncludes: string[] = []) {
 
   const normalizedTerms = textIncludes.map(normalizeText);
   const candidates = Array.from(
-    document.querySelectorAll<HTMLElement>(
-      'header, nav, aside, button, a, input, section, div, [role="button"], [aria-label], [title]'
-    )
+    document.querySelectorAll<HTMLElement>('header, nav, aside, button, a, input, section, div, [role="button"], [aria-label], [title]')
   );
 
-  return (
-    candidates.find((element) => {
-      if (!isVisibleElement(element)) return false;
-      const text = getElementSearchText(element);
-      return normalizedTerms.every((term) => text.includes(term));
-    }) ?? null
-  );
+  return candidates.find((element) => {
+    if (!isVisibleElement(element)) return false;
+    const text = getElementSearchText(element);
+    return normalizedTerms.every((term) => text.includes(term));
+  }) ?? null;
 }
 
 function queryVisibleContainerByText(textIncludes: string[] = []) {
@@ -335,482 +304,347 @@ function queryVisibleContainerByText(textIncludes: string[] = []) {
 }
 
 function resolveSingleTarget(target: TutorialTarget) {
-  return (
-    queryVisibleElement(target.selectors) ??
-    queryVisibleContainerByText(target.containerTextIncludes) ??
-    queryVisibleElementByText(target.textIncludes)
-  );
+  return queryVisibleElement(target.selectors)
+    ?? queryVisibleContainerByText(target.containerTextIncludes)
+    ?? queryVisibleElementByText(target.textIncludes);
 }
 
-function resolveTargetElements(targets: TutorialTarget[] = []) {
-  const elements: { element: HTMLElement; padding: number }[] = [];
+function getSpotlightRects(step: TutorialStep): SpotlightRect[] {
+  if (typeof window === 'undefined') return [];
 
-  for (const target of targets) {
-    const element = resolveSingleTarget(target);
-    if (!element) continue;
+  const elements = (step.targets ?? [])
+    .map((target) => {
+      const element = resolveSingleTarget(target);
+      if (!element) return null;
 
-    elements.push({
-      element,
-      padding: target.padding ?? 10,
-    });
-  }
+      const rect = element.getBoundingClientRect();
+      const padding = target.padding ?? DEFAULT_TARGET_PADDING;
+
+      return {
+        left: clamp(rect.left - padding, 0, window.innerWidth),
+        top: clamp(rect.top - padding, 0, window.innerHeight),
+        width: Math.min(rect.width + padding * 2, window.innerWidth),
+        height: Math.min(rect.height + padding * 2, window.innerHeight),
+        radius: SPOTLIGHT_RADIUS,
+      };
+    })
+    .filter(Boolean) as SpotlightRect[];
 
   return elements;
 }
 
-function createSpotlightRect(targetElements: { element: HTMLElement; padding: number }[]): SpotlightRect | null {
-  if (targetElements.length === 0) return null;
+function getReferenceRect(rects: SpotlightRect[]) {
+  if (rects.length === 0) return null;
 
-  let left = Number.POSITIVE_INFINITY;
-  let top = Number.POSITIVE_INFINITY;
-  let right = Number.NEGATIVE_INFINITY;
-  let bottom = Number.NEGATIVE_INFINITY;
-
-  for (const target of targetElements) {
-    const rect = target.element.getBoundingClientRect();
-    const padding = target.padding;
-
-    left = Math.min(left, rect.left - padding);
-    top = Math.min(top, rect.top - padding);
-    right = Math.max(right, rect.right + padding);
-    bottom = Math.max(bottom, rect.bottom + padding);
-  }
-
-  left = clamp(left, VIEWPORT_MARGIN, window.innerWidth - VIEWPORT_MARGIN);
-  top = clamp(top, VIEWPORT_MARGIN, window.innerHeight - VIEWPORT_MARGIN);
-  right = clamp(right, VIEWPORT_MARGIN, window.innerWidth - VIEWPORT_MARGIN);
-  bottom = clamp(bottom, VIEWPORT_MARGIN, window.innerHeight - VIEWPORT_MARGIN);
+  const left = Math.min(...rects.map((rect) => rect.left));
+  const top = Math.min(...rects.map((rect) => rect.top));
+  const right = Math.max(...rects.map((rect) => rect.left + rect.width));
+  const bottom = Math.max(...rects.map((rect) => rect.top + rect.height));
 
   return {
     left,
     top,
     right,
     bottom,
-    width: Math.max(right - left, 1),
-    height: Math.max(bottom - top, 1),
-    radius: SPOTLIGHT_RADIUS,
+    width: Math.max(1, right - left),
+    height: Math.max(1, bottom - top),
   };
 }
 
-function createSpotlightRects(targetElements: { element: HTMLElement; padding: number }[]): SpotlightRect[] {
-  return targetElements.map((target) => createSpotlightRect([target])).filter((rect): rect is SpotlightRect => Boolean(rect));
-}
+function getPanelPosition(step: TutorialStep, rects: SpotlightRect[], isMobile: boolean): PanelPosition {
+  const width = Math.min(isMobile ? MOBILE_PANEL_WIDTH : PANEL_WIDTH, window.innerWidth - VIEWPORT_MARGIN * 2);
+  const reference = getReferenceRect(rects);
 
-function createUnionSpotlightRect(spotlights: SpotlightRect[]) {
-  if (spotlights.length === 0) return null;
-
-  const left = Math.min(...spotlights.map((spotlight) => spotlight.left));
-  const top = Math.min(...spotlights.map((spotlight) => spotlight.top));
-  const right = Math.max(...spotlights.map((spotlight) => spotlight.right));
-  const bottom = Math.max(...spotlights.map((spotlight) => spotlight.bottom));
-
-  return {
-    left,
-    top,
-    right,
-    bottom,
-    width: Math.max(right - left, 1),
-    height: Math.max(bottom - top, 1),
-    radius: SPOTLIGHT_RADIUS,
-  } satisfies SpotlightRect;
-}
-
-function createCenteredPanel(width: number, estimatedHeight: number): PanelPosition {
-  return {
-    left: clamp((window.innerWidth - width) / 2, VIEWPORT_MARGIN, window.innerWidth - width - VIEWPORT_MARGIN),
-    top: clamp((window.innerHeight - estimatedHeight) / 2, VIEWPORT_MARGIN, window.innerHeight - estimatedHeight - VIEWPORT_MARGIN),
-    width,
-  };
-}
-
-function createPanelPosition(
-  spotlight: SpotlightRect | null,
-  placement: TutorialStep['panelPlacement'],
-  gap = PANEL_GAP,
-  compact = false
-): PanelPosition {
-  const maxWidth = compact ? MOBILE_PANEL_MAX_WIDTH : PANEL_MAX_WIDTH;
-  const estimatedHeight = compact ? MOBILE_PANEL_ESTIMATED_HEIGHT : PANEL_ESTIMATED_HEIGHT;
-  const width = Math.min(maxWidth, window.innerWidth - VIEWPORT_MARGIN * 2);
-
-  if (!spotlight || placement === 'center') {
-    return createCenteredPanel(width, estimatedHeight);
+  if (!reference) {
+    return {
+      left: (window.innerWidth - width) / 2,
+      top: Math.max(VIEWPORT_MARGIN, window.innerHeight * 0.18),
+      width,
+    };
   }
 
-  const tryBelow = () => ({
-    left: clamp(spotlight.left + spotlight.width / 2 - width / 2, VIEWPORT_MARGIN, window.innerWidth - width - VIEWPORT_MARGIN),
-    top: spotlight.bottom + gap,
-    width,
-  });
+  const placement = isMobile ? 'below' : step.panelPlacement ?? 'auto';
+  const gap = isMobile ? 12 : 18;
+  const panelHeight = isMobile ? 245 : PANEL_ESTIMATED_HEIGHT;
+  const centeredLeft = reference.left + reference.width / 2 - width / 2;
 
-  const tryAbove = () => ({
-    left: clamp(spotlight.left + spotlight.width / 2 - width / 2, VIEWPORT_MARGIN, window.innerWidth - width - VIEWPORT_MARGIN),
-    top: spotlight.top - estimatedHeight - gap,
-    width,
-  });
+  let left = centeredLeft;
+  let top = reference.bottom + gap;
 
-  const tryRight = () => ({
-    left: spotlight.right + gap,
-    top: clamp(spotlight.top, VIEWPORT_MARGIN, window.innerHeight - estimatedHeight - VIEWPORT_MARGIN),
-    width,
-  });
+  if (placement === 'right') {
+    left = reference.right + gap;
+    top = reference.top;
+  } else if (placement === 'left') {
+    left = reference.left - width - gap;
+    top = reference.top;
+  } else if (placement === 'above') {
+    left = centeredLeft;
+    top = reference.top - panelHeight - gap;
+  } else if (placement === 'center') {
+    left = (window.innerWidth - width) / 2;
+    top = (window.innerHeight - panelHeight) / 2;
+  } else if (placement === 'auto') {
+    const hasRoomRight = reference.right + gap + width <= window.innerWidth - VIEWPORT_MARGIN;
+    const hasRoomLeft = reference.left - gap - width >= VIEWPORT_MARGIN;
+    const hasRoomBelow = reference.bottom + gap + panelHeight <= window.innerHeight - VIEWPORT_MARGIN;
 
-  const tryLeft = () => ({
-    left: spotlight.left - width - gap,
-    top: clamp(spotlight.top, VIEWPORT_MARGIN, window.innerHeight - estimatedHeight - VIEWPORT_MARGIN),
-    width,
-  });
-
-  const fits = (panel: PanelPosition) => (
-    panel.left >= VIEWPORT_MARGIN &&
-    panel.top >= VIEWPORT_MARGIN &&
-    panel.left + panel.width <= window.innerWidth - VIEWPORT_MARGIN &&
-    panel.top + estimatedHeight <= window.innerHeight - VIEWPORT_MARGIN
-  );
-
-  const preferredOrder: Record<NonNullable<TutorialStep['panelPlacement']>, (() => PanelPosition)[]> = {
-    auto: [tryBelow, tryAbove, tryRight, tryLeft],
-    below: [tryBelow, tryAbove, tryRight, tryLeft],
-    above: [tryAbove, tryBelow, tryRight, tryLeft],
-    right: [tryRight, tryBelow, tryAbove, tryLeft],
-    left: [tryLeft, tryBelow, tryAbove, tryRight],
-    center: [() => createCenteredPanel(width, estimatedHeight)],
-  };
-
-  for (const build of preferredOrder[placement ?? 'auto']) {
-    const panel = build();
-    if (fits(panel)) return panel;
+    if (hasRoomRight) {
+      left = reference.right + gap;
+      top = reference.top;
+    } else if (hasRoomLeft) {
+      left = reference.left - width - gap;
+      top = reference.top;
+    } else if (!hasRoomBelow) {
+      left = centeredLeft;
+      top = reference.top - panelHeight - gap;
+    }
   }
 
-  const fallback = tryBelow();
-
   return {
-    left: clamp(fallback.left, VIEWPORT_MARGIN, window.innerWidth - width - VIEWPORT_MARGIN),
-    top: clamp(fallback.top, VIEWPORT_MARGIN, window.innerHeight - estimatedHeight - VIEWPORT_MARGIN),
+    left: clamp(left, VIEWPORT_MARGIN, window.innerWidth - width - VIEWPORT_MARGIN),
+    top: clamp(top, VIEWPORT_MARGIN, window.innerHeight - panelHeight - VIEWPORT_MARGIN),
     width,
   };
 }
 
-function SpotlightOverlay({ spotlights }: { spotlights: SpotlightRect[] }) {
-  const maskId = React.useId().replace(/[^a-zA-Z0-9_-]/g, '');
+function readStoredStepIndex(maxIndex: number) {
+  if (typeof window === 'undefined') return 0;
 
-  if (spotlights.length === 0) {
-    return <div className="fixed inset-0 z-[12001] bg-slate-950/85 backdrop-blur-[1px]" data-tree-export-ignore="true" />;
+  const raw = window.sessionStorage.getItem(STEP_STORAGE_KEY);
+  const parsed = Number(raw);
+
+  if (!Number.isInteger(parsed)) return 0;
+  return clamp(parsed, 0, maxIndex);
+}
+
+function storeStepIndex(index: number) {
+  try {
+    window.sessionStorage.setItem(STEP_STORAGE_KEY, String(index));
+  } catch {
+    // Sem persistência em ambientes que bloqueiam storage.
   }
+}
+
+function clearStoredStepIndex() {
+  try {
+    window.sessionStorage.removeItem(STEP_STORAGE_KEY);
+  } catch {
+    // noop
+  }
+}
+
+export function FirstLoginTutorial({ open, onOpenChange, onFinish }: FirstLoginTutorialProps) {
+  const [isMobile, setIsMobile] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    return window.matchMedia(MOBILE_BREAKPOINT_QUERY).matches;
+  });
+  const steps = useMemo(() => (isMobile ? MOBILE_STEPS : DESKTOP_STEPS), [isMobile]);
+  const [currentStepIndex, setCurrentStepIndex] = useState(0);
+  const [spotlights, setSpotlights] = useState<SpotlightRect[]>([]);
+  const [panelPosition, setPanelPosition] = useState<PanelPosition>({
+    left: VIEWPORT_MARGIN,
+    top: VIEWPORT_MARGIN,
+    width: PANEL_WIDTH,
+  });
+
+  const currentStep = steps[currentStepIndex] ?? steps[0];
+  const isLastStep = currentStepIndex >= steps.length - 1;
+
+  const updateLayout = useCallback(() => {
+    if (!open || !currentStep) return;
+
+    try {
+      const nextSpotlights = getSpotlightRects(currentStep);
+      setSpotlights(nextSpotlights);
+      setPanelPosition(getPanelPosition(currentStep, nextSpotlights, isMobile));
+    } catch (error) {
+      console.error('[FirstLoginTutorial] Falha ao calcular layout do tour:', error);
+      setSpotlights([]);
+      setPanelPosition(getPanelPosition({ ...currentStep, panelPlacement: 'center' }, [], isMobile));
+    }
+  }, [currentStep, isMobile, open]);
+
+  useEffect(() => {
+    if (!open) return;
+
+    const nextIndex = readStoredStepIndex(steps.length - 1);
+    setCurrentStepIndex(nextIndex);
+  }, [open, steps.length]);
+
+  useEffect(() => {
+    if (!open) return;
+    storeStepIndex(currentStepIndex);
+  }, [currentStepIndex, open]);
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia(MOBILE_BREAKPOINT_QUERY);
+    const handleChange = () => setIsMobile(mediaQuery.matches);
+
+    handleChange();
+    mediaQuery.addEventListener?.('change', handleChange);
+
+    return () => {
+      mediaQuery.removeEventListener?.('change', handleChange);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!open) return;
+
+    updateLayout();
+    const resizeHandler = () => updateLayout();
+    const scrollHandler = () => updateLayout();
+    const timeoutIds = [80, 250, 600].map((delay) => window.setTimeout(updateLayout, delay));
+
+    window.addEventListener('resize', resizeHandler);
+    window.addEventListener('scroll', scrollHandler, true);
+
+    return () => {
+      timeoutIds.forEach(window.clearTimeout);
+      window.removeEventListener('resize', resizeHandler);
+      window.removeEventListener('scroll', scrollHandler, true);
+    };
+  }, [currentStepIndex, open, updateLayout]);
+
+  const goToPreviousStep = () => {
+    setCurrentStepIndex((current) => Math.max(0, current - 1));
+  };
+
+  const goToNextStep = () => {
+    if (isLastStep) {
+      clearStoredStepIndex();
+      onFinish();
+      onOpenChange(false);
+      return;
+    }
+
+    setCurrentStepIndex((current) => Math.min(steps.length - 1, current + 1));
+  };
+
+  const closeTutorial = () => {
+    onOpenChange(false);
+  };
+
+  if (!open || !currentStep) return null;
+
+  const StepIcon = currentStep.icon;
 
   return (
-    <>
-      <svg className="pointer-events-none fixed inset-0 z-[12001] h-screen w-screen" data-tree-export-ignore="true" aria-hidden="true">
+    <div
+      data-first-login-tutorial="true"
+      data-first-login-tutorial-step={currentStep.title}
+      className="fixed inset-0 z-[12000]"
+      role="dialog"
+      aria-modal="true"
+      aria-label="Guia rápido da árvore familiar"
+    >
+      <svg className="pointer-events-none fixed inset-0 z-[12001] h-full w-full" aria-hidden="true">
         <defs>
-          <mask id={maskId}>
+          <mask id="first-login-tutorial-mask">
             <rect x="0" y="0" width="100%" height="100%" fill="white" />
-            {spotlights.map((spotlight, index) => (
+            {spotlights.map((rect, index) => (
               <rect
-                key={`${spotlight.left}-${spotlight.top}-${index}`}
-                x={spotlight.left}
-                y={spotlight.top}
-                width={spotlight.width}
-                height={spotlight.height}
-                rx={spotlight.radius}
-                ry={spotlight.radius}
+                key={`spotlight-mask-${index}`}
+                x={rect.left}
+                y={rect.top}
+                width={rect.width}
+                height={rect.height}
+                rx={rect.radius}
+                ry={rect.radius}
                 fill="black"
               />
             ))}
           </mask>
         </defs>
-        <rect x="0" y="0" width="100%" height="100%" fill="rgba(2,6,23,0.85)" mask={`url(#${maskId})`} />
+        <rect x="0" y="0" width="100%" height="100%" fill="rgba(15,23,42,0.62)" mask="url(#first-login-tutorial-mask)" />
       </svg>
-      {spotlights.map((spotlight, index) => (
+
+      {spotlights.map((rect, index) => (
         <div
-          key={`${spotlight.left}-${spotlight.top}-${index}`}
-          className="pointer-events-none fixed z-[12002] border-2 border-blue-400"
+          key={`spotlight-border-${index}`}
+          className="pointer-events-none fixed z-[12002] rounded-[18px] ring-2 ring-blue-400 ring-offset-2 ring-offset-white/60"
           style={{
-            left: spotlight.left,
-            top: spotlight.top,
-            width: spotlight.width,
-            height: spotlight.height,
-            borderRadius: spotlight.radius,
-            boxShadow: '0 0 0 2px rgba(255,255,255,0.65), 0 0 34px rgba(59,130,246,0.85), inset 0 0 18px rgba(255,255,255,0.22)',
+            left: rect.left,
+            top: rect.top,
+            width: rect.width,
+            height: rect.height,
           }}
-          data-tree-export-ignore="true"
         />
       ))}
-    </>
-  );
-}
-
-function getInitialMobileViewport() {
-  if (typeof window === 'undefined') return false;
-  return window.matchMedia(MOBILE_BREAKPOINT_QUERY).matches;
-}
-
-export function FirstLoginTutorial({
-  open,
-  onOpenChange,
-  onFinish,
-}: FirstLoginTutorialProps) {
-  const [stepIndex, setStepIndex] = useState(0);
-  const [isMobileViewport, setIsMobileViewport] = useState(getInitialMobileViewport);
-  const [layout, setLayout] = useState<TourLayout>(() => ({
-    spotlights: [],
-    panel: {
-      left: VIEWPORT_MARGIN,
-      top: VIEWPORT_MARGIN,
-      width: PANEL_MAX_WIDTH,
-    },
-  }));
-
-  const tutorialSteps = isMobileViewport ? MOBILE_TUTORIAL_STEPS : TUTORIAL_STEPS;
-  const totalSteps = tutorialSteps.length;
-  const currentStep = tutorialSteps[Math.min(stepIndex, totalSteps - 1)];
-  const isFirstStep = stepIndex === 0;
-  const isLastStep = stepIndex === totalSteps - 1;
-
-  const progress = useMemo(() => Math.round(((stepIndex + 1) / totalSteps) * 100), [stepIndex, totalSteps]);
-
-  useEffect(() => {
-    const mediaQuery = window.matchMedia(MOBILE_BREAKPOINT_QUERY);
-    const syncViewport = () => setIsMobileViewport(mediaQuery.matches);
-
-    syncViewport();
-    mediaQuery.addEventListener('change', syncViewport);
-
-    return () => {
-      mediaQuery.removeEventListener('change', syncViewport);
-    };
-  }, []);
-
-  useEffect(() => {
-    setStepIndex((current) => Math.min(current, totalSteps - 1));
-  }, [totalSteps]);
-
-  const updateLayout = useCallback(() => {
-    const targetElements = resolveTargetElements(currentStep.targets ?? []);
-    const individualSpotlights = createSpotlightRects(targetElements);
-    const mergedSpotlight = createUnionSpotlightRect(individualSpotlights);
-    const spotlights = currentStep.mergeSpotlights && mergedSpotlight ? [mergedSpotlight] : individualSpotlights;
-    const panelSpotlight = currentStep.panelReference === 'first'
-      ? spotlights[0] ?? null
-      : currentStep.panelReference === 'last'
-        ? spotlights[spotlights.length - 1] ?? null
-        : createUnionSpotlightRect(spotlights);
-
-    setLayout({
-      spotlights,
-      panel: createPanelPosition(
-        panelSpotlight,
-        currentStep.panelPlacement ?? 'auto',
-        currentStep.panelGap ?? PANEL_GAP,
-        isMobileViewport
-      ),
-    });
-  }, [currentStep, isMobileViewport]);
-
-  useEffect(() => {
-    if (!open) {
-      setStepIndex(0);
-      return;
-    }
-
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
-
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') onOpenChange(false);
-      if (event.key === 'ArrowRight') setStepIndex((current) => Math.min(current + 1, totalSteps - 1));
-      if (event.key === 'ArrowLeft') setStepIndex((current) => Math.max(current - 1, 0));
-    };
-
-    document.addEventListener('keydown', handleKeyDown);
-
-    return () => {
-      document.body.style.overflow = previousOverflow;
-      document.removeEventListener('keydown', handleKeyDown);
-    };
-  }, [open, onOpenChange, totalSteps]);
-
-  useEffect(() => {
-    if (!open) return;
-
-    let frame = 0;
-    const scheduleUpdate = () => {
-      window.cancelAnimationFrame(frame);
-      frame = window.requestAnimationFrame(updateLayout);
-    };
-
-    scheduleUpdate();
-    window.addEventListener('resize', scheduleUpdate);
-    window.addEventListener('scroll', scheduleUpdate, true);
-
-    const timeoutIds = [
-      window.setTimeout(scheduleUpdate, 80),
-      window.setTimeout(scheduleUpdate, 250),
-      window.setTimeout(scheduleUpdate, 600),
-    ];
-
-    return () => {
-      window.cancelAnimationFrame(frame);
-      timeoutIds.forEach((timeoutId) => window.clearTimeout(timeoutId));
-      window.removeEventListener('resize', scheduleUpdate);
-      window.removeEventListener('scroll', scheduleUpdate, true);
-    };
-  }, [open, stepIndex, updateLayout]);
-
-  if (!open) return null;
-
-  const StepIcon = currentStep.icon;
-
-  const goBack = () => setStepIndex((current) => Math.max(current - 1, 0));
-  const goNext = () => {
-    if (isLastStep) {
-      onFinish();
-      return;
-    }
-    setStepIndex((current) => Math.min(current + 1, totalSteps - 1));
-  };
-
-  return (
-    <div
-      className="fixed inset-0 z-[12000]"
-      data-first-login-tutorial="true"
-      data-first-login-tutorial-step={currentStep.title}
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="first-login-tutorial-title"
-      data-tree-export-ignore="true"
-    >
-      <div className="pointer-events-auto fixed inset-0 z-[12000]" />
-      <SpotlightOverlay spotlights={layout.spotlights} />
 
       <section
-        className={[
-          'fixed z-[12003] overflow-hidden border border-slate-200 bg-white text-slate-950 shadow-2xl',
-          isMobileViewport ? 'rounded-xl' : 'rounded-2xl',
-        ].join(' ')}
+        className="fixed z-[12003] max-h-[calc(100vh-2rem)] overflow-y-auto rounded-2xl border border-blue-100 bg-white p-4 text-gray-900 shadow-2xl sm:p-5"
         style={{
-          left: layout.panel.left,
-          top: layout.panel.top,
-          width: layout.panel.width,
+          left: panelPosition.left,
+          top: panelPosition.top,
+          width: panelPosition.width,
         }}
       >
-        <header className={[
-          'relative z-10 flex items-start border-b border-slate-100 bg-white',
-          isMobileViewport ? 'gap-2 px-3 py-3' : 'gap-3 px-4 py-4',
-        ].join(' ')}>
-          <div className={[
-            'flex shrink-0 items-center justify-center border border-blue-100 bg-blue-50 text-blue-700',
-            isMobileViewport ? 'h-9 w-9 rounded-lg' : 'h-11 w-11 rounded-xl',
-          ].join(' ')}>
-            <StepIcon className={isMobileViewport ? 'h-4 w-4' : 'h-5 w-5'} />
-          </div>
-
-          <div className="min-w-0 flex-1">
-            <p className={[
-              'font-extrabold uppercase text-blue-700',
-              isMobileViewport ? 'text-[9px] tracking-[0.14em]' : 'text-[11px] tracking-[0.16em]',
-            ].join(' ')}>
-              {currentStep.eyebrow}
-            </p>
-            <h2
-              id="first-login-tutorial-title"
-              className={[
-                'mt-0.5 font-extrabold leading-tight text-slate-950',
-                isMobileViewport ? 'text-base' : 'text-lg',
-              ].join(' ')}
-            >
-              {currentStep.title}
-            </h2>
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex min-w-0 items-center gap-3">
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-blue-700 ring-1 ring-blue-100">
+              <StepIcon className="h-5 w-5" />
+            </span>
+            <div className="min-w-0">
+              <p className="text-xs font-bold uppercase tracking-wide text-blue-700">{currentStep.eyebrow}</p>
+              <h2 className="mt-1 break-words text-lg font-bold leading-tight text-gray-950">{currentStep.title}</h2>
+            </div>
           </div>
 
           <button
             type="button"
-            className={[
-              'flex shrink-0 items-center justify-center border border-slate-200 bg-white text-slate-700 shadow-sm transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-500',
-              isMobileViewport ? 'h-8 w-8 rounded-lg' : 'h-9 w-9 rounded-xl',
-            ].join(' ')}
-            onClick={() => onOpenChange(false)}
+            onClick={closeTutorial}
+            className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-gray-500 transition hover:bg-gray-100 hover:text-gray-900"
             aria-label="Fechar tutorial"
           >
-            <X className={isMobileViewport ? 'h-3.5 w-3.5' : 'h-4 w-4'} />
+            <X className="h-4 w-4" />
           </button>
-        </header>
-
-        <div className="h-1 bg-slate-100">
-          <div
-            className="h-full rounded-r-full bg-blue-600 transition-all duration-300"
-            style={{ width: progress + '%' }}
-          />
         </div>
 
-        <main className={[
-          'relative z-10 overflow-y-auto bg-white',
-          isMobileViewport ? 'max-h-[30vh] px-3 py-3' : 'max-h-[44vh] px-4 py-4',
-        ].join(' ')}>
-          {currentStep.description && (
-            <p className={isMobileViewport ? 'text-xs leading-5 text-slate-700' : 'text-sm leading-6 text-slate-700'}>
-              {currentStep.description}
-            </p>
-          )}
+        {currentStep.description && (
+          <p className="mt-4 text-sm leading-6 text-gray-600">{currentStep.description}</p>
+        )}
 
-          {currentStep.bullets && currentStep.bullets.length > 0 && (
-            <ul className={[
-              isMobileViewport ? 'space-y-1.5' : 'space-y-2',
-              currentStep.description ? 'mt-3' : '',
-            ].join(' ')}>
-              {currentStep.bullets.map((item) => (
-                <li
-                  key={item}
-                  className={[
-                    'flex gap-2 text-slate-700',
-                    isMobileViewport ? 'text-xs leading-5' : 'text-sm leading-5',
-                  ].join(' ')}
-                >
-                  <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-blue-600" />
-                  <span>{item}</span>
-                </li>
-              ))}
-            </ul>
-          )}
+        {currentStep.bullets && currentStep.bullets.length > 0 && (
+          <ul className="mt-4 space-y-2 text-sm leading-6 text-gray-700">
+            {currentStep.bullets.map((bullet) => (
+              <li key={bullet} className="flex gap-2">
+                <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-blue-600" />
+                <span>{bullet}</span>
+              </li>
+            ))}
+          </ul>
+        )}
 
-          {currentStep.tip && (
-            <div className={[
-              'rounded-xl border border-blue-100 bg-blue-50 text-blue-950',
-              isMobileViewport ? 'mt-3 px-3 py-2 text-[11px] leading-4' : 'mt-4 px-3 py-2 text-xs leading-5',
-            ].join(' ')}>
-              <strong className="font-extrabold">Dica: </strong>
-              {currentStep.tip}
-            </div>
-          )}
-        </main>
+        {spotlights.length === 0 && (
+          <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
+            Esta etapa não encontrou o elemento destacado na tela atual. Você pode continuar o tour normalmente.
+          </div>
+        )}
 
-        <footer className={[
-          'relative z-10 flex justify-end gap-2 border-t border-slate-100 bg-white',
-          isMobileViewport ? 'px-3 py-2.5' : 'px-4 py-3',
-        ].join(' ')}>
-          {!isFirstStep && (
+        <div className="mt-5 flex items-center justify-between gap-3">
+          <span className="text-xs font-semibold text-gray-500">
+            {currentStepIndex + 1} de {steps.length}
+          </span>
+
+          <div className="flex items-center gap-2">
             <button
               type="button"
-              className={[
-                'rounded-xl border border-slate-200 bg-white font-bold text-slate-800 shadow-sm transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-500',
-                isMobileViewport ? 'px-3 py-2 text-[11px]' : 'px-4 py-2 text-xs',
-              ].join(' ')}
-              onClick={goBack}
+              onClick={goToPreviousStep}
+              disabled={currentStepIndex === 0}
+              className="rounded-xl border border-gray-200 px-3 py-2 text-sm font-semibold text-gray-700 transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
             >
               Voltar
             </button>
-          )}
-
-          <button
-            type="button"
-            className={[
-              'rounded-xl bg-blue-600 font-extrabold text-white shadow-sm transition hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2',
-              isMobileViewport ? 'px-3 py-2 text-[11px]' : 'px-4 py-2 text-xs',
-            ].join(' ')}
-            onClick={goNext}
-          >
-            {isLastStep ? 'Começar' : 'Próximo'}
-          </button>
-        </footer>
+            <button
+              type="button"
+              onClick={goToNextStep}
+              className="rounded-xl bg-blue-600 px-3 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700"
+            >
+              {isLastStep ? 'Concluir' : 'Próximo'}
+            </button>
+          </div>
+        </div>
       </section>
     </div>
   );
