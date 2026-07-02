@@ -76,16 +76,17 @@ function applyRelationshipModalFixes() {
   if (!typeSelect) return;
 
   const isParentSelection = typeSelect.value === 'pai' || typeSelect.value === 'mae';
+  const hasBloodOrAdoptionOptions = subtypeSelect
+    ? Array.from(subtypeSelect.options).some((option) => option.value === 'sangue' || option.value === 'adotivo')
+    : false;
 
   const typeWrapper = findAncestorByClass(typeSelect, 'min-w-0') ?? typeSelect.parentElement;
   const subtypeWrapper = subtypeSelect ? findAncestorByClass(subtypeSelect, 'min-w-0') ?? subtypeSelect.parentElement : null;
 
-  [typeWrapper, subtypeWrapper].forEach((wrapper) => {
-    if (!wrapper) return;
-    wrapper.style.display = isParentSelection ? 'none' : '';
-  });
+  if (typeWrapper) typeWrapper.style.display = isParentSelection ? 'none' : '';
+  if (subtypeWrapper) subtypeWrapper.style.display = isParentSelection || hasBloodOrAdoptionOptions ? 'none' : '';
 
-  if (isParentSelection && subtypeSelect && subtypeSelect.value !== 'sangue') {
+  if ((isParentSelection || hasBloodOrAdoptionOptions) && subtypeSelect && subtypeSelect.value !== 'sangue') {
     subtypeSelect.value = 'sangue';
     subtypeSelect.dispatchEvent(new Event('change', { bubbles: true }));
   }
