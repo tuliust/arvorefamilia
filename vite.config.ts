@@ -1,8 +1,30 @@
-import { defineConfig, loadEnv } from 'vite'
+import { defineConfig, loadEnv, type Plugin } from 'vite'
 import path from 'path'
 import tailwindcss from '@tailwindcss/vite'
 import react from '@vitejs/plugin-react'
 import aiHandler from './api/ai'
+
+const HORIZONTAL_MAP_SPOUSE_VISIBILITY_TARGET = 'if (!hasBaseFamilyAnchor && !isAlwaysVisibleSpouseGeneration(effectiveGeneration)) return;';
+const HORIZONTAL_MAP_SPOUSE_VISIBILITY_REPLACEMENT = 'if (!directRelativeFilters.conjuge && !hasBaseFamilyAnchor && !isAlwaysVisibleSpouseGeneration(effectiveGeneration)) return;';
+
+function desktopHorizontalMapSpouseVisibilityPatch(): Plugin {
+  return {
+    name: 'desktop-horizontal-map-spouse-visibility-patch',
+    enforce: 'pre',
+    transform(code, id) {
+      if (!id.endsWith('DesktopFamilyHorizontalMapView.tsx')) return null;
+      if (!code.includes(HORIZONTAL_MAP_SPOUSE_VISIBILITY_TARGET)) return null;
+
+      return {
+        code: code.replace(
+          HORIZONTAL_MAP_SPOUSE_VISIBILITY_TARGET,
+          HORIZONTAL_MAP_SPOUSE_VISIBILITY_REPLACEMENT,
+        ),
+        map: null,
+      };
+    },
+  };
+}
 
 function readRequestBody(req: any) {
   return new Promise((resolve, reject) => {
@@ -48,6 +70,7 @@ export default defineConfig(({ mode }) => {
 
   return {
     plugins: [
+      desktopHorizontalMapSpouseVisibilityPatch(),
       // The React and Tailwind plugins are both required for Make, even if
       // Tailwind is not being actively used – do not remove them
       react(),
