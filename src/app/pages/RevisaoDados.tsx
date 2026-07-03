@@ -84,6 +84,21 @@ function getMeusVinculosDraftKey(userId: string, pessoaId: string) {
   return `meus-vinculos-draft:${userId}:${pessoaId}`;
 }
 
+function getMeusDadosDraftKey(userId: string, pessoaId: string) {
+  return `meus-dados-draft:${userId}:${pessoaId}`;
+}
+
+function readMeusDadosPendingAvatar(userId: string, pessoaId: string) {
+  try {
+    const raw = window.sessionStorage.getItem(getMeusDadosDraftKey(userId, pessoaId));
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as { pendingAvatarDataUrl?: string | null };
+    return parsed.pendingAvatarDataUrl ?? null;
+  } catch {
+    return null;
+  }
+}
+
 function readDraftRelationships(userId: string, pessoaId: string): RelationshipGroups | null {
   try {
     const raw = window.sessionStorage.getItem(getMeusVinculosDraftKey(userId, pessoaId));
@@ -156,6 +171,68 @@ function getArchiveRecordLabel(archive: ArquivoHistorico) {
   return 'Imagem';
 }
 
+function isCompleteBirthDate(value: unknown) {
+  const text = String(value ?? '').trim();
+  if (!text) return false;
+
+  if (/^\d{4}-\d{2}-\d{2}$/.test(text)) {
+    const [year, month, day] = text.split('-').map(Number);
+    const date = new Date(Date.UTC(year, month - 1, day));
+    return date.getUTCFullYear() === year && date.getUTCMonth() === month - 1 && date.getUTCDate() === day;
+  }
+
+  if (/^\d{2}\/\d{2}\/\d{4}$/.test(text)) {
+    const [day, month, year] = text.split('/').map(Number);
+    const date = new Date(Date.UTC(year, month - 1, day));
+    return date.getUTCFullYear() === year && date.getUTCMonth() === month - 1 && date.getUTCDate() === day;
+  }
+
+  return false;
+}
+
+function hasText(value: unknown) {
+  return String(value ?? '').trim().length > 0;
+}
+
+function getEssentialProfileMissingFields({
+  pessoa,
+  form,
+  pendingAvatarDataUrl,
+}: {
+  pessoa: Pessoa;
+  form: EditableOwnPersonPayload;
+  pendingAvatarDataUrl?: string | null;
+}) {
+  const missingFields: string[] = [];
+  const isDeceased = form.falecido === true || pessoa.falecido === true;
+
+  if (!hasText(form.foto_principal_url) && !hasText(pessoa.foto_principal_url) && !hasText(pendingAvatarDataUrl)) {
+    missingFields.push('Foto de perfil');
+  }
+
+  if (!isCompleteBirthDate(form.data_nascimento ?? pessoa.data_nascimento)) {
+    missingFields.push('Data completa de nascimento');
+  }
+
+  if (!hasText(form.local_nascimento ?? pessoa.local_nascimento)) {
+    missingFields.push('Local de nascimento');
+  }
+
+  if (!isDeceased && !hasText(form.local_atual ?? pessoa.local_atual)) {
+    missingFields.push('Local de residência atual');
+  }
+
+  if (!hasText(form.minibio ?? pessoa.minibio)) {
+    missingFields.push('Mini bio');
+  }
+
+  if (!hasText(form.curiosidades ?? pessoa.curiosidades)) {
+    missingFields.push('Curiosidades');
+  }
+
+  return missingFields;
+}
+
 
 type GenderHint = 'homem' | 'mulher' | null | undefined;
 
@@ -189,6 +266,42 @@ function InlineField({ label, children }: { label: string; children: React.React
       <Label className="text-xs font-semibold uppercase tracking-wide text-gray-500">{label}</Label>
       {children}
     </div>
+  );
+}
+
+function EssentialProfileFieldsReminder({
+  missingFields,
+  onComplete,
+}: {
+  missingFields: string[];
+  onComplete: () => void;
+}) {
+  if (missingFields.length === 0) return null;
+
+  return (
+    <Card className="border-amber-200 bg-amber-50 shadow-sm">
+      <CardContent className="flex flex-col gap-4 p-5 md:flex-row md:items-start md:justify-between">
+        <div className="min-w-0">
+          <h2 className="break-words text-base font-semibold text-amber-950">
+            Complete informações importantes do perfil
+          </h2>
+          <p className="mt-2 break-words text-sm leading-relaxed text-amber-900">
+            Antes de finalizar, recomendamos completar estas informações para deixar o perfil mais completo e útil para a família.
+          </p>
+          <ul className="mt-3 grid grid-cols-1 gap-2 text-sm text-amber-950 sm:grid-cols-2">
+            {missingFields.map((field) => (
+              <li key={field} className="flex min-w-0 items-center gap-2">
+                <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-amber-600" />
+                <span className="break-words">{field}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+        <Button type="button" className="w-full shrink-0 md:w-auto" onClick={onComplete}>
+          Completar em Meus Dados
+        </Button>
+      </CardContent>
+    </Card>
   );
 }
 
@@ -303,6 +416,7 @@ export function RevisaoDados() {
   const [socialProfileForms, setSocialProfileForms] = useState<SocialProfileForm[]>([createSocialProfile()]);
   const [archives, setArchives] = useState<ArquivoHistorico[]>([]);
   const [form, setForm] = useState<EditableOwnPersonPayload>(() => buildEditablePersonFormState(null));
+  const [pendingAvatarDataUrl, setPendingAvatarDataUrl] = useState<string | null>(null);
   const [editingSection, setEditingSection] = useState<ReviewSectionId | null>(null);
   const [loading, setLoading] = useState(true);
   const [savingSection, setSavingSection] = useState<ReviewSectionId | null>(null);
@@ -336,6 +450,7 @@ export function RevisaoDados() {
       const pessoa = data.pessoa;
       setLink(data);
       setForm(buildEditablePersonFormState(pessoa));
+      setPendingAvatarDataUrl(readMeusDadosPendingAvatar(user.id, pessoa.id));
 
       const [storedRelationships, storedArchives, storedSocialProfiles] = await Promise.all([
         obterRelacionamentosDaPessoa(pessoa.id),
@@ -522,6 +637,11 @@ export function RevisaoDados() {
 
   const isDeceased = pessoa.falecido === true;
   const visibleSocialForms = socialProfileForms.length > 0 ? socialProfileForms : [createSocialProfile()];
+  const essentialMissingFields = getEssentialProfileMissingFields({
+    pessoa,
+    form,
+    pendingAvatarDataUrl,
+  });
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -537,6 +657,11 @@ export function RevisaoDados() {
       {isOnboarding && <MemberOnboardingSteps activeStep={5} hidePreferences={pessoa.falecido === true} />}
 
       <main className={`${PAGE_CONTAINER_CLASS} space-y-6 py-6 pb-[calc(7rem+env(safe-area-inset-bottom))] md:pb-6`}>
+        <EssentialProfileFieldsReminder
+          missingFields={essentialMissingFields}
+          onComplete={() => navigate('/meus-dados')}
+        />
+
         <Card className="border-gray-200 bg-white shadow-sm">
           <CardContent className="flex flex-col gap-4 p-5 md:flex-row md:items-center md:justify-between">
             <div className="flex min-w-0 items-center gap-4">
