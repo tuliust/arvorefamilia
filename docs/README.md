@@ -1,10 +1,10 @@
 # Documentação do produto — arvorefamilia
 
-> Última revisão: 2026-07-02
-> Escopo: documentação canônica mantida em `docs/` após auditoria, limpeza final, ajustes mobile/admin, refatoração do layout compartilhado de mapas e complementos de 2026-07-02 sobre notificações, primeiro acesso, vínculos e perspectiva memorial.
+> Última revisão: 2026-07-03
+> Escopo: documentação canônica mantida em `docs/` após auditoria, limpeza final, ajustes mobile/admin, layout compartilhado de mapas, inventário real de runtimes carregados por `index.html` e correções de validação para PowerShell.
 > Status: canônico.
 
-Este diretório concentra a documentação fundamental do produto. A fonte de verdade para comportamento continua sendo o código da branch `main`, especialmente `src/app/routes.tsx`, `src/app/pages`, `src/app/components`, `src/app/components/FamilyTree`, `src/app/services`, `src/app/types`, `src/app/utils`, `index.html`, `api/ai.ts` e os arquivos SQL/Supabase versionados.
+Este diretório concentra a documentação fundamental do produto. A fonte de verdade para comportamento continua sendo o código da branch `main`, especialmente `src/app/routes.tsx`, `src/app/pages`, `src/app/components`, `src/app/components/FamilyTree`, `src/app/services`, `src/app/types`, `src/app/utils`, `src/main.tsx`, `index.html`, `api/ai.ts` e os arquivos SQL/Supabase versionados.
 
 ## Estrutura canônica
 
@@ -51,7 +51,7 @@ docs/
     REVISAO_DOCUMENTACAO_MAPA_MOBILE_20260701.md
 ```
 
-Arquivos residuais fora desse índice não devem ser usados como contrato operacional. Checklists datados, baselines antigos ou documentos de rodada devem ser removidos ou absorvidos pelos documentos canônicos, preservando histórico apenas quando houver valor real de manutenção.
+Arquivos residuais fora desse índice não devem ser usados como contrato operacional. Checklists datados, baselines antigos, diagnósticos pontuais ou documentos de rodada devem ser removidos, absorvidos pelos documentos canônicos ou preservados em `docs/historico/` apenas quando houver valor real de manutenção.
 
 ## Índice canônico
 
@@ -104,7 +104,8 @@ As rotas abaixo refletem `src/app/routes.tsx` na branch `main`.
 - `/mapa-familiar` e `/linha-geracional` compartilham, no mobile, `TreeMapSharedLayout` com `<Outlet />`;
 - `/mapa-familiar-horizontal` continua usando a shell `Home`/`TreeHomeShell`;
 - `/busca`;
-- `/pessoa/:id` e `/pessoas/:id`.
+- `/pessoa/:id`;
+- `/pessoas/:id`.
 
 ### Membro e onboarding
 
@@ -163,19 +164,18 @@ A documentação deve diferenciar componentes React vigentes de scripts defensiv
 Contratos vigentes:
 
 - `/mapa-familiar` e `/linha-geracional` compartilham o chrome mobile via `TreeMapSharedLayout`;
-- o header, a toolbar superior e a navegação inferior ficam fora da área trocada pelo `<Outlet />`;
+- header, toolbar superior e navegação inferior ficam fora da área trocada pelo `<Outlet />`;
 - `MobileTreeChromeContext` recebe o registro de dados do header e navegação feito pela rota filha ativa;
 - `MapaFamiliarSharedRoute` é camada transitória de compatibilidade para encaixar `Home` no layout compartilhado;
 - `LinhaGeracional` aceita `mobileChromeMode="shared"`;
 - `MobileFamilyMapFullLayer` renderiza o mapa completo abaixo da toolbar e sem botão `X` próprio;
-- novos runtimes em `index.html` devem constar no inventário técnico e ser tratados como camada defensiva de transição.
+- runtimes carregados por `index.html` devem constar em `INVENTARIO_TECNICO.md`, `GUIA_COMPONENTES.md` e `GUIA_IMPLEMENTACOES.md`.
 
 Mudanças nessa frente devem atualizar, no mínimo, `funcionalidades/MAPA_FAMILIAR_VIEW.md`, `arquitetura/ROTAS_E_GUARDS.md`, `arquitetura/DECISOES_ARQUITETURAIS.md`, `GUIA_COMPONENTES.md`, `GUIA_IMPLEMENTACOES.md`, `GUIA_UX_LAYOUT.md`, `QA_MANUAL.md`, `REGRAS_DE_NAO_REGRESSAO.md` e `INVENTARIO_TECNICO.md`.
 
-
 ### Primeiro acesso, vínculos e perspectiva memorial
 
-Contratos vigentes adicionados em 2026-07-02:
+Contratos vigentes:
 
 - o tutorial de primeiro acesso deve preservar a etapa corrente em `sessionStorage` e continuar mesmo quando um alvo visual não estiver disponível;
 - `/meus-vinculos` usa status real de `user_person_links` para exibir `Cadastrado` ou `Pré-cadastrado`, dependendo de RLS/migration compatível;
@@ -184,6 +184,35 @@ Contratos vigentes adicionados em 2026-07-02:
 - `src/memberInteractionLayoutRuntimeFixes.ts` é runtime defensivo transitório carregado por `src/main.tsx` e deve ser absorvido por componentes React definitivos quando estabilizado.
 
 Mudanças nessa frente devem atualizar `funcionalidades/MEUS_VINCULOS.md`, `funcionalidades/CURIOSIDADES.md`, `funcionalidades/FUNCIONALIDADES_COMPLEMENTARES.md`, `funcionalidades/MINI_BIO_CURIOSIDADES_IA.md`, `arquitetura/ROTAS_E_GUARDS.md`, `REGRAS_DE_NAO_REGRESSAO.md`, `QA_MANUAL.md`, `INVENTARIO_TECNICO.md` e `operacao/MIGRATIONS_SUPABASE.md` quando houver schema/RLS/RPC.
+
+## Validação técnica
+
+### Bash/Git Bash
+
+```bash
+git status --short
+git diff --check
+grep -R $'\xEF\xBF\xBD' docs || true
+npm run typecheck
+npm run build
+npm test
+```
+
+### PowerShell
+
+O comando `grep -R $'\xEF\xBF\xBD' docs || true` é sintaxe de Bash. Em Windows PowerShell, use:
+
+```powershell
+git status --short
+git diff --check
+
+# Busca o caractere de substituição Unicode U+FFFD em docs/.
+Get-ChildItem .\docs -Recurse -File | Select-String -SimpleMatch ([char]0xFFFD)
+
+npm run typecheck
+npm run build
+npm test
+```
 
 ## Regra de manutenção
 

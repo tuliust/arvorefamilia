@@ -1,7 +1,7 @@
 # Guia de componentes
 
 > Última revisão: 2026-07-03
-> Escopo: componentes relevantes para rotas e fluxos funcionais da branch `main`, incluindo layout compartilhado mobile dos mapas.
+> Escopo: componentes relevantes para rotas e fluxos funcionais da branch `main`, incluindo layout compartilhado mobile dos mapas, runtimes defensivos reais carregados por `index.html` e wrappers atuais.
 > Status: canônico.
 
 ## Home, mapas e shell compartilhada
@@ -60,61 +60,75 @@
 
 ## Runtimes React defensivos
 
-| Componente | Papel |
+| Componente / módulo | Papel |
 |---|---|
 | `MobileGlobalTweaks.tsx` | Ajustes mobile transversais de header, overlays, `/meus-dados`, `/meus-vinculos` e mapa quando aplicável. |
 | `MobileTopLayerTweaks.tsx` | Ajustes de camada mobile para painéis, busca, notificações e menu do avatar. |
 | `LinhaGeracionalMobilePanelLayerTweaks.tsx` | Isolamento de camada e comportamento do painel mobile da linha geracional; no layout compartilhado deve se isolar por `pathname`. |
 | `FirstLoginTutorialRuntimeTweaks.tsx` | Ajustes defensivos do tutorial e compatibilidade mobile. |
-| `src/memberInteractionLayoutRuntimeFixes.ts` | Runtime transitório importado em `src/main.tsx`; bloqueia ações sociais em perspectiva memorial e ajusta layout de `/meus-dados` e do modal de pet. |
 | `PersonProfileRuntimeTweaks.tsx` | Ocultações e reposicionamentos defensivos em `/pessoa/:id`. |
-| `AdminDashboardRuntimeTweaks.tsx` | Ajustes defensivos do dashboard administrativo. |
-| `MeusVinculosEnhancements.tsx` | Ajustes progressivos de `/meus-vinculos`. |
+| `src/memberInteractionLayoutRuntimeFixes.ts` | Runtime transitório importado em `src/main.tsx`; bloqueia ações sociais em perspectiva memorial e ajusta layout de `/meus-dados` e do modal de pet. |
+| `src/memberUiRuntimeFixes.ts` | Ajustes defensivos de UI de membro. |
+| `src/familyMapDesktopRuntimeFixes.ts` | Ajustes defensivos de mapa desktop. |
+| `src/mobileFamilyMapFullPanelStyleFix.ts` | Compatibilidade visual mobile importada por side effect; revisar antes de remover. |
+| `AdminDashboardRuntimeTweaks.tsx` | Ajustes defensivos do dashboard administrativo quando montado por wrapper. |
+| `MeusVinculosEnhancements.tsx` | Ajustes progressivos de `/meus-vinculos` quando aplicável. |
 
 ## Scripts defensivos carregados por `index.html`
 
-Conferir antes de alterar mobile, mapa familiar, curiosidades, tutorial ou painel desktop:
+Conferir antes de alterar mobile, mapa familiar, curiosidades, tutorial, notificações de header, painel desktop ou rotas administrativas:
 
-- `mobileFamilyTreeMutationPerformanceGuard.ts`
-- `visualPatchB.ts`
-- `firstLoginMobileTutorialFixes.ts`
-- `mobileCuriositiesNavigationFix.ts`
-- `mobileTreePanelViewportFix.ts`
-- `staticMobileFamilyTreeScreens.ts`
-- `mobileFamilyTreeScreenStateGuards.ts`
-- `mobileFamilyTreeGrandparentScreens.ts`
-- `mobileFamilyTreeSwipeHints.ts`
-- `mobileFamilyTreeAncestorConnectorsFix.ts`
-- `mobileFamilyTreeDescendantConnectorsFix.ts`
-- `mobileFamilyTreeCoreDescendantConnector.ts`
-- `mobileFamilyTreeGroupTitleVisibilityFix.ts`
-- `mobileFamilyHorizontalZoomOverview.ts`
-- `mobileFamilyMapUncleSwipeNavigationGuard.ts`
-- `mobileFamilyMapOverviewGhostClickGuard.ts`
-- `mobileFamilyMapOverviewButtonFix.ts`
-- `mobileFamilyMapStableMobileFix.ts`
-- `mobileFamilyMapDirectionalNavigationFix.ts`
-- `mobileFamilyMapUncleCardLimit.ts`
-- `mobileFamilyMapCoreConnectorFix.ts`
-- `mobileVisualizationPanelFamilyStatsFix.ts`
-- `mobileFamilyMapZoomOverviewVisualFix.ts`
-- `mobileFamilyMapOverviewTileVisualAdjustments.ts`
-- `mobileFamilyMapDescendantsStabilityLock.ts`
-- `mobileFamilyMapDescendantConnectorHeightFix.ts`
-- `mobileFamilyMapExtendedSpouseCards.ts`
-- `mobileFamilyMapFilterButtonsBehaviorFix.ts`
-- `mobileFamilyMapFullOverview.ts`
-- `mobileFamilyMapFullOverviewCompactFix.ts`
-- `mobileFamilyMapZoomTrayHeightFix.ts`
-- `mobileGenerationLineFullOverview.ts`
-- `mobileFamilyMapFullOverviewConnectorFix.ts`
-- `mobileFamilyMapFullOverviewButtonGuard.ts`
+- `src/mobileFamilyTreeMutationPerformanceGuard.ts`
+- `src/adminActivityAndRelationshipRuntimeFixes.ts`
+- `src/visualPatchB.ts`
+- `src/meusDadosOptionalFirstAccessFix.ts`
+- `src/headerNotificationsFullTextFix.ts`
+- `src/personProfileHistoricalFilesSectionFix.ts`
+- `src/firstLoginMobileTutorialFixes.ts`
+- `src/firstLoginDesktopTutorialPlacementFix.ts`
+- `src/mobileCuriositiesNavigationFix.ts`
+- `src/mobileTreePanelViewportFix.ts`
+- `src/staticMobileFamilyTreeScreens.ts`
+- `src/mobileFamilyTreeScreenStateGuards.ts`
+- `src/mobileFamilyTreeGrandparentScreens.ts`
+- `src/mobileFamilyTreeSwipeHints.ts`
+- `src/generationLineSwipeHintDirectionFix.ts`
+- `src/mobileFamilyTreeAncestorConnectorsFix.ts`
+- `src/mobileFamilyTreeDescendantConnectorsFix.ts`
+- `src/mobileFamilyTreeCoreDescendantConnector.ts`
+- `src/mobileFamilyTreeGroupTitleVisibilityFix.ts`
+- `src/mobileFamilyHorizontalZoomOverview.ts`
+- `src/mobileFamilyMapUncleSwipeNavigationGuard.ts`
+- `src/mobileFamilyMapOverviewGhostClickGuard.ts`
+- `src/mobileFamilyMapOverviewButtonFix.ts`
+- `src/mobileFamilyMapStableMobileFix.ts`
+- `src/mobileFamilyMapDirectionalNavigationFix.ts`
+- `src/mobileFamilyMapUncleCardLimit.ts`
+- `src/mobileFamilyMapCoreConnectorFix.ts`
+- `src/mobileVisualizationPanelFamilyStatsFix.ts`
+- `src/mobileFamilyMapZoomOverviewVisualFix.ts`
+- `src/mobileFamilyMapOverviewTileVisualAdjustments.ts`
+- `src/mobileFamilyMapDescendantsStabilityLock.ts`
+- `src/mobileFamilyMapDescendantConnectorHeightFix.ts`
+- `src/mobileFamilyMapExtendedSpouseCards.ts`
+- `src/mobileFamilyMapFilterButtonsBehaviorFix.ts`
+- `src/desktopSidebarFilterButtonStateFix.ts`
+- `src/horizontalHiddenSpouseConnectorFix.ts`
+- `src/mobileMapToolbarRequestedBehaviorFix.ts`
+- `src/mobileFamilyMapFullOverview.ts`
+- `src/mobileFamilyMapFullOverviewCompactFix.ts`
+- `src/mobileFamilyMapZoomTrayHeightFix.ts`
+- `src/mobileGenerationLineFullOverview.ts`
+- `src/mobileFamilyMapFullOverviewConnectorFix.ts`
+- `src/mobileFamilyMapFullOverviewButtonGuard.ts`
 
-Scripts e seletores absorvidos pela implementação React:
+### Critério de uso
 
-- `mobileMapToolbarBackdropLayerFix.ts`, `mobileMapPanelRefinements.ts` e `mobileFamilyMapFullPanelStyleFix.ts` permanecem como neutralizados quando existirem, mas não são contratos ativos;
-- `mobileFamilyMapFullOverviewButtonGuard.ts` é compatibilidade/no-op quando não concentrar regra;
-- `visualPatchA.ts` não é carregado por `index.html` e não é contrato operacional.
+- Esses scripts são camada defensiva/transitória.
+- Devem ser isolados por rota, breakpoint e seletor explícito.
+- Não devem alterar regras de domínio, RLS, permissões ou persistência.
+- Quando a regra estiver estável, migrar para componente React, serviço ou utilitário tipado.
+- Scripts inexistentes ou não carregados não devem ser tratados como contrato vigente.
 
 ## Seletores funcionais do mapa mobile
 
@@ -160,7 +174,6 @@ Seletores legados que não devem voltar como contrato vigente:
 | `screenAreaCapture.ts` | Captura real da tela/aba, overlay de seleção, PNG e salvamento. |
 | `exportColorSanitizer.ts` | Sanitização de CSS moderno para fluxos que usam `html2canvas`. |
 
-
 ## Administração de notificações
 
 | Componente / módulo | Papel |
@@ -168,7 +181,7 @@ Seletores legados que não devem voltar como contrato vigente:
 | `AdminNotificacoes.tsx` | Página administrativa de notificações. |
 | `AdminNotificationConfiguration.tsx` | Aba de configuração de tipos, conteúdo, canais, destinatários, variáveis e status. |
 | `adminNotificationCatalog.ts` | Catálogo base/fallback versionado no frontend. |
-| `adminNotificationCatalogRuntimeExtensions.ts` | Extensões runtime catalogadas em 2026-07-02, incluindo `first_access_welcome`, `admin_new_link_confirmed`, `trigger_user`, `specific_users` e `close_family`. |
+| `adminNotificationCatalogRuntimeExtensions.ts` | Extensões runtime catalogadas, incluindo `first_access_welcome`, `admin_new_link_confirmed`, `trigger_user`, `specific_users` e `close_family`. |
 | `adminNotificationConfigurationService.ts` | Carrega, reconcilia e salva catálogo/configurações persistidas em Supabase sem sobrescrever customizações existentes. |
 
 A UI administrativa deve consumir preferencialmente o catálogo carregado/reconciliado pelo serviço, não apenas arrays estáticos importados diretamente.
@@ -177,5 +190,6 @@ A UI administrativa deve consumir preferencialmente o catálogo carregado/reconc
 
 - Novos componentes de shell, rota, toolbar ou mapa devem ser registrados neste guia.
 - Novo script carregado por `index.html` deve ser listado também em `INVENTARIO_TECNICO.md` e `GUIA_IMPLEMENTACOES.md`.
+- Novo runtime importado por `src/main.tsx` deve ser listado em `INVENTARIO_TECNICO.md`.
 - Scripts defensivos devem ser isolados por rota, breakpoint e seletor explícito.
 - Comportamento estabilizado deve migrar para componente React de origem quando possível.

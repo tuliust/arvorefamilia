@@ -1,7 +1,7 @@
 # QA manual
 
 > Última revisão: 2026-07-03
-> Escopo: validação manual das rotas e contratos documentados, incluindo layout compartilhado mobile dos mapas, tutorial inicial, vínculos, notificações administrativas e perspectiva memorial.
+> Escopo: validação manual das rotas e contratos documentados, incluindo layout compartilhado mobile dos mapas, tutorial inicial, vínculos, notificações administrativas, perspectiva memorial e comandos compatíveis com PowerShell.
 > Status: canônico.
 
 ## Pré-condições
@@ -11,18 +11,33 @@
 - Usuário admin para rotas administrativas.
 - Dados mínimos de pessoas, relacionamentos, vínculos, fatos históricos, fotos, profissões e notificações.
 - Para QA mobile, validar preferencialmente em iPhone/Safari real ou device mode equivalente.
+- Para QA de notificações administrativas, migrations de catálogo/configuração aplicadas no ambiente remoto ou fallback validado.
 
 ## Validação técnica local
 
-Executar antes de merge:
+### Bash/Git Bash
 
 ```bash
 git status --short
 git diff --check
 grep -R $'\xEF\xBF\xBD' docs || true
-npm run test
 npm run typecheck
 npm run build
+npm test
+```
+
+### PowerShell
+
+```powershell
+git status --short
+git diff --check
+
+# Busca o caractere de substituição Unicode U+FFFD em docs/.
+Get-ChildItem .\docs -Recurse -File | Select-String -SimpleMatch ([char]0xFFFD)
+
+npm run typecheck
+npm run build
+npm test
 ```
 
 ## QA transversal
@@ -33,6 +48,8 @@ npm run build
 - Ajustes mobile não podem alterar layout desktop.
 - Dropdowns de busca, notificações, avatar e painéis devem ficar acima de header, toolbar, cards e canvas.
 - Navegação inferior não deve cobrir conteúdo final sem respiro inferior.
+- Scripts defensivos devem permanecer isolados por rota, breakpoint e seletor.
+- Não deve haver mojibake em `docs/` nem em textos visíveis de rotas críticas.
 
 ## `/mapa-familiar`
 
@@ -61,9 +78,8 @@ Validar no desktop de `/mapa-familiar`:
 - Confirmar que trocar para outra pessoa no dropdown reinicia `Todos os cônjuges` como inativo.
 - No caso de Leonardo, confirmar que uma única pessoa cadastrada como parental não aparece duplicada como `Pai` e `Mãe`.
 - Em `Primos Paternos` e `Primos Maternos`, testar grupos com 2, 3, 4, 5 e 6 cards quando houver dados disponíveis; grupos com 4 ou 5 cards devem usar largura visual de 2 colunas.
-- Confirmar que `Primos Paternos` de Charalambos não mantém grande espaço vazio lateral.
 - Confirmar que grupos de tios/primos não exibem espaço vazio lateral excessivo após compactação.
-- Em `Tios Paternos`, quando expandir de 9 para 11 cards não alterar a altura útil do grupo, confirmar que o botão local `+` não deve aparecer e que todos os cards carregam visíveis.
+- Em grupos de tios, quando todos os cards couberem sem alterar a altura útil, confirmar que o botão local `+` não aparece e que todos os cards carregam visíveis.
 
 ## QA mobile de navegação 3x3
 
@@ -118,7 +134,7 @@ Validar em 320px, 375px, 390px e 430px.
 - Tocar em `Filtros` abre container de filtros acima do backdrop.
 - Blur começa abaixo do painel.
 - Área branca do painel não fica cortada.
-- Card inativo `Ocultar cards de cônjuges de tios, primos etc` usa leitura cinza equivalente a `Apenas meus familiares` quando inativo.
+- Card inativo `Ocultar cards de cônjuges de tios, primos etc` usa leitura cinza equivalente a `Apenas familiares` quando inativo.
 
 ### `Mapa` em `/mapa-familiar`
 
@@ -169,7 +185,7 @@ Validar em 320px, 375px, 390px e 430px.
 - Renderiza linha geracional horizontal.
 - Mantém filtros e contadores coerentes.
 - Não é afetado pelo chrome compartilhado mobile de `/mapa-familiar` e `/linha-geracional`.
-
+- Respeita `directRelativeFilters.conjuge` no escopo filtrado.
 
 ## Tutorial de primeiro acesso
 
@@ -187,12 +203,14 @@ Validar em 320px, 375px, 390px e 430px.
 - Validar que a migration de leitura de status de vínculo existe no ambiente remoto.
 - Abrir o modal de pet e confirmar que o formulário principal fica em coluna única, sem lateral redundante comprimindo os campos.
 - Confirmar que o modal de pet não abre teclado automaticamente antes de foco explícito.
+- Confirmar que a seleção de filho, cônjuge, irmão ou pet não trava o mobile.
 
 ## `/meus-dados`
 
 - Em desktop, confirmar que `Dia ou Ano de Nascimento` mantém largura compacta.
 - Em desktop, confirmar que `Local de falecimento` e `Falecimento no exterior` permanecem legíveis quando a pessoa está marcada como falecida.
 - Em mobile, confirmar que os ajustes não alteram o contrato já documentado de botões e questionário.
+- Confirmar que pessoa falecida pula `/preferencias`.
 
 ## Perspectiva memorial
 
@@ -202,6 +220,7 @@ Validar em 320px, 375px, 390px e 430px.
 - Abrir `/curiosidades` e confirmar aviso de modo memorial.
 - Confirmar que perguntas à IA, sugestões rápidas e publicação no mural ficam bloqueadas.
 - Confirmar que leitura de conteúdo existente em fórum e curiosidades permanece disponível.
+- Confirmar que nenhum bloqueio usa `alert`, `confirm` ou `prompt`.
 
 ## `/admin/notificacoes`
 
@@ -212,9 +231,12 @@ Validar em 320px, 375px, 390px e 430px.
 - Recarregar a página e confirmar que a customização permanece.
 - Confirmar que a reconciliação do catálogo não remove tipos customizados já existentes.
 - Confirmar que `Usuário do gatilho`, `Usuários específicos` e `Familiares próximos` aparecem como destinatários quando disponíveis.
+- Confirmar que `variable_settings` é preservado ao salvar e reabrir.
+- Confirmar que a tela não promete disparo real quando o evento estiver apenas preparado.
 
 ## Administração e demais rotas
 
 - Rotas admin exigem usuário admin, exceto `/admin/login`.
 - Rotas de membro exigem primeiro acesso concluído quando aplicável.
+- `/admin/gestao-conteudo-pessoas` deve estar acessível via rota e ação administrativa quando a frente estiver habilitada.
 - Ajustes de mapa mobile não devem alterar dados, notificações, fórum, calendário ou perfil.

@@ -1,7 +1,7 @@
 # Guia de UX e layout
 
 > Última revisão: 2026-07-03
-> Escopo: experiência visual das rotas principais da branch `main`, com foco em mapa mobile, linha geracional e layout compartilhado.
+> Escopo: experiência visual das rotas principais da branch `main`, com foco em mapa mobile, linha geracional, layout compartilhado, exportação desktop, onboarding, perspectiva memorial e camadas de overlay.
 > Status: canônico.
 
 ## Princípios
@@ -12,6 +12,7 @@
 - Proteger fluxos de onboarding contra perda acidental de contexto.
 - Preservar contraste, legibilidade e áreas clicáveis confortáveis.
 - Alterações mobile devem ser isoladas por breakpoint/rota e não podem alterar desktop por herança.
+- Ajustes visuais transitórios devem migrar para componentes React quando estabilizados.
 
 ## Mapa familiar
 
@@ -46,6 +47,7 @@
 - `Salvar Imagem` abre modal de instruções com fundo opaco, três etapas e botões `Cancelar`/`Continuar`.
 - Durante seleção de área, zoom, favorito e botão `?` desaparecem.
 - A impressão usa página limpa, título superior, árvore centralizada e uma página em retrato ou paisagem.
+- `Imagem` e `PDF` não devem aparecer como botões principais do painel. Helpers internos ou legados não alteram o contrato visual.
 
 ### Mobile compartilhado
 
@@ -126,6 +128,7 @@ Os botões da visão geral mobile seguem contrato visual próprio:
 - Sugestões de busca ficam acima de todo conteúdo.
 - Menu do avatar fica alto o suficiente para exibir conteúdo sem scroll vertical excessivo.
 - A área `Perfis gerenciados`, quando existir, fica dentro do menu do avatar.
+- A seleção de perfil memorial não deve exibir sufixo visual `— memorial`, mas deve aplicar as restrições funcionais.
 
 ## Fluxo de onboarding
 
@@ -140,7 +143,6 @@ Os botões da visão geral mobile seguem contrato visual próprio:
 
 Pessoa marcada como falecida em `/meus-dados` pula `/preferencias` e segue para `/revisao-dados`.
 
-
 ## Perspectiva memorial
 
 - Em perspectiva de pessoa falecida administrada por responsável, áreas sociais permanecem em modo leitura.
@@ -148,12 +150,21 @@ Pessoa marcada como falecida em `/meus-dados` pula `/preferencias` e segue para 
 - `/curiosidades` deve bloquear perguntas à IA, uso de sugestões rápidas e publicação no mural nessa perspectiva.
 - O aviso de modo memorial deve ser discreto, legível e não bloquear a leitura do conteúdo já existente.
 - Controles desabilitados devem usar `aria-disabled`, texto de apoio ou estado visual consistente, sem abrir teclado ou iniciar fluxo de escrita.
+- O bloqueio não deve usar `alert`, `confirm` ou `prompt` nativos.
 
 ## Ajustes de `/meus-dados` e pet
 
 - Em desktop, o campo `Dia ou Ano de Nascimento` deve manter largura compacta para não competir com o restante do formulário.
 - O grupo `Local de falecimento` e `Falecimento no exterior` deve preservar leitura em linha quando houver espaço, sem quebrar labels importantes.
 - No modal de pet em `/meus-vinculos`, a experiência atual deve priorizar formulário em coluna única; listas laterais redundantes de pets cadastrados não devem comprimir o formulário principal.
+- Modais de parentes e pet no mobile não devem abrir teclado automaticamente antes de foco explícito do usuário.
+
+## Administração
+
+- No dashboard administrativo mobile, cards principais devem manter estrutura visual equivalente.
+- `Conteúdo de Pessoas` deve aparecer como ação administrativa quando a rota `/admin/gestao-conteudo-pessoas` estiver ativa.
+- Nas rotas `/admin/*`, o header global deve ser reduzido para navegação essencial: `Painel Administrativo`, `Principal` e menu do usuário.
+- Botões como `Membros`, `Conteúdo` e `Responsáveis` não devem aparecer no header global administrativo quando essas entradas já estiverem disponíveis por cards, menus ou páginas internas.
 
 ## Regra de manutenção visual
 

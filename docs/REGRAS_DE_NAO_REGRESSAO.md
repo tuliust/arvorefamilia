@@ -1,7 +1,7 @@
 # Regras de não regressão
 
 > Última revisão: 2026-07-03
-> Escopo: contratos que não devem ser quebrados em novas alterações, incluindo layout compartilhado mobile dos mapas.
+> Escopo: contratos que não devem ser quebrados em novas alterações, incluindo layout compartilhado mobile dos mapas, scripts defensivos, exportação, onboarding, vínculos, notificações administrativas e perspectiva memorial.
 > Status: canônico.
 
 ## Rotas
@@ -13,6 +13,7 @@
 - `/pessoa/:id` e `/pessoas/:id` devem continuar apontando para `PersonProfile`.
 - Rotas administrativas, exceto `/admin/login`, devem continuar protegidas por `ProtectedRoute`.
 - Usuário com primeiro acesso incompleto (`dados_confirmados = false`) não pode acessar rotas internas fora do fluxo de onboarding.
+- `/admin/gestao-conteudo-pessoas` não deve ser removida enquanto estiver listada em `routes.tsx` e no dashboard administrativo.
 
 ## Chrome mobile compartilhado
 
@@ -21,6 +22,14 @@
 - `TreeMapSharedLayout`, `MobileTreeChromeContext`, `MapaFamiliarSharedRoute` e `LinhaGeracional mobileChromeMode="shared"` são parte do contrato vigente.
 - O adaptador `MapaFamiliarSharedRoute` é transição: pode esconder o shell antigo do `Home` no mobile, mas não deve afetar desktop.
 - Runtimes específicos de linha geracional podem estar montados no layout compartilhado desde que sejam isolados internamente por `pathname`, breakpoint e seletores explícitos.
+
+## Scripts defensivos
+
+- Scripts carregados por `index.html` devem estar documentados em `INVENTARIO_TECNICO.md`, `GUIA_COMPONENTES.md` e `GUIA_IMPLEMENTACOES.md`.
+- Novo script defensivo não pode ser adicionado sem escopo por rota, breakpoint e seletor.
+- Scripts defensivos não podem substituir regra de domínio, schema, RLS, guard ou serviço.
+- Scripts antigos de reorganização documental não devem reescrever `docs/README.md` com índice obsoleto.
+- Comportamento estabilizado deve migrar para componente React, serviço ou utilitário tipado.
 
 ## Mapa familiar desktop por grupos
 
@@ -72,6 +81,14 @@
 - O fundo branco do painel envolve grade e CTA inferior.
 - A visualização completa preserva `transform` após pan ou pinch.
 
+## Exportação
+
+- A seção `Exportar` do painel desktop deve mostrar apenas `Salvar Imagem` e `Imprimir`.
+- `Imagem` e `PDF` não devem voltar como ações principais do painel.
+- `Salvar Imagem` deve abrir modal de instruções antes de solicitar captura.
+- Durante seleção de área, controles de zoom, favorito e botão `?` devem ficar ocultos.
+- `Imprimir` deve abrir janela nativa de impressão com página limpa e árvore centralizada.
+- Falhas de exportação devem usar `toast`, não diálogo nativo.
 
 ## Primeiro acesso e vínculos
 
@@ -79,6 +96,8 @@
 - A etapa corrente do tutorial deve ser preservada durante a sessão e limpa ao finalizar.
 - Badges de `/meus-vinculos` não podem regredir para `Pré-cadastrado` quando há vínculo real em `user_person_links`.
 - O modal de pet não deve voltar a comprimir o formulário principal com lista lateral redundante.
+- Modais mobile de vínculo e pet não devem abrir teclado automaticamente antes de foco explícito.
+- Pessoa falecida no primeiro acesso não deve ser obrigada a passar por `/preferencias`.
 
 ## Perspectiva memorial
 
@@ -93,8 +112,18 @@
 - Novos modelos runtime devem ser adicionados ao catálogo salvo apenas quando ausentes.
 - `Boas-vindas de primeiro acesso` e `Novo vínculo confirmado` devem aparecer na aba `Configuração`.
 - A presença de modelo editável não deve ser confundida com disparo real até que o dispatch correspondente esteja conectado e testado.
+- `variable_settings` deve ser preservado ao salvar e reabrir configuração.
+- `Usuário do gatilho`, `Usuários específicos` e `Familiares próximos` não devem desaparecer quando suportados pelo catálogo/UI.
+
+## Validação documental
+
+- Não pode haver caractere `U+FFFD` em `docs/`.
+- Comando Bash de busca de mojibake não deve ser documentado como se funcionasse em Windows PowerShell.
+- Em PowerShell, usar `Get-ChildItem .\docs -Recurse -File | Select-String -SimpleMatch ([char]0xFFFD)`.
+- Índices não devem apontar para documentos removidos ou consolidados.
+- Documentos históricos fragmentados não devem ser recriados quando `historico/LEGADO_TECNICO.md` já absorveu o conteúdo.
 
 ## Escopo documental
 
-- Alterações documentais finais devem ficar restritas a `docs/`.
+- Alterações documentais finais devem ficar restritas a `docs/`, salvo quando o ajuste necessário for no `README.md` raiz ou em scripts legados.
 - Alterações funcionais de mapa mobile devem atualizar `MAPA_FAMILIAR_VIEW.md`, `GUIA_UX_LAYOUT.md`, `GUIA_COMPONENTES.md`, `GUIA_IMPLEMENTACOES.md`, `QA_MANUAL.md`, `REGRAS_DE_NAO_REGRESSAO.md`, `INVENTARIO_TECNICO.md`, `ROTAS_E_GUARDS.md` e `DECISOES_ARQUITETURAIS.md`.

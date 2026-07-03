@@ -1,7 +1,7 @@
 # Inventário técnico
 
 > Última revisão: 2026-07-03
-> Escopo: rotas, módulos, documentos finais e referências técnicas preservadas após limpeza documental, ajustes mobile/admin, layout compartilhado mobile de mapas, ajustes desktop do mapa familiar e complementos de notificações, vínculos, tutorial e perspectiva memorial.
+> Escopo: rotas, módulos, documentos finais, runtimes carregados por `index.html` e `src/main.tsx`, layout compartilhado mobile de mapas, ajustes desktop do mapa familiar, notificações, vínculos, tutorial e perspectiva memorial.
 > Status: canônico.
 
 ## Stack
@@ -11,8 +11,8 @@
 - Guards: `ProtectedRoute`, `MemberRoute` e `TreeAccessRoute`.
 - Dados via Supabase, com serviços em `src/app/services` e tipos em `src/app/types`.
 - IA por endpoint serverless `api/ai.ts`.
-- Scripts de runtime mobile e defensivo carregados por `index.html` ou importados por side effect em `src/main.tsx`.
-- Validação esperada: `npm run typecheck` e `npm run build`.
+- Scripts defensivos carregados por `index.html` ou importados por side effect em `src/main.tsx`.
+- Validação esperada: `npm run typecheck`, `npm run build`, `npm test` e `git diff --check`.
 
 ## Documentos canônicos por área
 
@@ -169,6 +169,8 @@ Essa arquitetura é mobile-first. Desktop continua sendo responsabilidade das p�
 
 ## Runtimes e wrappers relevantes
 
+### Importados por componentes/rotas React
+
 - `src/app/components/MobileGlobalTweaks.tsx`
 - `src/app/components/MobileTopLayerTweaks.tsx`
 - `src/app/components/LinhaGeracionalMobilePanelLayerTweaks.tsx`
@@ -177,8 +179,17 @@ Essa arquitetura é mobile-first. Desktop continua sendo responsabilidade das p�
 - `src/app/components/FamilyTree/MobileFamilyMapFullLayer.tsx`
 - `src/app/components/FirstLoginTutorialRuntimeTweaks.tsx`
 - `src/app/components/person/PersonProfileRuntimeTweaks.tsx`
-- `src/memberInteractionLayoutRuntimeFixes.ts`
-- Wrappers ativos: `AdminDashboardWithTweaks`, `AdminHomeSettingsWithSaveBar`, `MeusDadosWithInlineProfileBio`, `MeusVinculosWithProfileBio` e `MeusVinculosMobileShortcutsPage`.
+
+### Importados por `src/main.tsx`
+
+| Arquivo | Situação documental |
+|---|---|
+| `src/mobileFamilyMapFullPanelStyleFix.ts` | Compatibilidade visual mobile importada por side effect; revisar antes de remover. |
+| `src/familyMapDesktopRuntimeFixes.ts` | Ajustes defensivos de mapa desktop; não substitui contratos React de origem. |
+| `src/memberUiRuntimeFixes.ts` | Ajustes defensivos de UI de membro; manter isolado por rota e seletor. |
+| `src/memberInteractionLayoutRuntimeFixes.ts` | Runtime transitório para perspectiva memorial em `/forum` e `/curiosidades`, ajustes de `/meus-dados` e modal de pet em `/meus-vinculos`. |
+
+Wrappers ativos: `AdminDashboardWithTweaks`, `AdminHomeSettingsWithSaveBar`, `MeusDadosWithInlineProfileBio`, `MeusVinculosWithProfileBio` e `MeusVinculosMobileShortcutsPage`.
 
 ## Mapa mobile: componentes React vigentes
 
@@ -196,40 +207,53 @@ Essa arquitetura é mobile-first. Desktop continua sendo responsabilidade das p�
 
 ## Scripts carregados por `index.html`
 
-- `src/mobileFamilyTreeMutationPerformanceGuard.ts`
-- `src/visualPatchB.ts`
-- `src/firstLoginMobileTutorialFixes.ts`
-- `src/mobileCuriositiesNavigationFix.ts`
-- `src/mobileTreePanelViewportFix.ts`
-- `src/staticMobileFamilyTreeScreens.ts`
-- `src/mobileFamilyTreeScreenStateGuards.ts`
-- `src/mobileFamilyTreeGrandparentScreens.ts`
-- `src/mobileFamilyTreeSwipeHints.ts`
-- `src/mobileFamilyTreeAncestorConnectorsFix.ts`
-- `src/mobileFamilyTreeDescendantConnectorsFix.ts`
-- `src/mobileFamilyTreeCoreDescendantConnector.ts`
-- `src/mobileFamilyTreeGroupTitleVisibilityFix.ts`
-- `src/mobileFamilyHorizontalZoomOverview.ts`
-- `src/mobileFamilyMapUncleSwipeNavigationGuard.ts`
-- `src/mobileFamilyMapOverviewGhostClickGuard.ts`
-- `src/mobileFamilyMapOverviewButtonFix.ts`
-- `src/mobileFamilyMapStableMobileFix.ts`
-- `src/mobileFamilyMapDirectionalNavigationFix.ts`
-- `src/mobileFamilyMapUncleCardLimit.ts`
-- `src/mobileFamilyMapCoreConnectorFix.ts`
-- `src/mobileVisualizationPanelFamilyStatsFix.ts`
-- `src/mobileFamilyMapZoomOverviewVisualFix.ts`
-- `src/mobileFamilyMapOverviewTileVisualAdjustments.ts`
-- `src/mobileFamilyMapDescendantsStabilityLock.ts`
-- `src/mobileFamilyMapDescendantConnectorHeightFix.ts`
-- `src/mobileFamilyMapExtendedSpouseCards.ts`
-- `src/mobileFamilyMapFilterButtonsBehaviorFix.ts`
-- `src/mobileFamilyMapFullOverview.ts`
-- `src/mobileFamilyMapFullOverviewCompactFix.ts`
-- `src/mobileFamilyMapZoomTrayHeightFix.ts`
-- `src/mobileGenerationLineFullOverview.ts`
-- `src/mobileFamilyMapFullOverviewConnectorFix.ts`
-- `src/mobileFamilyMapFullOverviewButtonGuard.ts`
+| Arquivo | Situação documental |
+|---|---|
+| `src/mobileFamilyTreeMutationPerformanceGuard.ts` | Runtime defensivo carregado por `index.html`; manter isolado por rota, breakpoint e seletor. |
+| `src/adminActivityAndRelationshipRuntimeFixes.ts` | Runtime defensivo carregado por `index.html`; manter isolado por rota, breakpoint e seletor. |
+| `src/visualPatchB.ts` | Runtime defensivo carregado por `index.html`; manter isolado por rota, breakpoint e seletor. |
+| `src/meusDadosOptionalFirstAccessFix.ts` | Runtime defensivo carregado por `index.html`; manter isolado por rota, breakpoint e seletor. |
+| `src/headerNotificationsFullTextFix.ts` | Runtime defensivo carregado por `index.html`; manter isolado por rota, breakpoint e seletor. |
+| `src/personProfileHistoricalFilesSectionFix.ts` | Runtime defensivo carregado por `index.html`; manter isolado por rota, breakpoint e seletor. |
+| `src/firstLoginMobileTutorialFixes.ts` | Runtime defensivo carregado por `index.html`; manter isolado por rota, breakpoint e seletor. |
+| `src/firstLoginDesktopTutorialPlacementFix.ts` | Runtime defensivo carregado por `index.html`; manter isolado por rota, breakpoint e seletor. |
+| `src/mobileCuriositiesNavigationFix.ts` | Runtime defensivo carregado por `index.html`; manter isolado por rota, breakpoint e seletor. |
+| `src/mobileTreePanelViewportFix.ts` | Runtime defensivo carregado por `index.html`; manter isolado por rota, breakpoint e seletor. |
+| `src/staticMobileFamilyTreeScreens.ts` | Runtime defensivo carregado por `index.html`; manter isolado por rota, breakpoint e seletor. |
+| `src/mobileFamilyTreeScreenStateGuards.ts` | Runtime defensivo carregado por `index.html`; manter isolado por rota, breakpoint e seletor. |
+| `src/mobileFamilyTreeGrandparentScreens.ts` | Runtime defensivo carregado por `index.html`; manter isolado por rota, breakpoint e seletor. |
+| `src/mobileFamilyTreeSwipeHints.ts` | Runtime defensivo carregado por `index.html`; manter isolado por rota, breakpoint e seletor. |
+| `src/generationLineSwipeHintDirectionFix.ts` | Runtime defensivo carregado por `index.html`; manter isolado por rota, breakpoint e seletor. |
+| `src/mobileFamilyTreeAncestorConnectorsFix.ts` | Runtime defensivo carregado por `index.html`; manter isolado por rota, breakpoint e seletor. |
+| `src/mobileFamilyTreeDescendantConnectorsFix.ts` | Runtime defensivo carregado por `index.html`; manter isolado por rota, breakpoint e seletor. |
+| `src/mobileFamilyTreeCoreDescendantConnector.ts` | Runtime defensivo carregado por `index.html`; manter isolado por rota, breakpoint e seletor. |
+| `src/mobileFamilyTreeGroupTitleVisibilityFix.ts` | Runtime defensivo carregado por `index.html`; manter isolado por rota, breakpoint e seletor. |
+| `src/mobileFamilyHorizontalZoomOverview.ts` | Runtime defensivo carregado por `index.html`; manter isolado por rota, breakpoint e seletor. |
+| `src/mobileFamilyMapUncleSwipeNavigationGuard.ts` | Runtime defensivo carregado por `index.html`; manter isolado por rota, breakpoint e seletor. |
+| `src/mobileFamilyMapOverviewGhostClickGuard.ts` | Runtime defensivo carregado por `index.html`; manter isolado por rota, breakpoint e seletor. |
+| `src/mobileFamilyMapOverviewButtonFix.ts` | Runtime defensivo carregado por `index.html`; manter isolado por rota, breakpoint e seletor. |
+| `src/mobileFamilyMapStableMobileFix.ts` | Runtime defensivo carregado por `index.html`; manter isolado por rota, breakpoint e seletor. |
+| `src/mobileFamilyMapDirectionalNavigationFix.ts` | Runtime defensivo carregado por `index.html`; manter isolado por rota, breakpoint e seletor. |
+| `src/mobileFamilyMapUncleCardLimit.ts` | Runtime defensivo carregado por `index.html`; manter isolado por rota, breakpoint e seletor. |
+| `src/mobileFamilyMapCoreConnectorFix.ts` | Runtime defensivo carregado por `index.html`; manter isolado por rota, breakpoint e seletor. |
+| `src/mobileVisualizationPanelFamilyStatsFix.ts` | Runtime defensivo carregado por `index.html`; manter isolado por rota, breakpoint e seletor. |
+| `src/mobileFamilyMapZoomOverviewVisualFix.ts` | Runtime defensivo carregado por `index.html`; manter isolado por rota, breakpoint e seletor. |
+| `src/mobileFamilyMapOverviewTileVisualAdjustments.ts` | Runtime defensivo carregado por `index.html`; manter isolado por rota, breakpoint e seletor. |
+| `src/mobileFamilyMapDescendantsStabilityLock.ts` | Runtime defensivo carregado por `index.html`; manter isolado por rota, breakpoint e seletor. |
+| `src/mobileFamilyMapDescendantConnectorHeightFix.ts` | Runtime defensivo carregado por `index.html`; manter isolado por rota, breakpoint e seletor. |
+| `src/mobileFamilyMapExtendedSpouseCards.ts` | Runtime defensivo carregado por `index.html`; manter isolado por rota, breakpoint e seletor. |
+| `src/mobileFamilyMapFilterButtonsBehaviorFix.ts` | Runtime defensivo carregado por `index.html`; manter isolado por rota, breakpoint e seletor. |
+| `src/desktopSidebarFilterButtonStateFix.ts` | Runtime defensivo carregado por `index.html`; manter isolado por rota, breakpoint e seletor. |
+| `src/horizontalHiddenSpouseConnectorFix.ts` | Runtime defensivo carregado por `index.html`; manter isolado por rota, breakpoint e seletor. |
+| `src/mobileMapToolbarRequestedBehaviorFix.ts` | Runtime defensivo carregado por `index.html`; manter isolado por rota, breakpoint e seletor. |
+| `src/mobileFamilyMapFullOverview.ts` | Runtime defensivo carregado por `index.html`; manter isolado por rota, breakpoint e seletor. |
+| `src/mobileFamilyMapFullOverviewCompactFix.ts` | Runtime defensivo carregado por `index.html`; manter isolado por rota, breakpoint e seletor. |
+| `src/mobileFamilyMapZoomTrayHeightFix.ts` | Runtime defensivo carregado por `index.html`; manter isolado por rota, breakpoint e seletor. |
+| `src/mobileGenerationLineFullOverview.ts` | Runtime defensivo carregado por `index.html`; manter isolado por rota, breakpoint e seletor. |
+| `src/mobileFamilyMapFullOverviewConnectorFix.ts` | Runtime defensivo carregado por `index.html`; manter isolado por rota, breakpoint e seletor. |
+| `src/mobileFamilyMapFullOverviewButtonGuard.ts` | Runtime defensivo carregado por `index.html`; manter isolado por rota, breakpoint e seletor. |
+
+Esses arquivos devem ser tratados como camada defensiva de transição. Quando o comportamento estabilizar, migrar a regra para componentes/serviços tipados e remover a manipulação direta de DOM.
 
 ## Scripts neutralizados, removidos ou absorvidos
 
@@ -237,31 +261,51 @@ Essa arquitetura é mobile-first. Desktop continua sendo responsabilidade das p�
 |---|---|
 | `src/mobileMapPanelRefinements.ts` | Não é contrato vigente se vazio ou não carregado. |
 | `src/mobileMapToolbarBackdropLayerFix.ts` | Não é contrato vigente se vazio ou não carregado. |
-| `src/mobileFamilyMapFullPanelStyleFix.ts` | Não é contrato vigente se vazio ou não carregado. |
+| `src/mobileFamilyMapFullPanelStyleFix.ts` | Se apenas importado por compatibilidade, revisar absorção por componente React. |
 | `src/mobileFamilyMapFullOverviewButtonGuard.ts` | Se estiver carregado mas vazio, é compatibilidade/no-op. |
 | `src/desktopTreeVisualizationPanelTextFix.ts` | Não listar como ativo quando a correção textual já estiver no componente de origem. |
 | `src/visualPatchA.ts` | Se existir sem carregamento, tratar como resíduo técnico. |
+| `scripts/reorganizar-documentacao.sh` | Script legado de reorganização; não executar sem revisão, pois pode recriar índice antigo. |
+| `scripts/reorganizar-documentacao.ps1` | Script legado de reorganização; não executar sem revisão, pois pode recriar índice antigo. |
 
-
-## Runtimes importados por `src/main.tsx`
-
-| Arquivo | Situação documental |
-|---|---|
-| `src/memberInteractionLayoutRuntimeFixes.ts` | Runtime defensivo transitório para perspectiva memorial em `/forum` e `/curiosidades`, ajuste de layout em `/meus-dados` e ajuste de modal de pet em `/meus-vinculos`. |
-| `src/memberUiRuntimeFixes.ts` | Ajustes defensivos de UI de membro já existentes; manter isolado por rota e seletor. |
-| `src/familyMapDesktopRuntimeFixes.ts` | Ajustes defensivos de mapa desktop; não substituir contratos React de origem. |
-| `src/mobileFamilyMapFullPanelStyleFix.ts` | Compatibilidade visual mobile importada por side effect; revisar se ainda é necessária antes de remover. |
-
-Esses runtimes não substituem regra de domínio, RLS ou componente React de origem. Quando o comportamento estabilizar, migrar a regra para componentes ou serviços tipados e remover a manipulação direta de DOM.
-
-## Migrations recentes não documentadas antes desta revisão
+## Migrations recentes relevantes
 
 | Migration | Uso |
 |---|---|
-| `supabase/migrations/20260701090000_allow_member_link_status_lookup.sql` | Cria função `current_user_has_person_link()` e policy para que membros autenticados consigam resolver status de vínculo exibido nos badges de `/meus-vinculos`. |
+| `supabase/migrations/20260701090000_allow_member_link_status_lookup.sql` | Cria função `current_user_has_person_link()` e policy para resolver status de vínculo exibido nos badges de `/meus-vinculos`. |
+| `supabase/migrations/20260701120000_persist_admin_notification_config_and_first_map_access.sql` | Persiste configuração administrativa de notificações e deduplica primeiro acesso a `/mapa-familiar`. |
+| `supabase/migrations/20260701143000_persist_full_admin_notification_catalog.sql` | Persiste snapshot completo do catálogo administrativo. |
+| `supabase/migrations/20260701170000_add_variable_settings_to_admin_notification_config.sql` | Adiciona `variable_settings` em JSONB para regras administrativas de variáveis. |
 
 Revisão de segurança recomendada: substituir leitura ampla de `user_person_links` por RPC que retorne apenas `pessoa_id` quando o dispatch/serviço estiver estabilizado.
 
+## Validação
+
+### Bash/Git Bash
+
+```bash
+git status --short
+git diff --check
+grep -R $'\xEF\xBF\xBD' docs || true
+npm run typecheck
+npm run build
+npm test
+```
+
+### PowerShell
+
+```powershell
+git status --short
+git diff --check
+
+# Busca o caractere de substituição Unicode U+FFFD em docs/.
+Get-ChildItem .\docs -Recurse -File | Select-String -SimpleMatch ([char]0xFFFD)
+
+npm run typecheck
+npm run build
+npm test
+```
+
 ## Regra de manutenção do inventário
 
-Atualizar este arquivo sempre que houver nova rota, layout, guard, serviço, tabela, migration, runtime carregado por `index.html`, neutralização/remoção de runtime ou mudança no contrato de `/admin/notificacoes`.
+Atualizar este arquivo sempre que houver nova rota, layout, guard, serviço, tabela, migration, runtime carregado por `index.html`, runtime importado por `src/main.tsx`, neutralização/remoção de runtime ou mudança no contrato de `/admin/notificacoes`.

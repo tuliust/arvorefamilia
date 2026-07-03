@@ -1,14 +1,15 @@
 # Guia de implementações
 
 > Última revisão: 2026-07-03
-> Escopo: comportamento implementado na branch `main`, incluindo layout compartilhado mobile dos mapas.
+> Escopo: comportamento implementado na branch `main`, incluindo layout compartilhado mobile dos mapas, runtimes defensivos reais, primeiro acesso, vínculos, notificações administrativas e validação compatível com PowerShell.
 > Status: canônico.
 
 ## Rotas e carregamento
 
 - `src/app/routes.tsx` define lazy loading para páginas públicas, de membro, de árvore e administrativas.
 - O fallback de rota exibe estado de carregamento.
-- Erros de chunk ou asset JS disparam tentativa controlada de reload com chave de sessão.
+- `routes.tsx` mantém error boundary de rota.
+- `src/main.tsx` instala recuperação global para falhas de import dinâmico e CSS/cache, com reload controlado por `sessionStorage`.
 - `/` redireciona para `/mapa-familiar`.
 - `/aprovacoes` e `/admin/aprovacoes` carregam a página administrativa de aprovações.
 - Runtime tweaks globais devem ser defensivos, com `requestAnimationFrame`, `try/catch` e observação mínima de mutações para evitar loops.
@@ -33,7 +34,7 @@
 - Pessoa marcada como falecida em `/meus-dados` pula `/preferencias`.
 - Alterações de vínculos que dependem de aprovação são pendência, não gravação definitiva.
 
-## Runtimes defensivos mobile
+## Runtimes defensivos
 
 Regras de implementação:
 
@@ -42,15 +43,18 @@ Regras de implementação:
 - evitar recriar repetidamente opções de `<select>` ou nós equivalentes;
 - usar `requestAnimationFrame` para agrupar mutações;
 - usar `try/catch` para impedir que ajuste visual bloqueie a página;
-- preferir correção no componente de origem quando o ajuste deixar de ser temporário.
+- preferir correção no componente de origem quando o ajuste deixar de ser temporário;
+- não usar runtime defensivo para substituir regra de domínio, RLS, guard ou schema.
 
-Componentes relevantes:
+Componentes e módulos relevantes:
 
 - `MobileGlobalTweaks` para overlays mobile e ajustes transversais;
 - `MobileTopLayerTweaks` para busca, notificações, avatar e painéis;
 - `LinhaGeracionalMobilePanelLayerTweaks` para isolamento da linha geracional, inclusive quando montado no layout compartilhado;
 - `FirstLoginTutorialRuntimeTweaks` para tour;
-- `PersonProfileRuntimeTweaks` para `/pessoa/:id`.
+- `PersonProfileRuntimeTweaks` para `/pessoa/:id`;
+- `memberInteractionLayoutRuntimeFixes.ts` para perspectiva memorial transitória;
+- `memberUiRuntimeFixes.ts`, `familyMapDesktopRuntimeFixes.ts` e `mobileFamilyMapFullPanelStyleFix.ts` como side effects controlados de `src/main.tsx`.
 
 ## Mapa familiar
 
@@ -64,7 +68,7 @@ Componentes relevantes:
 - O mapa desktop por grupos usa `DesktopFamilyMapView`.
 - Cards em grupos usam `FamilyTreeVisualCards`.
 - O subtipo legado `sangue`/`adotivo` não deve ser reintroduzido como texto visível.
-- Em perspectiva por `?pessoa=`, cônjuges colaterais iniciam ocultos, mas o botão `Todos os cônjuges` continua acionável e deve refletir `directRelativeFilters.conjuge`.
+- O botão `Todos os cônjuges` continua acionável e deve refletir `directRelativeFilters.conjuge`.
 - `DesktopTreeVisualizationPanel.tsx` não deve aplicar filtro efetivo artificial para forçar `conjuge: false` depois que o usuário ativa o filtro.
 - Ao trocar a pessoa no dropdown, o filtro de cônjuges pode ser desligado para iniciar a nova perspectiva limpa.
 - `DesktopFamilyMapView.tsx` usa grupos colaterais adaptativos para reduzir largura de tios e primos quando a quantidade de cards pede menos colunas.
@@ -86,50 +90,60 @@ Componentes relevantes:
 
 ## Scripts carregados por `index.html`
 
-Scripts relevantes antes de alterar mapa, mobile, curiosidades, tutorial ou painel desktop:
+Scripts relevantes antes de alterar mapa, mobile, curiosidades, tutorial, header, notificações, painel desktop ou admin:
 
-- `mobileFamilyTreeMutationPerformanceGuard.ts`
-- `visualPatchB.ts`
-- `firstLoginMobileTutorialFixes.ts`
-- `mobileCuriositiesNavigationFix.ts`
-- `mobileTreePanelViewportFix.ts`
-- `staticMobileFamilyTreeScreens.ts`
-- `mobileFamilyTreeScreenStateGuards.ts`
-- `mobileFamilyTreeGrandparentScreens.ts`
-- `mobileFamilyTreeSwipeHints.ts`
-- `mobileFamilyTreeAncestorConnectorsFix.ts`
-- `mobileFamilyTreeDescendantConnectorsFix.ts`
-- `mobileFamilyTreeCoreDescendantConnector.ts`
-- `mobileFamilyTreeGroupTitleVisibilityFix.ts`
-- `mobileFamilyHorizontalZoomOverview.ts`
-- `mobileFamilyMapUncleSwipeNavigationGuard.ts`
-- `mobileFamilyMapOverviewGhostClickGuard.ts`
-- `mobileFamilyMapOverviewButtonFix.ts`
-- `mobileFamilyMapStableMobileFix.ts`
-- `mobileFamilyMapDirectionalNavigationFix.ts`
-- `mobileFamilyMapUncleCardLimit.ts`
-- `mobileFamilyMapCoreConnectorFix.ts`
-- `mobileVisualizationPanelFamilyStatsFix.ts`
-- `mobileFamilyMapZoomOverviewVisualFix.ts`
-- `mobileFamilyMapOverviewTileVisualAdjustments.ts`
-- `mobileFamilyMapDescendantsStabilityLock.ts`
-- `mobileFamilyMapDescendantConnectorHeightFix.ts`
-- `mobileFamilyMapExtendedSpouseCards.ts`
-- `mobileFamilyMapFilterButtonsBehaviorFix.ts`
-- `mobileFamilyMapFullOverview.ts`
-- `mobileFamilyMapFullOverviewCompactFix.ts`
-- `mobileFamilyMapZoomTrayHeightFix.ts`
-- `mobileGenerationLineFullOverview.ts`
-- `mobileFamilyMapFullOverviewConnectorFix.ts`
-- `mobileFamilyMapFullOverviewButtonGuard.ts`
+- `src/mobileFamilyTreeMutationPerformanceGuard.ts`
+- `src/adminActivityAndRelationshipRuntimeFixes.ts`
+- `src/visualPatchB.ts`
+- `src/meusDadosOptionalFirstAccessFix.ts`
+- `src/headerNotificationsFullTextFix.ts`
+- `src/personProfileHistoricalFilesSectionFix.ts`
+- `src/firstLoginMobileTutorialFixes.ts`
+- `src/firstLoginDesktopTutorialPlacementFix.ts`
+- `src/mobileCuriositiesNavigationFix.ts`
+- `src/mobileTreePanelViewportFix.ts`
+- `src/staticMobileFamilyTreeScreens.ts`
+- `src/mobileFamilyTreeScreenStateGuards.ts`
+- `src/mobileFamilyTreeGrandparentScreens.ts`
+- `src/mobileFamilyTreeSwipeHints.ts`
+- `src/generationLineSwipeHintDirectionFix.ts`
+- `src/mobileFamilyTreeAncestorConnectorsFix.ts`
+- `src/mobileFamilyTreeDescendantConnectorsFix.ts`
+- `src/mobileFamilyTreeCoreDescendantConnector.ts`
+- `src/mobileFamilyTreeGroupTitleVisibilityFix.ts`
+- `src/mobileFamilyHorizontalZoomOverview.ts`
+- `src/mobileFamilyMapUncleSwipeNavigationGuard.ts`
+- `src/mobileFamilyMapOverviewGhostClickGuard.ts`
+- `src/mobileFamilyMapOverviewButtonFix.ts`
+- `src/mobileFamilyMapStableMobileFix.ts`
+- `src/mobileFamilyMapDirectionalNavigationFix.ts`
+- `src/mobileFamilyMapUncleCardLimit.ts`
+- `src/mobileFamilyMapCoreConnectorFix.ts`
+- `src/mobileVisualizationPanelFamilyStatsFix.ts`
+- `src/mobileFamilyMapZoomOverviewVisualFix.ts`
+- `src/mobileFamilyMapOverviewTileVisualAdjustments.ts`
+- `src/mobileFamilyMapDescendantsStabilityLock.ts`
+- `src/mobileFamilyMapDescendantConnectorHeightFix.ts`
+- `src/mobileFamilyMapExtendedSpouseCards.ts`
+- `src/mobileFamilyMapFilterButtonsBehaviorFix.ts`
+- `src/desktopSidebarFilterButtonStateFix.ts`
+- `src/horizontalHiddenSpouseConnectorFix.ts`
+- `src/mobileMapToolbarRequestedBehaviorFix.ts`
+- `src/mobileFamilyMapFullOverview.ts`
+- `src/mobileFamilyMapFullOverviewCompactFix.ts`
+- `src/mobileFamilyMapZoomTrayHeightFix.ts`
+- `src/mobileGenerationLineFullOverview.ts`
+- `src/mobileFamilyMapFullOverviewConnectorFix.ts`
+- `src/mobileFamilyMapFullOverviewButtonGuard.ts`
 
-Arquivos de transição neutralizados:
+Arquivos de transição neutralizados ou não contratuais:
 
 - `mobileMapToolbarBackdropLayerFix.ts`;
 - `mobileMapPanelRefinements.ts`;
-- `mobileFamilyMapFullPanelStyleFix.ts`;
+- `mobileFamilyMapFullPanelStyleFix.ts`, quando a regra já estiver absorvida por componente;
 - `mobileFamilyMapFullOverviewButtonGuard.ts`, quando estiver vazio/no-op;
-- `visualPatchA.ts`, quando não carregado por `index.html`.
+- `visualPatchA.ts`, quando não carregado por `index.html`;
+- `desktopTreeVisualizationPanelTextFix.ts`, quando a correção textual já estiver no componente de origem.
 
 Handlers de `touchmove`/`touchend` devem avaliar scroll interno antes de chamar `preventDefault()` ou `stopImmediatePropagation()`.
 
@@ -156,8 +170,7 @@ Contrato:
 - A seção `Exportar` do painel desktop exibe somente `Salvar Imagem` e `Imprimir`.
 - `Salvar Imagem` é captura de área real da tela.
 - `Imprimir` abre janela nativa a partir de página limpa.
-- `Imagem` e `PDF` não são ações diretas expostas no painel principal.
-
+- `Imagem` e `PDF` não são ações diretas expostas no painel principal; se existirem helpers internos, são legado/fallback técnico.
 
 ## Tutorial de primeiro acesso
 
@@ -191,13 +204,27 @@ Contrato:
 
 ## Validação técnica esperada
 
-Antes de merge/deploy:
+### Bash/Git Bash
 
 ```bash
 git status --short
 git diff --check
 grep -R $'\xEF\xBF\xBD' docs || true
-npm run test
 npm run typecheck
 npm run build
+npm test
+```
+
+### PowerShell
+
+```powershell
+git status --short
+git diff --check
+
+# Busca o caractere de substituição Unicode U+FFFD em docs/.
+Get-ChildItem .\docs -Recurse -File | Select-String -SimpleMatch ([char]0xFFFD)
+
+npm run typecheck
+npm run build
+npm test
 ```
