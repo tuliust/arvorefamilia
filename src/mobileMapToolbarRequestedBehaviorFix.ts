@@ -7,6 +7,7 @@ const DESCENDANTS_TRANSFORM = 'translate3d(calc(-33.333333333333336% + 0px), cal
 
 let syncFrame: number | null = null;
 let descendantsSteadyUntil = 0;
+let pendingProfileReturnPath: string | null = null;
 
 function isMobileViewport() {
   return typeof window !== 'undefined'
@@ -38,6 +39,10 @@ function getFamilyMapRoot() {
 
 function getFamilyMapStage(root = getFamilyMapRoot()) {
   return root?.querySelector<HTMLElement>('[data-mobile-family-tree-stage="true"]') ?? null;
+}
+
+function getFullControlsDialog() {
+  return document.querySelector<HTMLElement>('[role="dialog"][aria-label="Painel de visualização"]');
 }
 
 function isDescendantsTransform(value: string) {
@@ -129,11 +134,44 @@ function syncCurrentFormatCardState() {
   });
 }
 
+function looksLikeFullPanelPersonButton(button: HTMLButtonElement) {
+  const dialog = getFullControlsDialog();
+  if (!dialog || !dialog.contains(button)) return false;
+
+  const text = normalizeText(button.textContent);
+  if (!text || text.includes('exibir') || text.includes('geracao') || text.includes('arvore')) return false;
+
+  const className = String(button.className);
+  return className.includes('text-sm')
+    && className.includes('font-bold')
+    && className.includes('text-blue-950')
+    && !button.querySelector('svg');
+}
+
+function redirectPendingProfileNavigation() {
+  const returnPath = pendingProfileReturnPath;
+  pendingProfileReturnPath = null;
+  if (!returnPath || !isMobileTreeRoute()) return;
+
+  const personId = new URLSearchParams(window.location.search).get('pessoa');
+  if (!personId) return;
+
+  window.location.href = `/pessoa/${encodeURIComponent(personId)}?voltar=${encodeURIComponent(returnPath)}`;
+}
+
 function handleDocumentClick(event: MouseEvent) {
   if (!isMobileTreeRoute()) return;
 
   const target = event.target;
   if (!(target instanceof Element)) return;
+
+  const personButton = target.closest<HTMLButtonElement>('button');
+  if (personButton && looksLikeFullPanelPersonButton(personButton)) {
+    pendingProfileReturnPath = `${window.location.pathname}${window.location.search}`;
+    window.setTimeout(redirectPendingProfileNavigation, 80);
+    window.setTimeout(redirectPendingProfileNavigation, 180);
+    return;
+  }
 
   const colorButton = target.closest<HTMLButtonElement>('[data-mobile-family-map-context-action="cor"] button');
   if (!colorButton) return;
