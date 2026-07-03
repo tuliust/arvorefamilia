@@ -106,13 +106,21 @@ function setExtendedSpouseState(value: boolean) {
 function isExtendedButton(button: HTMLElement) {
   const label = normalizeText(button.textContent);
   const ariaLabel = normalizeText(button.getAttribute('aria-label'));
-  return label.includes('exibir conjuges') || label.includes('ocultar conjuges') || ariaLabel.includes('exibir conjuges') || ariaLabel.includes('ocultar conjuges');
+  return label.includes('exibir conjuges')
+    || label.includes('ocultar conjuges')
+    || label.includes('todos os conjuges')
+    || ariaLabel.includes('exibir conjuges')
+    || ariaLabel.includes('ocultar conjuges')
+    || ariaLabel.includes('todos os conjuges');
 }
 
 function isFamilyOnlyButton(button: HTMLElement) {
   const label = normalizeText(button.textContent);
   const ariaLabel = normalizeText(button.getAttribute('aria-label'));
-  return label.includes('apenas meus familiares') || ariaLabel.includes('apenas meus familiares');
+  return label.includes('apenas meus familiares')
+    || label.includes('apenas familiares')
+    || ariaLabel.includes('apenas meus familiares')
+    || ariaLabel.includes('apenas familiares');
 }
 
 function getFilterButtons() {
