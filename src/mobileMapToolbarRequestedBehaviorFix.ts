@@ -23,6 +23,15 @@ function isMobileTreeRoute() {
   return isMobileViewport() && (pathname === DIRECT_MAP_PATH || pathname === GENERATION_LINE_PATH);
 }
 
+function normalizeText(value?: string | null) {
+  return String(value ?? '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, ' ')
+    .trim();
+}
+
 function getFamilyMapRoot() {
   return document.querySelector<HTMLElement>('[data-mobile-family-tree-root="true"]');
 }
@@ -67,6 +76,33 @@ function closeActiveColorTray() {
       'nav[data-mobile-family-map-toolbar="true"] button[aria-pressed="true"][data-mobile-family-map-toolbar-action="cor"]'
     )
     ?.click();
+}
+
+function setFirstLabel(button: HTMLButtonElement, label: string) {
+  const span = button.querySelector<HTMLSpanElement>('span');
+  if (span && span.textContent?.trim() !== label) span.textContent = label;
+}
+
+function syncMobileFilterLabels() {
+  if (!isMobileTreeRoute()) return;
+
+  document.querySelectorAll<HTMLButtonElement>('[data-mobile-family-map-context-action="grupos"] button, [role="dialog"][aria-label="Painel de visualização"] [data-mobile-family-filter-panel-toggle="true"]').forEach((button) => {
+    const text = normalizeText(button.textContent);
+    const active = button.getAttribute('aria-pressed') === 'true';
+
+    if (text.includes('conjuge')) {
+      setFirstLabel(button, 'Exibir todos os cônjuges');
+      button.setAttribute('aria-label', 'Exibir todos os cônjuges');
+      button.dataset.mobileFilterActive = active ? 'true' : 'false';
+      return;
+    }
+
+    if (text.includes('familiares')) {
+      setFirstLabel(button, 'Exibir apenas meus familiares');
+      button.setAttribute('aria-label', 'Exibir apenas meus familiares');
+      button.dataset.mobileFilterActive = active ? 'true' : 'false';
+    }
+  });
 }
 
 function syncCurrentFormatCardState() {
@@ -181,6 +217,25 @@ function ensureStyles() {
       [data-mobile-family-map-context-action="formato"] button[aria-current="page"] span {
         color: #64748b !important;
       }
+
+      [data-mobile-filter-active="true"] {
+        border-color: #2563eb !important;
+        background: #eff6ff !important;
+        color: #172554 !important;
+        box-shadow: 0 0 0 1px rgba(37, 99, 235, 0.52) !important;
+        opacity: 1 !important;
+      }
+
+      [data-mobile-filter-active="true"] svg {
+        color: #2563eb !important;
+      }
+
+      [data-mobile-filter-active="false"] {
+        border-color: #e2e8f0 !important;
+        background: #ffffff !important;
+        color: #64748b !important;
+        box-shadow: none !important;
+      }
     }
   `;
 
@@ -198,6 +253,7 @@ function syncRequestedBehaviorFixes() {
   ensureStyles();
   syncDescendantsSteadyState();
   syncCurrentFormatCardState();
+  syncMobileFilterLabels();
 }
 
 function scheduleSync() {
