@@ -85,7 +85,18 @@ export type PersonProfileResetResult = {
   deleted_activity_logs: number;
   deleted_user_links: number;
   deleted_auth_users: number;
+  deleted_profiles: number;
   notification_preferences_reset: number;
+  deleted_notifications: number;
+  deleted_notification_dispatch_logs: number;
+  deleted_notification_occurrences: number;
+  deleted_relationship_change_requests: number;
+  deleted_profile_control_requests: number;
+  deleted_profile_suggestions: number;
+  deleted_visibility_settings: number;
+  deleted_first_map_accesses: number;
+  deleted_avatar_storage_objects: number;
+  deleted_historical_storage_objects: number;
 };
 
 function logSupabaseError(context: string, error: SupabaseErrorLike) {
@@ -399,7 +410,18 @@ export async function resetarPerfilPessoa(id: string): Promise<PersonProfileRese
     deleted_activity_logs: Number(data?.deleted_activity_logs ?? 0),
     deleted_user_links: Number(data?.deleted_user_links ?? 0),
     deleted_auth_users: Number(data?.deleted_auth_users ?? 0),
+    deleted_profiles: Number(data?.deleted_profiles ?? 0),
     notification_preferences_reset: Number(data?.notification_preferences_reset ?? 0),
+    deleted_notifications: Number(data?.deleted_notifications ?? 0),
+    deleted_notification_dispatch_logs: Number(data?.deleted_notification_dispatch_logs ?? 0),
+    deleted_notification_occurrences: Number(data?.deleted_notification_occurrences ?? 0),
+    deleted_relationship_change_requests: Number(data?.deleted_relationship_change_requests ?? 0),
+    deleted_profile_control_requests: Number(data?.deleted_profile_control_requests ?? 0),
+    deleted_profile_suggestions: Number(data?.deleted_profile_suggestions ?? 0),
+    deleted_visibility_settings: Number(data?.deleted_visibility_settings ?? 0),
+    deleted_first_map_accesses: Number(data?.deleted_first_map_accesses ?? 0),
+    deleted_avatar_storage_objects: Number(data?.deleted_avatar_storage_objects ?? 0),
+    deleted_historical_storage_objects: Number(data?.deleted_historical_storage_objects ?? 0),
   };
 }
 
