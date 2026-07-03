@@ -8,26 +8,27 @@ const EXTENDED_CARD_ATTR = 'data-family-map-extended-spouse-card';
 const EXTENDED_WRAPPER_ATTR = 'data-family-map-extended-spouse-wrapper';
 const SPOUSE_TONE_ATTR = 'data-family-map-spouse-tone';
 const ANCHOR_ATTR = 'data-family-map-spouse-anchor-id';
-const STYLE_ID = 'family-map-strict-extended-spouse-cards-style';
+const STYLE_ID = 'family-map-strict-lineage-collateral-style';
+
+type ParentKind = 'pai' | 'mae' | 'parent';
 
 type RelIndex = {
-  parents: Map<string, string[]>;
-  children: Map<string, Set<string>>;
-  siblings: Map<string, Set<string>>;
-  spouses: Map<string, Set<string>>;
-  parentKind: Map<string, Map<'pai' | 'mae', string>>;
+  parentsByChild: Map<string, Array<{ parentId: string; kind: ParentKind }>>;
+  childrenByParent: Map<string, Set<string>>;
+  spousesByPerson: Map<string, Set<string>>;
 };
 
-type StrictScope = {
-  paternalUncles: Set<string>;
-  maternalUncles: Set<string>;
-  paternalCousins: Set<string>;
-  maternalCousins: Set<string>;
-  siblings: Set<string>;
-  nephews: Set<string>;
-  children: Set<string>;
-  grandchildren: Set<string>;
-};
+type StrictScope = Record<
+  'paternalUncles'
+  | 'maternalUncles'
+  | 'paternalCousins'
+  | 'maternalCousins'
+  | 'siblings'
+  | 'nephews'
+  | 'children'
+  | 'grandchildren',
+  Set<string>
+>;
 
 let people: Pessoa[] = [];
 let relationships: Relacionamento[] = [];
@@ -56,39 +57,29 @@ function addToSetMap(map: Map<string, Set<string>>, key?: string | null, value?:
   map.set(key, values);
 }
 
-function addParent(index: RelIndex, childId?: string | null, parentId?: string | null, kind?: 'pai' | 'mae') {
+function addParent(index: RelIndex, childId?: string | null, parentId?: string | null, kind: ParentKind = 'parent') {
   if (!childId || !parentId || childId === parentId) return;
-  const parents = index.parents.get(childId) ?? [];
-  if (!parents.includes(parentId)) parents.push(parentId);
-  index.parents.set(childId, parents);
-  addToSetMap(index.children, parentId, childId);
 
-  if (kind) {
-    const kinds = index.parentKind.get(childId) ?? new Map<'pai' | 'mae', string>();
-    kinds.set(kind, parentId);
-    index.parentKind.set(childId, kinds);
+  const links = index.parentsByChild.get(childId) ?? [];
+  if (!links.some((link) => link.parentId === parentId)) {
+    links.push({ parentId, kind });
+    index.parentsByChild.set(childId, links);
   }
+
+  addToSetMap(index.childrenByParent, parentId, childId);
 }
 
 function buildIndex(): RelIndex {
   const index: RelIndex = {
-    parents: new Map(),
-    children: new Map(),
-    siblings: new Map(),
-    spouses: new Map(),
-    parentKind: new Map(),
+    parentsByChild: new Map(),
+    childrenByParent: new Map(),
+    spousesByPerson: new Map(),
   };
 
   relationships.forEach((relationship) => {
     if (relationship.tipo_relacionamento === 'conjuge') {
-      addToSetMap(index.spouses, relationship.pessoa_origem_id, relationship.pessoa_destino_id);
-      addToSetMap(index.spouses, relationship.pessoa_destino_id, relationship.pessoa_origem_id);
-      return;
-    }
-
-    if (relationship.tipo_relacionamento === 'irmao') {
-      addToSetMap(index.siblings, relationship.pessoa_origem_id, relationship.pessoa_destino_id);
-      addToSetMap(index.siblings, relationship.pessoa_destino_id, relationship.pessoa_origem_id);
+      addToSetMap(index.spousesByPerson, relationship.pessoa_origem_id, relationship.pessoa_destino_id);
+      addToSetMap(index.spousesByPerson, relationship.pessoa_destino_id, relationship.pessoa_origem_id);
       return;
     }
 
@@ -128,20 +119,49 @@ function sortIds(ids: string[]) {
     });
 }
 
-function findChildren(personId: string | undefined, index: RelIndex) {
+function findParents(personId: string | undefined, index: RelIndex) {
   if (!personId) return [];
-  return sortIds(Array.from(index.children.get(personId) ?? []));
-}
-
-function findSiblings(personId: string, index: RelIndex) {
-  const sharedParentSiblings = (index.parents.get(personId) ?? []).flatMap((parentId) => findChildren(parentId, index));
-  const explicitSiblings = Array.from(index.siblings.get(personId) ?? []);
-  return sortIds([...sharedParentSiblings, ...explicitSiblings]).filter((id) => id !== personId);
+  return sortIds((index.parentsByChild.get(personId) ?? []).map((link) => link.parentId));
 }
 
 function findParentByKind(personId: string, kind: 'pai' | 'mae', index: RelIndex) {
-  return index.parentKind.get(personId)?.get(kind)
-    ?? index.parents.get(personId)?.[kind === 'pai' ? 0 : 1];
+  const explicit = (index.parentsByChild.get(personId) ?? []).find((link) => link.kind === kind)?.parentId;
+  if (explicit) return explicit;
+
+  const parents = findParents(personId, index);
+  return parents[kind === 'pai' ? 0 : 1];
+}
+
+function findChildren(personId: string | undefined, index: RelIndex) {
+  if (!personId) return [];
+  return sortIds(Array.from(index.childrenByParent.get(personId) ?? []));
+}
+
+function findStrictSiblings(personId: string, index: RelIndex) {
+  return sortIds(findParents(personId, index).flatMap((parentId) => findChildren(parentId, index)))
+    .filter((id) => id !== personId);
+}
+
+function buildStrictScope(centralPersonId: string, index: RelIndex): StrictScope {
+  const fatherId = findParentByKind(centralPersonId, 'pai', index) ?? findParents(centralPersonId, index)[0];
+  const motherId = findParentByKind(centralPersonId, 'mae', index)
+    ?? findParents(centralPersonId, index).find((personId) => personId !== fatherId);
+
+  const paternalUncles = sortIds(fatherId ? findStrictSiblings(fatherId, index).filter((personId) => personId !== motherId) : []);
+  const maternalUncles = sortIds(motherId ? findStrictSiblings(motherId, index).filter((personId) => personId !== fatherId) : []);
+  const siblings = findStrictSiblings(centralPersonId, index);
+  const children = findChildren(centralPersonId, index).filter((personId) => isHumanFamilyMember(people.find((person) => person.id === personId)));
+
+  return {
+    paternalUncles: new Set(paternalUncles),
+    maternalUncles: new Set(maternalUncles),
+    paternalCousins: new Set(sortIds(paternalUncles.flatMap((personId) => findChildren(personId, index)))),
+    maternalCousins: new Set(sortIds(maternalUncles.flatMap((personId) => findChildren(personId, index)))),
+    siblings: new Set(siblings),
+    nephews: new Set(sortIds(siblings.flatMap((personId) => findChildren(personId, index)))),
+    children: new Set(children),
+    grandchildren: new Set(sortIds(children.flatMap((personId) => findChildren(personId, index)))),
+  };
 }
 
 function buildDisplayNameMap() {
@@ -183,27 +203,6 @@ function resolveCentralPersonId(displayNameMap: Map<string, string[]>) {
   return centralCard ? resolvePersonIdFromText(centralCard.textContent ?? '', displayNameMap) : null;
 }
 
-function buildStrictScope(centralPersonId: string, index: RelIndex): StrictScope {
-  const fatherId = findParentByKind(centralPersonId, 'pai', index) ?? index.parents.get(centralPersonId)?.[0];
-  const motherId = findParentByKind(centralPersonId, 'mae', index)
-    ?? index.parents.get(centralPersonId)?.find((personId) => personId !== fatherId);
-  const paternalUncles = sortIds(fatherId ? findSiblings(fatherId, index).filter((personId) => personId !== motherId) : []);
-  const maternalUncles = sortIds(motherId ? findSiblings(motherId, index).filter((personId) => personId !== fatherId) : []);
-  const siblings = findSiblings(centralPersonId, index);
-  const children = findChildren(centralPersonId, index).filter((personId) => isHumanFamilyMember(people.find((person) => person.id === personId)));
-
-  return {
-    paternalUncles: new Set(paternalUncles),
-    maternalUncles: new Set(maternalUncles),
-    paternalCousins: new Set(sortIds(paternalUncles.flatMap((personId) => findChildren(personId, index)))),
-    maternalCousins: new Set(sortIds(maternalUncles.flatMap((personId) => findChildren(personId, index)))),
-    siblings: new Set(siblings),
-    nephews: new Set(sortIds(siblings.flatMap((personId) => findChildren(personId, index)))),
-    children: new Set(children),
-    grandchildren: new Set(sortIds(children.flatMap((personId) => findChildren(personId, index)))),
-  };
-}
-
 function getBaseIdsForTitle(title: string, scope: StrictScope) {
   const normalized = normalizeText(title);
   if (normalized.includes('tios paternos')) return scope.paternalUncles;
@@ -218,7 +217,7 @@ function getBaseIdsForTitle(title: string, scope: StrictScope) {
 }
 
 function getSpouseAnchor(personId: string, baseIds: Set<string>, index: RelIndex) {
-  return Array.from(baseIds).find((baseId) => index.spouses.get(baseId)?.has(personId));
+  return Array.from(baseIds).find((baseId) => index.spousesByPerson.get(baseId)?.has(personId));
 }
 
 function isExtendedSpouseFilterActive() {
@@ -291,7 +290,6 @@ function markExtendedSpouseCards() {
       if (!personId || baseIds.has(personId)) return;
 
       const anchorId = getSpouseAnchor(personId, baseIds, index) ?? 'non-lineage-collateral';
-
       getHideTarget(card).setAttribute(EXTENDED_WRAPPER_ATTR, 'true');
       card.setAttribute(EXTENDED_CARD_ATTR, 'true');
       card.setAttribute(SPOUSE_TONE_ATTR, 'true');
@@ -362,7 +360,7 @@ function ensureStyles() {
 if (typeof window !== 'undefined' && typeof document !== 'undefined') {
   ensureStyles();
   void loadDataOnce();
-  [80, 220, 520, 1200, 2200].forEach((delay) => window.setTimeout(markExtendedSpouseCards, delay));
+  [80, 220, 520, 1200, 2200, 3600].forEach((delay) => window.setTimeout(markExtendedSpouseCards, delay));
 
   const observer = new MutationObserver(scheduleMark);
   observer.observe(document.documentElement, {
