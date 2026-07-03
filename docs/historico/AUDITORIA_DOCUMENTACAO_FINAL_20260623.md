@@ -4,6 +4,17 @@
 > Escopo: auditoria de `docs/` contra a branch `main`.
 > Status: histórico de auditoria.
 
+
+## Nota de revisão de 2026-07-03
+
+Este arquivo é histórico. Ele preserva contexto de auditoria, limpeza ou revisão anterior e não deve prevalecer sobre documentos canônicos atuais nem sobre o código da branch `main`.
+
+Fonte operacional vigente, em ordem de prioridade:
+
+1. código atual da branch `main`;
+2. documentos canônicos listados em `docs/README.md`;
+3. documentos históricos apenas como rastreabilidade.
+
 ## Resumo executivo
 
 A documentação em `docs/` foi consolidada para reduzir referências a ciclos antigos, branches de trabalho e documentos operacionais duplicados. A fonte canônica de rotas passou a ser explicitamente `src/app/routes.tsx`; os documentos principais foram reescritos com cabeçalho padronizado, linguagem objetiva e foco no comportamento atualmente descrito pelo código.

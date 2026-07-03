@@ -1,12 +1,19 @@
 # Revisão de dados
 
-> Última revisão: 2026-07-01
+> Última revisão: 2026-07-03
 > Escopo: `/revisao-dados` e fechamento do fluxo de membro.
 > Status: canônico.
 
 ## Objetivo
 
 Apresentar ao membro um resumo final dos dados antes de concluir o fluxo e seguir para o mapa familiar.
+
+## Ajustes de manutenção de 2026-07-03
+
+- Este documento permanece canônico para o fechamento do onboarding de membro.
+- Alterações pendentes vindas de `/meus-vinculos` devem ser apresentadas como pendência de aprovação, não como alteração definitiva.
+- O destino preferencial ao concluir o fluxo continua sendo `/mapa-familiar`.
+- Mudanças no bloqueio de primeiro acesso devem ser refletidas também em `FUNCIONALIDADES_COMPLEMENTARES.md`, `QA_MANUAL.md`, `REGRAS_DE_NAO_REGRESSAO.md` e `arquitetura/ROTAS_E_GUARDS.md`.
 
 ## Entradas esperadas
 
@@ -54,6 +61,10 @@ Regras do modal:
 - `Depois` deve seguir para a árvore sem perder o vínculo de responsabilidade;
 - a ausência de perfis sob responsabilidade deve pular o modal;
 - o modal não deve aparecer repetidamente sem mudança de estado.
+
+## Responsáveis por outros perfis
+
+Quando o usuário logado for responsável por outros perfis, o modal de responsabilidade deve aparecer apenas quando houver perfis pendentes de revisão e não deve bloquear o acesso definitivo à árvore se o usuário escolher `Depois`.
 
 ## QA mínimo
 

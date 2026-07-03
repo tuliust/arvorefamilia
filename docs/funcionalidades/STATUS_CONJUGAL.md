@@ -1,6 +1,6 @@
 # Status conjugal
 
-> Última revisão: 2026-06-26
+> Última revisão: 2026-07-03
 > Escopo: interpretação, exibição e validação de vínculos conjugais.
 > Status: canônico.
 
@@ -9,6 +9,12 @@
 O status conjugal é uma camada semântica compartilhada para interpretar vínculos do tipo `conjuge` sem criar campo persistido adicional neste momento.
 
 A fonte de verdade continua sendo composta pelos campos já existentes em `relacionamentos` e pelos dados de falecimento das pessoas envolvidas.
+
+## Ajustes de manutenção de 2026-07-03
+
+- Este documento permanece canônico para a interpretação semântica de vínculos conjugais.
+- Não há contrato atual para criar campo persistido adicional de status conjugal; o status continua calculado a partir dos dados existentes.
+- Mudanças nos símbolos, padrões de linha ou grupos de exibição devem atualizar também `ARVORE_LEGENDAS_CONECTORES_PAINEL.md`, `MAPA_FAMILIAR_VIEW.md`, `QA_MANUAL.md` e `REGRAS_DE_NAO_REGRESSAO.md`.
 
 ## Fonte técnica
 

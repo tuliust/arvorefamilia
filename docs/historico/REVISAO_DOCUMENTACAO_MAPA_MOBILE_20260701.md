@@ -4,6 +4,17 @@
 > Escopo: documentação canônica afetada pelos ajustes mobile de mapa, blur/backdrop, toolbar, visão geral e mapa completo.
 > Status: registro de revisão e orientação para atualização dos documentos canônicos.
 
+
+## Nota de revisão de 2026-07-03
+
+Este arquivo é histórico. Ele preserva contexto de auditoria, limpeza ou revisão anterior e não deve prevalecer sobre documentos canônicos atuais nem sobre o código da branch `main`.
+
+Fonte operacional vigente, em ordem de prioridade:
+
+1. código atual da branch `main`;
+2. documentos canônicos listados em `docs/README.md`;
+3. documentos históricos apenas como rastreabilidade.
+
 ## Contexto
 
 Esta revisão consolida os ajustes implementados na frente de mapa mobile envolvendo:

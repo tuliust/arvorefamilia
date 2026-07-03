@@ -224,13 +224,56 @@ Contrato atual:
 
 ## Runtimes defensivos vigentes nesta frente
 
+Antes de alterar mapa familiar, linha geracional, toolbar mobile, visão geral, mapa completo ou conectores, conferir os runtimes realmente carregados por `index.html` e os imports por side effect de `src/main.tsx`.
+
+### Runtimes ativos diretamente relevantes
+
 - `mobileFamilyMapUncleCardLimit.ts`: limite visual local de tios e coordenação de expansão.
-- `mobileFamilyTreeUncleSizingFix.ts`: sizing estável de telas de tios.
 - `mobileFamilyMapDescendantConnectorHeightFix.ts`: altura dos conectores superiores de `Descendentes`.
 - `mobileFamilyMapFullOverviewCompactFix.ts`: compactação de `Tios maternos`, nomes de dois termos e reconstrução de conectores no mapa completo.
 - `mobileFamilyMapZoomTrayHeightFix.ts`: redução da base branca reta do tray `Mapa`.
 - `mobileFamilyMapFullOverviewConnectorFix.ts`: refinamento de conectores do mapa completo.
 - `mobileGenerationLineFullOverview.ts`: visualização completa da linha geracional.
 - `mobileFamilyMapFilterButtonsBehaviorFix.ts`: comportamento defensivo dos filtros mobile.
+- `mobileFamilyMapFullOverview.ts`: compatibilidade da visualização completa do mapa familiar.
+- `mobileFamilyMapFullOverviewButtonGuard.ts`: compatibilidade defensiva quando houver botão/CTA de mapa completo.
+- `generationLineSwipeHintDirectionFix.ts`: ajuste defensivo de direção de hint da linha geracional.
+- `desktopSidebarFilterButtonStateFix.ts`: estado visual dos filtros do painel desktop.
+- `horizontalHiddenSpouseConnectorFix.ts`: compatibilidade de conectores da visualização horizontal.
+- `mobileMapToolbarRequestedBehaviorFix.ts`: comportamento solicitado da toolbar mobile.
+
+### Runtimes transversais relacionados
+
+- `mobileFamilyTreeMutationPerformanceGuard.ts`;
+- `visualPatchB.ts`;
+- `firstLoginMobileTutorialFixes.ts`;
+- `mobileCuriositiesNavigationFix.ts`;
+- `mobileTreePanelViewportFix.ts`;
+- `staticMobileFamilyTreeScreens.ts`;
+- `mobileFamilyTreeScreenStateGuards.ts`;
+- `mobileFamilyTreeGrandparentScreens.ts`;
+- `mobileFamilyTreeSwipeHints.ts`;
+- `mobileFamilyTreeAncestorConnectorsFix.ts`;
+- `mobileFamilyTreeDescendantConnectorsFix.ts`;
+- `mobileFamilyTreeCoreDescendantConnector.ts`;
+- `mobileFamilyTreeGroupTitleVisibilityFix.ts`;
+- `mobileFamilyHorizontalZoomOverview.ts`;
+- `mobileFamilyMapUncleSwipeNavigationGuard.ts`;
+- `mobileFamilyMapOverviewGhostClickGuard.ts`;
+- `mobileFamilyMapOverviewButtonFix.ts`;
+- `mobileFamilyMapStableMobileFix.ts`;
+- `mobileFamilyMapDirectionalNavigationFix.ts`;
+- `mobileFamilyMapCoreConnectorFix.ts`;
+- `mobileVisualizationPanelFamilyStatsFix.ts`;
+- `mobileFamilyMapZoomOverviewVisualFix.ts`;
+- `mobileFamilyMapOverviewTileVisualAdjustments.ts`;
+- `mobileFamilyMapDescendantsStabilityLock.ts`;
+- `mobileFamilyMapExtendedSpouseCards.ts`.
+
+### Runtimes não operacionais nesta frente
+
+- Runtimes inexistentes ou não carregados por `index.html` não devem ser citados como contrato vigente.
+- `visualPatchA.ts` não é contrato operacional quando não estiver carregado por `index.html`.
+- Runtimes neutralizados devem permanecer documentados apenas como compatibilidade, não como fonte de regra nova.
 
 Esses runtimes devem permanecer isolados por rota, breakpoint e seletor. Quando o comportamento estabilizar no componente React de origem, o runtime correspondente deve ser removido ou neutralizado com documentação.

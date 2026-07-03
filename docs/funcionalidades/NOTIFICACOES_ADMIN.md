@@ -1,6 +1,6 @@
 # Notificações administrativas
 
-> Última revisão: 2026-07-02
+> Última revisão: 2026-07-03
 > Escopo: `/admin/notificacoes`, catálogo administrativo, configuração persistida, destinatários, eventos de gatilho, canais, variáveis, regras de variáveis, rascunho local e primeiro acesso real a `/mapa-familiar`.
 > Status: canônico.
 
@@ -9,6 +9,13 @@
 A frente de notificações administrativas centraliza a configuração de tipos, templates, canais, frequências, destinatários e variáveis usadas pelo produto para comunicação interna, e-mail, push ou WhatsApp quando o canal estiver disponível.
 
 Este documento cobre a administração do catálogo e das regras de envio. A experiência de consumo pelo usuário final permanece resumida em `funcionalidades/FUNCIONALIDADES_COMPLEMENTARES.md`.
+
+## Ajustes de manutenção de 2026-07-03
+
+- Este documento permanece canônico para a administração do catálogo e das configurações de notificação.
+- A experiência do usuário final deve continuar resumida em `FUNCIONALIDADES_COMPLEMENTARES.md`.
+- A existência de tipo/template no catálogo administrativo não deve ser interpretada como entrega real enquanto o dispatcher correspondente não consumir o catálogo persistido.
+- Mudanças de schema devem atualizar `docs/operacao/MIGRATIONS_SUPABASE.md`; mudanças de fluxo administrativo devem atualizar `QA_MANUAL.md` e `REGRAS_DE_NAO_REGRESSAO.md`.
 
 ## Arquivos principais
 
@@ -24,6 +31,10 @@ Este documento cobre a administração do catálogo e das regras de envio. A exp
 | Registro do primeiro acesso ao mapa | `src/app/services/firstMapWelcomeNotificationService.ts`, `src/app/components/TreeAccessRoute.tsx` |
 | UI base de formulário | `src/app/components/ui/textarea.tsx`, `Input`, `Select`, `Checkbox`, `Button`, `Card` |
 | Rascunho local da página | `localStorage` nas chaves `arvorefamilia:admin-notifications-console-config` e `arvorefamilia:admin-notifications-active-tab` |
+
+## Fronteira entre catálogo e dispatch
+
+A administração do catálogo define nomes, textos, canais, destinatários e variáveis disponíveis. O envio real depende do fluxo de dispatch consumir essas configurações no evento correspondente. A UI não deve prometer entrega real quando o gatilho estiver apenas catalogado/preparado.
 
 ## Camadas de dados
 

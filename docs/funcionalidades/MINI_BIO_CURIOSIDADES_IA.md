@@ -1,12 +1,25 @@
 # Meus dados, IA, Mini Bio e Curiosidades
 
-> Última revisão: 2026-07-02
+> Última revisão: 2026-07-03
 > Escopo: `/meus-dados`, `/pessoa/:id`, textos de perfil, geração assistida por IA, mini bio, curiosidades individuais e ajustes de layout dos campos de dados pessoais.
 > Status: canônico.
 
 ## Objetivo
 
 Documentar o contrato dos textos curtos de perfil e da geração assistida por IA. Este documento absorve o conteúdo útil do antigo `CURIOSIDADES_E_IA.md`.
+
+## Ajustes de manutenção de 2026-07-03
+
+- Este documento permanece canônico para textos individuais de perfil, mini bio, curiosidades individuais e geração assistida por IA.
+- A página geral `/curiosidades` continua documentada separadamente em `CURIOSIDADES.md`.
+- A IA deve ser tratada como assistente de redação, nunca como fonte de verdade genealógica.
+- Mudanças em prompts, payloads ou fallback de IA devem atualizar também `api/ai.ts`, `QA_MANUAL.md` e `GUIA_CORRECAO_ERROS.md` quando afetarem operação.
+
+## Separação entre perfil individual e página de curiosidades
+
+- Este documento trata de textos individuais de pessoa e geração assistida por IA.
+- A rota `/curiosidades` trata exploração familiar agregada, quiz, mural, gráficos e perguntas sobre a árvore.
+- Contratos compartilhados de IA devem ser mantidos coerentes entre este documento, `CURIOSIDADES.md` e `api/ai.ts`.
 
 ## Campos de perfil
 

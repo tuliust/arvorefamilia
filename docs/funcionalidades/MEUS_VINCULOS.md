@@ -1,12 +1,19 @@
 # Meus vínculos
 
-> Última revisão: 2026-07-02
+> Última revisão: 2026-07-03
 > Escopo: `/meus-vinculos`, vínculos familiares, pets, responsáveis por edição familiar, solicitações de alteração e badges de status baseados em vínculo real.
 > Status: canônico.
 
 ## Objetivo
 
 Permitir que o membro revise e complemente seus vínculos familiares, diferencie pessoas humanas de pets e encaminhe alterações para revisão quando a regra exigir aprovação.
+
+## Ajustes de manutenção de 2026-07-03
+
+- Este documento permanece canônico para vínculos familiares, pets, responsáveis e solicitações de alteração.
+- O status `Cadastrado` depende de vínculo real em `user_person_links`; falha de leitura deve degradar sem quebrar a página.
+- A política ampla de leitura pode ser substituída futuramente por RPC `security definer`, mas isso exigirá atualização de `MIGRATIONS_SUPABASE.md`.
+- Alterações de UX mobile nesta rota devem atualizar também `QA_MANUAL.md` e `REGRAS_DE_NAO_REGRESSAO.md`.
 
 ## Estrutura da página
 
@@ -93,6 +100,10 @@ Revisão técnica recomendada: substituir, em etapa futura, a policy ampla de le
 - Modais de adicionar parentes não devem abrir teclado automaticamente antes de foco explícito no campo.
 - Ajustes mobile devem ser isolados por breakpoint/rota e não alterar comportamento desktop.
 - Manipulações defensivas de DOM não podem recriar opções de select repetidamente a ponto de travar a página.
+
+## Responsáveis familiares
+
+Quando o usuário for responsável por outro perfil, a rota deve preservar clareza entre vínculos do próprio usuário e vínculos do perfil administrado. A perspectiva administrada não deve habilitar ações incompatíveis com modo memorial ou com permissões do usuário.
 
 ## Relação com outras rotas
 

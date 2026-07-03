@@ -1,6 +1,6 @@
 # Funcionalidades complementares
 
-> Última revisão: 2026-07-01
+> Última revisão: 2026-07-03
 > Escopo: calendário, dúvidas, fórum, favoritos, notificações, onboarding, exportação, busca global, timeline, perfil, aprovações e cadastros administrativos de pessoas.
 > Status: canônico complementar.
 
@@ -20,6 +20,13 @@ Este documento absorve o conteúdo útil dos antigos documentos individuais:
 - `TIMELINE.md`;
 - `PESSOAS_PERFIL_ADMIN.md`.
 
+## Ajustes de manutenção de 2026-07-03
+
+- Este documento permanece complementar e deve concentrar funcionalidades reais sem documentação isolada própria.
+- Notificações administrativas ficam em `NOTIFICACOES_ADMIN.md`; notificações de usuário final permanecem resumidas aqui.
+- Exportação da árvore deve continuar descrevendo apenas `Salvar Imagem` e `Imprimir` como ações diretas no painel.
+- Novas funcionalidades pequenas devem ser adicionadas aqui apenas se não justificarem documento canônico próprio.
+
 ## Busca global do header
 
 A busca global está disponível nos headers das páginas de mapa e nas páginas internas que usam `MemberPageHeader`.
@@ -31,7 +38,7 @@ Regras:
 - sugestões de páginas devem navegar para a rota correspondente;
 - o botão `Ver todos os resultados` deve enviar para `/busca?q=...`;
 - páginas internas como `/curiosidades`, `/forum` e `/calendario-familiar` devem usar o mesmo componente compartilhado de busca do header;
-- no mobile, o dropdown de sugestões deve aparecer acima de headers, toolbars sticky, painéis da árvore, menus e conteúdo da página.
+- no mobile, o dropdown de sugestões deve aparecer acima de headers, toolbars sticky, painéis da árvore, menus e conteúdo da página;
 - em rotas de mapa, busca e notificações devem continuar acima dos painéis da árvore, mas sem alterar os limites do backdrop/blur documentados em `MAPA_FAMILIAR_VIEW.md`.
 
 ## Menu do avatar
@@ -76,7 +83,7 @@ Regras atuais:
 - eventos de casamento no calendário devem omitir o prefixo `Data de casamento de` quando exibidos como título;
 - nomes de casamentos devem usar primeiro e segundo nome de cada pessoa quando possível;
 - memórias devem usar nome curto, com primeiro e segundo nome da pessoa;
-- abaixo de `Aniversariantes`, deve haver card `Casamentos` quando existirem casamentos filtrados no mês.
+- abaixo de `Aniversariantes`, deve haver card `Casamentos` ou `Datas de Casamento` quando existirem casamentos filtrados no mês, conforme o contrato visual vigente da rota.
 
 Não regressão mínima:
 

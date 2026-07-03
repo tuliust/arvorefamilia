@@ -8,10 +8,17 @@
 
 Consolidar em um único documento o contrato visual e funcional da árvore, sem recriar documentos antigos de rodada.
 
+## Ajustes de manutenção de 2026-07-03
+
+- Este documento permanece canônico para painel, conectores, legendas e seletor de visualização.
+- O contrato de shell mobile compartilhada e rotas de mapa fica centralizado em `MAPA_FAMILIAR_VIEW.md`.
+- Alterações de conectores mobile completos devem ser documentadas aqui apenas quando afetarem regras visuais ou semânticas; detalhes de rota e runtime ficam em `MAPA_FAMILIAR_VIEW.md`.
+
 ## Rotas relacionadas
 
 - `/mapa-familiar`;
-- `/mapa-familiar-horizontal`.
+- `/mapa-familiar-horizontal`;
+- `/linha-geracional`.
 
 `/minha-arvore/editar` permanece apenas como rota legada protegida, redirecionando para `/meus-dados`.
 
@@ -66,6 +73,12 @@ Grupos de tios e primos devem adaptar a largura ao conteúdo visível:
 - o container não deve manter espaço vazio lateral excessivo quando a coluna efetiva for menor que a configuração original;
 - botão local `+`/`−` só deve existir quando a expansão muda a altura útil ou revela uma linha que não cabia inicialmente;
 - se expandir apenas troca a quantidade de cards sem alterar altura útil do grupo, todos os cards devem carregar visíveis e o botão local não deve aparecer.
+
+## Relação com documentos de mapa
+
+- `MAPA_FAMILIAR_VIEW.md` concentra rotas, shell mobile, layout de mapa familiar, linha geracional e runtimes defensivos.
+- Este documento concentra painel, conectores, legendas e semântica visual da árvore.
+- `STATUS_CONJUGAL.md` concentra a interpretação dos vínculos conjugais que alimentam símbolos e padrões de linha.
 
 ## Legendas
 

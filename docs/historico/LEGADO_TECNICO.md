@@ -4,6 +4,17 @@
 > Escopo: registro histórico consolidado de SQLs legados, rotas removidas, imports colados, genealogia e versões antigas da árvore.  
 > Status: histórico consolidado.
 
+
+## Nota de revisão de 2026-07-03
+
+Este arquivo é histórico. Ele preserva contexto de auditoria, limpeza ou revisão anterior e não deve prevalecer sobre documentos canônicos atuais nem sobre o código da branch `main`.
+
+Fonte operacional vigente, em ordem de prioridade:
+
+1. código atual da branch `main`;
+2. documentos canônicos listados em `docs/README.md`;
+3. documentos históricos apenas como rastreabilidade.
+
 ## Objetivo
 
 Preservar rastreabilidade técnica sem manter múltiplos documentos históricos fragmentados.
@@ -70,6 +81,7 @@ Este documento pode ser consultado para:
 - explicar por que documentos históricos individuais foram apagados.
 
 ## Uso proibido
+
 
 Este documento não deve ser usado para:
 

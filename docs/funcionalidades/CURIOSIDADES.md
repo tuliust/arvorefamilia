@@ -1,6 +1,6 @@
 # Curiosidades
 
-> Última revisão: 2026-07-02
+> Última revisão: 2026-07-03
 > Escopo: `/curiosidades`, exploração visual e textual dos dados familiares, rankings, IA, quiz, mural, fotos, relacionamentos, rota, gerações e abas de descoberta.
 > Status: canônico.
 
@@ -9,6 +9,12 @@
 Transformar os dados da árvore em exploração visual e textual: datas, relações, cidades, memórias, profissões, casais, gerações, padrões familiares e perguntas assistidas por IA.
 
 Este documento cobre a página geral `/curiosidades`. Textos individuais de perfil e geração assistida por IA ficam em `MINI_BIO_CURIOSIDADES_IA.md`.
+
+## Ajustes de manutenção de 2026-07-03
+
+- Este documento permanece canônico para a rota geral `/curiosidades`.
+- Textos individuais de perfil, mini bio e geração assistida por IA continuam em `MINI_BIO_CURIOSIDADES_IA.md`.
+- Mudanças de blocos visuais, quiz, mural, rota familiar, rankings, modo memorial ou fallback de badges devem atualizar `QA_MANUAL.md` e `REGRAS_DE_NAO_REGRESSAO.md`.
 
 ## Dados usados
 
