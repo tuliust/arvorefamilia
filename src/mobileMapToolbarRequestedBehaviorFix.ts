@@ -2,6 +2,7 @@ const MOBILE_QUERY = '(max-width: 767px)';
 const STYLE_ID = 'mobile-map-toolbar-requested-behavior-fix-style';
 const DESCENDANTS_STEADY_ATTR = 'data-af-mobile-descendants-steady';
 const DIRECT_MAP_PATH = '/mapa-familiar';
+const HORIZONTAL_MAP_PATH = '/mapa-familiar-horizontal';
 const GENERATION_LINE_PATH = '/linha-geracional';
 const DESCENDANTS_TRANSFORM = 'translate3d(calc(-33.333333333333336% + 0px), calc(-66.66666666666667% + 0px), 0)';
 
@@ -17,6 +18,11 @@ function isMobileViewport() {
 
 function getPathname() {
   return window.location.pathname.replace(/\/$/, '');
+}
+
+function isTreeRoutePath() {
+  const pathname = getPathname();
+  return pathname === DIRECT_MAP_PATH || pathname === HORIZONTAL_MAP_PATH || pathname === GENERATION_LINE_PATH;
 }
 
 function isMobileTreeRoute() {
@@ -88,24 +94,37 @@ function setFirstLabel(button: HTMLButtonElement, label: string) {
   if (span && span.textContent?.trim() !== label) span.textContent = label;
 }
 
-function syncMobileFilterLabels() {
-  if (!isMobileTreeRoute()) return;
+function syncFilterLabels() {
+  if (!isTreeRoutePath()) return;
 
-  document.querySelectorAll<HTMLButtonElement>('[data-mobile-family-map-context-action="grupos"] button, [role="dialog"][aria-label="Painel de visualização"] [data-mobile-family-filter-panel-toggle="true"]').forEach((button) => {
+  document.querySelectorAll<HTMLButtonElement>([
+    '[data-mobile-family-map-context-action="grupos"] button',
+    '[role="dialog"][aria-label="Painel de visualização"] [data-mobile-family-filter-panel-toggle="true"]',
+    '.desktop-tree-final-filter-button',
+  ].join(', ')).forEach((button) => {
     const text = normalizeText(button.textContent);
-    const active = button.getAttribute('aria-pressed') === 'true';
+    const active = button.getAttribute('aria-pressed') === 'true' || button.dataset.active === 'true';
 
     if (text.includes('conjuge')) {
       setFirstLabel(button, 'Todos os cônjuges');
       button.setAttribute('aria-label', 'Todos os cônjuges');
+      button.setAttribute('title', 'Todos os cônjuges');
       button.dataset.mobileFilterActive = active ? 'true' : 'false';
+      if (button.classList.contains('desktop-tree-final-filter-button')) {
+        button.dataset.sidebarFilterVisualActive = active ? 'true' : 'false';
+      }
       return;
     }
 
-    if (text.includes('familiares')) {
+    if (text.includes('familiares') || text.includes('todas as pessoas')) {
       setFirstLabel(button, 'Apenas familiares');
       button.setAttribute('aria-label', 'Apenas familiares');
+      button.setAttribute('title', 'Apenas familiares');
       button.dataset.mobileFilterActive = active ? 'true' : 'false';
+      if (button.classList.contains('desktop-tree-final-filter-button')) {
+        const enabledHorizontal = getPathname() === HORIZONTAL_MAP_PATH && !button.disabled;
+        button.dataset.sidebarFilterVisualActive = enabledHorizontal && active ? 'true' : 'false';
+      }
     }
   });
 }
@@ -291,7 +310,7 @@ function syncRequestedBehaviorFixes() {
   ensureStyles();
   syncDescendantsSteadyState();
   syncCurrentFormatCardState();
-  syncMobileFilterLabels();
+  syncFilterLabels();
 }
 
 function scheduleSync() {
