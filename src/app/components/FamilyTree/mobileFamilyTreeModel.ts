@@ -41,6 +41,10 @@ export interface MobileFamilyTreeModel {
   maternal: MobileFamilyBranch;
 }
 
+export interface MobileFamilyTreeModelOptions {
+  includeExtendedSpouses?: boolean;
+}
+
 export type MobileFamilyExtendedSpousePerson = Pessoa & {
   __mobileFamilyExtendedSpouse?: true;
   __mobileFamilySpouseAnchorId?: string;
@@ -239,8 +243,8 @@ function findChildren(personId: string | undefined, index: RelationshipIndex, pe
 function findSiblings(personId: string, index: RelationshipIndex, peopleById: Map<string, Pessoa>) {
   const sharedParentSiblings = findParents(personId, index, peopleById)
     .flatMap((parentId) => findChildren(parentId, index, peopleById));
-  const explicitSiblings = Array.from(index.siblingsByPerson.get(personId) ?? []);
-  return sortIds([...sharedParentSiblings, ...explicitSiblings], peopleById)
+
+  return sortIds(sharedParentSiblings, peopleById)
     .filter((id) => id !== personId);
 }
 
@@ -280,12 +284,24 @@ function toPeopleWithExtendedSpouses(ids: string[], index: RelationshipIndex, pe
   return people;
 }
 
+function toPeopleForGroup(
+  ids: string[],
+  index: RelationshipIndex,
+  peopleById: Map<string, Pessoa>,
+  includeExtendedSpouses: boolean,
+) {
+  return includeExtendedSpouses
+    ? toPeopleWithExtendedSpouses(ids, index, peopleById)
+    : toPeople(ids, peopleById);
+}
+
 function buildBranch(
   parentId: string | undefined,
   otherParentId: string | undefined,
   index: RelationshipIndex,
   peopleById: Map<string, Pessoa>,
   explicitUncleIds: string[] = [],
+  includeExtendedSpouses = false,
 ): MobileFamilyBranch {
   const grandparents = findParents(parentId, index, peopleById);
   const greatGrandparents = sortIds(
@@ -311,16 +327,27 @@ function buildBranch(
     grandparents: toPeople(grandparents, peopleById),
     greatGrandparents: toPeople(greatGrandparents, peopleById),
     greatGreatGrandparents: toPeople(greatGreatGrandparents, peopleById),
-    uncles: toPeopleWithExtendedSpouses(uncles, index, peopleById),
-    cousins: toPeopleWithExtendedSpouses(cousins, index, peopleById),
+    uncles: toPeopleForGroup(uncles, index, peopleById, includeExtendedSpouses),
+    cousins: toPeopleForGroup(cousins, index, peopleById, includeExtendedSpouses),
   };
+}
+
+function shouldIncludeExtendedSpouses(options?: MobileFamilyTreeModelOptions) {
+  if (typeof options?.includeExtendedSpouses === 'boolean') return options.includeExtendedSpouses;
+
+  if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return false;
+
+  const path = window.location.pathname.replace(/\/$/, '');
+  return path === '/mapa-familiar' && window.matchMedia('(max-width: 767px)').matches;
 }
 
 export function buildMobileFamilyTreeModel(
   pessoas: Pessoa[],
   relacionamentos: Relacionamento[],
   centralPersonId?: string,
+  options?: MobileFamilyTreeModelOptions,
 ): MobileFamilyTreeModel {
+  const includeExtendedSpouses = shouldIncludeExtendedSpouses(options);
   const peopleById = new Map(pessoas.map((person) => [person.id, person]));
   const index = buildIndex(relacionamentos);
   const central = centralPersonId ? peopleById.get(centralPersonId) : undefined;
@@ -333,8 +360,8 @@ export function buildMobileFamilyTreeModel(
       children: [],
       pets: [],
       grandchildren: [],
-      paternal: buildBranch(undefined, undefined, index, peopleById),
-      maternal: buildBranch(undefined, undefined, index, peopleById),
+      paternal: buildBranch(undefined, undefined, index, peopleById, [], includeExtendedSpouses),
+      maternal: buildBranch(undefined, undefined, index, peopleById, [], includeExtendedSpouses),
     };
   }
 
@@ -378,16 +405,17 @@ export function buildMobileFamilyTreeModel(
     mother: motherId ? peopleById.get(motherId) : undefined,
     spouses: toPeople(sortIds(Array.from(index.spousesByPerson.get(central.id) ?? []), peopleById), peopleById),
     siblings: toPeople(siblingIds, peopleById),
-    nephews: toPeopleWithExtendedSpouses(nephewIds, index, peopleById).filter(isHumanFamilyMember),
-    children: toPeopleWithExtendedSpouses(humanChildIds, index, peopleById).filter(isHumanFamilyMember),
+    nephews: toPeopleForGroup(nephewIds, index, peopleById, includeExtendedSpouses).filter(isHumanFamilyMember),
+    children: toPeopleForGroup(humanChildIds, index, peopleById, includeExtendedSpouses).filter(isHumanFamilyMember),
     pets: toPeople(childIds, peopleById).filter(isPetFamilyMember),
-    grandchildren: toPeopleWithExtendedSpouses(grandchildIds, index, peopleById).filter(isHumanFamilyMember),
+    grandchildren: toPeopleForGroup(grandchildIds, index, peopleById, includeExtendedSpouses).filter(isHumanFamilyMember),
     paternal: buildBranch(
       fatherId,
       motherId,
       index,
       peopleById,
       [...explicitPaternalUncles, ...genericPaternalFallback],
+      includeExtendedSpouses,
     ),
     maternal: buildBranch(
       motherId,
@@ -395,6 +423,7 @@ export function buildMobileFamilyTreeModel(
       index,
       peopleById,
       [...explicitMaternalUncles, ...genericMaternalFallback],
+      includeExtendedSpouses,
     ),
   };
 }
