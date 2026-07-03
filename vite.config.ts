@@ -89,6 +89,33 @@ function homePageDirectFamilyOnlyPatch(code: string) {
 
   nextCode = replaceExact(
     nextCode,
+    `  const togglePersonFilter = useCallback((filterKey: keyof typeof personFilters) => {
+    setPersonFilters((prev) => ({
+      ...prev,
+      [filterKey]: !prev[filterKey],
+    }));
+  }, []);`,
+    `  const togglePersonFilter = useCallback((filterKey: keyof typeof personFilters) => {
+    setPersonFilters((prev) => ({
+      ...prev,
+      [filterKey]: !prev[filterKey],
+    }));
+  }, []);
+
+  useEffect(() => {
+    const handleMobileLifeStatusFilter = (event: Event) => {
+      const filterKey = (event as CustomEvent<keyof typeof personFilters>).detail;
+      if (filterKey !== 'vivos' && filterKey !== 'falecidos') return;
+      togglePersonFilter(filterKey);
+    };
+
+    window.addEventListener('arvorefamilia:toggle-life-status-filter', handleMobileLifeStatusFilter);
+    return () => window.removeEventListener('arvorefamilia:toggle-life-status-filter', handleMobileLifeStatusFilter);
+  }, [togglePersonFilter]);`,
+  );
+
+  nextCode = replaceExact(
+    nextCode,
     `  const toggleDirectRelativeFilter = useCallback((filterKey: DirectRelativeGroup) => {
     setDirectRelativeFilterState((prev) => ({
       userId: user?.id,
@@ -347,6 +374,236 @@ function desktopHorizontalMapViewPatch(code: string) {
   return nextCode;
 }
 
+function meusVinculosPatch(code: string) {
+  return replaceExact(
+    code,
+    `className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"`,
+    `className="flex items-center justify-between gap-3"`,
+  );
+}
+
+function meusVinculosUtilsPatch(code: string) {
+  let nextCode = code;
+
+  nextCode = replaceExact(
+    nextCode,
+    `['mulher', 'feminino', 'female', 'feminina', 'woman'].includes(normalized)`,
+    `['mulher', 'feminino', 'female', 'feminina', 'woman', 'f', 'fem'].includes(normalized)`,
+  );
+
+  nextCode = replaceExact(
+    nextCode,
+    `['homem', 'masculino', 'male', 'masculina', 'man'].includes(normalized)`,
+    `['homem', 'masculino', 'male', 'masculina', 'man', 'm', 'masc'].includes(normalized)`,
+  );
+
+  nextCode = replaceExact(
+    nextCode,
+    `const gender = String(person.genero ?? '').trim().toLowerCase();`,
+    `const gender = String(person.genero ?? (person as Pessoa & { sexo?: string | null }).sexo ?? '').trim().toLowerCase();`,
+  );
+
+  nextCode = replaceExact(
+    nextCode,
+    `['mulher', 'feminino', 'female', 'feminina', 'woman'].includes(gender)`,
+    `['mulher', 'feminino', 'female', 'feminina', 'woman', 'f', 'fem'].includes(gender)`,
+  );
+
+  nextCode = replaceExact(
+    nextCode,
+    `['homem', 'masculino', 'male', 'masculino'].includes(gender)`,
+    `['homem', 'masculino', 'male', 'masculino', 'm', 'masc'].includes(gender)`,
+  );
+
+  nextCode = replaceExact(
+    nextCode,
+    `const normalizedGender = String(person.genero ?? '').trim().toLowerCase();`,
+    `const normalizedGender = String(person.genero ?? (person as Pessoa & { sexo?: string | null }).sexo ?? '').trim().toLowerCase();`,
+  );
+
+  nextCode = replaceExact(
+    nextCode,
+    `['mulher', 'feminino', 'female', 'feminina', 'woman'].includes(normalizedGender)`,
+    `['mulher', 'feminino', 'female', 'feminina', 'woman', 'f', 'fem'].includes(normalizedGender)`,
+  );
+
+  nextCode = replaceExact(
+    nextCode,
+    `['homem', 'masculino', 'male', 'masculina', 'man'].includes(normalizedGender)`,
+    `['homem', 'masculino', 'male', 'masculina', 'man', 'm', 'masc'].includes(normalizedGender)`,
+  );
+
+  return nextCode;
+}
+
+function homeMobileNavPatch(code: string) {
+  let nextCode = code;
+
+  nextCode = replaceExact(
+    nextCode,
+    `  {
+    path: '/linha-geracional',
+    label: 'Linha Geracional',
+    subtitle: 'Visualização cronológica por gerações',
+    ariaLabel: 'Alternar para Linha Geracional',
+    icon: Map,
+  },
+  {
+    path: '/mapa-familiar',
+    label: 'Árvore Familiar',
+    subtitle: 'Visão de parentesco por grupos',
+    ariaLabel: 'Alternar para Árvore Familiar',
+    icon: Layers,
+  },`,
+    `  {
+    path: '/mapa-familiar',
+    label: 'Árvore Familiar',
+    subtitle: 'Visão de parentesco por grupos',
+    ariaLabel: 'Alternar para Árvore Familiar',
+    icon: Layers,
+  },
+  {
+    path: '/linha-geracional',
+    label: 'Linha Geracional',
+    subtitle: 'Visualização cronológica por gerações',
+    ariaLabel: 'Alternar para Linha Geracional',
+    icon: Map,
+  },`,
+  );
+
+  nextCode = replaceExact(
+    nextCode,
+    `onClick={() => setTreeColorPalette(paletteKey)}`,
+    `onClick={() => {
+                        setTreeColorPalette(paletteKey);
+                        setFullControlsOpen(false);
+                      }}`,
+  );
+
+  nextCode = replaceExact(
+    nextCode,
+    `onClick={() => setTreeColorPalette(paletteKey)}`,
+    `onClick={() => {
+                            setTreeColorPalette(paletteKey);
+                            setFullControlsOpen(false);
+                          }}`,
+  );
+
+  nextCode = replaceExact(
+    nextCode,
+    `{getExtendedSpouseFilterLabel(showExtendedSpouseFilters)}`,
+    `Exibir cônjuges de tios, primos etc`,
+  );
+
+  nextCode = replaceExact(
+    nextCode,
+    `<span className="text-base font-semibold leading-tight text-blue-950">Apenas meus familiares</span>`,
+    `<span className="text-base font-semibold leading-tight text-blue-950">Exibir apenas meus familiares</span>`,
+  );
+
+  nextCode = replaceExact(
+    nextCode,
+    `<SummaryTile tone="green" icon={UserRound} value={mobileStats.alivePeople} label="Vivos" />`,
+    `<SummaryTile
+                      tone="green"
+                      icon={UserRound}
+                      value={mobileStats.alivePeople}
+                      label="Vivos"
+                      onClick={() => window.dispatchEvent(new CustomEvent('arvorefamilia:toggle-life-status-filter', { detail: 'vivos' }))}
+                    />`,
+  );
+
+  nextCode = replaceExact(
+    nextCode,
+    `<SummaryTile tone="purple" icon={Cross} value={mobileStats.deceasedPeople} label="Falecidos" />`,
+    `<SummaryTile
+                      tone="purple"
+                      icon={Cross}
+                      value={mobileStats.deceasedPeople}
+                      label="Falecidos"
+                      onClick={() => window.dispatchEvent(new CustomEvent('arvorefamilia:toggle-life-status-filter', { detail: 'falecidos' }))}
+                    />`,
+  );
+
+  nextCode = replaceExact(
+    nextCode,
+    `function SummaryTile({
+  tone,
+  icon: Icon,
+  value,
+  label,
+}: {
+  tone: 'blue' | 'green' | 'purple' | 'orange';
+  icon: React.ComponentType<{ className?: string }>;
+  value: number;
+  label: string;
+}) {
+  const toneClassName = {
+    blue: 'border-blue-200 bg-blue-50 text-blue-600',
+    green: 'border-green-200 bg-green-50 text-green-600',
+    purple: 'border-violet-200 bg-violet-50 text-violet-600',
+    orange: 'border-orange-200 bg-orange-50 text-orange-600',
+  }[tone];
+
+  return (
+    <div className={['flex min-h-24 items-center gap-3 rounded-2xl border px-4 py-3', toneClassName].join(' ')}>
+      <Icon className="h-10 w-10 shrink-0" />
+      <div className="min-w-0">
+        <strong className="block text-[2rem] font-bold leading-none tracking-[-0.035em]">{value}</strong>
+        <span className="mt-1.5 block truncate text-base font-semibold text-blue-950">{label}</span>
+      </div>
+    </div>
+  );
+}`,
+    `function SummaryTile({
+  tone,
+  icon: Icon,
+  value,
+  label,
+  onClick,
+}: {
+  tone: 'blue' | 'green' | 'purple' | 'orange';
+  icon: React.ComponentType<{ className?: string }>;
+  value: number;
+  label: string;
+  onClick?: () => void;
+}) {
+  const toneClassName = {
+    blue: 'border-blue-200 bg-blue-50 text-blue-600',
+    green: 'border-green-200 bg-green-50 text-green-600',
+    purple: 'border-violet-200 bg-violet-50 text-violet-600',
+    orange: 'border-orange-200 bg-orange-50 text-orange-600',
+  }[tone];
+  const className = [
+    'flex min-h-24 items-center gap-3 rounded-2xl border px-4 py-3',
+    toneClassName,
+    onClick ? 'w-full text-left transition active:scale-[0.98]' : '',
+  ].join(' ');
+  const content = (
+    <>
+      <Icon className="h-10 w-10 shrink-0" />
+      <div className="min-w-0">
+        <strong className="block text-[2rem] font-bold leading-none tracking-[-0.035em]">{value}</strong>
+        <span className="mt-1.5 block truncate text-base font-semibold text-blue-950">{label}</span>
+      </div>
+    </>
+  );
+
+  if (onClick) {
+    return (
+      <button type="button" onClick={onClick} className={className}>
+        {content}
+      </button>
+    );
+  }
+
+  return <div className={className}>{content}</div>;
+}`,
+  );
+
+  return nextCode;
+}
+
 function familyMapRuntimePatches(): Plugin {
   return {
     name: 'family-map-runtime-patches',
@@ -364,6 +621,12 @@ function familyMapRuntimePatches(): Plugin {
         nextCode = desktopHorizontalMapFilteredViewPatch(nextCode);
       } else if (id.endsWith('DesktopFamilyHorizontalMapView.tsx')) {
         nextCode = desktopHorizontalMapViewPatch(nextCode);
+      } else if (id.endsWith('MeusVinculos.tsx')) {
+        nextCode = meusVinculosPatch(nextCode);
+      } else if (id.endsWith('meusVinculosUtils.ts')) {
+        nextCode = meusVinculosUtilsPatch(nextCode);
+      } else if (id.endsWith('HomeMobileNav.tsx')) {
+        nextCode = homeMobileNavPatch(nextCode);
       }
 
       return nextCode === code ? null : { code: nextCode, map: null };
