@@ -290,8 +290,7 @@ function markExtendedSpouseCards() {
       const personId = resolvePersonIdFromText(card.textContent ?? '', displayNames);
       if (!personId || baseIds.has(personId)) return;
 
-      const anchorId = getSpouseAnchor(personId, baseIds, index);
-      if (!anchorId) return;
+      const anchorId = getSpouseAnchor(personId, baseIds, index) ?? 'non-lineage-collateral';
 
       getHideTarget(card).setAttribute(EXTENDED_WRAPPER_ATTR, 'true');
       card.setAttribute(EXTENDED_CARD_ATTR, 'true');
