@@ -150,16 +150,6 @@ export function DesktopTreeVisualizationPanel({
   const location = useLocation();
   const navigate = useNavigate();
   const currentViewMode = getCurrentTreeViewMode(location.pathname);
-  const isViewingPersonPerspective = React.useMemo(
-    () => new URLSearchParams(location.search).has('pessoa'),
-    [location.search]
-  );
-  const effectiveDirectRelativeFilters = React.useMemo(
-    () => isViewingPersonPerspective
-      ? { ...directRelativeFilters, conjuge: false }
-      : directRelativeFilters,
-    [directRelativeFilters, isViewingPersonPerspective]
-  );
   const [treeColorPalette, setTreeColorPalette] = React.useState<TreeColorPalette>(getStoredPalette);
   React.useEffect(() => {
     applyTreePalette(treeColorPalette);
@@ -186,12 +176,12 @@ export function DesktopTreeVisualizationPanel({
   }, [directRelativeFilters.conjuge, onToggleDirectRelative, onViewAsPersonChange]);
 
   const handleGroupToggle = React.useCallback((keys: DirectRelativeGroup[]) => {
-    const allActive = getGroupActive(effectiveDirectRelativeFilters, keys);
+    const allActive = getGroupActive(directRelativeFilters, keys);
 
     keys
       .filter((key) => directRelativeFilters[key] === allActive)
       .forEach((key) => onToggleDirectRelative(key));
-  }, [directRelativeFilters, effectiveDirectRelativeFilters, onToggleDirectRelative]);
+  }, [directRelativeFilters, onToggleDirectRelative]);
 
   return (
     <div className="desktop-tree-visualization-panel-shell" data-tree-export-ignore="true">
@@ -324,7 +314,7 @@ export function DesktopTreeVisualizationPanel({
 
               <div className="desktop-tree-family-group-row-list">
                 {section.rows.map((row) => {
-                  const active = getGroupActive(effectiveDirectRelativeFilters, row.keys);
+                  const active = getGroupActive(directRelativeFilters, row.keys);
 
                   return (
                     <button
@@ -371,33 +361,26 @@ export function DesktopTreeVisualizationPanel({
           <button
             type="button"
             className="desktop-tree-final-filter-button"
-            aria-pressed={effectiveDirectRelativeFilters.conjuge}
-            aria-disabled={isViewingPersonPerspective}
-            data-active={effectiveDirectRelativeFilters.conjuge ? 'true' : 'false'}
-            disabled={isViewingPersonPerspective}
-            onClick={() => {
-              if (isViewingPersonPerspective) return;
-              onToggleDirectRelative('conjuge');
-            }}
-            title={isViewingPersonPerspective
-              ? 'Oculto ao visualizar a árvore como outro perfil'
-              : effectiveDirectRelativeFilters.conjuge
-                ? 'Ocultar cônjuges de tios, primos etc'
-                : 'Mostrar cônjuges de tios, primos etc'}
+            aria-pressed={directRelativeFilters.conjuge}
+            data-active={directRelativeFilters.conjuge ? 'true' : 'false'}
+            onClick={() => onToggleDirectRelative('conjuge')}
+            title={directRelativeFilters.conjuge
+              ? 'Ocultar cônjuges de tios, primos etc'
+              : 'Mostrar cônjuges de tios, primos etc'}
           >
             <HeartHandshake />
-            <span>{effectiveDirectRelativeFilters.conjuge ? 'Ocultar cônjuges de tios, primos etc' : 'Exibir cônjuges de tios, primos etc'}</span>
+            <span>Todos os cônjuges</span>
           </button>
 
           <button
             type="button"
             className="desktop-tree-final-filter-button"
             disabled
-            aria-label="Apenas meus familiares. Funcionalidade será definida posteriormente."
+            aria-label="Apenas familiares. Funcionalidade será definida posteriormente."
             title="Funcionalidade será definida posteriormente."
           >
             <UsersRound />
-            <span>Apenas meus familiares</span>
+            <span>Apenas familiares</span>
           </button>
         </div>
       </section>

@@ -165,9 +165,11 @@ const MATERNAL_ANCESTOR_IDS = [
   'maternalGrandparents',
 ] as const;
 
-const ADAPTIVE_UNCLES_GROUP_IDS = new Set<string>([
+const ADAPTIVE_COLLATERAL_GROUP_IDS = new Set<string>([
   'paternalUncles',
   'maternalUncles',
+  'paternalCousins',
+  'maternalCousins',
 ]);
 
 const FAMILY_MAP_LAYOUT_BASE: FamilyMapLayout = {
@@ -354,7 +356,7 @@ function getVisiblePeople(group: ComposedGroup, config: GroupConfig, expanded: b
 }
 
 function getAdaptiveGroupColumns(config: GroupConfig, visiblePeople: Pessoa[]): GroupColumns {
-  if (!ADAPTIVE_UNCLES_GROUP_IDS.has(config.id)) return config.columns;
+  if (!ADAPTIVE_COLLATERAL_GROUP_IDS.has(config.id)) return config.columns;
   if (visiblePeople.length === 2) return 'double';
   if (visiblePeople.length === 3 || visiblePeople.length === 6) return 'triple';
 
@@ -385,11 +387,11 @@ function getAdaptiveGroupWidth(config: GroupConfig, peopleCount: number, columns
 
   if (peopleCount === 1 && config.singleWidth) return Math.min(config.width, config.singleWidth);
 
-  if (ADAPTIVE_UNCLES_GROUP_IDS.has(config.id) && peopleCount === 2) {
+  if (ADAPTIVE_COLLATERAL_GROUP_IDS.has(config.id) && peopleCount === 2) {
     return Math.min(config.width, getCompactGroupWidth(config, 2, layout));
   }
 
-  if (!ADAPTIVE_UNCLES_GROUP_IDS.has(config.id) || columns !== 'triple') return config.width;
+  if (!ADAPTIVE_COLLATERAL_GROUP_IDS.has(config.id) || columns !== 'triple') return config.width;
 
   return Math.min(config.width, getCompactGroupWidth(config, getColumnCount(columns), layout));
 }

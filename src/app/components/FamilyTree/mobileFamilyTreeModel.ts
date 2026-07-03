@@ -232,7 +232,7 @@ function findParentByKind(
   const remaining = parents.find((parentId) => parentId !== oppositeInferred);
   if (remaining) return remaining;
 
-  return parents[kind === 'pai' ? 0 : 1];
+  return undefined;
 }
 
 function findChildren(personId: string | undefined, index: RelationshipIndex, peopleById: Map<string, Pessoa>) {
@@ -367,8 +367,9 @@ export function buildMobileFamilyTreeModel(
 
   const parents = findParents(central.id, index, peopleById);
   const fatherId = findParentByKind(central.id, 'pai', index, peopleById) ?? parents[0];
-  const motherId = findParentByKind(central.id, 'mae', index, peopleById)
+  let motherId = findParentByKind(central.id, 'mae', index, peopleById)
     ?? parents.find((personId) => personId !== fatherId);
+  if (motherId === fatherId) motherId = undefined;
   const siblingIds = findSiblings(central.id, index, peopleById);
   const childIds = findChildren(central.id, index, peopleById);
   const humanChildIds = toPeople(childIds, peopleById)
