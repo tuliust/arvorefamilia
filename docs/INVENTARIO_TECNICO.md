@@ -1,7 +1,7 @@
 # Inventário técnico
 
-> Última revisão: 2026-07-02
-> Escopo: rotas, módulos, documentos finais e referências técnicas preservadas após limpeza documental, ajustes mobile/admin, layout compartilhado mobile de mapas e complementos de notificações, vínculos, tutorial e perspectiva memorial de 2026-07-02.
+> Última revisão: 2026-07-03
+> Escopo: rotas, módulos, documentos finais e referências técnicas preservadas após limpeza documental, ajustes mobile/admin, layout compartilhado mobile de mapas, ajustes desktop do mapa familiar e complementos de notificações, vínculos, tutorial e perspectiva memorial.
 > Status: canônico.
 
 ## Stack
@@ -129,6 +129,16 @@
 | `src/app/routes.tsx` | Declara `/mapa-familiar` e `/linha-geracional` como filhas de `TreeMapSharedLayout`. |
 
 Essa arquitetura é mobile-first. Desktop continua sendo responsabilidade das páginas originais e da shell `Home` quando aplicável.
+
+## Mapa familiar desktop: arquivos de implementação
+
+| Arquivo | Responsabilidade |
+|---|---|
+| `src/app/pages/home/DesktopTreeVisualizationPanel.tsx` | Painel lateral desktop com dropdown de perspectiva, paletas, resumo, grupos, filtros finais e exportação; usa `directRelativeFilters` reais e mantém `Todos os cônjuges` acionável em `?pessoa=`. |
+| `src/app/components/FamilyTree/DesktopFamilyMapView.tsx` | Layout desktop por grupos; calcula coordenadas, colunas efetivas, largura adaptativa de tios/primos e controle local de expansão. |
+| `src/app/components/FamilyTree/FamilyTreeVisualCards.tsx` | Renderização visual dos cards e ordenação de singles/pares conjugais nos grupos. |
+| `src/app/components/FamilyTree/mobileFamilyTreeModel.ts` | Modelo de parentesco e inferência de relações diretas; não pode duplicar a mesma pessoa como `Pai` e `Mãe`. |
+| `src/app/components/FamilyTree/utils/treePreferences.ts` | Preferências persistidas e defaults iniciais de filtros; não substitui o estado real alterado pelo usuário no painel. |
 
 ## Primeiro acesso: arquivos de implementação
 

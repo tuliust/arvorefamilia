@@ -1,6 +1,6 @@
 # Guia de componentes
 
-> Última revisão: 2026-07-02
+> Última revisão: 2026-07-03
 > Escopo: componentes relevantes para rotas e fluxos funcionais da branch `main`, incluindo layout compartilhado mobile dos mapas.
 > Status: canônico.
 
@@ -17,7 +17,7 @@
 | `HomeMobileNav.tsx` | Navegação e ações mobile dos mapas; no chrome compartilhado fica fora do `<Outlet />` e mantém toolbar `Formato`/`Cor`/`Filtros`/`Mapa`/`+`, trays, filtros e ações de mapa. |
 | `MobileFamilyMapToolbar.tsx` | Toolbar mobile; o botão `Mapa` abre visão geral de grupos/gerações, não zoom direto. |
 | `HomeTreeSection.tsx` | Área de renderização da árvore, ações do painel, modal de `Salvar Imagem`, captura/impressão e helpers internos. |
-| `DesktopTreeVisualizationPanel.tsx` | Painel desktop de visualização, temas, grupos, filtros e exportação. |
+| `DesktopTreeVisualizationPanel.tsx` | Painel desktop de visualização, dropdown de perspectiva, paletas, grupos, filtros finais (`Todos os cônjuges`/`Apenas familiares`) e exportação; não deve bloquear `Todos os cônjuges` em perspectiva por `?pessoa=`. |
 | `SidebarPanelTabs.tsx` | Abas auxiliares do painel lateral. |
 | `HomeCuriositiesDialog.tsx` | Diálogo de curiosidades e perguntas assistidas na home. |
 | `FirstLoginTutorial.tsx` | Tutorial de primeiro acesso; persiste a etapa corrente em `sessionStorage`, ignora alvos ausentes e usa fallback centralizado quando o spotlight não pode ser calculado. |
@@ -27,7 +27,7 @@
 | Componente / módulo | Papel |
 |---|---|
 | `FamilyTree.tsx` | Componente principal de árvore com ações expostas por ref. |
-| `DesktopFamilyMapView.tsx` | Mapa familiar desktop por grupos. |
+| `DesktopFamilyMapView.tsx` | Mapa familiar desktop por grupos; define coordenadas, colunas efetivas, largura adaptativa de tios/primos e controles locais de expansão. |
 | `FamilyTreeVisualCards.tsx` | Cards visuais dos grupos, incluindo ordenação de pares conjugais. |
 | `MobileFamilyTreeView.tsx` | Mapa familiar mobile por telas/grupos. |
 | `DesktopFamilyHorizontalMapView.tsx` | Linha geracional desktop. |
@@ -37,18 +37,26 @@
 | `MobileFamilyMapBackdrop.tsx` | Backdrop mobile parcial ou imersivo; no modo parcial calcula limite inferior pelo menu inferior real. |
 | `MobileFamilyMapContextTray.tsx` | Tray contextual dos botões `Formato`, `Cor`, `Filtros` e `Mapa`; em `/linha-geracional`, renderiza cards compactos `GERAÇÃO` numerados de 1 a 6, contadores e CTA real de mapa completo. |
 | `MobileFamilyMapFullLayer.tsx` | Camada completa mobile com base branca reta e container arredondado iniciado logo abaixo da toolbar; a versão atual não renderiza botão `X` próprio. |
-| `mobileFamilyTreeModel.ts` | Modelo de parentesco mobile usado para reconhecer grupos e navegação por telas. |
+| `mobileFamilyTreeModel.ts` | Modelo de parentesco usado para reconhecer grupos, navegação por telas e relações diretas; deve evitar duplicar a mesma pessoa como `Pai` e `Mãe`. |
 | `buildTreeGraph.ts` | Montagem do grafo a partir de pessoas e relacionamentos. |
 | `MarriageNode.tsx` | Nó conjugal com símbolo, status, tooltip e acessibilidade do vínculo. |
 | `TreeConjugalStatusLegend.tsx` | Legenda de status conjugais por símbolo e padrão de linha. |
 | `TreeLegend.tsx` | Legenda consolidada da árvore. |
 | `treeViewMode.ts` | Conversão entre rota e modo de visualização. |
-| `utils/treePreferences.ts` | Preferências visuais e ocultação inicial de cônjuges colaterais em perspectiva por `?pessoa=`. |
+| `utils/treePreferences.ts` | Preferências visuais e defaults iniciais de filtros; não deve substituir o estado real controlado pelo painel quando o usuário altera `Todos os cônjuges`. |
 | `utils/treeExport.ts` | Helpers legados/compartilhados de captura e artefatos internos. |
 | `utils/exportColorSanitizer.ts` | Sanitização de cores modernas não suportadas por `html2canvas`. |
 | `src/app/utils/screenAreaCapture.ts` | Captura real de área visível por `getDisplayMedia`, overlay de seleção, recorte, PNG e fallback. |
 | `modals/AddConnectionModal.tsx` | Modal de nova conexão. |
 | `modals/ViewMarriageModal.tsx` | Modal de detalhes de casamento. |
+
+### Contratos recentes dos componentes desktop
+
+- `DesktopTreeVisualizationPanel.tsx` deve usar `directRelativeFilters` reais para estado visual e clique dos filtros; não deve criar `effectiveDirectRelativeFilters` que bloqueie cônjuges em `?pessoa=`.
+- `DesktopFamilyMapView.tsx` deve tratar `paternalUncles`, `maternalUncles`, `paternalCousins` e `maternalCousins` como grupos colaterais adaptativos.
+- A compactação de primos deve considerar 2, 4 e 5 cards como `double` e 3 ou 6 cards como `triple`.
+- Controles locais `+`/`−` dos grupos devem existir apenas quando houver ganho visual real com expansão.
+- `mobileFamilyTreeModel.ts` deve privilegiar relação explícita e metadados confiáveis antes de inferências, e nunca devolver o mesmo ID para pai e mãe.
 
 ## Runtimes React defensivos
 

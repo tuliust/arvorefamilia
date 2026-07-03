@@ -1,6 +1,6 @@
 # Guia de implementações
 
-> Última revisão: 2026-07-02
+> Última revisão: 2026-07-03
 > Escopo: comportamento implementado na branch `main`, incluindo layout compartilhado mobile dos mapas.
 > Status: canônico.
 
@@ -64,6 +64,13 @@ Componentes relevantes:
 - O mapa desktop por grupos usa `DesktopFamilyMapView`.
 - Cards em grupos usam `FamilyTreeVisualCards`.
 - O subtipo legado `sangue`/`adotivo` não deve ser reintroduzido como texto visível.
+- Em perspectiva por `?pessoa=`, cônjuges colaterais iniciam ocultos, mas o botão `Todos os cônjuges` continua acionável e deve refletir `directRelativeFilters.conjuge`.
+- `DesktopTreeVisualizationPanel.tsx` não deve aplicar filtro efetivo artificial para forçar `conjuge: false` depois que o usuário ativa o filtro.
+- Ao trocar a pessoa no dropdown, o filtro de cônjuges pode ser desligado para iniciar a nova perspectiva limpa.
+- `DesktopFamilyMapView.tsx` usa grupos colaterais adaptativos para reduzir largura de tios e primos quando a quantidade de cards pede menos colunas.
+- Para grupos de primos, 2, 4 e 5 cards usam `double`; 3 e 6 cards usam `triple`.
+- O botão local `+`/`−` de grupos só deve ser usado quando a expansão altera linhas visíveis ou altura útil.
+- `mobileFamilyTreeModel.ts` não deve usar fallback posicional que atribua a mesma pessoa como `Pai` e `Mãe`; se `motherId === fatherId`, o segundo papel deve ser descartado.
 
 ## Mapa e linha geracional no mobile
 

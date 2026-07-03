@@ -1,6 +1,6 @@
 # Plano de próximos passos
 
-> Última revisão: 2026-07-02
+> Última revisão: 2026-07-03
 > Escopo: pendências reais após auditoria documental da branch `main` e rodadas recentes de implementação.
 > Status: canônico.
 
@@ -24,6 +24,8 @@
 - Implementar, quando aprovado, os ajustes de `/calendario-familiar` para nomes curtos dentro dos dias, texto curto de falecimento/casamento e card lateral `Datas de Casamento`.
 - Implementar, quando aprovado, a renomeação dos botões em `/meus-dados`: `Ajustar Meus Vínculos` para `Meus Vínculos` e `Ajustar Fatos e Arquivos Históricos` para `Fatos e Arquivos Históricos`.
 - Validar o modal atual de pet em `/meus-vinculos` com layout em coluna única e decidir se o runtime defensivo deve ser absorvido pelo componente React de origem.
+- Revisar o botão local `+`/`−` dos grupos de tios no desktop de `/mapa-familiar`: quando todos os cards cabem sem alterar a altura útil do grupo, o botão não deve aparecer e todos os cards devem carregar visíveis.
+- Validar em produção os casos de `/mapa-familiar` com dropdown para Bianca, Charalambos e Leonardo, cobrindo ativação manual de `Todos os cônjuges`, largura adaptativa de primos e ausência de duplicidade entre `Pai` e `Mãe`.
 
 ## Pendências de produto administrativo
 

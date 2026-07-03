@@ -1,6 +1,6 @@
 # Mapa familiar
 
-> Última revisão: 2026-07-02
+> Última revisão: 2026-07-03
 > Escopo: `/mapa-familiar`, `/mapa-familiar-horizontal`, `/linha-geracional`, shell mobile compartilhada, `Home.tsx`, `LinhaGeracional.tsx` e componentes `FamilyTree`.
 > Status: canônico.
 
@@ -46,6 +46,8 @@ Ao navegar para perfil, o retorno é preservado em `?voltar=` quando o fluxo de 
 - A troca entre visualizações deve preservar a query string.
 - O painel desktop permite selecionar outra pessoa para visualizar a árvore.
 - Em visualização por `?pessoa=`, a árvore deve adotar a pessoa da query como perspectiva e ocultar cônjuges colaterais por padrão.
+- A ocultação inicial de cônjuges colaterais em `?pessoa=` é um estado padrão, não um bloqueio permanente: o botão `Todos os cônjuges` deve permanecer clicável para ativação manual pelo usuário.
+- Ao trocar a pessoa no dropdown `Visualização`, o filtro `conjuge` pode ser reiniciado como inativo para a nova perspectiva; depois disso, a UI deve respeitar `directRelativeFilters.conjuge` real, sem filtro efetivo artificial.
 - No mobile, o header das telas de mapa deve usar `Árvore Familiar`.
 - O título `Visualização` e labels como `Família de X` devem permanecer em UTF-8 válido.
 - Ajustes defensivos de runtime devem permanecer isolados por rota/breakpoint e não substituir a correção dos textos de origem.
@@ -61,6 +63,21 @@ Ao navegar para perfil, o retorno é preservado em `?voltar=` quando o fluxo de 
 - O painel desktop deve exibir `Grupos de Familiares` e subtítulo `Clique para exibir/ocultar grupos de parentes na árvore`.
 - Títulos `Resumo`, `Grupos de Familiares` e `Exportar` devem ter tratamento tipográfico equivalente.
 - Cards `Núcleo`, `Ascendentes` e `Colaterais` devem ocupar o espaço vertical disponível sem cortar a seção `Exportar`.
+
+### Grupos colaterais adaptativos no desktop
+
+`DesktopFamilyMapView.tsx` deve reduzir colunas e largura de grupos colaterais quando a quantidade real de cards não justificar a largura padrão.
+
+Contrato:
+
+- grupos adaptativos: `Tios Paternos`, `Tios Maternos`, `Primos Paternos` e `Primos Maternos`;
+- grupos com 1 card usam largura compacta quando o grupo original não for de coluna única;
+- grupos de tios usam `double` para 2 cards e `triple` para 3 ou 6 cards, preservando a configuração padrão nos demais casos;
+- grupos de primos usam `double` para 2, 4 ou 5 cards e `triple` para 3 ou 6 cards;
+- a largura do container deve ser derivada da coluna efetiva, não apenas da configuração original do grupo;
+- grupos de primos com 4 ou 5 cards não devem manter largura visual de 4 colunas;
+- espaço vazio lateral excessivo dentro do grupo é regressão visual;
+- botão local `+`/`−` só deve aparecer quando a expansão altera a quantidade de linhas visíveis ou a altura útil do grupo; se todos os cards couberem sem mudança de altura útil, o grupo deve carregar todos os cards visíveis e não exibir controle local de expansão.
 
 
 ## Linha geracional desktop filtrada

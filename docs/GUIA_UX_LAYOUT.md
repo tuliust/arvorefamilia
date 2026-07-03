@@ -1,6 +1,6 @@
 # Guia de UX e layout
 
-> Última revisão: 2026-07-02
+> Última revisão: 2026-07-03
 > Escopo: experiência visual das rotas principais da branch `main`, com foco em mapa mobile, linha geracional e layout compartilhado.
 > Status: canônico.
 
@@ -28,7 +28,17 @@
 - Títulos `Resumo`, `Grupos de Familiares` e `Exportar` compartilham formatação compacta.
 - Cards `Núcleo`, `Ascendentes` e `Colaterais` preservam largura, gap, labels e botões de exportação.
 - `Pai` e `Mãe` são referências de alinhamento visual no mapa por grupos.
+- Em perspectiva por outra pessoa, `Todos os cônjuges` inicia inativo, mas continua visualmente clicável e pode ser ativado pelo usuário.
+- `Apenas familiares` usa nomenclatura curta e não deve voltar para `Apenas meus familiares`.
+- Grupos de tios e primos no desktop devem encolher quando houver poucos cards, evitando grandes áreas vazias dentro do container.
 - `Salvar Imagem` e `Imprimir` aparecem em uma linha com duas colunas.
+
+### Grupos desktop adaptativos
+
+- A largura visual de `Tios Paternos`, `Tios Maternos`, `Primos Paternos` e `Primos Maternos` deve acompanhar a quantidade de colunas efetivas.
+- Grupos de primos com 4 ou 5 cards devem parecer grupos de 2 colunas, não containers largos de 4 colunas.
+- Grupos com espaço vazio lateral excessivo reduzem a sensação de mapa organizado e devem ser tratados como regressão visual.
+- O botão local `+`/`−` não deve aparecer quando todos os cards cabem sem alterar a altura útil do grupo; nesse caso, todos os cards devem carregar visíveis.
 
 ### Exportação desktop
 

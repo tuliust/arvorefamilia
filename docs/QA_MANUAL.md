@@ -1,6 +1,6 @@
 # QA manual
 
-> Última revisão: 2026-07-02
+> Última revisão: 2026-07-03
 > Escopo: validação manual das rotas e contratos documentados, incluindo layout compartilhado mobile dos mapas, tutorial inicial, vínculos, notificações administrativas e perspectiva memorial.
 > Status: canônico.
 
@@ -48,6 +48,22 @@ npm run build
 - Não há mojibake em textos de painel.
 - `Salvar Imagem` abre modal de instruções antes de solicitar captura.
 - `Imprimir` abre janela nativa com título, árvore centralizada e sem elementos auxiliares.
+
+### QA desktop de perspectiva, filtros e grupos
+
+Validar no desktop de `/mapa-familiar`:
+
+- Selecionar Bianca no dropdown `Visualização` e confirmar que a árvore carrega na perspectiva correta.
+- Selecionar Charalambos no dropdown `Visualização` e confirmar que a árvore carrega na perspectiva correta.
+- Selecionar Leonardo no dropdown `Visualização` e confirmar que a árvore carrega na perspectiva correta.
+- Em cada perspectiva por `?pessoa=`, confirmar que `Todos os cônjuges` inicia desativado.
+- Confirmar que `Todos os cônjuges` permanece clicável e que ativar/desativar altera a presença de cônjuges colaterais.
+- Confirmar que trocar para outra pessoa no dropdown reinicia `Todos os cônjuges` como inativo.
+- No caso de Leonardo, confirmar que uma única pessoa cadastrada como parental não aparece duplicada como `Pai` e `Mãe`.
+- Em `Primos Paternos` e `Primos Maternos`, testar grupos com 2, 3, 4, 5 e 6 cards quando houver dados disponíveis; grupos com 4 ou 5 cards devem usar largura visual de 2 colunas.
+- Confirmar que `Primos Paternos` de Charalambos não mantém grande espaço vazio lateral.
+- Confirmar que grupos de tios/primos não exibem espaço vazio lateral excessivo após compactação.
+- Em `Tios Paternos`, quando expandir de 9 para 11 cards não alterar a altura útil do grupo, confirmar que o botão local `+` não deve aparecer e que todos os cards carregam visíveis.
 
 ## QA mobile de navegação 3x3
 

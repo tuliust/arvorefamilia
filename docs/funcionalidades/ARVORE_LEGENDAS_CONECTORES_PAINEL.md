@@ -1,6 +1,6 @@
 # Árvore, legendas, conectores e painel
 
-> Última revisão: 2026-06-29
+> Última revisão: 2026-07-03
 > Escopo: painéis do mapa familiar, conectores, legendas e seletor de visualização.
 > Status: canônico.
 
@@ -36,6 +36,36 @@ Visualize a árvore como...
 ```
 
 A lista deve priorizar pessoas disponíveis para navegação sem duplicar a pessoa já selecionada.
+
+### Visualização como outra pessoa
+
+Ao selecionar uma pessoa no dropdown, a rota deve adotar essa pessoa como perspectiva, normalmente via query `?pessoa=`. Nessa perspectiva:
+
+- a árvore deve carregar com cônjuges colaterais ocultos por padrão;
+- `Todos os cônjuges` deve permanecer clicável para permitir ativação manual;
+- o painel não deve forçar `conjuge: false` por renderização quando o usuário já ativou o filtro;
+- a troca para outra pessoa pode reiniciar `conjuge` como inativo para preservar a leitura inicial focada no sangue familiar.
+
+### Filtros finais do painel
+
+O painel desktop expõe os controles finais:
+
+- `Todos os cônjuges`: alterna cônjuges de tios, primos e demais parentes colaterais; não deve ser desabilitado em perspectiva por `?pessoa=`.
+- `Apenas familiares`: mantém nomenclatura curta e estado desabilitado enquanto a funcionalidade definitiva não estiver especificada.
+
+## Integridade da pessoa de referência
+
+A mesma pessoa não pode ser renderizada simultaneamente como `Pai` e `Mãe`. Quando só houver um vínculo parental cadastrado ou inferível, o modelo deve renderizar apenas o papel seguro e não duplicar o card por fallback posicional.
+
+## Layout dos grupos colaterais no desktop
+
+Grupos de tios e primos devem adaptar a largura ao conteúdo visível:
+
+- `Tios Paternos` e `Tios Maternos` podem compactar largura para 1, 2 ou 3 colunas conforme quantidade visível;
+- `Primos Paternos` e `Primos Maternos` devem compactar para 2 colunas quando houver 2, 4 ou 5 cards, e para 3 colunas quando houver 3 ou 6 cards;
+- o container não deve manter espaço vazio lateral excessivo quando a coluna efetiva for menor que a configuração original;
+- botão local `+`/`−` só deve existir quando a expansão muda a altura útil ou revela uma linha que não cabia inicialmente;
+- se expandir apenas troca a quantidade de cards sem alterar altura útil do grupo, todos os cards devem carregar visíveis e o botão local não deve aparecer.
 
 ## Legendas
 
@@ -102,6 +132,9 @@ Antes de alterar árvore, painel ou conectores, validar:
 - redirect legado de `/minha-arvore/editar` para `/meus-dados`;
 - visualização desktop e mobile;
 - dados com pessoa central, pais, cônjuge, filhos, irmãos e pets;
+- visualização como Bianca, Charalambos e Leonardo pelo dropdown do painel;
+- ausência de duplicidade entre `Pai` e `Mãe` quando só há um vínculo parental;
+- grupos de tios e primos sem largura vazia desnecessária;
 - legenda e conectores de status conjugais.
 
 ## Regra de manutenção

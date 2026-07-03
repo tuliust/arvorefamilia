@@ -1,6 +1,6 @@
 # Regras de não regressão
 
-> Última revisão: 2026-07-02
+> Última revisão: 2026-07-03
 > Escopo: contratos que não devem ser quebrados em novas alterações, incluindo layout compartilhado mobile dos mapas.
 > Status: canônico.
 
@@ -21,6 +21,19 @@
 - `TreeMapSharedLayout`, `MobileTreeChromeContext`, `MapaFamiliarSharedRoute` e `LinhaGeracional mobileChromeMode="shared"` são parte do contrato vigente.
 - O adaptador `MapaFamiliarSharedRoute` é transição: pode esconder o shell antigo do `Home` no mobile, mas não deve afetar desktop.
 - Runtimes específicos de linha geracional podem estar montados no layout compartilhado desde que sejam isolados internamente por `pathname`, breakpoint e seletores explícitos.
+
+## Mapa familiar desktop por grupos
+
+- Em `/mapa-familiar` desktop, a alternância de pessoa pelo dropdown `Visualização` deve preservar a perspectiva via query e carregar cônjuges colaterais ocultos por padrão.
+- O botão `Todos os cônjuges` não pode ficar `disabled` em perspectiva por `?pessoa=`; deve iniciar inativo, mas permanecer clicável.
+- A UI do painel deve refletir `directRelativeFilters.conjuge` real e não um filtro efetivo artificial que force `conjuge: false`.
+- Ao trocar a pessoa de referência, é permitido reiniciar `conjuge` como inativo para a nova perspectiva.
+- `Apenas familiares` não deve voltar para a nomenclatura antiga `Apenas meus familiares`.
+- A mesma pessoa não pode ser renderizada simultaneamente como `Pai` e `Mãe`.
+- Grupos de tios e primos não podem manter largura de 4 colunas quando a quantidade visível pede 1, 2 ou 3 colunas.
+- `Primos Paternos` e `Primos Maternos` com 4 ou 5 cards devem usar largura visual de 2 colunas.
+- Espaço vazio lateral excessivo dentro de grupos colaterais é regressão visual.
+- Botão local `+`/`−` em grupos de tios ou primos só deve aparecer quando a expansão muda linhas visíveis ou altura útil; se todos os cards já cabem, eles devem carregar visíveis.
 
 ## Mapa familiar mobile
 
