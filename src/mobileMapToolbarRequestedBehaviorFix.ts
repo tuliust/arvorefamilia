@@ -96,15 +96,15 @@ function syncMobileFilterLabels() {
     const active = button.getAttribute('aria-pressed') === 'true';
 
     if (text.includes('conjuge')) {
-      setFirstLabel(button, 'Exibir todos os cônjuges');
-      button.setAttribute('aria-label', 'Exibir todos os cônjuges');
+      setFirstLabel(button, 'Todos os cônjuges');
+      button.setAttribute('aria-label', 'Todos os cônjuges');
       button.dataset.mobileFilterActive = active ? 'true' : 'false';
       return;
     }
 
     if (text.includes('familiares')) {
-      setFirstLabel(button, 'Exibir apenas meus familiares');
-      button.setAttribute('aria-label', 'Exibir apenas meus familiares');
+      setFirstLabel(button, 'Apenas familiares');
+      button.setAttribute('aria-label', 'Apenas familiares');
       button.dataset.mobileFilterActive = active ? 'true' : 'false';
     }
   });
