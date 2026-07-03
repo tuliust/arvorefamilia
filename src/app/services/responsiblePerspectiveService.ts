@@ -6,6 +6,9 @@ export type ResponsiblePerspective = {
   nomeCompleto: string;
   falecido: boolean;
   role?: string | null;
+  fotoPrincipalUrl?: string | null;
+  localAtual?: string | null;
+  dataNascimento?: string | null;
 };
 
 function readStoredPerspective(): ResponsiblePerspective | null {
@@ -23,6 +26,9 @@ function readStoredPerspective(): ResponsiblePerspective | null {
       nomeCompleto: parsed.nomeCompleto,
       falecido: parsed.falecido === true,
       role: parsed.role ?? null,
+      fotoPrincipalUrl: parsed.fotoPrincipalUrl ?? null,
+      localAtual: parsed.localAtual ?? null,
+      dataNascimento: parsed.dataNascimento ?? null,
     };
   } catch {
     return null;

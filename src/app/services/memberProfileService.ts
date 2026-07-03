@@ -3,6 +3,7 @@ import { supabase } from '../lib/supabaseClient';
 import { Pessoa, UserPersonPermissionRole } from '../types';
 import { buildActivityActorFromUser, createActivityLog } from './activityLogService';
 import { notifyNewUserLinked } from './notificationTriggersService';
+import { listManagedPeopleForResponsiblePerson } from './personResponsibleLinksService';
 import { emitTreeDataChanged } from './treeDataCache';
 
 export interface MemberProfile {
@@ -368,6 +369,52 @@ export async function getCurrentUserLinkedPeople() {
   }
 
   return listUserPersonLinksWithPessoa(authData.user.id);
+}
+
+export async function getCurrentUserEditablePeopleWithPessoa() {
+  const { data: authData, error: authError } = await supabase.auth.getUser();
+
+  if (authError || !authData.user?.id) {
+    return { error: authError?.message || 'Usuário não autenticado.', data: [] as Array<UserPersonLinkRecord & { pessoa: Pessoa | null }> };
+  }
+
+  const directLinksResult = await listUserPersonLinksWithPessoa(authData.user.id);
+
+  if (directLinksResult.error) {
+    return directLinksResult;
+  }
+
+  const directLinks = directLinksResult.data;
+  const directPessoaIds = new Set(directLinks.map((link) => link.pessoa_id));
+  const primaryLink = directLinks.find((link) => link.principal) || directLinks[0] || null;
+
+  if (!primaryLink?.pessoa_id) {
+    return { error: undefined, data: directLinks };
+  }
+
+  const managedLinksResult = await listManagedPeopleForResponsiblePerson(primaryLink.pessoa_id);
+
+  if (managedLinksResult.error) {
+    return { error: managedLinksResult.error, data: directLinks };
+  }
+
+  const managedLinks = managedLinksResult.data
+    .filter((managedLink) => !directPessoaIds.has(managedLink.managed_pessoa_id))
+    .map((managedLink) => ({
+      id: `managed:${managedLink.managed_pessoa_id}`,
+      user_id: authData.user.id,
+      pessoa_id: managedLink.managed_pessoa_id,
+      relacao_com_perfil: managedLink.responsibility_role || 'Responsável',
+      principal: false,
+      can_edit: true,
+      permission_role: 'guardian' as UserPersonPermissionRole,
+      pessoa: managedLink.managed_pessoa ?? null,
+    } as UserPersonLinkRecord & { pessoa: Pessoa | null }));
+
+  return {
+    error: undefined,
+    data: [...directLinks, ...managedLinks],
+  };
 }
 
 export async function setPrimaryLinkedPerson(userId: string, pessoaId: string) {
@@ -772,18 +819,35 @@ export async function linkUserToPerson(params: {
 }
 
 export async function updateOwnLinkedPerson(pessoaId: string, payload: EditableOwnPersonPayload) {
-  const currentLinks = await getCurrentUserLinkedPeople();
-  const currentLink = currentLinks.data.find((link) => link.pessoa_id === pessoaId);
+  const { data: authData, error: authError } = await supabase.auth.getUser();
 
-  if (currentLinks.error) {
-    return { error: currentLinks.error, data: null as Pessoa | null };
+  if (authError || !authData.user?.id) {
+    return { error: authError?.message || 'Usuário não autenticado.', data: null as Pessoa | null };
   }
 
-  if (!currentLink) {
+  const directLink = await getLinkedPersonWithPessoa(authData.user.id, pessoaId);
+
+  if (directLink.error) {
+    return { error: directLink.error, data: null as Pessoa | null };
+  }
+
+  let editableLink = directLink.data;
+
+  if (!editableLink) {
+    const editableLinks = await getCurrentUserEditablePeopleWithPessoa();
+
+    if (editableLinks.error) {
+      return { error: editableLinks.error, data: null as Pessoa | null };
+    }
+
+    editableLink = editableLinks.data.find((link) => link.pessoa_id === pessoaId) ?? null;
+  }
+
+  if (!editableLink) {
     return { error: 'Sua conta não está vinculada a esta pessoa.', data: null as Pessoa | null };
   }
 
-  if (currentLink.can_edit === false) {
+  if (editableLink.can_edit === false) {
     return { error: 'Você não tem permissão para editar este perfil.', data: null as Pessoa | null };
   }
 

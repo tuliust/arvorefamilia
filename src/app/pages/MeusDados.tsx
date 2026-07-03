@@ -44,11 +44,17 @@ import { useAuth } from '../contexts/AuthContext';
 import {
   EditableOwnPersonPayload,
   ensureMemberProfile,
-  getCurrentUserLinkedPeople,
+  getCurrentUserEditablePeopleWithPessoa,
   resolveFirstAccessLinkForUser,
   updateOwnLinkedPerson,
   UserPersonLinkRecord,
 } from '../services/memberProfileService';
+import {
+  getResponsiblePerspective,
+  setResponsiblePerspective,
+  subscribeResponsiblePerspective,
+  type ResponsiblePerspective,
+} from '../services/responsiblePerspectiveService';
 import { uploadPersonAvatarFile } from '../services/storageService';
 import { salvarPreferenciasNotificacao } from '../services/userEngagementService';
 import {
@@ -269,6 +275,7 @@ export function MeusDados() {
   const [link, setLink] = useState<(UserPersonLinkRecord & { pessoa: Pessoa | null }) | null>(null);
   const [linkedPeople, setLinkedPeople] = useState<Array<UserPersonLinkRecord & { pessoa: Pessoa | null }>>([]);
   const [selectedPessoaId, setSelectedPessoaId] = useState('');
+  const [activePerspective, setActivePerspective] = useState<ResponsiblePerspective | null>(() => getResponsiblePerspective());
   const [form, setForm] = useState<EditableOwnPersonPayload>(buildEditablePersonFormState());
   const [socialProfiles, setSocialProfiles] = useState<SocialProfileForm[]>(() => [createSocialProfile()]);
   const [errors, setErrors] = useState<PersonFieldErrors>({});
@@ -294,6 +301,18 @@ export function MeusDados() {
   const sobreMimSectionRef = useRef<HTMLElement | null>(null);
 
   useEffect(() => {
+    return subscribeResponsiblePerspective((nextPerspective) => {
+      isDirtyRef.current = false;
+      hasInitializedFormRef.current = false;
+      initializedPessoaIdRef.current = null;
+      if (!nextPerspective) {
+        setSelectedPessoaId('');
+      }
+      setActivePerspective(nextPerspective);
+    });
+  }, []);
+
+  useEffect(() => {
     let mounted = true;
 
     async function loadData() {
@@ -303,7 +322,7 @@ export function MeusDados() {
       loadedQuestionnaireHashRef.current = null;
       loadedLastGeneratedHashRef.current = null;
       await resolveFirstAccessLinkForUser(user);
-      const { data: linksData, error } = await getCurrentUserLinkedPeople();
+      const { data: linksData, error } = await getCurrentUserEditablePeopleWithPessoa();
 
       if (!mounted) return;
 
@@ -314,7 +333,13 @@ export function MeusDados() {
       }
 
       setLinkedPeople(linksData);
+      const storedPerspective = getResponsiblePerspective();
+      const perspectivePessoaId = activePerspective?.pessoaId || storedPerspective?.pessoaId || '';
       const selectedLink = (
+        perspectivePessoaId
+          ? linksData.find((item) => item.pessoa_id === perspectivePessoaId)
+          : null
+      ) || (
         selectedPessoaId
           ? linksData.find((item) => item.pessoa_id === selectedPessoaId)
           : null
@@ -407,7 +432,7 @@ export function MeusDados() {
     return () => {
       mounted = false;
     };
-  }, [selectedPessoaId, user]);
+  }, [activePerspective?.pessoaId, selectedPessoaId, user]);
 
   useEffect(() => {
     return () => {
@@ -941,6 +966,24 @@ export function MeusDados() {
         setSaving(false);
         toast.error(profileError);
         return;
+      }
+    }
+
+    if (updatedPessoa) {
+      setLink((current) => current ? { ...current, pessoa: updatedPessoa } : current);
+      setLinkedPeople((current) => current.map((item) => (
+        item.pessoa_id === updatedPessoa.id ? { ...item, pessoa: updatedPessoa } : item
+      )));
+
+      if (activePerspective?.pessoaId === updatedPessoa.id) {
+        setResponsiblePerspective({
+          ...activePerspective,
+          nomeCompleto: updatedPessoa.nome_completo,
+          falecido: updatedPessoa.falecido === true,
+          fotoPrincipalUrl: updatedPessoa.foto_principal_url ?? null,
+          localAtual: updatedPessoa.local_atual ?? null,
+          dataNascimento: updatedPessoa.data_nascimento == null ? null : String(updatedPessoa.data_nascimento),
+        });
       }
     }
 

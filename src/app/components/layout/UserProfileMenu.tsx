@@ -193,9 +193,18 @@ export function UserProfileMenu({ variant = 'avatar' }: UserProfileMenuProps) {
     };
   }, [open]);
 
+  const activeDisplayPerson = activePerspective
+    ? {
+        nomeCompleto: activePerspective.nomeCompleto,
+        fotoPrincipalUrl: activePerspective.fotoPrincipalUrl ?? '',
+      }
+    : {
+        nomeCompleto: linkedPerson?.nome_completo ?? '',
+        fotoPrincipalUrl: linkedPerson?.foto_principal_url ?? '',
+      };
+
   const displayName = String(
-    activePerspective?.nomeCompleto ||
-    linkedPerson?.nome_completo ||
+    activeDisplayPerson.nomeCompleto ||
     profile?.nome_exibicao ||
     user?.user_metadata?.nome_exibicao ||
     user?.user_metadata?.name ||
@@ -206,7 +215,7 @@ export function UserProfileMenu({ variant = 'avatar' }: UserProfileMenuProps) {
 
   const firstName = getFirstName(displayName);
   const menuDisplayName = getFirstTwoNames(displayName);
-  const avatarUrl = String(linkedPerson?.foto_principal_url || profile?.avatar_url || user?.user_metadata?.avatar_url || user?.user_metadata?.picture || '').trim();
+  const avatarUrl = String(activeDisplayPerson.fotoPrincipalUrl || profile?.avatar_url || user?.user_metadata?.avatar_url || user?.user_metadata?.picture || '').trim();
   const initials = getInitials(displayName);
 
   useEffect(() => {
@@ -271,6 +280,9 @@ export function UserProfileMenu({ variant = 'avatar' }: UserProfileMenuProps) {
       nomeCompleto: selectedPerson.nome_completo,
       falecido: isPersonDeceased(selectedPerson),
       role: selectedLink.responsibility_role ?? null,
+      fotoPrincipalUrl: selectedPerson.foto_principal_url ?? null,
+      localAtual: selectedPerson.local_atual ?? null,
+      dataNascimento: selectedPerson.data_nascimento == null ? null : String(selectedPerson.data_nascimento),
     };
 
     setResponsiblePerspective(nextPerspective);
@@ -456,7 +468,10 @@ export function UserProfileMenu({ variant = 'avatar' }: UserProfileMenuProps) {
                   </div>
                 </div>
 
-                <button type="button" className={itemClassName} onClick={() => goTo('/mapa-familiar')}>
+                <button type="button" className={itemClassName} onClick={() => {
+                  setOpen(false);
+                  navigateToPerspectiveTree(activePerspective?.pessoaId);
+                }}>
                   <Home className="h-5 w-5 text-blue-700" />
                   Home
                 </button>
