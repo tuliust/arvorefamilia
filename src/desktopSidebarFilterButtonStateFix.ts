@@ -22,8 +22,10 @@ function isSpouseScopeButton(button: HTMLButtonElement) {
 
   return label.includes('conjuges de tios')
     || label.includes('conjuges de primos')
+    || label.includes('todos os conjuges')
     || ariaLabel.includes('conjuges de tios')
-    || ariaLabel.includes('conjuges de primos');
+    || ariaLabel.includes('conjuges de primos')
+    || ariaLabel.includes('todos os conjuges');
 }
 
 function isFamilyScopeButton(button: HTMLButtonElement) {
@@ -43,18 +45,23 @@ function setButtonText(button: HTMLButtonElement, value: string) {
 }
 
 function applySpouseButtonState(button: HTMLButtonElement) {
-  const label = normalizeText(button.textContent);
-  const ariaPressed = button.getAttribute('aria-pressed') === 'true';
-  const isHideAction = label.includes('ocultar conjuges') || ariaPressed;
+  const active = button.getAttribute('aria-pressed') === 'true'
+    || button.dataset.active === 'true';
 
   button.dataset.sidebarFilterOption = 'extended-spouses';
-  button.dataset.sidebarFilterVisualActive = isHideAction ? 'false' : 'true';
+  button.dataset.sidebarFilterVisualActive = active ? 'true' : 'false';
+  setButtonText(button, 'Exibir todos os cônjuges');
+  button.setAttribute('aria-label', 'Exibir todos os cônjuges');
+  button.setAttribute('title', 'Exibir todos os cônjuges');
 }
 
 function applyFamilyScopeButtonState(button: HTMLButtonElement) {
   const isHorizontalMap = getCurrentPath() === HORIZONTAL_FAMILY_MAP_PATH;
 
   button.dataset.sidebarFilterOption = 'family-scope';
+  setButtonText(button, 'Exibir apenas meus familiares');
+  button.setAttribute('aria-label', 'Exibir apenas meus familiares');
+  button.setAttribute('title', isHorizontalMap ? 'Exibir apenas meus familiares' : 'Disponível na Linha Geracional');
 
   if (!isHorizontalMap || button.disabled) {
     button.dataset.sidebarFilterVisualActive = 'false';
@@ -63,15 +70,8 @@ function applyFamilyScopeButtonState(button: HTMLButtonElement) {
 
   const directFamilyOnly = button.getAttribute('aria-pressed') === 'true'
     || button.dataset.active === 'true';
-  const nextLabel = directFamilyOnly ? 'Todas as pessoas' : 'Apenas meus familiares';
-  const nextTitle = directFamilyOnly
-    ? 'Exibir todas as pessoas cadastradas'
-    : 'Mostrar apenas meus familiares';
 
-  setButtonText(button, nextLabel);
-  button.dataset.sidebarFilterVisualActive = directFamilyOnly ? 'false' : 'true';
-  button.setAttribute('aria-label', nextTitle);
-  button.setAttribute('title', nextTitle);
+  button.dataset.sidebarFilterVisualActive = directFamilyOnly ? 'true' : 'false';
 }
 
 function applyButtonStates() {
