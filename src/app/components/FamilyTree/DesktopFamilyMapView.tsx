@@ -357,6 +357,14 @@ function getVisiblePeople(group: ComposedGroup, config: GroupConfig, expanded: b
 
 function getAdaptiveGroupColumns(config: GroupConfig, visiblePeople: Pessoa[]): GroupColumns {
   if (!ADAPTIVE_COLLATERAL_GROUP_IDS.has(config.id)) return config.columns;
+
+  const isCousinsGroup = config.id === 'paternalCousins' || config.id === 'maternalCousins';
+  if (isCousinsGroup) {
+    if (visiblePeople.length === 2 || visiblePeople.length === 4 || visiblePeople.length === 5) return 'double';
+    if (visiblePeople.length === 3 || visiblePeople.length === 6) return 'triple';
+    return config.columns;
+  }
+
   if (visiblePeople.length === 2) return 'double';
   if (visiblePeople.length === 3 || visiblePeople.length === 6) return 'triple';
 
@@ -387,11 +395,9 @@ function getAdaptiveGroupWidth(config: GroupConfig, peopleCount: number, columns
 
   if (peopleCount === 1 && config.singleWidth) return Math.min(config.width, config.singleWidth);
 
-  if (ADAPTIVE_COLLATERAL_GROUP_IDS.has(config.id) && peopleCount === 2) {
-    return Math.min(config.width, getCompactGroupWidth(config, 2, layout));
+  if (!ADAPTIVE_COLLATERAL_GROUP_IDS.has(config.id) || columns === config.columns) {
+    return config.width;
   }
-
-  if (!ADAPTIVE_COLLATERAL_GROUP_IDS.has(config.id) || columns !== 'triple') return config.width;
 
   return Math.min(config.width, getCompactGroupWidth(config, getColumnCount(columns), layout));
 }
