@@ -99,6 +99,7 @@ import {
 } from '../utils/personFields';
 
 const AVATAR_SIZE = 512;
+const RESET_QUESTIONNAIRE_EVENT = 'meus-dados:questionnaire-reset';
 // TODO: Migrar blocos simples para os componentes compartilhados de pessoa sem afetar avatar/crop, Places e primeiro acesso.
 
 type MeusDadosDraft = {
@@ -532,6 +533,20 @@ export function MeusDados() {
     });
   };
 
+  useEffect(() => {
+    const handleQuestionnaireReset = () => {
+      setAiError(null);
+      setAiStep(0);
+      scrollSobreMimToTop();
+    };
+
+    window.addEventListener(RESET_QUESTIONNAIRE_EVENT, handleQuestionnaireReset);
+
+    return () => {
+      window.removeEventListener(RESET_QUESTIONNAIRE_EVENT, handleQuestionnaireReset);
+    };
+  }, []);
+
   const updateAiTone = (tone: AiTone) => {
     markQuestionnaireDirty();
     setAiTone(tone);
@@ -794,6 +809,7 @@ export function MeusDados() {
     }
 
     if (validationError && !requireMinimum) {
+      setAiError(null);
       return { ok: true, skipped: true };
     }
 
@@ -837,7 +853,7 @@ export function MeusDados() {
   };
 
   const handleQuestionnaireFinish = async () => {
-    const questionnaireSave = await saveProfileQuestionnaire({ requireMinimum: isOnboarding, quiet: false });
+    const questionnaireSave = await saveProfileQuestionnaire({ requireMinimum: false, quiet: true });
 
     if (!questionnaireSave.ok) {
       toast.error(questionnaireSave.error || 'Não foi possível finalizar o questionário.');
@@ -845,6 +861,7 @@ export function MeusDados() {
       return;
     }
 
+    setAiError(null);
     window.dispatchEvent(new CustomEvent('meus-dados:questionnaire-finished'));
     scrollSobreMimToTop();
   };
@@ -866,23 +883,11 @@ export function MeusDados() {
       return;
     }
 
-    const questionnaireValidationError = isOnboarding ? validateQuestionnaire() : null;
-    if (questionnaireValidationError) {
-      setAiError(questionnaireValidationError);
-      toast.error(questionnaireValidationError);
-      return;
-    }
-
+    setAiError(null);
     setSaving(true);
 
-    const questionnaireSave = await saveProfileQuestionnaire({ requireMinimum: isOnboarding, quiet: !isOnboarding });
-    if (!questionnaireSave.ok && isOnboarding) {
-      setSaving(false);
-      toast.error(questionnaireSave.error || 'Não foi possível salvar o questionário.');
-      return;
-    }
-
-    if (!questionnaireSave.ok && !isOnboarding) {
+    const questionnaireSave = await saveProfileQuestionnaire({ requireMinimum: false, quiet: true });
+    if (!questionnaireSave.ok) {
       toast.warning(questionnaireSave.error || 'Dados pessoais serão salvos, mas o questionário de perfil não foi atualizado.');
     }
 
