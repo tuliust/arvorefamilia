@@ -15,11 +15,15 @@ import { Switch } from '../components/ui/switch';
 import { useAuth } from '../contexts/AuthContext';
 import { salvarPreferenciasNotificacao } from '../services/userEngagementService';
 import {
-  getPrimaryLinkedPersonWithPessoa,
+  getCurrentActiveEditablePersonWithPessoa,
   resolveFirstAccessLinkForUser,
   updateOwnLinkedPerson,
   UserPersonLinkRecord,
 } from '../services/memberProfileService';
+import {
+  getResponsiblePerspective,
+  subscribeResponsiblePerspective,
+} from '../services/responsiblePerspectiveService';
 import { Pessoa } from '../types';
 
 type PrivacyState = {
@@ -54,6 +58,13 @@ export function PreferenciasPage() {
   const [privacy, setPrivacy] = useState<PrivacyState | null>(null);
   const [loading, setLoading] = useState(true);
   const [savingPrivacy, setSavingPrivacy] = useState(false);
+  const [perspectiveRevision, setPerspectiveRevision] = useState(0);
+
+  useEffect(() => {
+    return subscribeResponsiblePerspective(() => {
+      setPerspectiveRevision((current) => current + 1);
+    });
+  }, []);
 
   useEffect(() => {
     let mounted = true;
@@ -63,7 +74,7 @@ export function PreferenciasPage() {
 
       setLoading(true);
       await resolveFirstAccessLinkForUser(user);
-      const { data, error } = await getPrimaryLinkedPersonWithPessoa(user.id);
+      const { data, error } = await getCurrentActiveEditablePersonWithPessoa();
 
       if (!mounted) return;
 
@@ -74,11 +85,13 @@ export function PreferenciasPage() {
       }
 
       const pessoa = data.pessoa;
+      let effectivePessoa = pessoa;
 
       const isOnboardingLink = data.dados_confirmados === false;
+      const hasManagedPerspective = Boolean(getResponsiblePerspective()?.pessoaId);
 
       if (pessoa.falecido === true) {
-        await updateOwnLinkedPerson(pessoa.id, {
+        const deceasedPrivacyResult = await updateOwnLinkedPerson(pessoa.id, {
           permitir_exibir_data_nascimento: true,
           permitir_exibir_telefone: true,
           permitir_exibir_endereco: true,
@@ -86,32 +99,43 @@ export function PreferenciasPage() {
           permitir_exibir_instagram: true,
           permitir_mensagens_whatsapp: false,
         });
-        await salvarPreferenciasNotificacao(user.id, {
-          receber_aniversarios: false,
-          receber_datas_memoria: false,
-          receber_eventos: false,
-          receber_avisos_gerais: false,
-          receber_email: false,
-          receber_push: false,
-          receber_whatsapp: false,
-          receber_email_novo_usuario: false,
-          receber_email_datas_especiais: false,
-          receber_email_novas_mensagens_forum: false,
-          receber_email_novos_registros_historicos: false,
-          receber_email_evento_historico_familia: false,
-        });
-        if (mounted) navigate(isOnboardingLink ? '/revisao-dados' : '/meus-dados', { replace: true });
-        return;
+        effectivePessoa = deceasedPrivacyResult.data ?? {
+          ...pessoa,
+          permitir_exibir_data_nascimento: true,
+          permitir_exibir_telefone: true,
+          permitir_exibir_endereco: true,
+          permitir_exibir_rede_social: true,
+          permitir_exibir_instagram: true,
+          permitir_mensagens_whatsapp: false,
+        };
+        if (!hasManagedPerspective) {
+          await salvarPreferenciasNotificacao(user.id, {
+            receber_aniversarios: false,
+            receber_datas_memoria: false,
+            receber_eventos: false,
+            receber_avisos_gerais: false,
+            receber_email: false,
+            receber_push: false,
+            receber_whatsapp: false,
+            receber_email_novo_usuario: false,
+            receber_email_datas_especiais: false,
+            receber_email_novas_mensagens_forum: false,
+            receber_email_novos_registros_historicos: false,
+            receber_email_evento_historico_familia: false,
+          });
+          if (mounted) navigate(isOnboardingLink ? '/revisao-dados' : '/meus-dados', { replace: true });
+          return;
+        }
       }
 
-      setLink(data);
+      setLink({ ...data, pessoa: effectivePessoa });
       setPrivacy({
-        permitir_exibir_data_nascimento: pessoa.permitir_exibir_data_nascimento !== false,
-        permitir_exibir_telefone: pessoa.permitir_exibir_telefone !== false,
-        permitir_exibir_endereco: pessoa.permitir_exibir_endereco !== false,
+        permitir_exibir_data_nascimento: effectivePessoa.permitir_exibir_data_nascimento !== false,
+        permitir_exibir_telefone: effectivePessoa.permitir_exibir_telefone !== false,
+        permitir_exibir_endereco: effectivePessoa.permitir_exibir_endereco !== false,
         permitir_exibir_rede_social:
-          pessoa.permitir_exibir_rede_social !== false && pessoa.permitir_exibir_instagram !== false,
-        permitir_mensagens_whatsapp: pessoa.permitir_mensagens_whatsapp !== false,
+          effectivePessoa.permitir_exibir_rede_social !== false && effectivePessoa.permitir_exibir_instagram !== false,
+        permitir_mensagens_whatsapp: effectivePessoa.permitir_mensagens_whatsapp !== false,
       });
       setLoading(false);
     }
@@ -121,10 +145,11 @@ export function PreferenciasPage() {
     return () => {
       mounted = false;
     };
-  }, [user]);
+  }, [perspectiveRevision, user]);
 
   const pessoa = link?.pessoa;
   const isOnboarding = link?.dados_confirmados === false;
+  const isManagedPerspective = Boolean(getResponsiblePerspective()?.pessoaId && link?.principal === false);
 
   const handleSavePrivacy = async () => {
     if (!pessoa?.id || !privacy) return false;
@@ -181,7 +206,7 @@ export function PreferenciasPage() {
     <div className="min-h-screen bg-gray-50">
       <MemberPageHeader
         title="Preferências"
-        subtitle={isOnboarding ? 'Etapa 4 de 5: configure notificações e permissões de exibição.' : 'Atualize notificações e permissões de exibição do seu perfil.'}
+        subtitle={isOnboarding ? 'Etapa 4 de 5: configure notificações e permissões de exibição.' : isManagedPerspective ? `Atualize permissões de exibição do perfil gerenciado de ${pessoa.nome_completo}.` : 'Atualize notificações e permissões de exibição do seu perfil.'}
         icon={Settings}
         hideHeaderActions={isOnboarding}
         hideMobileHeaderActions={isOnboarding}

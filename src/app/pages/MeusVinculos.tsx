@@ -42,12 +42,17 @@ import {
   findPendingDuplicateRelationshipChangeRequest,
 } from '../services/relationshipChangeRequestService';
 import {
-  getCurrentUserLinkedPeople,
+  getCurrentUserEditablePeopleWithPessoa,
   getLinkedPersonIds,
   resolveFirstAccessLinkForUser,
   searchPeopleForRelationship,
   UserPersonLinkRecord,
 } from '../services/memberProfileService';
+import {
+  getResponsiblePerspective,
+  subscribeResponsiblePerspective,
+  type ResponsiblePerspective,
+} from '../services/responsiblePerspectiveService';
 import { Pessoa, Relacionamento } from '../types';
 import { createProfileControlRequest, listMyProfileControlRequests } from '../services/profileControlRequestService';
 import { isPersonDeceased, maskBirthDate, normalizeBirthDate, normalizeLocationByMode, validateLocationByMode } from '../utils/personFields';
@@ -302,6 +307,7 @@ export function MeusVinculos() {
   const [link, setLink] = useState<(UserPersonLinkRecord & { pessoa: Pessoa | null }) | null>(null);
   const [linkedPeople, setLinkedPeople] = useState<Array<UserPersonLinkRecord & { pessoa: Pessoa | null }>>([]);
   const [selectedPessoaId, setSelectedPessoaId] = useState('');
+  const [activePerspective, setActivePerspective] = useState<ResponsiblePerspective | null>(() => getResponsiblePerspective());
   const [relationships, setRelationships] = useState<RelationshipGroups>(EMPTY_GROUPS);
   const [initialRelationships, setInitialRelationships] = useState<RelationshipGroups>(EMPTY_GROUPS);
   const [allRelacionamentos, setAllRelacionamentos] = useState<Relacionamento[]>([]);
@@ -342,6 +348,17 @@ export function MeusVinculos() {
 
   const pessoa = link?.pessoa;
   const isOnboarding = link?.dados_confirmados === false;
+
+  useEffect(() => {
+    return subscribeResponsiblePerspective((nextPerspective) => {
+      draftHydratedRef.current = false;
+      draftDirtyRef.current = false;
+      if (!nextPerspective) {
+        setSelectedPessoaId('');
+      }
+      setActivePerspective(nextPerspective);
+    });
+  }, []);
 
   async function reloadRelationships(pessoaId: string) {
     const [nextRelationships, nextAllRelationships] = await Promise.all([
@@ -389,7 +406,7 @@ export function MeusVinculos() {
       draftHydratedRef.current = false;
       draftDirtyRef.current = false;
       await resolveFirstAccessLinkForUser(user);
-      const { data: linksData, error } = await getCurrentUserLinkedPeople();
+      const { data: linksData, error } = await getCurrentUserEditablePeopleWithPessoa();
 
       if (!mounted) return;
 
@@ -400,7 +417,13 @@ export function MeusVinculos() {
       }
 
       setLinkedPeople(linksData);
+      const storedPerspective = getResponsiblePerspective();
+      const perspectivePessoaId = activePerspective?.pessoaId || storedPerspective?.pessoaId || '';
       const selectedLink = (
+        perspectivePessoaId
+          ? linksData.find((item) => item.pessoa_id === perspectivePessoaId)
+          : null
+      ) || (
         selectedPessoaId
           ? linksData.find((item) => item.pessoa_id === selectedPessoaId)
           : null
@@ -470,7 +493,7 @@ export function MeusVinculos() {
     return () => {
       mounted = false;
     };
-  }, [selectedPessoaId, user]);
+  }, [activePerspective?.pessoaId, selectedPessoaId, user]);
 
   useEffect(() => {
     if (!user?.id || !pessoa?.id || !draftHydratedRef.current || !draftDirtyRef.current) return;

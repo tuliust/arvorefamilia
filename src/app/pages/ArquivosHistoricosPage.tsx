@@ -18,10 +18,11 @@ import {
   substituirArquivosHistoricosDaPessoa,
 } from '../services/arquivosHistoricosService';
 import {
-  getPrimaryLinkedPersonWithPessoa,
+  getCurrentActiveEditablePersonWithPessoa,
   resolveFirstAccessLinkForUser,
   UserPersonLinkRecord,
 } from '../services/memberProfileService';
+import { subscribeResponsiblePerspective } from '../services/responsiblePerspectiveService';
 import { ArquivoHistorico, Pessoa } from '../types';
 
 function getArquivosHistoricosDraftKey(userId: string, pessoaId: string) {
@@ -68,6 +69,13 @@ export function ArquivosHistoricosPage() {
   const [saving, setSaving] = useState(false);
   const [draftHydrated, setDraftHydrated] = useState(false);
   const [availablePeople, setAvailablePeople] = useState<Pessoa[]>([]);
+  const [perspectiveRevision, setPerspectiveRevision] = useState(0);
+
+  useEffect(() => {
+    return subscribeResponsiblePerspective(() => {
+      setPerspectiveRevision((current) => current + 1);
+    });
+  }, []);
 
   useEffect(() => {
     let mounted = true;
@@ -78,7 +86,7 @@ export function ArquivosHistoricosPage() {
       setLoading(true);
       setDraftHydrated(false);
       await resolveFirstAccessLinkForUser(user);
-      const { data, error } = await getPrimaryLinkedPersonWithPessoa(user.id);
+      const { data, error } = await getCurrentActiveEditablePersonWithPessoa();
 
       if (!mounted) return;
 
@@ -118,7 +126,7 @@ export function ArquivosHistoricosPage() {
     return () => {
       mounted = false;
     };
-  }, [user]);
+  }, [perspectiveRevision, user]);
 
   const pessoa = link?.pessoa;
   const isOnboarding = link?.dados_confirmados === false;

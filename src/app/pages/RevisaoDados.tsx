@@ -33,11 +33,16 @@ import { listarArquivosHistoricosPorPessoa } from '../services/arquivosHistorico
 import {
   confirmOwnLinkedPersonData,
   EditableOwnPersonPayload,
-  getPrimaryLinkedPersonWithPessoa,
+  getCurrentActiveEditablePersonWithPessoa,
   resolveFirstAccessLinkForUser,
   updateOwnLinkedPerson,
   UserPersonLinkRecord,
 } from '../services/memberProfileService';
+import {
+  getResponsiblePerspective,
+  subscribeResponsiblePerspective,
+  type ResponsiblePerspective,
+} from '../services/responsiblePerspectiveService';
 import {
   buildSocialProfilesFromRows,
   listarPessoaSocialProfiles,
@@ -302,6 +307,11 @@ export function RevisaoDados() {
   const [loading, setLoading] = useState(true);
   const [savingSection, setSavingSection] = useState<ReviewSectionId | null>(null);
   const [finishing, setFinishing] = useState(false);
+  const [activePerspective, setActivePerspective] = useState<ResponsiblePerspective | null>(() => getResponsiblePerspective());
+
+  useEffect(() => {
+    return subscribeResponsiblePerspective(setActivePerspective);
+  }, []);
 
   useEffect(() => {
     let mounted = true;
@@ -310,7 +320,7 @@ export function RevisaoDados() {
       if (!user) return;
       setLoading(true);
       await resolveFirstAccessLinkForUser(user);
-      const { data, error } = await getPrimaryLinkedPersonWithPessoa(user.id);
+      const { data, error } = await getCurrentActiveEditablePersonWithPessoa();
       if (!mounted) return;
       if (error || !data?.pessoa) {
         toast.error(error || 'Não foi possível carregar seus dados.');
@@ -318,7 +328,7 @@ export function RevisaoDados() {
         return;
       }
 
-      if (data.dados_confirmados !== false) {
+      if (!activePerspective?.pessoaId && data.dados_confirmados !== false) {
         navigate('/meus-dados', { replace: true });
         return;
       }
@@ -346,9 +356,11 @@ export function RevisaoDados() {
     return () => {
       mounted = false;
     };
-  }, [user]);
+  }, [activePerspective?.pessoaId, user]);
 
   const pessoa = link?.pessoa;
+  const isManagedPerspective = Boolean(activePerspective?.pessoaId);
+  const isOnboarding = link?.dados_confirmados === false && !isManagedPerspective;
 
   const relationshipSummary = useMemo(() => {
     const currentParents = uniquePeople([...relationships.pais, ...relationships.maes]);
@@ -471,10 +483,12 @@ export function RevisaoDados() {
     if (!link?.id || !pessoa?.id || !user?.id) return;
     setFinishing(true);
     try {
-      const { error } = await confirmOwnLinkedPersonData(link.id);
-      if (error) throw new Error(error);
+      if (!isManagedPerspective) {
+        const { error } = await confirmOwnLinkedPersonData(link.id);
+        if (error) throw new Error(error);
+      }
       window.sessionStorage.removeItem(getMeusVinculosDraftKey(user.id, pessoa.id));
-      navigate('/mapa-familiar', { replace: true });
+      navigate(isManagedPerspective ? `/mapa-familiar?pessoa=${pessoa.id}` : '/mapa-familiar', { replace: true });
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Não foi possível finalizar a revisão.');
     } finally {
@@ -512,15 +526,15 @@ export function RevisaoDados() {
   return (
     <div className="min-h-screen bg-gray-50">
       <MemberPageHeader
-        title="Revisão final"
-        subtitle="Etapa 5 de 5: confira e ajuste seus dados antes de acessar a árvore."
+        title={isOnboarding ? 'Revisão final' : 'Revisão de dados'}
+        subtitle={isOnboarding ? 'Etapa 5 de 5: confira e ajuste seus dados antes de acessar a árvore.' : `Confira e ajuste os dados de ${pessoa.nome_completo}.`}
         icon={ClipboardCheck}
-        hideHeaderActions
-        hideMobileHeaderActions
-        hideMobileBottomNav
+        hideHeaderActions={isOnboarding}
+        hideMobileHeaderActions={isOnboarding}
+        hideMobileBottomNav={isOnboarding}
       />
 
-      <MemberOnboardingSteps activeStep={5} hidePreferences={pessoa.falecido === true} />
+      {isOnboarding && <MemberOnboardingSteps activeStep={5} hidePreferences={pessoa.falecido === true} />}
 
       <main className={`${PAGE_CONTAINER_CLASS} space-y-6 py-6 pb-[calc(7rem+env(safe-area-inset-bottom))] md:pb-6`}>
         <Card className="border-gray-200 bg-white shadow-sm">

@@ -1,4 +1,5 @@
-import { confirmOwnLinkedPersonData, getCurrentUserLinkedPeople, updateOwnLinkedPerson, type EditableOwnPersonPayload } from './app/services/memberProfileService';
+import { confirmOwnLinkedPersonData, getCurrentActiveEditablePersonWithPessoa, updateOwnLinkedPerson, type EditableOwnPersonPayload } from './app/services/memberProfileService';
+import { getResponsiblePerspective } from './app/services/responsiblePerspectiveService';
 
 const PROFILE_RESULT_HOST_ID = 'meus-dados-profile-bio-result-host';
 
@@ -31,16 +32,16 @@ function buildProfileTextPayload(): EditableOwnPersonPayload {
 
 async function syncFirstAccessConfirmation() {
   if (pendingSync || !isMeusDadosPage() || !isProfileResultVisible()) return;
+  if (getResponsiblePerspective()?.pessoaId) return;
   pendingSync = true;
 
   try {
-    const links = await getCurrentUserLinkedPeople();
-    if (links.error) throw new Error(links.error);
+    const result = await getCurrentActiveEditablePersonWithPessoa();
+    if (result.error) throw new Error(result.error);
 
     const selectedPessoaId = (document.getElementById('linked-profile-selector') as HTMLSelectElement | null)?.value;
-    const link = (selectedPessoaId ? links.data.find((item) => item.pessoa_id === selectedPessoaId) : null)
-      || links.data.find((item) => item.principal)
-      || links.data[0];
+    const link = (selectedPessoaId ? result.people.find((item) => item.pessoa_id === selectedPessoaId) : null)
+      || result.data;
 
     if (!link?.id || !link.pessoa_id || link.can_edit === false) return;
 

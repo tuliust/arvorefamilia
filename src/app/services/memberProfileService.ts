@@ -4,6 +4,7 @@ import { Pessoa, UserPersonPermissionRole } from '../types';
 import { buildActivityActorFromUser, createActivityLog } from './activityLogService';
 import { notifyNewUserLinked } from './notificationTriggersService';
 import { listManagedPeopleForResponsiblePerson } from './personResponsibleLinksService';
+import { getResponsiblePerspective } from './responsiblePerspectiveService';
 import { emitTreeDataChanged } from './treeDataCache';
 
 export interface MemberProfile {
@@ -414,6 +415,42 @@ export async function getCurrentUserEditablePeopleWithPessoa() {
   return {
     error: undefined,
     data: [...directLinks, ...managedLinks],
+  };
+}
+
+export async function getCurrentActiveEditablePersonWithPessoa() {
+  const { data: authData, error: authError } = await supabase.auth.getUser();
+
+  if (authError || !authData.user?.id) {
+    return {
+      error: authError?.message || 'Usuário não autenticado.',
+      data: null as (UserPersonLinkRecord & { pessoa: Pessoa | null }) | null,
+      people: [] as Array<UserPersonLinkRecord & { pessoa: Pessoa | null }>,
+    };
+  }
+
+  const editablePeopleResult = await getCurrentUserEditablePeopleWithPessoa();
+
+  if (editablePeopleResult.error) {
+    return {
+      error: editablePeopleResult.error,
+      data: null as (UserPersonLinkRecord & { pessoa: Pessoa | null }) | null,
+      people: editablePeopleResult.data,
+    };
+  }
+
+  const editablePeople = editablePeopleResult.data;
+  const activePerspective = getResponsiblePerspective();
+  const activeLink = (
+    activePerspective?.pessoaId
+      ? editablePeople.find((link) => link.pessoa_id === activePerspective.pessoaId)
+      : null
+  ) || editablePeople.find((link) => link.principal) || editablePeople[0] || null;
+
+  return {
+    error: undefined,
+    data: activeLink,
+    people: editablePeople,
   };
 }
 

@@ -1,5 +1,5 @@
 import { listarArquivosHistoricosPorPessoa } from './app/services/arquivosHistoricosService';
-import { getCurrentUserLinkedPeople } from './app/services/memberProfileService';
+import { getCurrentActiveEditablePersonWithPessoa } from './app/services/memberProfileService';
 import type { ArquivoHistorico } from './app/types';
 
 const PAGE_PATH = '/revisao-dados';
@@ -215,10 +215,10 @@ async function syncHistoricalArchives() {
 
   archiveRenderInFlight = true;
   try {
-    const links = await getCurrentUserLinkedPeople();
-    if (links.error) return;
+    const result = await getCurrentActiveEditablePersonWithPessoa();
+    if (result.error) return;
 
-    const link = links.data.find((item) => item.principal) || links.data[0];
+    const link = result.data;
     if (!link?.pessoa_id) return;
 
     const userId = link.user_id;
