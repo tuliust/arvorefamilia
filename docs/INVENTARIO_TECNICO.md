@@ -286,7 +286,7 @@ Revisão de segurança recomendada: substituir leitura ampla de `user_person_lin
 ```bash
 git status --short
 git diff --check
-grep -R $'\xEF\xBF\xBD' docs || true
+grep -R --include='*.md' --include='*.txt' --include='*.json' --include='*.sql' $'\xEF\xBF\xBD' docs || true
 npm run typecheck
 npm run build
 npm test
@@ -298,8 +298,10 @@ npm test
 git status --short
 git diff --check
 
-# Busca o caractere de substituição Unicode U+FFFD em docs/.
-Get-ChildItem .\docs -Recurse -File | Select-String -SimpleMatch ([char]0xFFFD)
+# Busca o caractere de substituição Unicode U+FFFD apenas em arquivos textuais.
+Get-ChildItem -Path .\docs -Recurse -File |
+  Where-Object { $_.Extension -in ".md", ".txt", ".json", ".sql" } |
+  Select-String -SimpleMatch ([char]0xFFFD)
 
 npm run typecheck
 npm run build

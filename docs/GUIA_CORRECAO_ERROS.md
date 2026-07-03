@@ -135,6 +135,8 @@ O único resultado esperado na varredura textual pode ser `src/app/components/ui
 
 ### Ação em PowerShell
 
+A busca deve se limitar a arquivos textuais para evitar que imagens, PDFs ou outros binários sejam interpretados como texto.
+
 ```powershell
 Select-String -Path (Get-ChildItem .\src -Recurse -File -Include *.ts,*.tsx) `
   -Pattern "\b(?:window\.)?confirm\s*\(|\b(?:window\.)?alert\s*\(|\b(?:window\.)?prompt\s*\(" |
@@ -158,13 +160,17 @@ Aparecem sequências de texto corrompido em arquivos de `docs/`, especialmente o
 ### Ação em Bash/Git Bash
 
 ```bash
-grep -R $'\xEF\xBF\xBD' docs || true
+grep -R --include='*.md' --include='*.txt' --include='*.json' --include='*.sql' $'\xEF\xBF\xBD' docs || true
 ```
 
 ### Ação em PowerShell
 
+A busca deve se limitar a arquivos textuais para evitar que imagens, PDFs ou outros binários sejam interpretados como texto.
+
 ```powershell
-Get-ChildItem .\docs -Recurse -File | Select-String -SimpleMatch ([char]0xFFFD)
+Get-ChildItem -Path .\docs -Recurse -File |
+  Where-Object { $_.Extension -in ".md", ".txt", ".json", ".sql" } |
+  Select-String -SimpleMatch ([char]0xFFFD)
 ```
 
 Se houver resultado:
@@ -195,14 +201,16 @@ Windows PowerShell 5.x não entende essa sintaxe.
 
 ### Ação
 
-Use comandos separados ou equivalentes PowerShell:
+Use comandos separados ou equivalentes PowerShell, restringindo a busca de mojibake a arquivos textuais:
 
 ```powershell
 git status --short
 git diff --check
 
-# Busca o caractere de substituição Unicode U+FFFD em docs/.
-Get-ChildItem .\docs -Recurse -File | Select-String -SimpleMatch ([char]0xFFFD)
+# Busca o caractere de substituição Unicode U+FFFD apenas em arquivos textuais.
+Get-ChildItem -Path .\docs -Recurse -File |
+  Where-Object { $_.Extension -in ".md", ".txt", ".json", ".sql" } |
+  Select-String -SimpleMatch ([char]0xFFFD)
 
 npm run typecheck
 npm run build
@@ -246,7 +254,7 @@ npm test
 ```bash
 git status --short
 git diff --check
-grep -R $'\xEF\xBF\xBD' docs || true
+grep -R --include='*.md' --include='*.txt' --include='*.json' --include='*.sql' $'\xEF\xBF\xBD' docs || true
 npm run typecheck
 npm run build
 npm test
@@ -258,8 +266,10 @@ npm test
 git status --short
 git diff --check
 
-# Busca o caractere de substituição Unicode U+FFFD em docs/.
-Get-ChildItem .\docs -Recurse -File | Select-String -SimpleMatch ([char]0xFFFD)
+# Busca o caractere de substituição Unicode U+FFFD apenas em arquivos textuais.
+Get-ChildItem -Path .\docs -Recurse -File |
+  Where-Object { $_.Extension -in ".md", ".txt", ".json", ".sql" } |
+  Select-String -SimpleMatch ([char]0xFFFD)
 
 npm run typecheck
 npm run build

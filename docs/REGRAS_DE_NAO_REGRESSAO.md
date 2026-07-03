@@ -117,9 +117,15 @@
 
 ## Validação documental
 
-- Não pode haver caractere `U+FFFD` em `docs/`.
+- Não pode haver caractere `U+FFFD` nos arquivos textuais de `docs/`.
 - Comando Bash de busca de mojibake não deve ser documentado como se funcionasse em Windows PowerShell.
-- Em PowerShell, usar `Get-ChildItem .\docs -Recurse -File | Select-String -SimpleMatch ([char]0xFFFD)`.
+- Em PowerShell, usar busca filtrada por arquivos textuais:
+
+```powershell
+Get-ChildItem -Path .\docs -Recurse -File |
+  Where-Object { $_.Extension -in ".md", ".txt", ".json", ".sql" } |
+  Select-String -SimpleMatch ([char]0xFFFD)
+```
 - Índices não devem apontar para documentos removidos ou consolidados.
 - Documentos históricos fragmentados não devem ser recriados quando `historico/LEGADO_TECNICO.md` já absorveu o conteúdo.
 
