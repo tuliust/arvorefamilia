@@ -138,11 +138,13 @@ function add(map: Map<string, Set<string>>, key?: string | null, value?: string 
 function parentsByChild() {
   const map = new Map<string, Set<string>>();
   relacionamentos.forEach((rel) => {
-    if (rel.tipo_relacionamento === 'pai' || rel.tipo_relacionamento === 'mae') {
+    const relationshipType: string = rel.tipo_relacionamento;
+
+    if (relationshipType === 'pai' || relationshipType === 'mae') {
       add(map, rel.pessoa_origem_id, rel.pessoa_destino_id);
       return;
     }
-    if (rel.tipo_relacionamento === 'filho' || rel.tipo_relacionamento === 'filiacao_sangue' || rel.tipo_relacionamento === 'filiacao_adotiva') {
+    if (relationshipType === 'filho' || relationshipType === 'filiacao_sangue' || relationshipType === 'filiacao_adotiva') {
       add(map, rel.pessoa_destino_id, rel.pessoa_origem_id);
     }
   });

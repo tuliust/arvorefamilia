@@ -134,30 +134,31 @@ function buildIndex(relacionamentos: Relacionamento[]) {
     const originId = relationship.pessoa_origem_id;
     const destinationId = relationship.pessoa_destino_id;
     const normalizedType = normalizeRelationshipType(relationship.tipo_relacionamento as string | undefined | null);
+    const relationshipType: string = relationship.tipo_relacionamento;
 
     addDirectUncleRelationship(index, relationship, normalizedType);
 
     if (!originId || !destinationId) return;
 
-    if (relationship.tipo_relacionamento === 'conjuge') {
+    if (relationshipType === 'conjuge') {
       addToSetMap(index.spousesByPerson, originId, destinationId);
       addToSetMap(index.spousesByPerson, destinationId, originId);
       return;
     }
 
-    if (relationship.tipo_relacionamento === 'irmao') {
+    if (relationshipType === 'irmao') {
       addToSetMap(index.siblingsByPerson, originId, destinationId);
       addToSetMap(index.siblingsByPerson, destinationId, originId);
       return;
     }
 
-    if (relationship.tipo_relacionamento === 'filho') {
+    if (relationshipType === 'filho' || relationshipType === 'filiacao_sangue' || relationshipType === 'filiacao_adotiva') {
       addParentLink(index, destinationId, originId, 'parent');
       return;
     }
 
-    if (relationship.tipo_relacionamento === 'pai' || relationship.tipo_relacionamento === 'mae') {
-      addParentLink(index, originId, destinationId, relationship.tipo_relacionamento);
+    if (relationshipType === 'pai' || relationshipType === 'mae') {
+      addParentLink(index, originId, destinationId, relationshipType);
     }
   });
 
@@ -243,8 +244,9 @@ function findChildren(personId: string | undefined, index: RelationshipIndex, pe
 function findSiblings(personId: string, index: RelationshipIndex, peopleById: Map<string, Pessoa>) {
   const sharedParentSiblings = findParents(personId, index, peopleById)
     .flatMap((parentId) => findChildren(parentId, index, peopleById));
+  const explicitSiblings = Array.from(index.siblingsByPerson.get(personId) ?? []);
 
-  return sortIds(sharedParentSiblings, peopleById)
+  return sortIds([...explicitSiblings, ...sharedParentSiblings], peopleById)
     .filter((id) => id !== personId);
 }
 

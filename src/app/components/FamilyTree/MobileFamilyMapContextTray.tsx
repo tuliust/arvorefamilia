@@ -137,9 +137,7 @@ export const MobileFamilyMapContextTray = React.forwardRef<HTMLDivElement, Mobil
 
     const trayInsetClassName = hasFlatWhiteTrayBase
       ? 'inset-x-0 px-2'
-      : action === 'cor'
-        ? 'inset-x-3'
-        : 'inset-x-2';
+      : 'inset-x-2';
 
     const trayClassName = [
       'fixed z-[10001] md:hidden',

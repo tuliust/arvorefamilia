@@ -48,7 +48,7 @@ const AdminIntegridade = React.lazy(() => import('./pages/admin/AdminIntegridade
 const AdminAtividades = React.lazy(() => import('./pages/admin/AdminAtividades').then((module) => ({ default: module.AdminAtividades })));
 const AdminResponsaveis = React.lazy(() => import('./pages/admin/AdminResponsaveis').then((module) => ({ default: module.AdminResponsaveis })));
 const AdminNotificacoes = React.lazy(() => import('./pages/admin/AdminNotificacoes').then((module) => ({ default: module.AdminNotificacoes })));
-const AdminDuvidas = React.lazy(() => import('./pages/admin/AdminDuvidasRefined').then((module) => ({ default: module.AdminDuvidas })));
+const AdminDuvidas = React.lazy(() => import('./pages/admin/AdminDuvidasRefined').then((module) => ({ default: module.AdminDuvidasRefined })));
 const AdminPeopleContentSettings = React.lazy(() => import('./pages/admin/AdminPeopleContentSettings').then((module) => ({ default: module.AdminPeopleContentSettings })));
 const LinhaGeracionalLazy = React.lazy(() => import('./pages/LinhaGeracional').then((module) => ({ default: module.LinhaGeracional })));
 const TreeMapSharedLayout = React.lazy(() => import('./pages/tree/TreeMapSharedLayout').then((module) => ({ default: module.TreeMapSharedLayout })));
