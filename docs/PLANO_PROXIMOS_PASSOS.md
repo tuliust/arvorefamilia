@@ -1,7 +1,7 @@
 # Plano de próximos passos
 
-> Última revisão: 2026-07-04  
-> Escopo: pendências reais após auditoria documental da branch `main`, validações pós-merge, primeiro acesso, perfis gerenciados, Supabase/RLS, IA, Linha do Tempo, PDF, parentesco e documentação complementar.  
+> Última revisão: 2026-07-04
+> Escopo: pendências reais após auditoria documental da branch `main`, validações pós-merge, primeiro acesso, perfis gerenciados, Supabase/RLS, IA, Linha do Tempo, PDF, parentesco e documentação complementar.
 > Status: canônico.
 
 ## Pendências operacionais pós-merge

@@ -1,7 +1,7 @@
 # Guia de UX e layout
 
-> Última revisão: 2026-07-04  
-> Escopo: experiência visual das rotas principais da branch `main`, com foco em mapa mobile, linha geracional, layout compartilhado, exportação desktop, onboarding, perspectiva memorial, camadas de overlay, Linha do Tempo com anexos, modal de PDF e conexões familiares.  
+> Última revisão: 2026-07-04
+> Escopo: experiência visual das rotas principais da branch `main`, com foco em mapa mobile, linha geracional, layout compartilhado, exportação desktop, onboarding, perspectiva memorial, camadas de overlay, Linha do Tempo com anexos, modal de PDF e conexões familiares.
 > Status: canônico.
 
 ## Princípios

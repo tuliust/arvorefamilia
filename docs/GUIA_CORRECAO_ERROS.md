@@ -1,7 +1,7 @@
 # Guia de correção de erros
 
-> Última revisão: 2026-07-04  
-> Escopo: erros conhecidos de operação e manutenção documental/técnica, com comandos compatíveis com Bash/Git Bash e Windows PowerShell.  
+> Última revisão: 2026-07-04
+> Escopo: erros conhecidos de operação e manutenção documental/técnica, com comandos compatíveis com Bash/Git Bash e Windows PowerShell.
 > Status: canônico.
 
 ## Erro de chunk ou asset JS

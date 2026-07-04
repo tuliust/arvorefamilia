@@ -1,31 +1,31 @@
-Ôªø# Google OAuth e Google Agenda
+# Google OAuth e Google Agenda
 
-> √öltima revis√£o: 2026-06-14
-> Local can√¥nico: `docs/operacao/OAUTH_GOOGLE.md`
-> Tipo: documenta√ß√£o operacional espec√≠fica de OAuth Google e integra√ß√£o Google Agenda.
-> Status: revisado para separar opera√ß√£o OAuth de ajustes visuais do calend√°rio.
+> ⁄ltima revis„o: 2026-06-14
+> Local canÙnico: `docs/operacao/OAUTH_GOOGLE.md`
+> Tipo: documentaÁ„o operacional especÌfica de OAuth Google e integraÁ„o Google Agenda.
+> Status: revisado para separar operaÁ„o OAuth de ajustes visuais do calend·rio.
 
 ---
 
 ## 1. Objetivo
 
-Este documento orienta a configura√ß√£o e manuten√ß√£o da integra√ß√£o com Google OAuth/Google Agenda.
+Este documento orienta a configuraÁ„o e manutenÁ„o da integraÁ„o com Google OAuth/Google Agenda.
 
 Use para:
 
 - configurar consent screen;
-- revisar dom√≠nio e redirect URI;
+- revisar domÌnio e redirect URI;
 - adicionar test users;
 - configurar secrets;
 - publicar Edge Functions;
 - diagnosticar bloqueios de OAuth;
-- validar conex√£o no calend√°rio familiar.
+- validar conex„o no calend·rio familiar.
 
-N√£o use este documento para ajustes visuais do calend√°rio mobile.
+N„o use este documento para ajustes visuais do calend·rio mobile.
 
 ---
 
-## 2. Escopo da integra√ß√£o
+## 2. Escopo da integraÁ„o
 
 Arquivos relevantes:
 
@@ -40,35 +40,35 @@ docs/funcionalidades/CALENDARIO_FAMILIAR.md
 
 Regras:
 
-- frontend n√£o manipula client secret;
-- tokens sens√≠veis ficam em Edge Function/backend/Supabase;
-- usu√°rio precisa estar autenticado;
+- frontend n„o manipula client secret;
+- tokens sensÌveis ficam em Edge Function/backend/Supabase;
+- usu·rio precisa estar autenticado;
 - falha do Google deve ser exibida como erro controlado;
-- app em Testing exige usu√°rios cadastrados como test users.
+- app em Testing exige usu·rios cadastrados como test users.
 
 ---
 
-## 3. O que n√£o √© OAuth
+## 3. O que n„o È OAuth
 
-Ajustes abaixo n√£o alteram OAuth:
+Ajustes abaixo n„o alteram OAuth:
 
-- cinco bot√µes mobile de categoria;
+- cinco botıes mobile de categoria;
 - bolinha colorida acima do texto;
-- layout mobile do calend√°rio;
-- copy local do bot√£o;
-- CSS do calend√°rio;
+- layout mobile do calend·rio;
+- copy local do bot„o;
+- CSS do calend·rio;
 - filtro visual de categorias.
 
-OAuth s√≥ entra no escopo quando mudar:
+OAuth sÛ entra no escopo quando mudar:
 
 - escopos;
 - redirect URI;
 - consent screen;
-- dom√≠nio;
+- domÌnio;
 - Edge Functions `google-calendar-*`;
 - secrets;
 - service `googleCalendarService.ts`;
-- textos p√∫blicos exigidos pela verifica√ß√£o Google.
+- textos p˙blicos exigidos pela verificaÁ„o Google.
 
 ---
 
@@ -87,10 +87,10 @@ supabase secrets set SITE_URL="https://seudominio.com"
 
 Regras:
 
-- n√£o usar `VITE_GOOGLE_CLIENT_SECRET`;
-- n√£o commitar `.env.local`;
-- n√£o colar client secret em prompt, issue, log ou documenta√ß√£o;
-- preview e produ√ß√£o podem exigir redirect URIs diferentes;
+- n„o usar `VITE_GOOGLE_CLIENT_SECRET`;
+- n„o commitar `.env.local`;
+- n„o colar client secret em prompt, issue, log ou documentaÁ„o;
+- preview e produÁ„o podem exigir redirect URIs diferentes;
 - confirmar projeto Supabase antes de testar.
 
 ---
@@ -99,16 +99,16 @@ Regras:
 
 A tela de consentimento deve estar alinhada com:
 
-- dom√≠nio final;
-- nome p√∫blico do app;
-- descri√ß√£o da integra√ß√£o;
-- pol√≠tica de privacidade p√∫blica;
-- termos de uso p√∫blicos;
+- domÌnio final;
+- nome p˙blico do app;
+- descriÁ„o da integraÁ„o;
+- polÌtica de privacidade p˙blica;
+- termos de uso p˙blicos;
 - escopos solicitados;
 - e-mail de suporte;
 - redirect URI autorizado.
 
-P√°ginas p√∫blicas necess√°rias:
+P·ginas p˙blicas necess·rias:
 
 ```txt
 /entrar
@@ -119,17 +119,17 @@ P√°ginas p√∫blicas necess√°rias:
 Regras:
 
 - `/privacidade` e `/termos` devem abrir sem login;
-- `/entrar` deve explicar a plataforma de forma p√∫blica;
-- n√£o prometer funcionalidade Google al√©m do implementado/aprovado.
+- `/entrar` deve explicar a plataforma de forma p˙blica;
+- n„o prometer funcionalidade Google alÈm do implementado/aprovado.
 
 ---
 
 ## 6. Modo Testing
 
-Enquanto o app OAuth n√£o estiver aprovado para produ√ß√£o:
+Enquanto o app OAuth n„o estiver aprovado para produÁ„o:
 
 ```txt
-Usu√°rios reais que testarem Google Agenda devem ser adicionados como test users.
+Usu·rios reais que testarem Google Agenda devem ser adicionados como test users.
 ```
 
 Checklist:
@@ -138,17 +138,17 @@ Checklist:
 2. selecionar projeto correto;
 3. confirmar OAuth consent screen;
 4. confirmar app em Testing;
-5. adicionar e-mail do usu√°rio;
+5. adicionar e-mail do usu·rio;
 6. conferir redirect URI;
 7. testar em `/calendario-familiar`.
 
-Bloqueio por usu√°rio n√£o cadastrado como test user n√£o √© bug de frontend.
+Bloqueio por usu·rio n„o cadastrado como test user n„o È bug de frontend.
 
 ---
 
 ## 7. Edge Functions
 
-Comandos √∫teis:
+Comandos ˙teis:
 
 ```bash
 supabase functions list
@@ -160,8 +160,8 @@ supabase functions deploy google-calendar-sync
 Antes de testar:
 
 - secrets configurados;
-- dom√≠nio e redirect URI corretos;
-- usu√°rio testador cadastrado quando Testing;
+- domÌnio e redirect URI corretos;
+- usu·rio testador cadastrado quando Testing;
 - frontend apontando para Supabase correto.
 
 ---
@@ -172,71 +172,71 @@ Antes de testar:
 1. Abrir /entrar sem login.
 2. Abrir /privacidade sem login.
 3. Abrir /termos sem login.
-4. Entrar com usu√°rio autorizado.
+4. Entrar com usu·rio autorizado.
 5. Abrir /calendario-familiar.
 6. Clicar para conectar Google Agenda.
 7. Confirmar redirect para Google.
 8. Autorizar escopos.
 9. Confirmar callback ao app.
 10. Confirmar estado conectado ou erro controlado.
-11. Sincronizar, se a√ß√£o dispon√≠vel.
-12. Desconectar, se a√ß√£o dispon√≠vel.
+11. Sincronizar, se aÁ„o disponÌvel.
+12. Desconectar, se aÁ„o disponÌvel.
 ```
 
 ---
 
 ## 9. Troubleshooting
 
-| Sintoma | Causa prov√°vel | A√ß√£o |
+| Sintoma | Causa prov·vel | AÁ„o |
 |---|---|---|
-| usu√°rio bloqueado | app em Testing sem test user | adicionar e-mail no Google Cloud |
+| usu·rio bloqueado | app em Testing sem test user | adicionar e-mail no Google Cloud |
 | redirect mismatch | URI diferente da configurada | corrigir redirect URI |
 | erro de secret | secret ausente/incorreto | revisar secrets da Edge Function |
-| callback n√£o conclui | fun√ß√£o n√£o publicada ou erro server-side | conferir logs e deploy |
-| calend√°rio n√£o conecta | escopo/dom√≠nio/consent screen | revisar configura√ß√£o OAuth |
-| UI quebra ap√≥s falha Google | erro n√£o tratado | corrigir tratamento no service/UI |
+| callback n„o conclui | funÁ„o n„o publicada ou erro server-side | conferir logs e deploy |
+| calend·rio n„o conecta | escopo/domÌnio/consent screen | revisar configuraÁ„o OAuth |
+| UI quebra apÛs falha Google | erro n„o tratado | corrigir tratamento no service/UI |
 
 ---
 
-## 10. Seguran√ßa
+## 10. SeguranÁa
 
-- n√£o expor tokens OAuth no frontend;
-- n√£o salvar client secret no reposit√≥rio;
-- n√£o registrar tokens em logs;
-- n√£o usar service role no navegador;
+- n„o expor tokens OAuth no frontend;
+- n„o salvar client secret no repositÛrio;
+- n„o registrar tokens em logs;
+- n„o usar service role no navegador;
 - revogar tokens quando desconectar, se o fluxo implementar;
-- respeitar escopos m√≠nimos necess√°rios;
-- manter pol√≠tica de privacidade coerente com o uso real.
+- respeitar escopos mÌnimos necess·rios;
+- manter polÌtica de privacidade coerente com o uso real.
 
 ---
 
-## 11. Rela√ß√£o com migrations
+## 11. RelaÁ„o com migrations
 
-OAuth pode depender de tabelas/conex√µes no banco.
+OAuth pode depender de tabelas/conexıes no banco.
 
-Se houver altera√ß√£o de schema:
+Se houver alteraÁ„o de schema:
 
 ```txt
 Criar migration e seguir MIGRATIONS_SUPABASE.md.
 ```
 
-Se a mudan√ßa for apenas consent screen, redirect URI, test user ou secret:
+Se a mudanÁa for apenas consent screen, redirect URI, test user ou secret:
 
 ```txt
-N√£o criar migration.
+N„o criar migration.
 ```
 
 ---
 
-## 12. Crit√©rios para atualizar este documento
+## 12. CritÈrios para atualizar este documento
 
 Atualize quando houver:
 
 - novo escopo Google;
-- mudan√ßa de redirect URI;
-- mudan√ßa de dom√≠nio;
-- aprova√ß√£o para produ√ß√£o;
+- mudanÁa de redirect URI;
+- mudanÁa de domÌnio;
+- aprovaÁ„o para produÁ„o;
 - nova Edge Function Google;
-- mudan√ßa em `googleCalendarService.ts`;
-- altera√ß√£o de exig√™ncia p√∫blica de privacidade/termos;
+- mudanÁa em `googleCalendarService.ts`;
+- alteraÁ„o de exigÍncia p˙blica de privacidade/termos;
 - novo troubleshooting recorrente.

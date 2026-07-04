@@ -1,7 +1,7 @@
 # Migrations Supabase
 
-> Última revisão: 2026-07-04  
-> Escopo: fontes SQL, RLS, RPCs, Edge Functions e orientação de validação do Supabase na branch `main`.  
+> Última revisão: 2026-07-04
+> Escopo: fontes SQL, RLS, RPCs, Edge Functions e orientação de validação do Supabase na branch `main`.
 > Status: canônico.
 
 ## Estado versionado

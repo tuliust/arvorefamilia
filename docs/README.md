@@ -1,7 +1,7 @@
 # Documentação do produto — arvorefamilia
 
-> Última revisão: 2026-07-04  
-> Escopo: documentação canônica mantida em `docs/` após auditoria, limpeza final, ajustes mobile/admin, layout compartilhado de mapas, inventário real de runtimes, Linha do Tempo com PDF, IA de conteúdos automáticos e conexões familiares.  
+> Última revisão: 2026-07-04
+> Escopo: documentação canônica mantida em `docs/` após auditoria, limpeza final, ajustes mobile/admin, layout compartilhado de mapas, inventário real de runtimes, Linha do Tempo com PDF, IA de conteúdos automáticos e conexões familiares.
 > Status: canônico.
 
 Este diretório concentra a documentação fundamental do produto. A fonte de verdade para comportamento continua sendo o código da branch `main`, especialmente `src/app/routes.tsx`, `src/app/pages`, `src/app/components`, `src/app/components/Timeline`, `src/app/services`, `src/app/types`, `src/app/utils`, `src/main.tsx`, `index.html`, `api/ai.ts` e os arquivos SQL/Supabase versionados.

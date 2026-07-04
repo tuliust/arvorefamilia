@@ -1,7 +1,7 @@
 # Legado técnico consolidado
 
-> Última revisão: 2026-06-23  
-> Escopo: registro histórico consolidado de SQLs legados, rotas removidas, imports colados, genealogia e versões antigas da árvore.  
+> Última revisão: 2026-06-23
+> Escopo: registro histórico consolidado de SQLs legados, rotas removidas, imports colados, genealogia e versões antigas da árvore.
 > Status: histórico consolidado.
 
 

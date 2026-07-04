@@ -1,7 +1,7 @@
 # Deploy
 
-> Última revisão: 2026-07-04  
-> Escopo: checklist operacional de validação, publicação, Supabase Functions e QA pós-deploy.  
+> Última revisão: 2026-07-04
+> Escopo: checklist operacional de validação, publicação, Supabase Functions e QA pós-deploy.
 > Status: canônico.
 
 ## Objetivo

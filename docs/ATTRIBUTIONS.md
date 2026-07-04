@@ -1,8 +1,8 @@
 # Atribuições e licenças
 
-> Última revisão: 2026-07-04  
-> Local recomendado: `docs/ATTRIBUTIONS.md`  
-> Tipo: atribuições de terceiros e referências de licença.  
+> Última revisão: 2026-07-04
+> Local recomendado: `docs/ATTRIBUTIONS.md`
+> Tipo: atribuições de terceiros e referências de licença.
 > Status: canônico/complementar para auditoria de dependências, componentes, ícones, imagens, PDFs, serviços externos e conteúdo familiar.
 
 ## 1. Objetivo

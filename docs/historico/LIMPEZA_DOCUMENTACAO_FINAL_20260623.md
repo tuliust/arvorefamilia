@@ -1,7 +1,7 @@
 # Limpeza documental final — 2026-06-23
 
-> Última revisão: 2026-06-23  
-> Escopo: fechamento da limpeza física da documentação em `docs/`.  
+> Última revisão: 2026-06-23
+> Escopo: fechamento da limpeza física da documentação em `docs/`.
 > Status: histórico de fechamento final.
 
 

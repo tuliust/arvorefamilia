@@ -1,7 +1,7 @@
 # Storage Maintenance
 
-> Última revisão: 2026-07-04  
-> Escopo: buckets, arquivos históricos, preview de PDF, limpeza de órfãos e QA de Storage.  
+> Última revisão: 2026-07-04
+> Escopo: buckets, arquivos históricos, preview de PDF, limpeza de órfãos e QA de Storage.
 > Status: canônico.
 
 ## Buckets
