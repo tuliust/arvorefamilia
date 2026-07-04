@@ -1,7 +1,7 @@
 # Inventário técnico
 
-> Última revisão: 2026-07-03
-> Escopo: rotas, módulos, documentos finais, runtimes carregados por `index.html` e `src/main.tsx`, layout compartilhado mobile de mapas, ajustes desktop do mapa familiar, notificações, vínculos, tutorial, questionário opcional `Sobre Mim`, perfis gerenciados e perspectiva memorial.
+> Última revisão: 2026-07-04
+> Escopo: rotas, módulos, documentos finais, runtimes carregados por `index.html` e `src/main.tsx`, layout compartilhado mobile de mapas, ajustes desktop do mapa familiar, notificações, vínculos, tutorial, questionário opcional `Sobre Mim`, perfis gerenciados e perspectiva memorial, timeline com preview de PDF, conexões de parentesco e conteúdos automáticos de pessoa.
 > Status: canônico.
 
 ## Stack
@@ -10,7 +10,7 @@
 - Rotas em `src/app/routes.tsx`, usando `createBrowserRouter`.
 - Guards: `ProtectedRoute`, `MemberRoute` e `TreeAccessRoute`.
 - Dados via Supabase, com serviços em `src/app/services` e tipos em `src/app/types`.
-- IA por endpoint serverless `api/ai.ts`.
+- IA por endpoint serverless `api/ai.ts` e pela Supabase Edge Function `generate-person-insights` para conteúdos automáticos de pessoa.
 - Scripts defensivos carregados por `index.html` ou importados por side effect em `src/main.tsx`.
 - Validação esperada: `npm run typecheck`, `npm run build`, `npm test` e `git diff --check`.
 
@@ -162,6 +162,54 @@ Contratos atuais:
 - a geração de Mini Bio/Curiosidades deve usar a pessoa ativa editável;
 - quando há `responsiblePerspective`, a pessoa administrada tem prioridade sobre o perfil principal do usuário responsável;
 - rascunhos de `/meus-dados` devem ser segmentados por `user.id` e `pessoa.id`.
+
+## Perfil, timeline e conexões: arquivos de implementação
+
+| Área | Arquivos principais |
+|---|---|
+| Timeline de perfil | `src/app/components/Timeline/PersonTimeline.tsx`, `src/app/utils/buildPersonTimeline.ts` |
+| Preview de PDF | `src/app/components/Timeline/PdfDocumentPreview.tsx` |
+| Relação no perfil | `src/app/components/person/RelationshipFinder.tsx` |
+| Conexão em `/curiosidades` | `src/app/pages/curiosidades/CuriosidadesConnectionSection.tsx`, `src/app/pages/home/ConnectionDiscoveryPanel.tsx` |
+| Cálculo e formatação | `src/app/utils/relationshipDegree.ts`, `src/app/utils/relationshipDegreeDisplay.ts`, `src/app/utils/relationshipSentenceOverrides.ts` |
+| Testes de frases | `src/app/utils/relationshipSentenceOverrides.test.ts` |
+
+Contratos atuais:
+
+- `PersonTimeline` renderiza anexos sem cabeçalho intermediário e usa modal para PDF.
+- `PdfDocumentPreview` carrega PDF.js por CDN e renderiza páginas em canvas.
+- `RelationshipFinder` calcula no perfil com `includeInactiveSpouses: true`.
+- `ConnectionDiscoveryPanel` centraliza a frase final de conexão na aba de `/curiosidades`.
+- `relationshipSentenceOverrides.ts` cobre padrões por filho em comum e família de cônjuge.
+
+## Conteúdos automáticos de pessoa: arquivos de implementação
+
+| Área | Arquivos principais |
+|---|---|
+| Admin | `src/app/pages/admin/AdminPeopleContentSettings.tsx` |
+| Serviço frontend | `src/app/services/personInsightsService.ts` |
+| Edge Function | `supabase/functions/generate-person-insights/index.ts` |
+| Signo solar | `src/app/utils/zodiac.ts` |
+| Tabela esperada | `person_generated_insights` |
+
+Contratos atuais:
+
+- tipos de insight: `astrology` e `historical_events`;
+- `historical_events` deve conter `title`, `main_event`, `period_title`, `brazil` e `world`;
+- geração automática depende de data de nascimento completa;
+- alteração na Edge Function exige deploy próprio no Supabase;
+- salvamento manual do admin usa `upsertPersonGeneratedInsight`.
+
+### Dependência externa carregada em runtime
+
+`PdfDocumentPreview.tsx` carrega PDF.js via CDN:
+
+```text
+https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js
+https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js
+```
+
+Essa dependência não aparece em `package.json`. Alterações nessa estratégia devem atualizar `ATTRIBUTIONS.md`, deploy/cache/CDN e este inventário.
 
 ## Notificações administrativas: arquivos de implementação
 

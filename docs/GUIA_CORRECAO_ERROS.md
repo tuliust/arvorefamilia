@@ -1,7 +1,7 @@
 # Guia de correção de erros
 
-> Última revisão: 2026-07-03
-> Escopo: erros conhecidos de operação e manutenção documental/técnica, com comandos compatíveis com Bash/Git Bash e Windows PowerShell.
+> Última revisão: 2026-07-04  
+> Escopo: erros conhecidos de operação e manutenção documental/técnica, com comandos compatíveis com Bash/Git Bash e Windows PowerShell.  
 > Status: canônico.
 
 ## Erro de chunk ou asset JS
@@ -30,10 +30,6 @@ Tela de rota não carrega após deploy, troca de versão ou publicação incompl
 
 Página carrega sem estilos, elementos aparecem empilhados ou com layout quebrado após deploy.
 
-### Implementação atual
-
-`src/main.tsx` testa disponibilidade de utilitários CSS e tenta reload controlado com parâmetro específico quando o CSS não parece carregado.
-
 ### Ação
 
 1. Conferir se arquivos CSS foram publicados.
@@ -48,10 +44,6 @@ Página carrega sem estilos, elementos aparecem empilhados ou com layout quebrad
 
 Mensagens como tabela inexistente, permissão, RLS, token inválido ou erro ao carregar pessoas/relacionamentos.
 
-### Implementação atual
-
-`dataService.ts` converte erros comuns de Supabase em mensagens técnicas mais claras. Rotas e componentes devem falhar de forma defensiva, sem tela branca.
-
 ### Ação
 
 1. Confirmar variáveis de ambiente do Supabase.
@@ -60,82 +52,245 @@ Mensagens como tabela inexistente, permissão, RLS, token inválido ou erro ao c
 4. Verificar SQLs documentados em `docs/operacao/MIGRATIONS_SUPABASE.md`.
 5. Confirmar se migrations recentes foram aplicadas no ambiente remoto.
 
-## Badges de `/meus-vinculos` incorretos
+## PDF não aparece no modal
 
 ### Sintoma
 
-Pessoa com conta vinculada aparece como `Pré-cadastrado`, ou pessoa sem vínculo aparece como `Cadastrado`.
+Ao clicar em `Abrir` em um PDF da Linha do Tempo:
+
+- o modal abre, mas o documento não aparece;
+- aparece só ícone de PDF;
+- aparece tela em branco;
+- aparece erro de rede;
+- aparece mensagem de erro do preview.
 
 ### Implementação atual
 
-`/meus-vinculos` depende de leitura controlada de `user_person_links`. A migration `20260701090000_allow_member_link_status_lookup.sql` cria a função/policy necessária para resolver status de badge.
+A visualização correta usa:
+
+```txt
+src/app/components/Timeline/PdfDocumentPreview.tsx
+```
+
+Contrato:
+
+- PDF.js é carregado por CDN;
+- o PDF é buscado via `fetch`;
+- o arquivo é convertido para `ArrayBuffer`;
+- cada página é renderizada em `<canvas>`;
+- o modal mantém fallback `Abrir em nova aba`.
 
 ### Ação
 
-1. Confirmar se a migration foi aplicada no ambiente remoto.
-2. Validar RLS de `user_person_links`.
-3. Testar com usuário que tenha vínculo real e com pessoa sem vínculo.
-4. Confirmar que falha de leitura não quebra a página.
-5. Planejar RPC restrita que retorne apenas `pessoa_id`, caso a policy ampla deixe de ser aceitável.
+1. Abrir console do navegador.
+2. Confirmar se o erro é de `fetch`, CORS, CDN ou PDF.js.
+3. Testar o link do arquivo em nova aba.
+4. Confirmar que o arquivo ainda existe no bucket `historical-files`.
+5. Confirmar que a URL está pública ou assinada e válida para o usuário.
+6. Confirmar que o arquivo é realmente PDF e não HTML de erro.
+7. Confirmar se o CDN de PDF.js está acessível.
+8. Confirmar se CSP/ambiente bloqueia `cdnjs.cloudflare.com`.
+9. Rodar build local.
+10. Validar em navegador real.
 
-## Curiosidades não carrega
+## Erro `X-Frame-Options: sameorigin` ao abrir PDF
 
 ### Sintoma
 
-A rota `/curiosidades` não renderiza ou o console aponta erro em seleção de pessoa, RPC de badges ou carregamento de dados do questionário.
+Console mostra:
 
-### Implementação atual
+```txt
+Refused to display 'https://docs.google.com/' in a frame because it set 'X-Frame-Options' to 'sameorigin'.
+```
 
-A página usa fallback para badges de perfil quando a RPC `get_person_profile_selected_badges` não estiver disponível. Seletores que usam Radix devem filtrar itens sem ID e iniciar neutros quando dependem de escolha do usuário.
+### Causa
+
+Google Viewer foi usado dentro de iframe. Esse serviço pode bloquear incorporação externa.
 
 ### Ação
 
-1. Confirmar se a migration da RPC foi aplicada no Supabase remoto.
-2. Conferir se a página continua carregando pelo fallback.
-3. Verificar se não existe item de seleção com valor vazio.
-4. Conferir `/curiosidades` no QA manual.
+1. Confirmar que `PersonTimeline.tsx` não monta URL `https://docs.google.com/gview`.
+2. Confirmar que `AttachmentPreviewDialog` usa `PdfDocumentPreview` para PDFs.
+3. Confirmar que PDF.js + canvas está ativo.
+4. Rebuildar e publicar frontend.
+5. Limpar cache do navegador/deploy se o erro persistir.
+
+Não usar:
+
+```txt
+https://docs.google.com/gview?embedded=1&url=...
+```
+
+## Botão `Abrir` diferente do botão `Baixar`
+
+### Sintoma
+
+O botão `Abrir` parece maior, mais azul, mais pesado ou desalinhado em relação a `Baixar`.
+
+### Implementação atual
+
+Ambos devem usar a mesma classe base em `PersonTimeline.tsx`:
+
+```txt
+ATTACHMENT_ACTION_CLASS
+```
+
+Contrato visual:
+
+```txt
+inline-flex
+items-center
+gap-1
+text-xs
+font-semibold
+leading-5
+text-gray-600
+hover:text-gray-900
+```
+
+### Ação
+
+1. Conferir `ATTACHMENT_ACTION_CLASS`.
+2. Conferir se `button` e `a` usam a mesma classe.
+3. Conferir se o container pai não aplica `sm:text-sm` ou cor diferente a apenas uma ação.
+4. Validar no navegador com zoom 100%.
+5. Testar desktop e mobile.
+
+## Frase de parentesco genérica indevida
+
+### Sintoma
+
+A aplicação mostra:
+
+```txt
+Há uma ligação familiar entre X e Y.
+```
+
+em um caso que deveria ter frase específica.
+
+### Implementação atual
+
+A camada principal está em:
+
+```txt
+src/app/utils/relationshipDegreeDisplay.ts
+```
+
+A camada de sobrescrita está em:
+
+```txt
+src/app/utils/relationshipSentenceOverrides.ts
+```
+
+Componentes que devem usar a camada com sobrescritas:
+
+```txt
+src/app/components/person/RelationshipFinder.tsx
+src/app/pages/home/ConnectionDiscoveryPanel.tsx
+```
+
+### Ação
+
+1. Conferir se o componente usa `getRelationshipResultSentenceWithOverrides`.
+2. Conferir se o padrão do caminho está coberto.
+3. Conferir se `includeInactiveSpouses` está coerente com a regra da rota.
+4. Adicionar teste em `relationshipSentenceOverrides.test.ts`.
+5. Rodar `npm run test`.
+6. Validar no perfil e em `/curiosidades`.
+
+## `avô/avó` aparece quando gênero é conhecido
+
+### Sintoma
+
+A frase mostra:
+
+```txt
+Condilênia Souza é avô/avó de Heitor Tsangaropulos.
+```
+
+### Esperado
+
+```txt
+Condilênia Souza é avó de Heitor Tsangaropulos.
+```
+
+### Ação
+
+1. Conferir se a pessoa possui `genero = mulher`.
+2. Conferir inferência de gênero em `relationshipDegreeDisplay.ts`.
+3. Confirmar que a frase usa `getGrandparentLabel(originPerson)`.
+4. Adicionar/rodar teste automatizado.
+5. Validar em produção.
 
 ## IA indisponível
 
 ### Sintoma
 
-`api/ai.ts` retorna erro de configuração ou falha ao interpretar resposta.
-
-### Causas prováveis
-
-- `OPENAI_API_KEY` ausente.
-- `OPENAI_MODEL` inválido ou indisponível.
-- Resposta fora do JSON esperado para `profile_text`.
-- Payload insuficiente.
-- Falha temporária do provedor.
+`api/ai.ts` ou Edge Function retorna erro de configuração ou falha ao interpretar resposta.
 
 ### Ação
 
 1. Validar `OPENAI_API_KEY`.
 2. Validar `OPENAI_MODEL` se estiver definido.
 3. Reproduzir payload mínimo.
-4. Conferir se `selectedBadges`, `customTraits` ou `answers` foram enviados quando `purpose === "profile_text"`.
+4. Conferir logs da Edge Function no Supabase.
 5. Garantir que erro de IA não bloqueia leitura de conteúdo já existente.
+6. Se a função alterada for `generate-person-insights`, rodar:
+
+```bash
+supabase functions deploy generate-person-insights
+```
+
+PowerShell:
+
+```powershell
+supabase functions deploy generate-person-insights
+```
+
+## Conteúdo Brasil/Mundo não aparece nos fatos do nascimento
+
+### Sintoma
+
+A página/admin mostra o fato principal, mas não mostra:
+
+```txt
+O que estava acontecendo na época
+Brasil
+Mundo
+```
+
+### Implementação atual
+
+A Edge Function deve gerar:
+
+```txt
+period_title
+brazil.title
+brazil.body
+world.title
+world.body
+```
+
+O admin deve carregar, editar e salvar esses campos.
+
+### Ação
+
+1. Confirmar se a função `generate-person-insights` foi publicada.
+2. Em `/admin/gestao-conteudo-pessoas`, clicar em `Regenerar conteúdos`.
+3. Conferir se `Texto Brasil` e `Texto Mundo` foram preenchidos.
+4. Salvar.
+5. Recarregar.
+6. Conferir registro em `person_generated_insights`.
+7. Confirmar `prompt_version = v2-contexto-brasil-mundo`.
+8. Se vier incompleto, consultar logs para saber se o repair prompt falhou.
 
 ## Diálogo nativo do navegador aparece
 
 ### Sintoma
 
-A aplicação abre um `alert`, `confirm` ou `prompt` nativo do navegador em vez de toast, `ConfirmDialog` ou modal próprio.
-
-### Implementação atual
-
-A UI da branch `main` deve usar:
-
-- `toast` de `sonner` para feedback não bloqueante;
-- `ConfirmDialog` para confirmação de ações;
-- `Dialog` controlado para coleta de texto.
-
-O único resultado esperado na varredura textual pode ser `src/app/components/ui/alert.tsx`, que é componente visual, não diálogo nativo.
+A aplicação abre um `alert`, `confirm` ou `prompt` nativo.
 
 ### Ação em PowerShell
-
-A busca deve se limitar a arquivos textuais para evitar que imagens, PDFs ou outros binários sejam interpretados como texto.
 
 ```powershell
 Select-String -Path (Get-ChildItem .\src -Recurse -File -Include *.ts,*.tsx) `
@@ -143,19 +298,7 @@ Select-String -Path (Get-ChildItem .\src -Recurse -File -Include *.ts,*.tsx) `
   Select-Object Path, LineNumber, Line
 ```
 
-Se aparecer arquivo diferente de `src/app/components/ui/alert.tsx`, substituir:
-
-- `alert` por `toast`;
-- `confirm` por `ConfirmDialog`;
-- `prompt` por modal controlado.
-
-Depois rodar `npm run build` e `git diff --check`.
-
 ## Mojibake em documentação
-
-### Sintoma
-
-Aparecem sequências de texto corrompido em arquivos de `docs/`, especialmente o caractere `U+FFFD`.
 
 ### Ação em Bash/Git Bash
 
@@ -165,82 +308,23 @@ grep -R --include='*.md' --include='*.txt' --include='*.json' --include='*.sql' 
 
 ### Ação em PowerShell
 
-A busca deve se limitar a arquivos textuais para evitar que imagens, PDFs ou outros binários sejam interpretados como texto.
-
 ```powershell
 Get-ChildItem -Path .\docs -Recurse -File |
   Where-Object { $_.Extension -in ".md", ".txt", ".json", ".sql" } |
   Select-String -SimpleMatch ([char]0xFFFD)
 ```
-
-Se houver resultado:
-
-1. Abrir o arquivo em editor configurado para UTF-8.
-2. Corrigir o texto.
-3. Salvar em UTF-8.
-4. Repetir a busca.
 
 ## Comandos Bash usados por engano no PowerShell
 
-### Sintoma
-
-Erro como:
-
-```text
-O token '||' não é um separador de instruções válido nesta versão.
-```
-
-### Causa
-
-O comando usa sintaxe de Bash:
-
-- `$'...'` para ANSI-C quoting;
-- `|| true` para ignorar código de saída.
-
-Windows PowerShell 5.x não entende essa sintaxe.
-
-### Ação
-
-Use comandos separados ou equivalentes PowerShell, restringindo a busca de mojibake a arquivos textuais:
-
-```powershell
-git status --short
-git diff --check
-
-# Busca o caractere de substituição Unicode U+FFFD apenas em arquivos textuais.
-Get-ChildItem -Path .\docs -Recurse -File |
-  Where-Object { $_.Extension -in ".md", ".txt", ".json", ".sql" } |
-  Select-String -SimpleMatch ([char]0xFFFD)
-
-npm run typecheck
-npm run build
-npm test
-```
+Windows PowerShell 5.x não entende `$'...'` nem `|| true`. Use equivalentes PowerShell.
 
 ## Link quebrado no índice
-
-### Sintoma
-
-`docs/README.md` ou `README.md` aponta para arquivo inexistente.
-
-### Ação
 
 1. Conferir todos os caminhos listados.
 2. Corrigir índice ou restaurar documento.
 3. Se o documento antigo foi consolidado, apontar para `docs/historico/LEGADO_TECNICO.md`.
-4. Registrar mudança no relatório histórico apenas se houver valor real de rastreabilidade.
 
 ## Script antigo de reorganização documental
-
-### Sintoma
-
-`docs/README.md` volta a listar documentos removidos, antigos ou fragmentados depois de executar script de organização.
-
-### Causa provável
-
-`scripts/reorganizar-documentacao.sh` ou `scripts/reorganizar-documentacao.ps1` pode conter uma versão antiga do índice canônico.
-
-### Ação
 
 1. Não executar esses scripts sem revisão.
 2. Tratar como legado ou mover para histórico.
@@ -257,7 +341,7 @@ git diff --check
 grep -R --include='*.md' --include='*.txt' --include='*.json' --include='*.sql' $'\xEF\xBF\xBD' docs || true
 npm run typecheck
 npm run build
-npm test
+npm run test
 ```
 
 ### PowerShell
@@ -266,12 +350,11 @@ npm test
 git status --short
 git diff --check
 
-# Busca o caractere de substituição Unicode U+FFFD apenas em arquivos textuais.
 Get-ChildItem -Path .\docs -Recurse -File |
   Where-Object { $_.Extension -in ".md", ".txt", ".json", ".sql" } |
   Select-String -SimpleMatch ([char]0xFFFD)
 
 npm run typecheck
 npm run build
-npm test
+npm run test
 ```

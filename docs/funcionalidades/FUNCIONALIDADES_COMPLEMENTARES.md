@@ -1,7 +1,7 @@
 # Funcionalidades complementares
 
-> Última revisão: 2026-07-03
-> Escopo: calendário, dúvidas, fórum, favoritos, notificações, onboarding, exportação, busca global, timeline, perfil, aprovações e cadastros administrativos de pessoas.
+> Última revisão: 2026-07-04
+> Escopo: calendário, dúvidas, fórum, favoritos, notificações, onboarding, exportação, busca global, timeline com anexos e PDF, perfil, parentesco, aprovações e cadastros administrativos de pessoas.
 > Status: canônico complementar.
 
 ## Objetivo
@@ -20,13 +20,16 @@ Este documento absorve o conteúdo útil dos antigos documentos individuais:
 - `TIMELINE.md`;
 - `PESSOAS_PERFIL_ADMIN.md`.
 
-## Ajustes de manutenção de 2026-07-03
+## Ajustes de manutenção de 2026-07-04
 
 - Este documento permanece complementar e deve concentrar funcionalidades reais sem documentação isolada própria.
 - Notificações administrativas ficam em `NOTIFICACOES_ADMIN.md`; notificações de usuário final permanecem resumidas aqui.
 - Exportação da árvore deve continuar descrevendo apenas `Salvar Imagem` e `Imprimir` como ações diretas no painel.
 - Novas funcionalidades pequenas devem ser adicionadas aqui apenas se não justificarem documento canônico próprio.
 
+
+- A timeline de perfil agora possui contrato explícito para anexos: sem cabeçalho intermediário, botão `Abrir`, botão `Baixar` e preview de PDF em modal via canvas.
+- O perfil de pessoa deve usar frases de parentesco com sobrescritas compartilhadas para evitar resultados genéricos quando houver caminho familiar específico.
 ## Busca global do header
 
 A busca global está disponível nos headers das páginas de mapa e nas páginas internas que usam `MemberPageHeader`.
@@ -199,6 +202,28 @@ Regras:
 - `Seu parentesco com ele` não deve aparecer quando a página estiver sendo vista pelo próprio usuário;
 - no mobile, o conteúdo final deve ter respiro inferior para não ficar atrás da navegação inferior.
 
+### Parentesco no perfil
+
+A seção `Seu parentesco com ela/ele` é renderizada por `RelationshipFinder`.
+
+Regras atuais:
+
+- a frase inicial compara a pessoa vinculada do usuário com a pessoa do perfil;
+- a comparação adicional permite selecionar outra pessoa da árvore;
+- o cálculo no perfil usa `includeInactiveSpouses: true`;
+- o resultado final usa `getRelationshipResultSentenceWithOverrides`;
+- a frase deve preferir parentesco específico a fallback genérico;
+- termos com gênero devem ser usados quando possível: `avó`, `avô`, `sobrinha`, `sobrinho`, `tia`, `tio`, `casada` e `casado`;
+- vínculos por afinidade com família de cônjuge podem ser descritos por narrativa, por exemplo: `X é sobrinho de Y, que foi casado com Z`;
+- o bloco não deve aparecer quando a página estiver sendo vista pela própria pessoa, quando esse for o contrato visual vigente.
+
+Casos de validação recomendados:
+
+- Condilênia Souza × Caio Cavalcanti Souza;
+- Condilênia Souza × Absalon Limeira de Souza Neto;
+- Condilênia Souza × Adalberto Bezerra Neto;
+- Condilênia Souza × Heitor de Albuquerque Tsangaropulos.
+
 ## Onboarding de membro
 
 Função:
@@ -310,7 +335,36 @@ Função:
 
 - organizar fatos familiares em ordem temporal;
 - usar datas estruturadas quando disponíveis;
-- tratar eventos sem data completa sem quebrar a renderização.
+- tratar eventos sem data completa sem quebrar a renderização;
+- exibir anexos de fatos históricos diretamente nos cards do evento;
+- permitir abrir PDFs em modal sem download obrigatório.
+
+Arquivos principais:
+
+- `src/app/components/Timeline/PersonTimeline.tsx`;
+- `src/app/components/Timeline/PdfDocumentPreview.tsx`;
+- `src/app/utils/buildPersonTimeline.ts`.
+
+Regras atuais:
+
+- não exibir o título intermediário `Arquivos e registros vinculados` na lista de anexos;
+- anexos devem aparecer após separador discreto dentro do card da timeline;
+- cada anexo deve exibir ícone, título, tipo, ano quando disponível, descrição e ações;
+- o botão `Abrir` deve ter a mesma hierarquia visual do botão `Baixar`;
+- para PDF, `Abrir` abre `AttachmentPreviewDialog` e renderiza via `PdfDocumentPreview`;
+- `PdfDocumentPreview` carrega PDF.js por CDN, busca o PDF por `fetch`, renderiza páginas em `<canvas>` e mantém estados de carregamento/erro;
+- `Abrir em nova aba` é fallback dentro do modal;
+- `Baixar` permanece disponível no card original e usa o nome derivado do título do anexo;
+- imagem ou registro não-PDF com URL pode abrir em nova aba.
+
+Não regressão mínima:
+
+- evento sem anexo renderiza normalmente;
+- evento com PDF exibe `Abrir` e `Baixar`;
+- o modal de PDF renderiza pelo menos uma página quando o arquivo e CORS permitem;
+- falha de preview mostra mensagem contextual e mantém `Abrir em nova aba`;
+- o botão `Baixar` continua funcional;
+- não reaparecer o texto `Arquivos e registros vinculados`.
 
 ## Pessoas e perfil administrativo
 

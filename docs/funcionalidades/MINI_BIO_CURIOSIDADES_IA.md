@@ -1,14 +1,14 @@
 # Meus dados, IA, Mini Bio e Curiosidades
 
-> Última revisão: 2026-07-03
-> Escopo: `/meus-dados`, `/pessoa/:id`, textos de perfil, geração assistida por IA, mini bio, curiosidades individuais, questionário opcional `Sobre Mim` e perfis gerenciados.
+> Última revisão: 2026-07-04
+> Escopo: `/meus-dados`, `/pessoa/:id`, textos de perfil, geração assistida por IA, mini bio, curiosidades individuais, questionário opcional `Sobre Mim`, perfis gerenciados, conteúdos automáticos de pessoa, astrologia e fatos históricos do nascimento.
 > Status: canônico.
 
 ## Objetivo
 
 Documentar o contrato dos textos curtos de perfil e da geração assistida por IA. Este documento absorve o conteúdo útil do antigo `CURIOSIDADES_E_IA.md` e registra o comportamento vigente do questionário opcional de `/meus-dados`.
 
-## Ajustes de manutenção de 2026-07-03
+## Ajustes de manutenção de 2026-07-04
 
 - Este documento permanece canônico para textos individuais de perfil, mini bio, curiosidades individuais e geração assistida por IA.
 - A página geral `/curiosidades` continua documentada separadamente em `CURIOSIDADES.md`.
@@ -20,6 +20,10 @@ Documentar o contrato dos textos curtos de perfil e da geração assistida por I
 - Em perfis gerenciados, a geração por IA deve usar exclusivamente a pessoa ativa editável, não o usuário responsável autenticado.
 - Mudanças em prompts, payloads, fallback de IA ou RLS de respostas de perfil devem atualizar também `api/ai.ts`, `QA_MANUAL.md`, `REGRAS_DE_NAO_REGRESSAO.md`, `GUIA_IMPLEMENTACOES.md`, `GUIA_COMPONENTES.md` e `operacao/MIGRATIONS_SUPABASE.md` quando afetarem operação.
 
+
+- `/admin/gestao-conteudo-pessoas` mantém edição administrativa de astrologia e fatos do nascimento em `person_generated_insights`.
+- Fatos do nascimento devem persistir `title`, `main_event`, `period_title`, `brazil` e `world`, preservando os textos de Brasil/Mundo no perfil.
+- A Edge Function `generate-person-insights` usa prompt histórico com chaves obrigatórias e uma chamada de reparo quando Brasil/Mundo vierem incompletos.
 ## Separação entre perfil individual e página de curiosidades
 
 - Este documento trata de textos individuais de pessoa e geração assistida por IA.
@@ -141,6 +145,93 @@ Payload funcional esperado:
 
 A IA não deve ser tratada como fonte de verdade. O usuário deve poder revisar, ajustar ou descartar o texto gerado.
 
+## Conteúdos automáticos de pessoa
+
+Além de Mini Bio e Curiosidades individuais, a aplicação possui conteúdos automáticos de perfil administrados em `/admin/gestao-conteudo-pessoas`.
+
+Tipos atuais em `person_generated_insights`:
+
+- `astrology`;
+- `historical_events`.
+
+Arquivos principais:
+
+- `src/app/pages/admin/AdminPeopleContentSettings.tsx`;
+- `src/app/services/personInsightsService.ts`;
+- `supabase/functions/generate-person-insights/index.ts`;
+- componentes de perfil que exibem os insights salvos.
+
+### Astrologia
+
+Conteúdo esperado:
+
+```json
+{
+  "body": "texto em um parágrafo",
+  "sign": "Signo solar"
+}
+```
+
+Regras:
+
+- depende de data de nascimento completa;
+- o signo pode ser calculado por `getZodiacSignFromBirthDate`;
+- o admin pode editar manualmente o signo e o resumo;
+- `Limpar astrologia` remove o insight correspondente;
+- `Gerar conteúdos ausentes` não sobrescreve item já existente;
+- `Regenerar conteúdos` força nova geração.
+
+### Fatos do nascimento
+
+Conteúdo esperado:
+
+```json
+{
+  "title": "DD/MM/AAAA — principal acontecimento do dia",
+  "main_event": "parágrafo sobre o principal acontecimento",
+  "period_title": "O que estava acontecendo na época",
+  "brazil": {
+    "title": "Brasil",
+    "body": ["parágrafo 1", "parágrafo 2 opcional"]
+  },
+  "world": {
+    "title": "Mundo",
+    "body": ["parágrafo 1", "parágrafo 2 opcional"]
+  }
+}
+```
+
+Regras:
+
+- `period_title` deve ter fallback `O que estava acontecendo na época`;
+- `brazil.title` deve ter fallback `Brasil`;
+- `world.title` deve ter fallback `Mundo`;
+- os corpos de Brasil e Mundo são arrays de parágrafos;
+- no admin, o campo de texto usa linha em branco para separar parágrafos;
+- ao salvar manualmente, `toParagraphArray` converte o textarea em array;
+- ao carregar, `toMultilineText` converte array em texto editável;
+- respostas antigas com chaves `brasil`/`mundo` podem ser normalizadas para `brazil`/`world` na Edge Function;
+- o conteúdo não deve ser salvo sem data de nascimento completa.
+
+### Reparo de conteúdo histórico incompleto
+
+A Edge Function `generate-person-insights`:
+
+1. normaliza a data de nascimento em `DD/MM/AAAA` ou `YYYY-MM-DD`;
+2. chama a IA para gerar `astrology` e `historical_events`;
+3. para `historical_events`, verifica se `brazil.body` e `world.body` têm pelo menos um parágrafo;
+4. se faltar contexto, chama prompt de reparo;
+5. normaliza o conteúdo final;
+6. salva com `prompt_version: "v2-contexto-brasil-mundo"`.
+
+Não regressão:
+
+- não perder `brazil` e `world` ao editar/salvar pelo admin;
+- não exibir apenas cards vazios de Brasil/Mundo no perfil;
+- não trocar as chaves persistidas para `brasil`/`mundo`;
+- erro de IA deve aparecer como feedback não bloqueante;
+- deploy da Edge Function é obrigatório quando `supabase/functions/generate-person-insights/index.ts` mudar.
+
 ## Mini bio
 
 A mini bio deve:
@@ -175,7 +266,9 @@ Conferir implementação em:
 - `src/app/services/responsiblePerspectiveService.ts`;
 - `src/app/services/profileQuestionnaireService.ts`;
 - `src/app/pages/curiosidades` quando aplicável;
-- `src/app/services/personInsightsService` quando aplicável;
+- `src/app/services/personInsightsService.ts` quando aplicável;
+- `src/app/pages/admin/AdminPeopleContentSettings.tsx` para edição administrativa dos conteúdos automáticos;
+- `supabase/functions/generate-person-insights/index.ts` para geração de astrologia e fatos históricos;
 - componentes de perfil em `src/app/components`;
 - policies de `person_profile_questionnaire_answers` quando houver edição de perfil gerenciado.
 
@@ -185,6 +278,8 @@ Validar:
 
 - geração de mini bio;
 - geração de curiosidades individuais;
+- geração de astrologia e fatos do nascimento em `/admin/gestao-conteudo-pessoas`;
+- persistência de `period_title`, `brazil.body` e `world.body` em `historical_events`;
 - edição manual em `/meus-dados`;
 - exibição em `/pessoa/:id`;
 - ausência de texto salvo automaticamente sem ação do usuário;

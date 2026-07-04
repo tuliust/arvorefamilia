@@ -1,7 +1,7 @@
 # QA manual
 
-> Última revisão: 2026-07-03
-> Escopo: validação manual das rotas e contratos documentados, incluindo layout compartilhado mobile dos mapas, tutorial inicial, vínculos, notificações administrativas, perspectiva memorial e comandos compatíveis com PowerShell.
+> Última revisão: 2026-07-04
+> Escopo: validação manual das rotas e contratos documentados, incluindo layout compartilhado mobile dos mapas, tutorial inicial, vínculos, notificações administrativas, perspectiva memorial, timeline com PDF, conexões de parentesco, conteúdos automáticos de pessoa e comandos compatíveis com PowerShell.
 > Status: canônico.
 
 ## Pré-condições
@@ -14,6 +14,8 @@
 - Para QA de notificações administrativas, migrations de catálogo/configuração aplicadas no ambiente remoto ou fallback validado.
 - Para QA de perfis gerenciados, usuário responsável com ao menos uma pessoa administrada via `person_responsible_links`.
 - Para QA de IA de perfil, `OPENAI_API_KEY` configurada ou fallback/erro de IA validado explicitamente.
+- Para QA de PDF na timeline, ao menos um registro histórico do tipo PDF com URL acessível pelo navegador.
+- Para QA de conteúdos automáticos, pessoa com data de nascimento completa e Supabase Function `generate-person-insights` publicada quando houver mudança nessa função.
 
 ## Validação técnica local
 
@@ -240,6 +242,62 @@ Validar em 320px, 375px, 390px e 430px.
 - Confirmar que a chamada a `person_profile_questionnaire_answers` não retorna 403/409 por RLS.
 - Limpar a perspectiva e confirmar retorno aos dados do perfil principal.
 
+
+## `/pessoa/:id` e `/pessoas/:id`
+
+### Timeline e PDF
+
+- Abrir perfil com pelo menos um evento de linha do tempo contendo PDF.
+- Confirmar que o título `Arquivos e registros vinculados` não aparece.
+- Confirmar que o card do anexo exibe ícone, título, tipo `PDF`, ano quando disponível, descrição e ações.
+- Confirmar que `Abrir` e `Baixar` têm a mesma hierarquia visual, fonte e peso.
+- Clicar em `Abrir` e confirmar que abre modal com título do documento.
+- Confirmar que o PDF é renderizado dentro do modal por canvas, sem depender de Google Viewer.
+- Confirmar que o console não mostra bloqueio de `https://docs.google.com/` por `X-Frame-Options`.
+- Confirmar que o estado `Carregando PDF...` aparece enquanto o arquivo carrega.
+- Confirmar que `Abrir em nova aba` aparece no rodapé do modal.
+- Confirmar que `Baixar` permanece funcional no card da timeline.
+- Testar fechamento e reabertura do modal sem duplicar páginas ou manter canvas antigo.
+
+### Parentesco no perfil
+
+Validar em `/pessoa/4b6eb714-a6e3-4a44-a093-01a95d935271?voltar=%2Fmapa-familiar%3Fpessoa%3D839bac13-31cb-4173-82a3-12bd1376d38c`, ou perfil equivalente de Condilênia quando os IDs forem diferentes no ambiente:
+
+- com pessoa vinculada do usuário, confirmar frase inicial `Você é filho de Condilênia Souza.` quando aplicável;
+- selecionar `Caio Cavalcanti Souza` e confirmar frase específica de sobrinho de Márcio Ailton, não fallback genérico;
+- selecionar `Absalon Limeira de Souza Neto` e confirmar frase específica de sobrinho de Márcio Ailton;
+- selecionar `Adalberto Bezerra Neto` e confirmar frase de cônjuge de Tatiane/Tathiane, sobrinha de Márcio Ailton;
+- selecionar `Heitor de Albuquerque Tsangaropulos` e confirmar `Condilênia Souza é avó de Heitor Tsangaropulos.`;
+- confirmar que não aparece `avô/avó` quando o gênero da pessoa permite `avó`;
+- confirmar que fallback `Há uma ligação familiar...` só aparece quando não houver regra específica.
+
+## `/curiosidades` — conexões
+
+- Abrir `/curiosidades`.
+- Entrar na aba `Qual a minha conexão?`.
+- Confirmar que a primeira pessoa pode vir preenchida pela pessoa vinculada do usuário.
+- Confirmar que pets não aparecem nos seletores.
+- Confirmar que não há `SelectItem` com valor vazio.
+- Selecionar os mesmos pares validados no perfil, quando disponíveis na base.
+- Confirmar que a frase principal usa a mesma lógica de sobrescrita do perfil.
+- Confirmar que erros de dados insuficientes aparecem como mensagem textual, sem quebrar a rota.
+- Confirmar que o resultado visual não cria overflow horizontal em desktop ou mobile.
+
+## `/admin/gestao-conteudo-pessoas`
+
+- Abrir como admin.
+- Selecionar pessoa com data de nascimento completa.
+- Clicar em `Gerar conteúdos ausentes`.
+- Confirmar que `Astrologia` recebe signo solar e resumo.
+- Confirmar que `Fatos do nascimento` recebe título e resumo principal.
+- Confirmar que aparecem campos `Subtítulo do período`, `Título Brasil`, `Texto Brasil`, `Título Mundo` e `Texto Mundo`.
+- Confirmar que `Texto Brasil` e `Texto Mundo` não ficam vazios após geração bem-sucedida.
+- Salvar conteúdos automáticos, recarregar a página e confirmar persistência.
+- Editar manualmente Brasil/Mundo usando linha em branco entre parágrafos, salvar e confirmar que os parágrafos são preservados.
+- Clicar em `Limpar fatos` e confirmar remoção apenas de `historical_events`.
+- Clicar em `Regenerar conteúdos` e confirmar que itens existentes são sobrescritos.
+- Testar pessoa sem data de nascimento completa e confirmar erro amigável.
+- Confirmar no perfil que o bloco `O que estava acontecendo na época` exibe Brasil e Mundo quando o conteúdo existe.
 
 ## Fluxo de onboarding completo
 

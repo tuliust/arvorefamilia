@@ -1,7 +1,7 @@
 # Regras de não regressão
 
-> Última revisão: 2026-07-03
-> Escopo: contratos que não devem ser quebrados em novas alterações, incluindo layout compartilhado mobile dos mapas, scripts defensivos, exportação, onboarding, vínculos, notificações administrativas e perspectiva memorial.
+> Última revisão: 2026-07-04
+> Escopo: contratos que não devem ser quebrados em novas alterações, incluindo layout compartilhado mobile dos mapas, scripts defensivos, exportação, onboarding, vínculos, notificações administrativas e perspectiva memorial, timeline com PDF, conexões de parentesco e conteúdos automáticos de pessoa.
 > Status: canônico.
 
 ## Rotas
@@ -89,6 +89,44 @@
 - Durante seleção de área, controles de zoom, favorito e botão `?` devem ficar ocultos.
 - `Imprimir` deve abrir janela nativa de impressão com página limpa e árvore centralizada.
 - Falhas de exportação devem usar `toast`, não diálogo nativo.
+
+## Perfil, timeline e arquivos históricos
+
+- A timeline de perfil não pode voltar a exibir o título `Arquivos e registros vinculados` acima dos anexos.
+- Eventos sem anexo não podem sumir da timeline.
+- Anexos com URL devem manter as ações `Abrir` e `Baixar`.
+- `Abrir` e `Baixar` devem permanecer visualmente equivalentes em fonte, peso, tamanho de ícone e cor base.
+- PDF deve abrir em modal sem download obrigatório.
+- Preview de PDF não pode voltar a depender de Google Viewer em iframe.
+- Erro `Refused to display 'https://docs.google.com/' in a frame because it set 'X-Frame-Options' to 'sameorigin'` é regressão se o fluxo principal de preview voltar a usar Google Viewer.
+- Falha de canvas, fetch, CORS ou PDF.js deve exibir fallback e manter `Abrir em nova aba`.
+- `Baixar` deve continuar disponível no card mesmo quando o preview falha.
+- Fechar e reabrir o modal não pode duplicar canvases nem manter documento anterior.
+
+## Parentesco e conexões familiares
+
+- Frases de conexão não devem voltar ao fallback `Há uma ligação familiar entre...` quando houver regra específica conhecida.
+- `Condilênia Souza é avó de Heitor Tsangaropulos.` não deve regredir para `avô/avó`.
+- Para Caio Cavalcanti Souza e Absalon Limeira de Souza Neto, quando os dados de família estiverem disponíveis, a frase deve indicar que são sobrinhos de Márcio Ailton, que foi casado com Condilênia Souza.
+- Para Adalberto Bezerra Neto, quando os dados estiverem disponíveis, a frase deve indicar que é cônjuge de Tatiane/Tathiane, sobrinha de Márcio Ailton, que foi casado com Condilênia Souza.
+- O perfil deve usar `getRelationshipResultSentenceWithOverrides` nas comparações da seção `Seu parentesco com ela/ele`.
+- A aba `Qual a minha conexão?` de `/curiosidades` deve usar a mesma função final de frase.
+- Pets não devem entrar nos seletores de conexão de `/curiosidades`.
+- Novos padrões de parentesco por afinidade devem ter teste automatizado ou QA manual explícito.
+- Inferência de gênero deve preferir `pessoa.genero` quando disponível e não deve produzir termos neutros quando há informação suficiente.
+
+## Conteúdos automáticos de pessoa
+
+- `/admin/gestao-conteudo-pessoas` não pode perder os campos de Brasil/Mundo dos fatos do nascimento.
+- `historical_events` deve persistir `title`, `main_event`, `period_title`, `brazil` e `world`.
+- `brazil.body` e `world.body` devem permanecer arrays de parágrafos no JSON salvo.
+- Salvar conteúdo manual no admin não pode converter `brazil`/`world` para `brasil`/`mundo`.
+- A Edge Function deve reparar ou rejeitar resposta histórica sem contexto de Brasil e Mundo.
+- `Gerar conteúdos ausentes` não deve sobrescrever conteúdo existente quando `force = false`.
+- `Regenerar conteúdos` pode sobrescrever conteúdo existente quando `force = true`.
+- Pessoa sem data de nascimento completa deve receber erro claro, não conteúdo incompleto.
+- Alteração em `supabase/functions/generate-person-insights/index.ts` exige deploy da função antes de validar produção.
+- Erro de IA não pode bloquear edição manual dos campos existentes.
 
 ## Primeiro acesso e vínculos
 

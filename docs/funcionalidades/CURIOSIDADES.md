@@ -1,6 +1,6 @@
 # Curiosidades
 
-> Última revisão: 2026-07-03
+> Última revisão: 2026-07-04
 > Escopo: `/curiosidades`, exploração visual e textual dos dados familiares, rankings, IA, quiz, mural, fotos, relacionamentos, rota, gerações e abas de descoberta.
 > Status: canônico.
 
@@ -10,12 +10,16 @@ Transformar os dados da árvore em exploração visual e textual: datas, relaç�
 
 Este documento cobre a página geral `/curiosidades`. Textos individuais de perfil e geração assistida por IA ficam em `MINI_BIO_CURIOSIDADES_IA.md`.
 
-## Ajustes de manutenção de 2026-07-03
+## Ajustes de manutenção de 2026-07-04
 
 - Este documento permanece canônico para a rota geral `/curiosidades`.
 - Textos individuais de perfil, mini bio e geração assistida por IA continuam em `MINI_BIO_CURIOSIDADES_IA.md`.
 - Mudanças de blocos visuais, quiz, mural, rota familiar, rankings, modo memorial ou fallback de badges devem atualizar `QA_MANUAL.md` e `REGRAS_DE_NAO_REGRESSAO.md`.
 
+
+- A aba `Qual a minha conexão?` deve usar as frases finais de parentesco geradas por `getRelationshipResultSentenceWithOverrides`, evitando fallback genérico quando houver caminho familiar conhecido.
+- Conexões por afinidade e por família de cônjuge devem preservar termos com gênero quando os dados permitem, como `sobrinho`, `sobrinha`, `avô`, `avó`, `tio` e `tia`.
+- A seção de conexões deve continuar filtrando pets da lista de seleção e iniciar a primeira pessoa com o perfil vinculado do usuário quando disponível.
 ## Dados usados
 
 A página depende principalmente de:
@@ -234,6 +238,43 @@ Regras:
 - o título interno da aba ativa deve alinhar à margem esquerda no mobile;
 - o ícone ao lado do título interno pode ser ocultado no mobile para preservar leitura.
 
+## Qual a minha conexão?
+
+A aba `Qual a minha conexão?` usa `CuriosidadesConnectionSection` e `ConnectionDiscoveryPanel`.
+
+Contrato atual:
+
+- a seção carrega pessoas humanas elegíveis, excluindo pets;
+- quando há usuário autenticado com pessoa vinculada, a primeira pessoa do seletor pode iniciar com essa pessoa;
+- os dois seletores não devem aceitar pessoa vazia nem quebrar quando a base tem menos de duas pessoas;
+- `Descobrir conexão` calcula o caminho familiar com `calculateRelationshipDegree`;
+- o resultado visual exibe avatar ou ícone, origem, destino, frase principal e, quando útil, resumo narrativo;
+- a frase principal deve passar por `getRelationshipResultSentenceWithOverrides`;
+- narrativas genéricas como `Há uma ligação familiar entre...` só são aceitáveis quando o algoritmo realmente não possui classificação mais específica;
+- quando houver caminho conhecido, preferir frase explicativa e legível.
+
+### Sobrescritas de frases de parentesco
+
+`src/app/utils/relationshipSentenceOverrides.ts` cobre caminhos que o algoritmo pode encontrar por filho em comum antes de chegar à família do cônjuge.
+
+Padrões cobertos:
+
+- `parent > child > sibling > parent`: descreve a pessoa destino como sobrinho/sobrinha do cônjuge da origem;
+- `parent > child > sibling > parent > spouse`: descreve a pessoa destino como cônjuge de sobrinho/sobrinha do cônjuge da origem.
+
+Exemplos esperados quando a base de dados contém os vínculos correspondentes:
+
+- `Caio Cavalcanti Souza é sobrinho de Márcio Ailton, que foi casado com Condilênia Souza.`;
+- `Absalon Limeira de Souza Neto é sobrinho de Márcio Ailton, que foi casado com Condilênia Souza.`;
+- `Adalberto Bezerra Neto é cônjuge de Tatiane Barros, sobrinha de Márcio Ailton, que foi casado com Condilênia Souza.`;
+- `Condilênia Souza é avó de Heitor Tsangaropulos.`.
+
+### Observação de implementação
+
+Na rota `/curiosidades`, a chamada atual de `calculateRelationshipDegree` em `CuriosidadesConnectionSection` usa `includeInactiveSpouses: false`. A frase final ainda passa pelo componente compartilhado `ConnectionDiscoveryPanel` e pelo utilitário de sobrescrita.
+
+Se uma conexão futura depender exclusivamente de vínculo conjugal inativo explícito para ser descoberta, revisar esse parâmetro na implementação e atualizar este documento, `QA_MANUAL.md` e `REGRAS_DE_NAO_REGRESSAO.md`.
+
 ## Comparar interesses
 
 A comparação de interesses cruza dados objetivos do perfil e badges do questionário de `/meus-dados`.
@@ -273,6 +314,8 @@ Validar:
 - slide de fotos com uma foto por vez no mobile;
 - cards responsivos sem overflow horizontal;
 - seletor de conexão entre pessoas sem SelectItem vazio;
+- aba `Qual a minha conexão?` sem fallback genérico quando houver frase específica de parentesco por sangue ou afinidade;
+- conexões Condilênia/Caio, Condilênia/Absalon, Condilênia/Adalberto e Condilênia/Heitor quando esses dados existirem na base;
 - fallback da RPC de badges sem impedir a página;
 - descoberta sem erro quando nenhuma pessoa estiver selecionada;
 - primeira geração expandida inicialmente e apenas uma geração aberta por vez;

@@ -1,7 +1,7 @@
 # Guia de UX e layout
 
-> Última revisão: 2026-07-03
-> Escopo: experiência visual das rotas principais da branch `main`, com foco em mapa mobile, linha geracional, layout compartilhado, exportação desktop, onboarding, perspectiva memorial e camadas de overlay.
+> Última revisão: 2026-07-04  
+> Escopo: experiência visual das rotas principais da branch `main`, com foco em mapa mobile, linha geracional, layout compartilhado, exportação desktop, onboarding, perspectiva memorial, camadas de overlay, Linha do Tempo com anexos, modal de PDF e conexões familiares.  
 > Status: canônico.
 
 ## Princípios
@@ -13,6 +13,8 @@
 - Preservar contraste, legibilidade e áreas clicáveis confortáveis.
 - Alterações mobile devem ser isoladas por breakpoint/rota e não podem alterar desktop por herança.
 - Ajustes visuais transitórios devem migrar para componentes React quando estabilizados.
+- Componentes de modal devem usar overlays próprios da aplicação, nunca diálogos nativos do navegador.
+- Uploads familiares e documentos históricos devem ter hierarquia visual discreta, sem parecer biblioteca pública de arquivos.
 
 ## Mapa familiar
 
@@ -24,22 +26,10 @@
 - O seletor de visualização mantém label fechado do tipo `Família de X` quando houver pessoa de referência.
 - O placeholder aberto é `Visualize a árvore como...`.
 - O cabeçalho do painel mantém título `Visualização`, ícone de olho sem borda visual e ação de recolher na mesma linha.
-- `Visualização` usa hierarquia menor que o header global.
-- Botões `Árvore Familiar` e `Linha Geracional` devem ter títulos compactos e subtítulos `Visão por grupos` e `Por gerações`.
-- Títulos `Resumo`, `Grupos de Familiares` e `Exportar` compartilham formatação compacta.
-- Cards `Núcleo`, `Ascendentes` e `Colaterais` preservam largura, gap, labels e botões de exportação.
 - `Pai` e `Mãe` são referências de alinhamento visual no mapa por grupos.
 - Em perspectiva por outra pessoa, `Todos os cônjuges` inicia inativo, mas continua visualmente clicável e pode ser ativado pelo usuário.
 - `Apenas familiares` usa nomenclatura curta e não deve voltar para `Apenas meus familiares`.
-- Grupos de tios e primos no desktop devem encolher quando houver poucos cards, evitando grandes áreas vazias dentro do container.
-- `Salvar Imagem` e `Imprimir` aparecem em uma linha com duas colunas.
-
-### Grupos desktop adaptativos
-
-- A largura visual de `Tios Paternos`, `Tios Maternos`, `Primos Paternos` e `Primos Maternos` deve acompanhar a quantidade de colunas efetivas.
-- Grupos de primos com 4 ou 5 cards devem parecer grupos de 2 colunas, não containers largos de 4 colunas.
-- Grupos com espaço vazio lateral excessivo reduzem a sensação de mapa organizado e devem ser tratados como regressão visual.
-- O botão local `+`/`−` não deve aparecer quando todos os cards cabem sem alterar a altura útil do grupo; nesse caso, todos os cards devem carregar visíveis.
+- Grupos de tios e primos no desktop devem encolher quando houver poucos cards.
 
 ### Exportação desktop
 
@@ -47,88 +37,122 @@
 - `Salvar Imagem` abre modal de instruções com fundo opaco, três etapas e botões `Cancelar`/`Continuar`.
 - Durante seleção de área, zoom, favorito e botão `?` desaparecem.
 - A impressão usa página limpa, título superior, árvore centralizada e uma página em retrato ou paisagem.
-- `Imagem` e `PDF` não devem aparecer como botões principais do painel. Helpers internos ou legados não alteram o contrato visual.
+- `Imagem` e `PDF` não devem aparecer como botões principais do painel.
 
-### Mobile compartilhado
+## Mobile compartilhado
 
 - Em `/mapa-familiar` e `/linha-geracional`, o mobile usa chrome compartilhado: header, toolbar superior e navegação inferior ficam fora da área central trocada pelo `<Outlet />`.
 - Alternar `Formato` entre mapa familiar e linha geracional preserva visualmente header, toolbar e menu inferior.
 - A navegação mobile evita manter painéis abertos por padrão.
-- O header das páginas de árvore usa `Árvore Familiar`.
-- O painel aberto pelo botão `+` fica na camada mais alta, acima de header, toolbar, busca, notificações e canvas.
-- O painel de visualização mostra contadores e familiares reais por grupo.
+- O painel aberto pelo botão `+` fica na camada mais alta.
 - A toolbar mobile usa o rótulo `Mapa`; `Zoom` não deve ser usado para visão geral.
 - O zoom real fica no fluxo `Exibir mapa completo`.
-- Botões ativos da toolbar superior usam azul principal do site.
-- Controles inativos em `Filtros` usam cinza uniforme.
-- Ícones do tray `Formato` usam azul principal.
 
-## Tray `Mapa da família`
+## Linha do Tempo e anexos históricos
 
-Os botões da visão geral mobile seguem contrato visual próprio:
+A Linha do Tempo da página de pessoa usa `PersonTimeline`.
 
-- padding uniforme de `8px`;
-- conteúdo centralizado nos eixos horizontal e vertical;
-- apenas um ícone por botão;
-- ícone diferente para cada grupo;
-- títulos com `letter-spacing` reduzido em cards estreitos;
-- contador centralizado;
-- container branco, borda sutil, botões arredondados e estado ativo destacado;
-- o botão `Mapa` tem semântica de visão geral;
-- cards da visão geral têm destino explícito por grupo;
-- controle local `+`/`−` de tios é distinto do botão `+` global;
-- painel abre dentro da shell mobile preservando header, toolbar e navegação inferior;
-- cards e CTA permanecem acima do backdrop/blur;
-- base branca reta envolve cards e `Exibir mapa completo` sem sobra excessiva abaixo do CTA.
+Contrato visual atual:
 
-## Mapa completo mobile
+- eventos têm ícone circular à esquerda, badge de tipo, título, data e descrição;
+- anexos aparecem dentro do card do evento, abaixo da descrição;
+- a seção de anexos não deve exibir o título `Arquivos e registros vinculados`;
+- cada anexo é um card compacto com ícone, título, selo de tipo (`PDF`, `Imagem`, `Registro`) e ano quando disponível;
+- descrição do anexo usa texto pequeno, com `whitespace-pre-line` e quebra segura;
+- ações ficam em uma linha compacta: `Abrir` e `Baixar`.
 
-- A visualização completa é camada própria posicionada abaixo da área superior compartilhada.
-- Header, toolbar superior e área de botões permanecem visíveis.
-- O container arredondado inicia logo abaixo da toolbar, sem espaçamento extra.
-- A base branca reta acompanha a altura do container arredondado.
-- O palco permite pan com um dedo e zoom por pinça.
-- Pan/pinch preservam o `transform` aplicado pelo usuário.
-- `Reenquadrar`, quando disponível, é a ação explícita para recalcular escala e posição.
-- Cards e grupos seguem estrutura única.
-- Conectores tocam bordas de grupos/cards e não atravessam badges ou títulos.
-- A versão atual não renderiza botão `X` próprio; retorno/fechamento deve ser controlado pelo fluxo de toolbar/estado da rota sem deixar blur, overlay ou tray preso.
-- Nomes no mapa completo mostram somente dois primeiros termos e não exibem datas/status ao lado do nome.
-- `Tios maternos` não deve deixar espaço vazio excessivo abaixo da última linha de cards.
+### Botões `Abrir` e `Baixar`
 
-## Camadas e backdrop dos painéis mobile
+Contrato atual:
 
-- Header, toolbar superior, painel ativo, cards, CTA e navegação inferior ficam acima do backdrop parcial.
-- O backdrop parcial começa abaixo do painel ativo, não apenas abaixo da toolbar.
-- Em `Formato`, o blur começa abaixo dos cards de escolha de visualização.
-- Em `Cor`, o blur começa abaixo da faixa de paletas.
-- Em `Filtros`, o blur começa abaixo do container de filtros.
-- Em `Mapa` de `/mapa-familiar`, o blur começa abaixo dos cards de grupos e do CTA.
-- Em `Mapa` de `/linha-geracional`, o blur começa abaixo do container `Gerações`, incluindo `Exibir mapa completo`.
-- O backdrop parcial termina no topo real da navegação inferior.
-- A toolbar não muda de posição quando qualquer painel é aberto.
+- `Abrir` e `Baixar` compartilham a mesma classe visual base;
+- ambos usam `text-xs`, `font-semibold`, `leading-5`, `text-gray-600` e `hover:text-gray-900`;
+- ícones usam `h-3.5 w-3.5`;
+- `Abrir` não deve parecer botão primário;
+- `Baixar` continua visível e separado do preview;
+- diferença de fonte, peso, cor ou tamanho entre `Abrir` e `Baixar` é regressão visual.
 
-## `/linha-geracional`
+### Modal de PDF
 
-- A versão mobile tem leitura geracional equivalente à visualização horizontal.
-- Cabeçalhos `Geração N` têm margem superior suficiente para não colar na toolbar.
-- Títulos de geração têm fonte e peso moderados.
-- Cards conjugais empilham quando necessário.
-- Conectores representam relações reais e não criam ligação lateral em todos os cards.
-- Ajustes de camada da linha geracional são isolados para não afetar `/mapa-familiar`.
-- O painel `Mapa` usa grid compacto preferencialmente `3x2`.
-- Cada card usa label `GERAÇÃO`, número central, contador e estado ativo evidente.
-- A geração ativa, badge e CTA usam azul principal do site.
-- O CTA `Exibir mapa completo` permanece dentro da área branca do painel.
-- Tocar em uma geração navega para a geração correspondente e fecha o tray sem alterar rota.
+Quando o anexo é PDF:
 
-## Overlays de header no mobile
+- clicar em `Abrir` abre modal próprio da aplicação;
+- o modal usa `Dialog`;
+- a largura máxima é ampla, mas limitada ao viewport;
+- a altura usa `min(calc(100dvh - 2rem), 860px)`;
+- o cabeçalho mostra título do arquivo e descrição curta;
+- o conteúdo usa fundo cinza para área de leitura;
+- o rodapé mantém fallback `Abrir em nova aba`.
 
-- Dropdown de notificações fica acima de todo conteúdo, inclusive toolbars e painéis.
-- Sugestões de busca ficam acima de todo conteúdo.
-- Menu do avatar fica alto o suficiente para exibir conteúdo sem scroll vertical excessivo.
-- A área `Perfis gerenciados`, quando existir, fica dentro do menu do avatar.
-- A seleção de perfil memorial não deve exibir sufixo visual `— memorial`, mas deve aplicar as restrições funcionais.
+### Preview de PDF
+
+O preview atual não usa iframe do Google Viewer.
+
+Contrato:
+
+- PDFs são renderizados por `PdfDocumentPreview`;
+- o componente carrega PDF.js por CDN;
+- busca o arquivo por `fetch`;
+- lê o conteúdo como `ArrayBuffer`;
+- renderiza página por página em `<canvas>`;
+- exibe estado `Carregando PDF...`;
+- em erro, exibe mensagem amigável;
+- canvas deve respeitar largura do container e permitir rolagem.
+
+Não usar:
+
+- Google Viewer em iframe;
+- iframe direto como única forma de preview de PDF;
+- download automático ao clicar em `Abrir`.
+
+## Conexões familiares e parentesco
+
+### Perfil da pessoa
+
+A seção `Seu parentesco com ela/ele` usa `RelationshipFinder`.
+
+Contrato visual:
+
+- card com título e ícone `Users`;
+- bloco azul claro com resultado do vínculo da pessoa logada com a pessoa do perfil;
+- seletor para “Veja qual a relação dela/dele com outra pessoa”;
+- resultado em card branco translúcido;
+- se não houver seleção, mostrar `O resultado aparece aqui após a seleção.`
+
+Contrato de frase:
+
+- o resultado deve usar `getRelationshipResultSentenceWithOverrides`;
+- vínculos conjugais inativos devem ser considerados no perfil (`includeInactiveSpouses: true`);
+- o fallback `Há uma ligação familiar entre...` não deve aparecer para padrões já conhecidos;
+- quando houver gênero conhecido ou inferível, usar `avó`, `avô`, `sobrinha`, `sobrinho`, `tia`, `tio`, `casada`, `casado`.
+
+Casos de referência:
+
+```txt
+Caio Souza é sobrinho de Márcio Ailton, que foi casado com Condilênia Souza.
+Adalberto Bezerra Neto é cônjuge de Tathiane/Tatiane, sobrinha de Márcio Ailton, que foi casado com Condilênia Souza.
+Absalon Limeira de Souza Neto é sobrinho de Márcio Ailton, que foi casado com Condilênia Souza.
+Condilênia Souza é avó de Heitor Tsangaropulos.
+```
+
+### `/curiosidades`
+
+A seção `Qual a minha conexão com alguém?` usa `ConnectionDiscoveryPanel`.
+
+Contrato visual:
+
+- dois selects (`Pessoa 1`, `Pessoa 2`);
+- botão `Descobrir conexão`;
+- resultado em card azul claro com avatares, seta e frase principal;
+- narrativa secundária só aparece quando agrega informação real;
+- não deve duplicar frase principal como narrativa.
+
+Contrato de frase:
+
+- usar a mesma função de sobrescrita do perfil;
+- resultado principal vem de `getRelationshipResultSentenceWithOverrides`;
+- narrativa complementar pode usar `getRelationshipNarrative`, desde que não seja genérica ou duplicada;
+- seletores não devem receber pessoas sem ID ou pets.
 
 ## Fluxo de onboarding
 
@@ -149,23 +173,55 @@ Pessoa marcada como falecida em `/meus-dados` pula `/preferencias` e segue para 
 - O fórum deve bloquear criação de tópico, resposta, edição de resposta e reações nessa perspectiva.
 - `/curiosidades` deve bloquear perguntas à IA, uso de sugestões rápidas e publicação no mural nessa perspectiva.
 - O aviso de modo memorial deve ser discreto, legível e não bloquear a leitura do conteúdo já existente.
-- Controles desabilitados devem usar `aria-disabled`, texto de apoio ou estado visual consistente, sem abrir teclado ou iniciar fluxo de escrita.
 - O bloqueio não deve usar `alert`, `confirm` ou `prompt` nativos.
-
-## Ajustes de `/meus-dados` e pet
-
-- Em desktop, o campo `Dia ou Ano de Nascimento` deve manter largura compacta para não competir com o restante do formulário.
-- O grupo `Local de falecimento` e `Falecimento no exterior` deve preservar leitura em linha quando houver espaço, sem quebrar labels importantes.
-- No modal de pet em `/meus-vinculos`, a experiência atual deve priorizar formulário em coluna única; listas laterais redundantes de pets cadastrados não devem comprimir o formulário principal.
-- Modais de parentes e pet no mobile não devem abrir teclado automaticamente antes de foco explícito do usuário.
 
 ## Administração
 
 - No dashboard administrativo mobile, cards principais devem manter estrutura visual equivalente.
 - `Conteúdo de Pessoas` deve aparecer como ação administrativa quando a rota `/admin/gestao-conteudo-pessoas` estiver ativa.
-- Nas rotas `/admin/*`, o header global deve ser reduzido para navegação essencial: `Painel Administrativo`, `Principal` e menu do usuário.
-- Botões como `Membros`, `Conteúdo` e `Responsáveis` não devem aparecer no header global administrativo quando essas entradas já estiverem disponíveis por cards, menus ou páginas internas.
+- Nas rotas `/admin/*`, o header global deve ser reduzido para navegação essencial.
+
+### `/admin/gestao-conteudo-pessoas`
+
+Contrato visual da área de conteúdos automáticos:
+
+- coluna lateral para busca/seleção de pessoa;
+- card de geração manual;
+- card de visibilidade;
+- card de conteúdos automáticos;
+- card de privacidade básica.
+
+Na área de conteúdos automáticos:
+
+- `Astrologia` possui `Signo solar`, `Resumo`, estado atual e ação `Limpar astrologia`;
+- `Fatos do nascimento` possui `Título`, `Resumo principal`, `Subtítulo do período`, `Título Brasil`, `Texto Brasil`, `Título Mundo`, `Texto Mundo` e ação `Limpar fatos`;
+- textos Brasil/Mundo usam áreas de texto com placeholder sobre linha em branco entre parágrafos;
+- botões `Gerar conteúdos ausentes` e `Regenerar conteúdos` ficam acima dos blocos.
+
+Regressão visual:
+
+- campos Brasil/Mundo sumirem;
+- `Subtítulo do período` voltar a não ser editável;
+- o layout dos dois blocos ficar comprimido em telas grandes;
+- conteúdos salvos voltarem vazios ao recarregar.
 
 ## Regra de manutenção visual
 
-Mudanças em mapa mobile devem validar 320px, 375px, 390px e 430px, preferencialmente em iPhone/Safari real ou device mode equivalente. Nenhum ajuste mobile deve alterar desktop por herança.
+Mudanças em mapa mobile devem validar 320px, 375px, 390px e 430px.
+
+Mudanças em modal de PDF devem validar:
+
+- desktop com PDF de uma página;
+- desktop com PDF de múltiplas páginas;
+- mobile 375px;
+- fallback `Abrir em nova aba`;
+- mensagem de erro quando o PDF não puder ser carregado.
+
+Mudanças em frases de parentesco devem validar:
+
+- perfil da pessoa;
+- `/curiosidades`;
+- vínculos diretos;
+- vínculos por afinidade;
+- vínculos com cônjuge falecido/inativo;
+- gênero feminino/masculino conhecido.

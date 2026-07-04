@@ -1,7 +1,7 @@
 # Migrations Supabase
 
-> Última revisão: 2026-07-02
-> Escopo: fontes SQL, RLS, RPCs e orientação de validação do Supabase na branch `main`.
+> Última revisão: 2026-07-04  
+> Escopo: fontes SQL, RLS, RPCs, Edge Functions e orientação de validação do Supabase na branch `main`.  
 > Status: canônico.
 
 ## Estado versionado
@@ -13,9 +13,11 @@ A branch atual possui diretório versionado `supabase/migrations`. As fontes SQL
 - `supabase/migrations/20260627143000_create_person_responsible_links.sql`, que cria vínculos pessoa-a-pessoa de responsáveis por perfis legados ou crianças;
 - `supabase/migrations/20260627152000_allow_responsible_people_perspective.sql`, que permite a perspectiva de pessoas sob responsabilidade quando aplicável;
 - `supabase/migrations/20260701090000_allow_member_link_status_lookup.sql`, que cria a função `current_user_has_person_link()` e policy de leitura para resolver badges `Cadastrado`/`Pré-cadastrado` em `/meus-vinculos`;
-- `supabase/migrations/20260701120000_persist_admin_notification_config_and_first_map_access.sql`, que cria persistência de configuração administrativa de notificações e deduplicação do primeiro acesso a `/mapa-familiar`;
-- `supabase/migrations/20260701143000_persist_full_admin_notification_catalog.sql`, que cria persistência do catálogo administrativo completo de notificações;
-- `supabase/migrations/20260701170000_add_variable_settings_to_admin_notification_config.sql`, que adiciona `variable_settings` para origem, link, fallback e formato de variáveis administrativas;
+- `supabase/migrations/20260701120000_persist_admin_notification_config_and_first_map_access.sql`;
+- `supabase/migrations/20260701143000_persist_full_admin_notification_catalog.sql`;
+- `supabase/migrations/20260701170000_add_variable_settings_to_admin_notification_config.sql`;
+- `supabase/migrations/20260703120000_fix_admin_reset_profile_storage_api_block.sql`, quando presente no repositório/ambiente;
+- `supabase/migrations/20260703170000_allow_responsible_profile_questionnaire_answers.sql`, quando presente no repositório/ambiente;
 - `supabase/forum-schema.sql`;
 - `supabase/google-calendar-schema.sql`;
 - `supabase/config.toml`;
@@ -27,12 +29,13 @@ A branch atual possui diretório versionado `supabase/migrations`. As fontes SQL
 - Não copiar SQL legado para produção sem adaptar ao estado atual do banco.
 - Sempre validar RLS depois de criar ou alterar tabela.
 - Manter migrations numeradas em `supabase/migrations` quando houver alteração de schema, RLS, policy, view ou RPC.
-- Timestamps de migrations devem ser únicos; versões duplicadas quebram o registro em `supabase_migrations.schema_migrations`.
-- Arquivos SQL devem permanecer em UTF-8 sem BOM. Erro de sintaxe no primeiro caractere do arquivo pode indicar BOM invisível antes do SQL.
+- Timestamps de migrations devem ser únicos.
+- Arquivos SQL devem permanecer em UTF-8 sem BOM.
 - Status conjugal permanece inferido pelos campos existentes; não criar migration de `status_conjugal` sem decisão explícita de schema.
-- Vínculos de responsáveis pessoa-a-pessoa devem usar `person_responsible_links`, não gravação indevida em `user_person_links.user_id`.
-- Catálogo administrativo de notificações deve usar `admin_notification_catalogs`; entregas reais ao usuário permanecem em `notificacoes_usuario`.
-- Configurações por variável de notificação devem usar `admin_notification_configurations.variable_settings` em JSONB, sem criar colunas específicas por variável.
+- Vínculos de responsáveis pessoa-a-pessoa devem usar `person_responsible_links`.
+- Catálogo administrativo de notificações deve usar `admin_notification_catalogs`.
+- Configurações por variável de notificação devem usar `admin_notification_configurations.variable_settings` em JSONB.
+- Edge Functions não substituem migrations. Alterações em `supabase/functions/*` exigem deploy de função, não `db push`.
 
 ## Tabelas e domínios esperados pela aplicação
 
@@ -57,6 +60,103 @@ A documentação funcional depende de tabelas ou estruturas equivalentes para:
 - permissões administrativas;
 - configurações públicas de site e auditoria de `/admin/home`.
 
+## Insights de pessoa
+
+A tabela/domínio `person_generated_insights` é usado por:
+
+```txt
+src/app/services/personInsightsService.ts
+src/app/pages/admin/AdminPeopleContentSettings.tsx
+supabase/functions/generate-person-insights/index.ts
+```
+
+Tipos esperados:
+
+```txt
+astrology
+historical_events
+```
+
+Contrato de `conteudo`:
+
+### `astrology`
+
+```json
+{
+  "title": "O que diz a astrologia",
+  "body": "texto em um parágrafo",
+  "sign": "Signo"
+}
+```
+
+### `historical_events`
+
+```json
+{
+  "title": "DD/MM/AAAA — principal acontecimento do dia",
+  "main_event": "parágrafo sobre o principal acontecimento",
+  "period_title": "O que estava acontecendo na época",
+  "brazil": {
+    "title": "Brasil",
+    "body": ["parágrafo 1", "parágrafo 2 opcional"]
+  },
+  "world": {
+    "title": "Mundo",
+    "body": ["parágrafo 1", "parágrafo 2 opcional"]
+  }
+}
+```
+
+Regras:
+
+- `period_title`, `brazil` e `world` devem ser preservados no admin.
+- `brazil.body` e `world.body` devem ser arrays de parágrafos.
+- Respostas em português com chaves `brasil`/`mundo` podem ser normalizadas pela Edge Function, mas o formato salvo deve ser `brazil`/`world`.
+- Conteúdo salvo manualmente pelo admin usa `modelo = manual` e `prompt_version = admin-manual-v1`.
+- Conteúdo gerado pela função deve usar `modelo = gpt-4o-mini`.
+- Fatos históricos gerados pela versão atual usam `prompt_version = v2-contexto-brasil-mundo`.
+
+## Edge Function `generate-person-insights`
+
+Local:
+
+```txt
+supabase/functions/generate-person-insights/index.ts
+```
+
+Função:
+
+- recebe `pessoaId` e `force`;
+- busca pessoa em `pessoas`;
+- exige data completa em `DD/MM/AAAA` ou `YYYY-MM-DD`;
+- gera astrologia e fatos históricos;
+- se `force = false`, preserva conteúdo existente;
+- se `force = true`, regenera;
+- chama OpenAI via `OPENAI_API_KEY`;
+- normaliza JSON histórico;
+- faz reparo automático quando Brasil/Mundo vierem incompletos;
+- grava em `person_generated_insights` com conflito em `pessoa_id,tipo`.
+
+Deploy:
+
+```bash
+supabase functions deploy generate-person-insights
+```
+
+PowerShell:
+
+```powershell
+supabase functions deploy generate-person-insights
+```
+
+Validações:
+
+1. Confirmar que o comando apontou para o projeto Supabase correto.
+2. Confirmar no dashboard a função publicada.
+3. Confirmar variável `OPENAI_API_KEY`.
+4. Testar em `/admin/gestao-conteudo-pessoas`.
+5. Confirmar persistência de `period_title`, `brazil`, `world`.
+
 ## Vínculos de usuário e status de badges
 
 | Elemento | Uso |
@@ -65,9 +165,7 @@ A documentação funcional depende de tabelas ou estruturas equivalentes para:
 | `current_user_has_person_link()` | Função `security definer` que verifica se o usuário autenticado tem ao menos um vínculo. |
 | Policy `members can read linked person ids for status badges` | Permite leitura necessária para resolver status de cadastro em `/meus-vinculos`. |
 
-A migration `20260701090000_allow_member_link_status_lookup.sql` foi criada para viabilizar o badge `Cadastrado` em familiares que já possuem conta vinculada.
-
-Revisão de segurança recomendada: em etapa futura, substituir a policy ampla por RPC que receba lista de `pessoa_id` e retorne somente IDs vinculados, evitando exposição desnecessária de colunas como `user_id`.
+Revisão de segurança recomendada: em etapa futura, substituir a policy ampla por RPC que receba lista de `pessoa_id` e retorne somente IDs vinculados.
 
 ## Tabelas de notificações administrativas
 
@@ -81,15 +179,13 @@ Revisão de segurança recomendada: em etapa futura, substituir a policy ampla p
 
 ### Coluna `variable_settings`
 
-A coluna `admin_notification_configurations.variable_settings` deve existir quando a UI de edição de regras de variáveis estiver ativa.
-
 Contrato:
 
 - tipo `jsonb`;
 - `not null`;
 - default `'{}'::jsonb`;
 - usada para guardar origem, valor, fallback, link e formato de data por variável/template;
-- não substitui `variable_overrides`, que continua representando a lista de tokens disponíveis por template.
+- não substitui `variable_overrides`.
 
 Validação SQL sugerida:
 
@@ -105,7 +201,18 @@ where table_schema = 'public'
   and column_name = 'variable_settings';
 ```
 
-Resultado esperado: uma linha `variable_settings`, `jsonb`, `NO` e default `{}`.
+## Storage e arquivos históricos
+
+O bucket `historical-files` é necessário para PDFs/imagens históricos.
+
+Validações:
+
+- arquivo histórico com upload deve ter `url`, `storage_bucket`, `storage_path`, `mime_type`;
+- registro sem arquivo não deve gerar `storage_path`;
+- PDF precisa ser legível pelo frontend via URL compatível com `fetch`;
+- preview em modal depende de leitura do arquivo pelo navegador;
+- se a leitura falhar por CORS, revisar bucket/policy/header;
+- não remover arquivos ainda referenciados em `arquivos_historicos.storage_path`.
 
 ## Checklist operacional
 
@@ -116,7 +223,8 @@ Resultado esperado: uma linha `variable_settings`, `jsonb`, `NO` e default `{}`.
 5. Confirmar que dados sensíveis não são expostos em views públicas.
 6. Confirmar RPC `get_person_profile_selected_badges(uuid)` ou fallback da aplicação.
 7. Confirmar RPCs de `/admin/home` quando configuração pública ou auditoria visual estiverem em validação.
-8. Confirmar `current_user_has_person_link()` e a policy de leitura de status de vínculos quando `/meus-vinculos` exibir badges.
-9. Quando houver mudanças em notificações administrativas, confirmar `admin_notification_configurations`, `admin_notification_catalogs`, `user_first_map_accesses` e `admin_notification_configurations.variable_settings`.
+8. Confirmar `current_user_has_person_link()` e a policy de leitura de status de vínculos.
+9. Quando houver mudanças em notificações administrativas, confirmar tabelas e `variable_settings`.
 10. Rodar `npx supabase db push` antes do build quando houver migration nova.
-11. Rodar a aplicação e validar as rotas documentadas em `QA_MANUAL.md`.
+11. Rodar `supabase functions deploy <nome>` quando houver mudança em Edge Function.
+12. Rodar a aplicação e validar as rotas documentadas em `QA_MANUAL.md`.

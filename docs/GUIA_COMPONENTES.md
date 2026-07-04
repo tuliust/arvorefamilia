@@ -1,7 +1,7 @@
 # Guia de componentes
 
-> Última revisão: 2026-07-03
-> Escopo: componentes relevantes para rotas e fluxos funcionais da branch `main`, incluindo layout compartilhado mobile dos mapas, primeiro acesso, questionário opcional `Sobre Mim`, perfis gerenciados, runtimes defensivos reais carregados por `index.html` e wrappers atuais.
+> Última revisão: 2026-07-04
+> Escopo: componentes relevantes para rotas e fluxos funcionais da branch `main`, incluindo layout compartilhado mobile dos mapas, primeiro acesso, questionário opcional `Sobre Mim`, perfis gerenciados, runtimes defensivos reais carregados por `index.html` e wrappers atuais, timeline com preview de PDF, conexões de parentesco e gestão de conteúdos automáticos.
 > Status: canônico.
 
 ## Home, mapas e shell compartilhada
@@ -58,6 +58,44 @@
 - Controles locais `+`/`−` dos grupos devem existir apenas quando houver ganho visual real com expansão.
 - `mobileFamilyTreeModel.ts` deve privilegiar relação explícita e metadados confiáveis antes de inferências, e nunca devolver o mesmo ID para pai e mãe.
 
+## Timeline, arquivos históricos e preview de PDF
+
+| Componente / módulo | Papel |
+|---|---|
+| `src/app/components/Timeline/PersonTimeline.tsx` | Renderiza a linha do tempo de perfil, badges por tipo de evento, anexos e modal de preview. |
+| `TimelineAttachments` | Bloco interno de anexos; exibe ícone, título, tipo, ano, descrição e ações `Abrir`/`Baixar`, sem cabeçalho intermediário. |
+| `AttachmentPreviewDialog` | Dialog controlado para pré-visualização de arquivo; em PDF usa `PdfDocumentPreview`, em outros arquivos com URL pode usar iframe. |
+| `src/app/components/Timeline/PdfDocumentPreview.tsx` | Carrega PDF.js por CDN, busca o PDF por `fetch`, renderiza páginas em `<canvas>` e trata loading, erro e ausência de URL. |
+| `src/app/utils/buildPersonTimeline.ts` | Monta itens de timeline e anexos a partir dos dados disponíveis. |
+
+Contratos:
+
+- `Abrir` e `Baixar` usam a mesma classe visual base para ações de anexo.
+- PDF não deve depender de Google Viewer ou iframe externo.
+- O modal mantém fallback `Abrir em nova aba`.
+- A ausência de anexo não impede exibição do evento.
+- O texto `Arquivos e registros vinculados` não faz parte da renderização vigente dos anexos.
+
+## Perfil, parentesco e conexões
+
+| Componente / módulo | Papel |
+|---|---|
+| `src/app/components/person/RelationshipFinder.tsx` | Renderiza `Seu parentesco com ela/ele` no perfil e compara a pessoa do perfil com outra pessoa selecionada. |
+| `src/app/pages/curiosidades/CuriosidadesConnectionSection.tsx` | Seção da rota `/curiosidades` para escolher duas pessoas e calcular a conexão familiar. |
+| `src/app/pages/home/ConnectionDiscoveryPanel.tsx` | Card/seletor compartilhado para descoberta de conexão, resultado visual com avatares e frase principal. |
+| `src/app/utils/relationshipDegree.ts` | Calcula o caminho de parentesco no grafo. |
+| `src/app/utils/relationshipDegreeDisplay.ts` | Formata nomes, gêneros, labels, narrativas e frases gerais de parentesco. |
+| `src/app/utils/relationshipSentenceOverrides.ts` | Sobrescreve frases para padrões específicos por família de cônjuge e filho em comum. |
+| `src/app/utils/relationshipSentenceOverrides.test.ts` | Testes dos casos de sobrescrita de frases de parentesco. |
+
+Contratos:
+
+- Resultado visível deve usar `getRelationshipResultSentenceWithOverrides` quando estiver disponível.
+- Fallback genérico só é aceitável quando não houver regra específica.
+- O perfil calcula relação com `includeInactiveSpouses: true`.
+- `/curiosidades` deve permanecer sincronizada com o painel compartilhado e não aceitar SelectItem vazio.
+- Termos com gênero devem ser aplicados quando houver dado suficiente.
+
 ## Componentes de primeiro acesso, dados pessoais e perfis gerenciados
 
 | Componente / módulo | Papel |
@@ -86,6 +124,22 @@
   - `meus-dados-profile-bio-result-host`;
   - `meus-dados-profile-bio-actions-host`;
   - `data-meus-dados-questionnaire-original`.
+
+## Administração de conteúdos automáticos de pessoa
+
+| Componente / módulo | Papel |
+|---|---|
+| `src/app/pages/admin/AdminPeopleContentSettings.tsx` | Gestão de geração, edição manual, limpeza e salvamento de astrologia e fatos do nascimento por pessoa. |
+| `src/app/services/personInsightsService.ts` | Serviço de leitura, geração via Edge Function, upsert manual e remoção de insights gerados. |
+| `supabase/functions/generate-person-insights/index.ts` | Edge Function que gera astrologia e fatos históricos, normaliza conteúdo e salva em `person_generated_insights`. |
+| `src/app/utils/zodiac.ts` | Apoia cálculo do signo solar quando há data de nascimento. |
+
+Contratos:
+
+- `Conteúdos automáticos` tem ações `Gerar conteúdos ausentes`, `Regenerar conteúdos`, `Limpar astrologia`, `Limpar fatos` e `Salvar conteúdos automáticos`.
+- `Fatos do nascimento` deve expor título, resumo principal, subtítulo do período, título/texto Brasil e título/texto Mundo.
+- O salvamento deve preservar `brazil.body` e `world.body` como arrays de parágrafos.
+- A função remota deve ser redeployada quando o arquivo da Edge Function for alterado.
 
 ## Runtimes React defensivos
 

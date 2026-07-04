@@ -1,10 +1,10 @@
 # Documentação do produto — arvorefamilia
 
-> Última revisão: 2026-07-03
-> Escopo: documentação canônica mantida em `docs/` após auditoria, limpeza final, ajustes mobile/admin, layout compartilhado de mapas, inventário real de runtimes carregados por `index.html` e correções de validação para PowerShell.
+> Última revisão: 2026-07-04  
+> Escopo: documentação canônica mantida em `docs/` após auditoria, limpeza final, ajustes mobile/admin, layout compartilhado de mapas, inventário real de runtimes, Linha do Tempo com PDF, IA de conteúdos automáticos e conexões familiares.  
 > Status: canônico.
 
-Este diretório concentra a documentação fundamental do produto. A fonte de verdade para comportamento continua sendo o código da branch `main`, especialmente `src/app/routes.tsx`, `src/app/pages`, `src/app/components`, `src/app/components/FamilyTree`, `src/app/services`, `src/app/types`, `src/app/utils`, `src/main.tsx`, `index.html`, `api/ai.ts` e os arquivos SQL/Supabase versionados.
+Este diretório concentra a documentação fundamental do produto. A fonte de verdade para comportamento continua sendo o código da branch `main`, especialmente `src/app/routes.tsx`, `src/app/pages`, `src/app/components`, `src/app/components/Timeline`, `src/app/services`, `src/app/types`, `src/app/utils`, `src/main.tsx`, `index.html`, `api/ai.ts` e os arquivos SQL/Supabase versionados.
 
 ## Estrutura canônica
 
@@ -51,7 +51,7 @@ docs/
     REVISAO_DOCUMENTACAO_MAPA_MOBILE_20260701.md
 ```
 
-Arquivos residuais fora desse índice não devem ser usados como contrato operacional. Checklists datados, baselines antigos, diagnósticos pontuais ou documentos de rodada devem ser removidos, absorvidos pelos documentos canônicos ou preservados em `docs/historico/` apenas quando houver valor real de manutenção.
+Arquivos residuais fora desse índice não devem ser usados como contrato operacional.
 
 ## Índice canônico
 
@@ -65,31 +65,15 @@ Arquivos residuais fora desse índice não devem ser usados como contrato operac
 | Regras de não regressão | `REGRAS_DE_NAO_REGRESSAO.md` |
 | Correção de erros | `GUIA_CORRECAO_ERROS.md` |
 | Próximos passos | `PLANO_PROXIMOS_PASSOS.md` |
-| Configurações públicas e `/admin/home` | `admin-home-configuracoes-publicas.md` |
-| Arquitetura e decisões técnicas | `arquitetura/DECISOES_ARQUITETURAIS.md` |
-| Rotas e guards | `arquitetura/ROTAS_E_GUARDS.md` |
 | Deploy | `operacao/DEPLOY.md` |
-| Migrations Supabase | `operacao/MIGRATIONS_SUPABASE.md` |
-| OAuth Google | `operacao/OAUTH_GOOGLE.md` |
+| Migrations Supabase e Edge Functions | `operacao/MIGRATIONS_SUPABASE.md` |
 | Storage | `operacao/STORAGE_MAINTENANCE.md` |
-| Mapa familiar e linha geracional | `funcionalidades/MAPA_FAMILIAR_VIEW.md` |
-| Árvore, conectores e painel | `funcionalidades/ARVORE_LEGENDAS_CONECTORES_PAINEL.md` |
-| Status conjugal | `funcionalidades/STATUS_CONJUGAL.md` |
 | Meus dados, IA, Mini Bio e Curiosidades | `funcionalidades/MINI_BIO_CURIOSIDADES_IA.md` |
-| Meus vínculos | `funcionalidades/MEUS_VINCULOS.md` |
-| Revisão de dados | `funcionalidades/REVISAO_DADOS.md` |
-| Curiosidades | `funcionalidades/CURIOSIDADES.md` |
-| Fatos e arquivos históricos | `funcionalidades/ARQUIVOS_HISTORICOS.md` |
-| Notificações administrativas | `funcionalidades/NOTIFICACOES_ADMIN.md` |
+| Curiosidades e conexões | `funcionalidades/CURIOSIDADES.md` |
+| Fatos, arquivos históricos e Linha do Tempo | `funcionalidades/ARQUIVOS_HISTORICOS.md` |
 | Funcionalidades complementares | `funcionalidades/FUNCIONALIDADES_COMPLEMENTARES.md` |
-| Auditoria documental | `historico/AUDITORIA_DOCUMENTACAO_FINAL_20260623.md` |
-| Legado técnico consolidado | `historico/LEGADO_TECNICO.md` |
-| Limpeza documental final | `historico/LIMPEZA_DOCUMENTACAO_FINAL_20260623.md` |
-| Revisão documental do mapa mobile | `historico/REVISAO_DOCUMENTACAO_MAPA_MOBILE_20260701.md` |
 
 ## Rotas funcionais cobertas
-
-As rotas abaixo refletem `src/app/routes.tsx` na branch `main`.
 
 ### Públicas e acesso
 
@@ -101,15 +85,15 @@ As rotas abaixo refletem `src/app/routes.tsx` na branch `main`.
 ### Árvore, busca e perfil
 
 - `/` redireciona para `/mapa-familiar`;
-- `/mapa-familiar` e `/linha-geracional` compartilham, no mobile, `TreeMapSharedLayout` com `<Outlet />`;
-- `/mapa-familiar-horizontal` continua usando a shell `Home`/`TreeHomeShell`;
+- `/mapa-familiar`;
+- `/linha-geracional`;
+- `/mapa-familiar-horizontal`;
 - `/busca`;
 - `/pessoa/:id`;
 - `/pessoas/:id`.
 
 ### Membro e onboarding
 
-- `/minha-arvore/editar` redireciona para `/meus-dados`;
 - `/meus-dados`;
 - `/meus-vinculos`;
 - `/arquivos-historicos`;
@@ -131,16 +115,11 @@ As rotas abaixo refletem `src/app/routes.tsx` na branch `main`.
 - `/admin`;
 - `/admin/login`;
 - `/admin/dashboard`;
-- `/aprovacoes`;
-- `/admin/aprovacoes`;
 - `/admin/home`;
 - `/admin/pessoas`;
-- `/admin/pessoas/novas`;
-- `/admin/pessoas/nova`;
 - `/admin/pessoas/:id`;
 - `/admin/pessoas/:id/editar`;
 - `/admin/relacionamentos`;
-- `/admin/relacionamentos/novo`;
 - `/admin/importacao`;
 - `/admin/migrar-dados`;
 - `/admin/diagnostico`;
@@ -153,37 +132,33 @@ As rotas abaixo refletem `src/app/routes.tsx` na branch `main`.
 
 ## Contratos transversais recentes
 
-### Notificações administrativas
+### Linha do Tempo, anexos e PDF
 
-A frente `/admin/notificacoes` possui contrato próprio e não deve ser documentada apenas como funcionalidade complementar. Mudanças nessa frente devem atualizar `funcionalidades/NOTIFICACOES_ADMIN.md`, `QA_MANUAL.md`, `REGRAS_DE_NAO_REGRESSAO.md`, `operacao/MIGRATIONS_SUPABASE.md` quando houver schema/migration e `INVENTARIO_TECNICO.md` quando houver novo módulo, serviço, tabela, chave ou script ativo.
+- `PersonTimeline` renderiza eventos automáticos/manuais da pessoa.
+- Anexos aparecem diretamente nos cards, sem título “Arquivos e registros vinculados”.
+- PDFs têm botão `Abrir` e `Baixar`.
+- `Abrir` abre modal controlado por `Dialog`.
+- PDF é renderizado por `PdfDocumentPreview` com PDF.js + canvas.
+- Google Viewer em iframe não deve ser usado por bloqueio potencial de `X-Frame-Options`.
+- O botão `Abrir` deve manter a mesma hierarquia visual de `Baixar`.
+- `Abrir em nova aba` permanece como fallback no rodapé do modal.
 
-### Mapa mobile, layout compartilhado e scripts defensivos
+### Conteúdos automáticos de pessoas
 
-A documentação deve diferenciar componentes React vigentes de scripts defensivos legados. Scripts carregados por `index.html` podem aparecer no inventário, mas regras absorvidas em componentes React devem ser documentadas preferencialmente no componente/rota de origem.
+- `/admin/gestao-conteudo-pessoas` permite gerar, regenerar, editar, salvar e limpar conteúdos automáticos por pessoa.
+- `astrology` e `historical_events` são os tipos atuais em `person_generated_insights`.
+- Fatos do nascimento devem preservar `period_title`, `brazil` e `world`.
+- A Edge Function `generate-person-insights` normaliza conteúdo histórico e tenta reparo automático se Brasil/Mundo vierem incompletos.
+- Alterações na Edge Function exigem deploy com `supabase functions deploy generate-person-insights`.
 
-Contratos vigentes:
+### Conexões familiares e parentesco
 
-- `/mapa-familiar` e `/linha-geracional` compartilham o chrome mobile via `TreeMapSharedLayout`;
-- header, toolbar superior e navegação inferior ficam fora da área trocada pelo `<Outlet />`;
-- `MobileTreeChromeContext` recebe o registro de dados do header e navegação feito pela rota filha ativa;
-- `MapaFamiliarSharedRoute` é camada transitória de compatibilidade para encaixar `Home` no layout compartilhado;
-- `LinhaGeracional` aceita `mobileChromeMode="shared"`;
-- `MobileFamilyMapFullLayer` renderiza o mapa completo abaixo da toolbar e sem botão `X` próprio;
-- runtimes carregados por `index.html` devem constar em `INVENTARIO_TECNICO.md`, `GUIA_COMPONENTES.md` e `GUIA_IMPLEMENTACOES.md`.
-
-Mudanças nessa frente devem atualizar, no mínimo, `funcionalidades/MAPA_FAMILIAR_VIEW.md`, `arquitetura/ROTAS_E_GUARDS.md`, `arquitetura/DECISOES_ARQUITETURAIS.md`, `GUIA_COMPONENTES.md`, `GUIA_IMPLEMENTACOES.md`, `GUIA_UX_LAYOUT.md`, `QA_MANUAL.md`, `REGRAS_DE_NAO_REGRESSAO.md` e `INVENTARIO_TECNICO.md`.
-
-### Primeiro acesso, vínculos e perspectiva memorial
-
-Contratos vigentes:
-
-- o tutorial de primeiro acesso deve preservar a etapa corrente em `sessionStorage` e continuar mesmo quando um alvo visual não estiver disponível;
-- `/meus-vinculos` usa status real de `user_person_links` para exibir `Cadastrado` ou `Pré-cadastrado`, dependendo de RLS/migration compatível;
-- o filtro de cônjuges deve ser respeitado também no escopo da linha geracional horizontal filtrada;
-- quando a perspectiva ativa for de pessoa falecida, rotas sociais como `/forum` e `/curiosidades` permanecem legíveis, mas ações de escrita, reação, publicação e perguntas à IA devem ficar bloqueadas;
-- `src/memberInteractionLayoutRuntimeFixes.ts` é runtime defensivo transitório carregado por `src/main.tsx` e deve ser absorvido por componentes React definitivos quando estabilizado.
-
-Mudanças nessa frente devem atualizar `funcionalidades/MEUS_VINCULOS.md`, `funcionalidades/CURIOSIDADES.md`, `funcionalidades/FUNCIONALIDADES_COMPLEMENTARES.md`, `funcionalidades/MINI_BIO_CURIOSIDADES_IA.md`, `arquitetura/ROTAS_E_GUARDS.md`, `REGRAS_DE_NAO_REGRESSAO.md`, `QA_MANUAL.md`, `INVENTARIO_TECNICO.md` e `operacao/MIGRATIONS_SUPABASE.md` quando houver schema/RLS/RPC.
+- A seção `Seu parentesco com ela/ele` usa `RelationshipFinder`.
+- A seção `Qual a minha conexão com alguém?` usa `ConnectionDiscoveryPanel`.
+- Frases principais devem usar `getRelationshipResultSentenceWithOverrides` quando disponível.
+- `relationshipSentenceOverrides` cobre padrões por filho em comum e família do cônjuge.
+- Termos com gênero conhecido/inferido devem usar forma específica (`avó`, `avô`, `sobrinha`, `sobrinho`, `casada`, `casado`).
+- O fallback `Há uma ligação familiar entre...` não deve aparecer para padrões conhecidos.
 
 ## Validação técnica
 
@@ -195,25 +170,22 @@ git diff --check
 grep -R --include='*.md' --include='*.txt' --include='*.json' --include='*.sql' $'\xEF\xBF\xBD' docs || true
 npm run typecheck
 npm run build
-npm test
+npm run test
 ```
 
 ### PowerShell
-
-O comando `grep -R --include='*.md' --include='*.txt' --include='*.json' --include='*.sql' $'\xEF\xBF\xBD' docs || true` é sintaxe de Bash. Em Windows PowerShell, use:
 
 ```powershell
 git status --short
 git diff --check
 
-# Busca o caractere de substituição Unicode U+FFFD apenas em arquivos textuais.
 Get-ChildItem -Path .\docs -Recurse -File |
   Where-Object { $_.Extension -in ".md", ".txt", ".json", ".sql" } |
   Select-String -SimpleMatch ([char]0xFFFD)
 
 npm run typecheck
 npm run build
-npm test
+npm run test
 ```
 
 ## Regra de manutenção
@@ -221,7 +193,5 @@ npm test
 - Alterações funcionais devem atualizar o documento funcional correspondente e, quando necessário, `GUIA_IMPLEMENTACOES.md`, `GUIA_COMPONENTES.md`, `GUIA_UX_LAYOUT.md`, `QA_MANUAL.md`, `REGRAS_DE_NAO_REGRESSAO.md` e `INVENTARIO_TECNICO.md`.
 - Alterações de rota, layout compartilhado ou guard devem atualizar `arquitetura/ROTAS_E_GUARDS.md`, `arquitetura/DECISOES_ARQUITETURAIS.md` e `INVENTARIO_TECNICO.md`.
 - Alterações de schema, RLS, migrations, Edge Functions ou jobs devem atualizar `operacao/MIGRATIONS_SUPABASE.md`, `QA_MANUAL.md` e o documento funcional afetado.
-- Alterações em comportamento por perspectiva memorial devem atualizar os documentos de fórum/curiosidades, rotas/guards, QA e não regressão.
-- Alterações em badges de vínculos ou RLS de `user_person_links` devem atualizar `funcionalidades/MEUS_VINCULOS.md` e `operacao/MIGRATIONS_SUPABASE.md`.
-- Alterações em `/admin/notificacoes` devem atualizar `funcionalidades/NOTIFICACOES_ADMIN.md` e, quando houver mudança transversal, `REGRAS_DE_NAO_REGRESSAO.md` e `INVENTARIO_TECNICO.md`.
+- Alterações em Linha do Tempo/PDF devem atualizar também `ATTRIBUTIONS.md` quando houver biblioteca/CDN externo.
 - Não criar documentos datados de rodada quando o conteúdo couber nos documentos canônicos existentes.

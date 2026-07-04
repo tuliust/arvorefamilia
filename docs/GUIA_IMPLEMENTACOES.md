@@ -1,7 +1,7 @@
 # Guia de implementações
 
-> Última revisão: 2026-07-03
-> Escopo: comportamento implementado na branch `main`, incluindo layout compartilhado mobile dos mapas, runtimes defensivos reais, primeiro acesso, vínculos, notificações administrativas e validação compatível com PowerShell.
+> Última revisão: 2026-07-04
+> Escopo: comportamento implementado na branch `main`, incluindo layout compartilhado mobile dos mapas, runtimes defensivos reais, primeiro acesso, vínculos, notificações administrativas e validação compatível com PowerShell, timeline com PDF em canvas, parentesco por afinidade e conteúdos automáticos de pessoa.
 > Status: canônico.
 
 ## Rotas e carregamento
@@ -33,6 +33,66 @@
 - `MemberRoute` e `TreeAccessRoute` bloqueiam rotas internas enquanto `dados_confirmados = false`.
 - Pessoa marcada como falecida em `/meus-dados` pula `/preferencias`.
 - Alterações de vínculos que dependem de aprovação são pendência, não gravação definitiva.
+
+## Timeline, anexos e preview de PDF
+
+- `PersonTimeline.tsx` renderiza eventos e anexos no perfil.
+- `TimelineAttachments` retorna `null` quando não há anexos.
+- Anexos aparecem em cards internos sem título intermediário.
+- `ATTACHMENT_ACTION_CLASS` padroniza visualmente `Abrir` e `Baixar`.
+- Para PDF, `Abrir` altera o estado `previewAttachment` e abre `AttachmentPreviewDialog`.
+- `AttachmentPreviewDialog` usa `PdfDocumentPreview` quando `attachment.kind === 'pdf'`.
+- Para não-PDF com URL, a pré-visualização pode usar iframe ou nova aba, conforme o tipo.
+- `PdfDocumentPreview` carrega PDF.js por CDN, configura `GlobalWorkerOptions.workerSrc`, busca o arquivo por `fetch(url, { cache: 'no-store' })`, lê `ArrayBuffer` e renderiza cada página em canvas.
+- O componente mantém estados `idle`, `loading`, `ready` e `error`.
+- Ao desmontar, remove canvases renderizados e limpa o container.
+- `Abrir em nova aba` é fallback permanente no rodapé do modal.
+
+Regras técnicas:
+
+- não usar Google Viewer em iframe, pois pode ser bloqueado por `X-Frame-Options: sameorigin`;
+- não depender do viewer nativo do navegador para renderizar PDF remoto dentro do modal;
+- não remover o botão `Baixar` do card da timeline;
+- se o projeto migrar de CDN para `pdfjs-dist`, atualizar dependências, atribuições e inventário.
+
+## Parentesco, conexões e sobrescritas de frases
+
+- `calculateRelationshipDegree` continua sendo a fonte do caminho no grafo.
+- `relationshipDegreeDisplay.ts` formata o resultado geral, aplica inferência de gênero e gera frases para parentesco direto, avós/netos, tios/sobrinhos, primos e vínculos conjugais.
+- `relationshipSentenceOverrides.ts` atua como camada final de frase para caminhos específicos que o classificador genérico encontra por filho em comum e família de cônjuge.
+- `RelationshipFinder.tsx` usa `getRelationshipResultSentenceWithOverrides` no perfil.
+- `ConnectionDiscoveryPanel.tsx` usa `getRelationshipResultSentenceWithOverrides` na aba de conexões.
+- `CuriosidadesConnectionSection.tsx` delega a renderização do resultado ao painel compartilhado.
+
+Padrões cobertos pela camada de sobrescrita:
+
+- `parent>child>sibling>parent`;
+- `parent>child>sibling>parent>spouse`.
+
+Regras:
+
+- frases devem privilegiar narrativa familiar clara;
+- `Há uma ligação familiar entre...` deve ser fallback, não resultado para caminhos já conhecidos;
+- termos de gênero devem respeitar `pessoa.genero` e, quando ausente, inferência conservadora por nome;
+- novos padrões devem ter teste em `relationshipSentenceOverrides.test.ts` ou teste equivalente.
+
+## Conteúdos automáticos de pessoa
+
+- `AdminPeopleContentSettings.tsx` permite gerar, regenerar, editar, limpar e salvar astrologia e fatos do nascimento.
+- `personInsightsService.ts` invoca a Supabase Edge Function `generate-person-insights`, lê e persiste registros em `person_generated_insights`.
+- `generate-person-insights/index.ts` exige data de nascimento completa, usa `OPENAI_API_KEY`, `SUPABASE_URL` e `SUPABASE_SERVICE_ROLE_KEY`.
+- A Edge Function gera `astrology` e `historical_events`.
+- Para fatos históricos, o prompt exige `title`, `main_event`, `period_title`, `brazil` e `world`.
+- Se `brazil.body` ou `world.body` vierem vazios, a função chama um prompt de reparo.
+- O conteúdo histórico final é normalizado antes do upsert.
+- Registros históricos gerados pela função usam `prompt_version: v2-contexto-brasil-mundo`; salvamento manual do admin usa `prompt_version: admin-manual-v1`.
+
+Regras:
+
+- alteração na Edge Function exige `supabase functions deploy generate-person-insights`;
+- alteração apenas no admin/frontend exige deploy do frontend;
+- o admin deve impedir geração/salvamento sem data de nascimento completa;
+- erro de IA deve retornar mensagem clara e não bloquear edição manual.
 
 ## Runtimes defensivos
 
