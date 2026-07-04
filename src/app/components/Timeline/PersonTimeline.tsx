@@ -60,6 +60,8 @@ const TYPE_STYLES: Record<PersonTimelineItemType, string> = {
   other: 'bg-gray-50 text-gray-700 ring-gray-200',
 };
 
+const ATTACHMENT_ACTION_CLASS = 'inline-flex items-center gap-1 text-gray-600 hover:text-gray-900';
+
 function historicalTimelineItemHasFile(item: PersonTimelineItem) {
   if (item.type !== 'historical_file') return undefined;
   return item.metadata?.has_file === true;
@@ -140,6 +142,53 @@ function AttachmentPreviewDialog({
   onOpenChange: (open: boolean) => void;
 }) {
   const attachmentUrl = attachment?.url;
+  const [previewUrl, setPreviewUrl] = React.useState<string | null>(null);
+  const [previewLoading, setPreviewLoading] = React.useState(false);
+  const [previewError, setPreviewError] = React.useState<string | null>(null);
+
+  React.useEffect(() => {
+    if (!attachmentUrl || attachment?.kind !== 'pdf') {
+      setPreviewUrl(null);
+      setPreviewError(null);
+      setPreviewLoading(false);
+      return undefined;
+    }
+
+    let cancelled = false;
+    let objectUrl: string | null = null;
+
+    async function loadPdfPreview() {
+      try {
+        setPreviewLoading(true);
+        setPreviewError(null);
+        setPreviewUrl(null);
+
+        const response = await fetch(attachmentUrl);
+        if (!response.ok) throw new Error('PDF não carregado.');
+
+        const fileBlob = await response.blob();
+        const pdfBlob = fileBlob.type === 'application/pdf'
+          ? fileBlob
+          : new Blob([fileBlob], { type: 'application/pdf' });
+
+        objectUrl = URL.createObjectURL(pdfBlob);
+        if (!cancelled) setPreviewUrl(objectUrl);
+      } catch {
+        if (!cancelled) {
+          setPreviewError('Não foi possível carregar a pré-visualização do PDF.');
+        }
+      } finally {
+        if (!cancelled) setPreviewLoading(false);
+      }
+    }
+
+    void loadPdfPreview();
+
+    return () => {
+      cancelled = true;
+      if (objectUrl) URL.revokeObjectURL(objectUrl);
+    };
+  }, [attachment?.id, attachment?.kind, attachmentUrl]);
 
   return (
     <Dialog open={Boolean(attachment)} onOpenChange={onOpenChange}>
@@ -154,22 +203,28 @@ function AttachmentPreviewDialog({
         </DialogHeader>
 
         <div className="min-h-0 flex-1 bg-gray-100">
-          {attachmentUrl ? (
+          {previewUrl ? (
             <iframe
-              src={attachmentUrl}
+              src={`${previewUrl}#toolbar=0&navpanes=0`}
               title={`Visualização de ${attachment?.title || 'arquivo'}`}
               className="h-full w-full border-0 bg-white"
             />
           ) : (
             <div className="flex h-full items-center justify-center p-6 text-center text-sm text-gray-500">
-              Este arquivo não tem uma URL disponível para visualização.
+              {previewLoading
+                ? 'Carregando PDF...'
+                : previewError || 'Este arquivo não tem uma URL disponível para visualização.'}
             </div>
           )}
         </div>
 
         {attachmentUrl && attachment && (
           <div className="flex shrink-0 flex-wrap items-center justify-between gap-3 border-t border-gray-100 bg-white px-5 py-3 text-xs font-semibold sm:text-sm">
-            <span className="text-gray-500">O botão Baixar continua disponível no cartão da linha do tempo.</span>
+            <span className="text-gray-500">
+              {previewError
+                ? 'Use a abertura em nova aba caso o navegador bloqueie a pré-visualização.'
+                : 'O botão Baixar continua disponível no cartão da linha do tempo.'}
+            </span>
             <a
               href={attachmentUrl}
               target="_blank"
@@ -219,7 +274,7 @@ function TimelineAttachments({ attachments }: { attachments?: PersonTimelineAtta
                       <button
                         type="button"
                         onClick={() => setPreviewAttachment(attachment)}
-                        className="inline-flex items-center gap-1 text-blue-700 hover:text-blue-900"
+                        className={ATTACHMENT_ACTION_CLASS}
                       >
                         <ExternalLink className="h-3.5 w-3.5" />
                         Abrir
@@ -229,7 +284,7 @@ function TimelineAttachments({ attachments }: { attachments?: PersonTimelineAtta
                         href={attachment.url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1 text-blue-700 hover:text-blue-900"
+                        className={ATTACHMENT_ACTION_CLASS}
                       >
                         <ExternalLink className="h-3.5 w-3.5" />
                         Abrir
@@ -238,7 +293,7 @@ function TimelineAttachments({ attachments }: { attachments?: PersonTimelineAtta
                     <a
                       href={attachment.url}
                       download={getAttachmentDownloadName(attachment)}
-                      className="inline-flex items-center gap-1 text-gray-600 hover:text-gray-900"
+                      className={ATTACHMENT_ACTION_CLASS}
                     >
                       <Download className="h-3.5 w-3.5" />
                       Baixar
