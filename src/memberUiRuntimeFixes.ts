@@ -343,6 +343,41 @@ function applyUserMenuFixes() {
   });
 }
 
+function getMeusDadosFieldLabelByText(text: string) {
+  const labels = Array.from(document.querySelectorAll<HTMLLabelElement>('main form label'));
+
+  return labels.find((label) => {
+    const labelTextElement = label.firstElementChild?.firstElementChild;
+    return normalizeSpaces(labelTextElement?.textContent ?? '') === text;
+  }) ?? null;
+}
+
+function applyMeusDadosDeathFieldsLayoutFix() {
+  if (!isCurrentPath('/meus-dados')) return;
+
+  const deathDateField = getMeusDadosFieldLabelByText('Dia ou Ano de Falecimento');
+  const deathLocationField = getMeusDadosFieldLabelByText('Local de falecimento');
+  if (!deathDateField || !deathLocationField) return;
+
+  const locationGroup = deathLocationField.closest<HTMLElement>('div.grid');
+  const deathFieldsGrid = deathDateField.parentElement;
+  if (!locationGroup || !deathFieldsGrid || locationGroup.parentElement !== deathFieldsGrid) return;
+
+  const isMediumViewport = window.matchMedia('(min-width: 768px)').matches;
+  const isSmallViewport = window.matchMedia('(min-width: 640px)').matches;
+
+  deathFieldsGrid.style.gridTemplateColumns = isMediumViewport
+    ? 'minmax(190px, 240px) minmax(0, 1fr)'
+    : '';
+  deathFieldsGrid.setAttribute(RUNTIME_FIX_ATTR, 'meus-dados-falecimento-layout');
+
+  locationGroup.style.minWidth = '0';
+  locationGroup.style.gridTemplateColumns = isSmallViewport
+    ? 'minmax(0, 1fr) minmax(160px, 180px)'
+    : '';
+  locationGroup.setAttribute(RUNTIME_FIX_ATTR, 'meus-dados-local-falecimento-layout');
+}
+
 function applyMeusDadosTextFixes() {
   if (!isCurrentPath('/meus-dados')) return;
 
@@ -351,6 +386,8 @@ function applyMeusDadosTextFixes() {
     if (normalizeSpaces(value) === 'Ajustar Fatos e Arquivos Históricos') return 'Fatos e Arquivos Históricos';
     return value;
   });
+
+  applyMeusDadosDeathFieldsLayoutFix();
 }
 
 function applyMemberUiRuntimeFixes() {
