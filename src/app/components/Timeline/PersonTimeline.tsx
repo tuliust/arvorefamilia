@@ -60,7 +60,7 @@ const TYPE_STYLES: Record<PersonTimelineItemType, string> = {
   other: 'bg-gray-50 text-gray-700 ring-gray-200',
 };
 
-const ATTACHMENT_ACTION_CLASS = 'inline-flex items-center gap-1 text-gray-600 hover:text-gray-900';
+const ATTACHMENT_ACTION_CLASS = 'inline-flex items-center gap-1 text-xs font-semibold leading-5 text-gray-600 hover:text-gray-900';
 
 function historicalTimelineItemHasFile(item: PersonTimelineItem) {
   if (item.type !== 'historical_file') return undefined;
@@ -134,6 +134,11 @@ function getAttachmentDownloadName(attachment: PersonTimelineAttachment) {
   return cleanTitle.endsWith(`.${extension}`) ? cleanTitle : `${cleanTitle}.${extension}`;
 }
 
+function getPdfPreviewUrl(attachmentUrl?: string) {
+  if (!attachmentUrl) return undefined;
+  return `https://docs.google.com/gview?embedded=1&url=${encodeURIComponent(attachmentUrl)}`;
+}
+
 function AttachmentPreviewDialog({
   attachment,
   onOpenChange,
@@ -142,53 +147,7 @@ function AttachmentPreviewDialog({
   onOpenChange: (open: boolean) => void;
 }) {
   const attachmentUrl = attachment?.url;
-  const [previewUrl, setPreviewUrl] = React.useState<string | null>(null);
-  const [previewLoading, setPreviewLoading] = React.useState(false);
-  const [previewError, setPreviewError] = React.useState<string | null>(null);
-
-  React.useEffect(() => {
-    if (!attachmentUrl || attachment?.kind !== 'pdf') {
-      setPreviewUrl(null);
-      setPreviewError(null);
-      setPreviewLoading(false);
-      return undefined;
-    }
-
-    let cancelled = false;
-    let objectUrl: string | null = null;
-
-    async function loadPdfPreview() {
-      try {
-        setPreviewLoading(true);
-        setPreviewError(null);
-        setPreviewUrl(null);
-
-        const response = await fetch(attachmentUrl);
-        if (!response.ok) throw new Error('PDF não carregado.');
-
-        const fileBlob = await response.blob();
-        const pdfBlob = fileBlob.type === 'application/pdf'
-          ? fileBlob
-          : new Blob([fileBlob], { type: 'application/pdf' });
-
-        objectUrl = URL.createObjectURL(pdfBlob);
-        if (!cancelled) setPreviewUrl(objectUrl);
-      } catch {
-        if (!cancelled) {
-          setPreviewError('Não foi possível carregar a pré-visualização do PDF.');
-        }
-      } finally {
-        if (!cancelled) setPreviewLoading(false);
-      }
-    }
-
-    void loadPdfPreview();
-
-    return () => {
-      cancelled = true;
-      if (objectUrl) URL.revokeObjectURL(objectUrl);
-    };
-  }, [attachment?.id, attachment?.kind, attachmentUrl]);
+  const previewUrl = attachment?.kind === 'pdf' ? getPdfPreviewUrl(attachmentUrl) : attachmentUrl;
 
   return (
     <Dialog open={Boolean(attachment)} onOpenChange={onOpenChange}>
@@ -205,26 +164,22 @@ function AttachmentPreviewDialog({
         <div className="min-h-0 flex-1 bg-gray-100">
           {previewUrl ? (
             <iframe
-              src={`${previewUrl}#toolbar=0&navpanes=0`}
+              key={previewUrl}
+              src={previewUrl}
               title={`Visualização de ${attachment?.title || 'arquivo'}`}
               className="h-full w-full border-0 bg-white"
+              allow="fullscreen"
             />
           ) : (
             <div className="flex h-full items-center justify-center p-6 text-center text-sm text-gray-500">
-              {previewLoading
-                ? 'Carregando PDF...'
-                : previewError || 'Este arquivo não tem uma URL disponível para visualização.'}
+              Este arquivo não tem uma URL disponível para visualização.
             </div>
           )}
         </div>
 
         {attachmentUrl && attachment && (
           <div className="flex shrink-0 flex-wrap items-center justify-between gap-3 border-t border-gray-100 bg-white px-5 py-3 text-xs font-semibold sm:text-sm">
-            <span className="text-gray-500">
-              {previewError
-                ? 'Use a abertura em nova aba caso o navegador bloqueie a pré-visualização.'
-                : 'O botão Baixar continua disponível no cartão da linha do tempo.'}
-            </span>
+            <span className="text-gray-500">Se a pré-visualização não carregar, abra o PDF em nova aba.</span>
             <a
               href={attachmentUrl}
               target="_blank"
