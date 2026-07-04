@@ -14,8 +14,8 @@ import type { RelationshipDegreeResult } from '../../utils/relationshipDegree';
 import {
   formatShortName,
   getRelationshipNarrative,
-  getRelationshipResultSentence,
 } from '../../utils/relationshipDegreeDisplay';
+import { getRelationshipResultSentenceWithOverrides } from '../../utils/relationshipSentenceOverrides';
 
 interface ConnectionDiscoveryPanelProps {
   pessoas: Pessoa[];
@@ -150,7 +150,7 @@ function PersonAvatar({ pessoa }: { pessoa?: Pessoa }) {
 function ConnectionResultCard({ result, pessoas }: { result: RelationshipDegreeResult; pessoas: Pessoa[] }) {
   const origin = getPessoaById(pessoas, result.originPersonId);
   const target = getPessoaById(pessoas, result.targetPersonId);
-  const resultSentence = getRelationshipResultSentence(result, pessoas);
+  const resultSentence = getRelationshipResultSentenceWithOverrides(result, pessoas);
   const narrative = getRelationshipNarrative(result, pessoas);
   const fallbackNarrative = buildUncleOrAuntNarrative(result, pessoas);
   const narrativeSummary = (fallbackNarrative || narrative.summary).trim();
