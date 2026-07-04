@@ -164,6 +164,35 @@ function matchesAdvancedFilters(pessoa: Pessoa, filters: AdvancedFilters) {
   );
 }
 
+function PersonAvatar({ pessoa }: { pessoa: Pessoa }) {
+  const isPet = pessoa.humano_ou_pet === 'Pet';
+  const hasPhoto = hasValue(pessoa.foto_principal_url);
+
+  return (
+    <div className={`relative flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full ${
+      isPet ? 'bg-amber-100' : 'bg-blue-100'
+    }`}>
+      {isPet ? (
+        <Dog className="h-5 w-5 text-amber-700" />
+      ) : (
+        <User className="h-5 w-5 text-blue-700" />
+      )}
+      {hasPhoto && (
+        <img
+          key={pessoa.foto_principal_url}
+          src={pessoa.foto_principal_url}
+          alt={`Foto de ${pessoa.nome_completo}`}
+          className="absolute inset-0 h-full w-full rounded-full object-cover"
+          loading="lazy"
+          onError={(event) => {
+            event.currentTarget.style.display = 'none';
+          }}
+        />
+      )}
+    </div>
+  );
+}
+
 export function AdminPessoas() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -457,15 +486,7 @@ export function AdminPessoas() {
                     className="flex min-w-0 flex-col gap-3 rounded-lg border border-gray-200 p-4 transition-colors hover:bg-gray-50 sm:flex-row sm:items-center sm:justify-between"
                   >
                     <div className="flex min-w-0 flex-1 items-center gap-3">
-                      <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full ${
-                        pessoa.humano_ou_pet === 'Pet' ? 'bg-amber-100' : 'bg-blue-100'
-                      }`}>
-                        {pessoa.humano_ou_pet === 'Pet' ? (
-                          <Dog className="h-5 w-5 text-amber-700" />
-                        ) : (
-                          <User className="h-5 w-5 text-blue-700" />
-                        )}
-                      </div>
+                      <PersonAvatar pessoa={pessoa} />
 
                       <div className="min-w-0 flex-1">
                         <h3 className="break-words font-medium text-gray-900">{pessoa.nome_completo}</h3>
