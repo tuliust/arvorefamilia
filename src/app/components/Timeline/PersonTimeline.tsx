@@ -22,6 +22,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '../ui/dialog';
+import { PdfDocumentPreview } from './PdfDocumentPreview';
 import type { PersonTimelineAttachment, PersonTimelineItem, PersonTimelineItemType } from '../../utils/buildPersonTimeline';
 
 type PersonTimelineProps = {
@@ -134,11 +135,6 @@ function getAttachmentDownloadName(attachment: PersonTimelineAttachment) {
   return cleanTitle.endsWith(`.${extension}`) ? cleanTitle : `${cleanTitle}.${extension}`;
 }
 
-function getPdfPreviewUrl(attachmentUrl?: string) {
-  if (!attachmentUrl) return undefined;
-  return `https://docs.google.com/gview?embedded=1&url=${encodeURIComponent(attachmentUrl)}`;
-}
-
 function AttachmentPreviewDialog({
   attachment,
   onOpenChange,
@@ -147,7 +143,6 @@ function AttachmentPreviewDialog({
   onOpenChange: (open: boolean) => void;
 }) {
   const attachmentUrl = attachment?.url;
-  const previewUrl = attachment?.kind === 'pdf' ? getPdfPreviewUrl(attachmentUrl) : attachmentUrl;
 
   return (
     <Dialog open={Boolean(attachment)} onOpenChange={onOpenChange}>
@@ -162,10 +157,11 @@ function AttachmentPreviewDialog({
         </DialogHeader>
 
         <div className="min-h-0 flex-1 bg-gray-100">
-          {previewUrl ? (
+          {attachment?.kind === 'pdf' ? (
+            <PdfDocumentPreview url={attachmentUrl} title={attachment.title} />
+          ) : attachmentUrl ? (
             <iframe
-              key={previewUrl}
-              src={previewUrl}
+              src={attachmentUrl}
               title={`Visualização de ${attachment?.title || 'arquivo'}`}
               className="h-full w-full border-0 bg-white"
               allow="fullscreen"
