@@ -1,19 +1,56 @@
 # Plano de próximos passos
 
 > Última revisão: 2026-07-03
-> Escopo: pendências reais após auditoria documental da branch `main`, limpeza de pendências já resolvidas e priorização das próximas documentações.
+> Escopo: pendências reais após auditoria documental da branch `main`, validações pós-merge, primeiro acesso, perfis gerenciados, Supabase/RLS, IA e documentação complementar.
 > Status: canônico.
 
 ## Pendências operacionais pós-merge
 
 - Conferir deploy gerado a partir da `main`.
-- Validar manualmente `/mapa-familiar`, `/linha-geracional`, `/mapa-familiar-horizontal`, `/curiosidades`, `/forum`, `/calendario-familiar`, `/meus-dados`, `/meus-vinculos`, `/admin/duvidas`, `/admin/atividades`, `/admin/notificacoes` e `/admin/gestao-conteudo-pessoas` no ambiente publicado.
+- Validar manualmente `/mapa-familiar`, `/linha-geracional`, `/mapa-familiar-horizontal`, `/curiosidades`, `/forum`, `/calendario-familiar`, `/meus-dados`, `/meus-vinculos`, `/arquivos-historicos`, `/preferencias`, `/revisao-dados`, `/admin/duvidas`, `/admin/atividades`, `/admin/notificacoes` e `/admin/gestao-conteudo-pessoas` no ambiente publicado.
 - Confirmar que o ambiente remoto do Supabase recebeu as migrations necessárias.
 - Confirmar que variáveis de ambiente de IA e demais chaves operacionais estão disponíveis quando exigidas.
 - Validar no ambiente publicado o bloqueio de rotas internas para usuário com `dados_confirmados = false`.
 - Validar que usuário com onboarding incompleto retorna para `/meus-dados` e mantém dados salvos nas etapas já preenchidas.
 - Validar que usuário com onboarding finalizado acessa `/mapa-familiar` e rotas internas normalmente.
 - Em `/admin/notificacoes`, abrir a aba `Configuração`, clicar em `Salvar` e confirmar registros em `admin_notification_configurations`, `admin_notification_catalogs` e a coluna `variable_settings`.
+
+## Pendências específicas de primeiro acesso e perfis gerenciados
+
+- Validar em produção `/meus-dados` no primeiro acesso:
+  - clicar em `Pular Tudo` sem responder o questionário;
+  - confirmar que não aparece `Selecione ao menos uma característica antes de continuar.`;
+  - confirmar que Mini Bio e Curiosidades podem ficar vazias;
+  - confirmar que `Confirmar meus dados` permanece disponível na tela final;
+  - clicar em `Voltar ao questionário` e confirmar retorno à primeira etapa.
+- Validar geração com IA em `/meus-dados`:
+  - responder parte do questionário;
+  - gerar/regenerar textos;
+  - confirmar limite visual de 500 caracteres;
+  - editar manualmente e recarregar a página.
+- Validar perfil gerenciado:
+  - selecionar pessoa sob responsabilidade no menu do avatar;
+  - abrir `/meus-dados`;
+  - confirmar que nome, avatar, dados pessoais e rascunhos pertencem à pessoa administrada;
+  - gerar Mini Bio/Curiosidades e confirmar que o texto usa dados da pessoa administrada, não do responsável;
+  - confirmar ausência de erro RLS em `person_profile_questionnaire_answers`.
+- Validar que as demais etapas do fluxo (`/meus-vinculos`, `/arquivos-historicos`, `/preferencias` e `/revisao-dados`) não misturam dados do usuário responsável com dados da pessoa ativa.
+- Se ainda não estiver implementado, criar card de reforço em `/revisao-dados` para foto, data completa de nascimento, local de nascimento, local atual, Mini Bio e Curiosidades pendentes.
+
+## Pendências de Supabase, RLS e Storage
+
+- Confirmar aplicação remota de `supabase/migrations/20260703120000_fix_admin_reset_profile_storage_api_block.sql`.
+- Confirmar aplicação remota de `supabase/migrations/20260703170000_allow_responsible_profile_questionnaire_answers.sql`.
+- Validar RLS de `person_profile_questionnaire_answers` com:
+  - usuário editando a própria pessoa;
+  - usuário responsável editando pessoa administrada;
+  - usuário sem permissão tentando acessar a pessoa.
+- Validar `admin_reset_person_profile` sem erro de deleção direta em `storage.objects`.
+- Planejar limpeza física de arquivos via Storage API, não por SQL direto.
+- Revisar a policy de `user_person_links` e planejar RPC restrita que retorne apenas `pessoa_id` para status de badge, reduzindo exposição de colunas não necessárias.
+- Confirmar políticas RLS para pessoas, relacionamentos, vínculos, fatos históricos, notificações, favoritos, fórum e visibilidade por pessoa.
+- Confirmar políticas RLS de `admin_notification_configurations`, `admin_notification_catalogs` e `user_first_map_accesses` em ambiente remoto.
+- Confirmar que `admin_notification_configurations.variable_settings` existe e aceita objeto JSONB no ambiente remoto.
 
 ## Pendências de produto e QA visual
 
@@ -44,25 +81,25 @@
 
 ## Pendências técnicas permanentes
 
-- Confirmar políticas RLS para pessoas, relacionamentos, vínculos, fatos históricos, notificações, favoritos, fórum e visibilidade por pessoa.
-- Confirmar políticas RLS de `admin_notification_configurations`, `admin_notification_catalogs` e `user_first_map_accesses` em ambiente remoto.
-- Confirmar que `admin_notification_configurations.variable_settings` existe e aceita objeto JSONB no ambiente remoto.
-- Revisar a policy de `user_person_links` e planejar RPC restrita que retorne apenas `pessoa_id` para status de badge, reduzindo exposição de colunas não necessárias.
 - Migrar, quando estável, `src/memberInteractionLayoutRuntimeFixes.ts` para componentes React/serviços tipados e remover manipulações diretas de DOM.
 - Revisar os scripts carregados por `index.html` e absorver em componentes React os que deixarem de ser necessários.
 - Criar documentação administrativa mais detalhada apenas quando novas rotas/abas administrativas forem implementadas no código.
+- Monitorar wrappers com nomes próximos (`MeusDadosWithInlineProfileBio` e `MeusVinculosWithProfileBio`) para evitar aplicação de lógica na rota errada.
+- Manter validação de `git diff --check`, typecheck, build e testes antes de publicar documentação ou código.
 
 ## Próximas documentações para ajustar
 
 Prioridade recomendada após esta rodada:
 
-1. `README.md` na raiz do repositório: substituir referências quebradas a `docs/historico/ROTAS_REMOVIDAS.md` e `docs/historico/SQLS_LEGADOS.md` por `docs/historico/LEGADO_TECNICO.md`.
-2. `docs/funcionalidades/MAPA_FAMILIAR_VIEW.md`: remover referência a runtime inexistente como `mobileFamilyTreeUncleSizingFix.ts`, revisar a lista de runtimes defensivos e alinhar com `index.html`.
-3. `docs/operacao/DEPLOY.md`: remover duplicidade de `/meus-dados`, incluir `/linha-geracional`, trocar “home pública” por rotas reais e adicionar comandos PowerShell.
-4. `docs/arquitetura/ROTAS_E_GUARDS.md`: revisar se precisa mencionar novos runtimes de `index.html` ou manter apenas arquitetura de rotas/guards.
-5. `docs/arquitetura/DECISOES_ARQUITETURAIS.md`: complementar decisão sobre scripts defensivos versus componentes React se a absorção dos runtimes avançar.
-6. `scripts/reorganizar-documentacao.sh` e `scripts/reorganizar-documentacao.ps1`: arquivar, neutralizar ou reescrever para não recriar índice/documentos antigos.
-7. `docs/funcionalidades/FUNCIONALIDADES_COMPLEMENTARES.md`: revisar se os contratos de calendário, fórum e notificações finais continuam atualizados após QA publicado.
+1. `docs/operacao/MIGRATIONS_SUPABASE.md`: incluir migrations `20260703120000_fix_admin_reset_profile_storage_api_block.sql` e `20260703170000_allow_responsible_profile_questionnaire_answers.sql`.
+2. `docs/GUIA_IMPLEMENTACOES.md`: detalhar `meus-dados:questionnaire-reset`, `skipped: true`, `responsiblePerspective` e pessoa ativa editável.
+3. `README.md` na raiz do repositório: substituir referências quebradas a `docs/historico/ROTAS_REMOVIDAS.md` e `docs/historico/SQLS_LEGADOS.md` por `docs/historico/LEGADO_TECNICO.md`.
+4. `docs/funcionalidades/MAPA_FAMILIAR_VIEW.md`: remover referência a runtime inexistente como `mobileFamilyTreeUncleSizingFix.ts`, revisar a lista de runtimes defensivos e alinhar com `index.html`.
+5. `docs/operacao/DEPLOY.md`: remover duplicidade de `/meus-dados`, incluir `/linha-geracional`, trocar “home pública” por rotas reais e adicionar comandos PowerShell.
+6. `docs/arquitetura/ROTAS_E_GUARDS.md`: revisar se precisa mencionar novos runtimes de `index.html` ou manter apenas arquitetura de rotas/guards.
+7. `docs/arquitetura/DECISOES_ARQUITETURAIS.md`: complementar decisão sobre scripts defensivos versus componentes React se a absorção dos runtimes avançar.
+8. `scripts/reorganizar-documentacao.sh` e `scripts/reorganizar-documentacao.ps1`: arquivar, neutralizar ou reescrever para não recriar índice/documentos antigos.
+9. `docs/funcionalidades/FUNCIONALIDADES_COMPLEMENTARES.md`: complementar onboarding com questionário opcional e perfis gerenciados, se ainda não estiver coberto.
 
 ## Regra de manutenção
 

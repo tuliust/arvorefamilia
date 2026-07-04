@@ -12,6 +12,8 @@
 - Dados mínimos de pessoas, relacionamentos, vínculos, fatos históricos, fotos, profissões e notificações.
 - Para QA mobile, validar preferencialmente em iPhone/Safari real ou device mode equivalente.
 - Para QA de notificações administrativas, migrations de catálogo/configuração aplicadas no ambiente remoto ou fallback validado.
+- Para QA de perfis gerenciados, usuário responsável com ao menos uma pessoa administrada via `person_responsible_links`.
+- Para QA de IA de perfil, `OPENAI_API_KEY` configurada ou fallback/erro de IA validado explicitamente.
 
 ## Validação técnica local
 
@@ -214,6 +216,41 @@ Validar em 320px, 375px, 390px e 430px.
 - Em mobile, confirmar que os ajustes não alteram o contrato já documentado de botões e questionário.
 - Confirmar que pessoa falecida pula `/preferencias`.
 
+### Questionário `Sobre Mim`
+
+- No primeiro acesso, abrir `/meus-dados` e ir até a seção `Sobre Mim`.
+- Clicar em `Pular Tudo` sem selecionar características ou responder perguntas.
+- Confirmar que não aparece a mensagem `Selecione ao menos uma característica antes de continuar.`
+- Confirmar que a tela final `Perfil` aparece com Mini Bio e Curiosidades editáveis.
+- Confirmar que Mini Bio e Curiosidades podem ficar vazias.
+- Confirmar que `Confirmar meus dados` permite continuar quando os dados pessoais obrigatórios estiverem válidos.
+- Clicar em `Voltar ao questionário` e confirmar retorno à primeira etapa.
+- Responder parte do questionário, finalizar e confirmar que a geração/regeneração por IA aparece apenas quando houver fonte suficiente.
+- Editar Mini Bio e Curiosidades manualmente, salvar, recarregar e confirmar persistência.
+- Simular falha de IA e confirmar que o erro não bloqueia leitura, edição manual ou continuação do fluxo.
+
+### Perfil gerenciado em `/meus-dados`
+
+- Selecionar uma pessoa sob responsabilidade no menu do avatar.
+- Confirmar que o menu passa a exibir nome/avatar da pessoa administrada.
+- Abrir `/meus-dados`.
+- Confirmar que o formulário mostra dados da pessoa administrada, não da pessoa responsável.
+- Responder o questionário e gerar Mini Bio/Curiosidades.
+- Confirmar que o texto gerado menciona dados da pessoa administrada.
+- Confirmar que a chamada a `person_profile_questionnaire_answers` não retorna 403/409 por RLS.
+- Limpar a perspectiva e confirmar retorno aos dados do perfil principal.
+
+
+## Fluxo de onboarding completo
+
+- Validar pessoa viva: `/meus-dados` -> `/meus-vinculos` -> `/arquivos-historicos` -> `/preferencias` -> `/revisao-dados` -> `/mapa-familiar`.
+- Validar pessoa falecida: `/meus-dados` -> `/meus-vinculos` -> `/arquivos-historicos` -> `/revisao-dados` -> `/mapa-familiar`.
+- Confirmar que dados já salvos não são perdidos ao voltar para etapas anteriores.
+- Confirmar que o fluxo não mistura dados quando a pessoa ativa é perfil gerenciado.
+- Em `/revisao-dados`, confirmar que Mini Bio e Curiosidades aparecem apenas quando fornecidas ou geradas.
+- Confirmar que ausência de Mini Bio e Curiosidades não bloqueia finalização.
+- Confirmar que alterações pendentes de vínculos aparecem como pendência de aprovação, não como alteração definitiva.
+
 ## Perspectiva memorial
 
 - Selecionar, pelo menu de perfis gerenciados, uma pessoa falecida.
@@ -235,6 +272,14 @@ Validar em 320px, 375px, 390px e 430px.
 - Confirmar que `Usuário do gatilho`, `Usuários específicos` e `Familiares próximos` aparecem como destinatários quando disponíveis.
 - Confirmar que `variable_settings` é preservado ao salvar e reabrir.
 - Confirmar que a tela não promete disparo real quando o evento estiver apenas preparado.
+
+### Reset de perfil administrativo
+
+- Abrir `/admin/pessoas` como admin.
+- Executar reset de perfil em pessoa de teste.
+- Confirmar que a RPC não falha com erro de deleção direta em `storage.objects`.
+- Confirmar que dados relacionais esperados foram limpos.
+- Confirmar que arquivos físicos remanescentes no Storage são tratados por rotina/API própria, não por SQL direto.
 
 ## Administração e demais rotas
 

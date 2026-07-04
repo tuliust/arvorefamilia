@@ -1,7 +1,7 @@
 # Guia de componentes
 
 > Última revisão: 2026-07-03
-> Escopo: componentes relevantes para rotas e fluxos funcionais da branch `main`, incluindo layout compartilhado mobile dos mapas, runtimes defensivos reais carregados por `index.html` e wrappers atuais.
+> Escopo: componentes relevantes para rotas e fluxos funcionais da branch `main`, incluindo layout compartilhado mobile dos mapas, primeiro acesso, questionário opcional `Sobre Mim`, perfis gerenciados, runtimes defensivos reais carregados por `index.html` e wrappers atuais.
 > Status: canônico.
 
 ## Home, mapas e shell compartilhada
@@ -57,6 +57,35 @@
 - A compactação de primos deve considerar 2, 4 e 5 cards como `double` e 3 ou 6 cards como `triple`.
 - Controles locais `+`/`−` dos grupos devem existir apenas quando houver ganho visual real com expansão.
 - `mobileFamilyTreeModel.ts` deve privilegiar relação explícita e metadados confiáveis antes de inferências, e nunca devolver o mesmo ID para pai e mãe.
+
+## Componentes de primeiro acesso, dados pessoais e perfis gerenciados
+
+| Componente / módulo | Papel |
+|---|---|
+| `MeusDados.tsx` | Página base de dados pessoais, foto, status vivo/falecido, redes sociais e questionário `Sobre Mim`. Deve carregar a pessoa ativa pela lista editável, incluindo perfis sob responsabilidade. |
+| `MeusDadosWithInlineProfileBio.tsx` | Wrapper de `/meus-dados`; renderiza `MeusDados` e injeta por portal a tela final de Mini Bio/Curiosidades. Mantém `Pular Tudo`, exibe `Voltar ao questionário` e não deve ser aplicado em `/meus-vinculos`. |
+| `MeusDadosProfileBioResults` | Tela final do questionário; mostra etapa `Perfil`, campos editáveis de Mini Bio/Curiosidades, mensagens opcionais e botão `Voltar ao questionário`. Só permite gerar/regenerar com IA quando houver fonte suficiente. |
+| `MeusDadosInlineProfileBioController` | Controla os hosts DOM da tela final, alterna conteúdo original do questionário, cria o portal e dispara `meus-dados:questionnaire-reset` ao voltar para a etapa inicial. |
+| `memberProfileService.ts` | Resolve vínculos editáveis do usuário, incluindo vínculo direto e pessoa sob responsabilidade, e centraliza atualização de pessoa ativa. |
+| `responsiblePerspectiveService.ts` | Persiste e notifica a perspectiva ativa de perfil gerenciado no navegador. |
+| `profileQuestionnaireService.ts` | Lê e salva respostas do questionário em `person_profile_questionnaire_answers`; deve receber o `pessoa.id` ativo. |
+| `UserProfileMenu.tsx` | Permite selecionar perfil gerenciado no menu do avatar, troca nome/avatar ativos e deve preservar clareza entre usuário responsável e pessoa administrada. |
+
+### Contratos do questionário `Sobre Mim`
+
+- O questionário é opcional.
+- `Pular Tudo` não pode exigir característica, tom ou resposta.
+- Mini Bio e Curiosidades podem ficar vazias.
+- `Voltar ao questionário` deve retornar à primeira etapa.
+- A geração com IA deve usar a pessoa ativa editável, não dados de autenticação do usuário responsável.
+- `MeusDadosWithInlineProfileBio` não deve ser confundido com `MeusVinculosWithProfileBio`.
+- Eventos funcionais:
+  - `meus-dados:questionnaire-finished`;
+  - `meus-dados:questionnaire-reset`.
+- Hosts funcionais:
+  - `meus-dados-profile-bio-result-host`;
+  - `meus-dados-profile-bio-actions-host`;
+  - `data-meus-dados-questionnaire-original`.
 
 ## Runtimes React defensivos
 
@@ -185,6 +214,13 @@ Seletores legados que não devem voltar como contrato vigente:
 | `adminNotificationConfigurationService.ts` | Carrega, reconcilia e salva catálogo/configurações persistidas em Supabase sem sobrescrever customizações existentes. |
 
 A UI administrativa deve consumir preferencialmente o catálogo carregado/reconciliado pelo serviço, não apenas arrays estáticos importados diretamente.
+
+## Regra específica para wrappers de membro
+
+- `MeusDadosWithInlineProfileBio` pertence à rota `/meus-dados` e ao questionário `Sobre Mim`.
+- `MeusVinculosWithProfileBio` pertence à rota `/meus-vinculos` e não deve receber ajustes de Mini Bio/Curiosidades.
+- Alterações em wrappers devem ser revisadas por rota, porque nomes semelhantes aumentam o risco de copiar lógica para o arquivo errado.
+- Quando uma regra estabilizar, preferir incorporá-la ao componente React de origem em vez de manter controle por portal/DOM.
 
 ## Regra de manutenção
 

@@ -98,6 +98,23 @@
 - O modal de pet não deve voltar a comprimir o formulário principal com lista lateral redundante.
 - Modais mobile de vínculo e pet não devem abrir teclado automaticamente antes de foco explícito.
 - Pessoa falecida no primeiro acesso não deve ser obrigada a passar por `/preferencias`.
+- O questionário `Sobre Mim` em `/meus-dados` é opcional e não pode bloquear o primeiro acesso.
+- `Pular Tudo` não pode acionar erro de característica obrigatória.
+- Mini Bio e Curiosidades podem permanecer vazias no primeiro acesso e fora dele.
+- `Voltar ao questionário` deve retornar à primeira etapa sem perder a tela ou quebrar o scroll da seção.
+- `Confirmar meus dados` não pode depender de respostas do questionário, Mini Bio ou Curiosidades.
+- A geração de Mini Bio/Curiosidades deve usar a pessoa ativa editável, inclusive pessoa sob responsabilidade.
+- Perfil gerenciado não pode gerar textos com dados da pessoa responsável.
+
+## Perfis gerenciados e RLS
+
+- A seleção de perfil gerenciado no menu do avatar deve trocar nome, avatar, contexto de edição e navegação para a pessoa administrada.
+- `/meus-dados` deve priorizar `responsiblePerspective` quando existir.
+- Serviços de edição devem consultar a lista editável, incluindo vínculo direto e `person_responsible_links`.
+- `person_profile_questionnaire_answers` deve permitir leitura/escrita para o usuário responsável quando houver vínculo válido com a pessoa administrada.
+- RLS não pode ser contornada gravando vínculo indevido em `user_person_links.user_id`.
+- Falha de RLS em questionário de perfil gerenciado é regressão funcional.
+- Rotas de primeiro acesso não devem misturar dados do usuário responsável com dados da pessoa administrada.
 
 ## Perspectiva memorial
 

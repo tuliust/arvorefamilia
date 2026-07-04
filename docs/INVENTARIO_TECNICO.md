@@ -1,7 +1,7 @@
 # Inventário técnico
 
 > Última revisão: 2026-07-03
-> Escopo: rotas, módulos, documentos finais, runtimes carregados por `index.html` e `src/main.tsx`, layout compartilhado mobile de mapas, ajustes desktop do mapa familiar, notificações, vínculos, tutorial e perspectiva memorial.
+> Escopo: rotas, módulos, documentos finais, runtimes carregados por `index.html` e `src/main.tsx`, layout compartilhado mobile de mapas, ajustes desktop do mapa familiar, notificações, vínculos, tutorial, questionário opcional `Sobre Mim`, perfis gerenciados e perspectiva memorial.
 > Status: canônico.
 
 ## Stack
@@ -145,11 +145,23 @@ Essa arquitetura é mobile-first. Desktop continua sendo responsabilidade das p�
 | Área | Arquivos principais |
 |---|---|
 | Dados pessoais e questionário `Sobre Mim` | `src/app/pages/MeusDados.tsx`, `src/app/pages/MeusDadosWithInlineProfileBio.tsx` |
+| Texto de perfil e IA | `src/app/services/profileQuestionnaireService.ts`, `api/ai.ts` |
+| Pessoa ativa e perfis gerenciados | `src/app/services/memberProfileService.ts`, `src/app/services/responsiblePerspectiveService.ts`, `src/app/services/personResponsibleLinksService.ts`, `src/app/components/layout/UserProfileMenu.tsx` |
 | Vínculos, pets, cônjuges e rascunhos | `src/app/pages/MeusVinculos.tsx`, `src/app/pages/MeusVinculosWithProfileBio.tsx`, `src/app/pages/MeusVinculosMobileShortcutsPage.tsx` |
 | Modal de pet | `src/app/pages/meus-vinculos/MeusVinculosPetEditorPortal.tsx` |
 | Fatos e arquivos históricos | `src/app/components/ArquivosHistoricos.tsx`, `src/app/pages/ArquivosHistoricosPage.tsx` |
 | Revisão final | `src/app/pages/RevisaoDados.tsx`, `src/app/pages/RevisaoDadosFlowPage.tsx` |
 | Guards | `src/app/components/MemberRoute.tsx`, `src/app/components/TreeAccessRoute.tsx`, `src/app/services/memberProfileService.ts` |
+
+Contratos atuais:
+
+- o questionário `Sobre Mim` é opcional;
+- Mini Bio e Curiosidades são opcionais;
+- `Pular Tudo` abre a tela final sem exigir característica selecionada;
+- `Voltar ao questionário` retorna à primeira etapa via `meus-dados:questionnaire-reset`;
+- a geração de Mini Bio/Curiosidades deve usar a pessoa ativa editável;
+- quando há `responsiblePerspective`, a pessoa administrada tem prioridade sobre o perfil principal do usuário responsável;
+- rascunhos de `/meus-dados` devem ser segmentados por `user.id` e `pessoa.id`.
 
 ## Notificações administrativas: arquivos de implementação
 
@@ -190,6 +202,17 @@ Essa arquitetura é mobile-first. Desktop continua sendo responsabilidade das p�
 | `src/memberInteractionLayoutRuntimeFixes.ts` | Runtime transitório para perspectiva memorial em `/forum` e `/curiosidades`, ajustes de `/meus-dados` e modal de pet em `/meus-vinculos`. |
 
 Wrappers ativos: `AdminDashboardWithTweaks`, `AdminHomeSettingsWithSaveBar`, `MeusDadosWithInlineProfileBio`, `MeusVinculosWithProfileBio` e `MeusVinculosMobileShortcutsPage`.
+
+## Perfis gerenciados e pessoa ativa
+
+| Elemento | Responsabilidade |
+|---|---|
+| `person_responsible_links` | Vínculo pessoa-a-pessoa que define quem pode administrar perfis legados, crianças ou pessoas sob responsabilidade. |
+| `responsiblePerspectiveService.ts` | Perspectiva ativa no cliente; guarda `pessoaId`, nome, estado memorial e metadados de exibição. |
+| `getCurrentUserEditablePeopleWithPessoa()` | Deve retornar pessoas editáveis por vínculo direto e por responsabilidade. |
+| `person_profile_questionnaire_answers` | Respostas do questionário `Sobre Mim`; RLS precisa aceitar vínculo direto e responsabilidade válida. |
+
+A regra transversal é não misturar usuário autenticado, pessoa principal e pessoa administrada. Páginas de primeiro acesso devem sempre operar sobre o `pessoa.id` ativo.
 
 ## Mapa mobile: componentes React vigentes
 
@@ -276,6 +299,8 @@ Esses arquivos devem ser tratados como camada defensiva de transição. Quando o
 | `supabase/migrations/20260701120000_persist_admin_notification_config_and_first_map_access.sql` | Persiste configuração administrativa de notificações e deduplica primeiro acesso a `/mapa-familiar`. |
 | `supabase/migrations/20260701143000_persist_full_admin_notification_catalog.sql` | Persiste snapshot completo do catálogo administrativo. |
 | `supabase/migrations/20260701170000_add_variable_settings_to_admin_notification_config.sql` | Adiciona `variable_settings` em JSONB para regras administrativas de variáveis. |
+| `supabase/migrations/20260703120000_fix_admin_reset_profile_storage_api_block.sql` | Corrige `admin_reset_person_profile` para não deletar diretamente `storage.objects`; remoção física deve ser feita pela Storage API. |
+| `supabase/migrations/20260703170000_allow_responsible_profile_questionnaire_answers.sql` | Atualiza RLS de `person_profile_questionnaire_answers` para permitir respostas de questionário em perfis sob responsabilidade. |
 
 Revisão de segurança recomendada: substituir leitura ampla de `user_person_links` por RPC que retorne apenas `pessoa_id` quando o dispatch/serviço estiver estabilizado.
 
