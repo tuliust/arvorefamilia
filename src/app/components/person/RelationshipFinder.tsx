@@ -2,7 +2,7 @@ import React, { useMemo, useState } from 'react';
 import { Users } from 'lucide-react';
 import { Pessoa, Relacionamento } from '../../types';
 import { calculateRelationshipDegree, type RelationshipDegreeResult } from '../../utils/relationshipDegree';
-import { getRelationshipResultSentence } from '../../utils/relationshipDegreeDisplay';
+import { getRelationshipResultSentenceWithOverrides } from '../../utils/relationshipSentenceOverrides';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 
@@ -110,7 +110,7 @@ function getSelfRelationshipSentence(result: RelationshipDegreeResult, people: P
     return `Você é ${cousinLabel} de ${targetName}, ${spouseLabel} de ${spouseName}.`;
   }
 
-  return replaceOriginWithVoce(getRelationshipResultSentence(result, people));
+  return replaceOriginWithVoce(getRelationshipResultSentenceWithOverrides(result, people));
 }
 
 export function RelationshipFinder({
@@ -138,6 +138,7 @@ export function RelationshipFinder({
       targetPersonId: selectedPersonId,
       people: pessoas,
       relationships: relacionamentos,
+      includeInactiveSpouses: true,
     });
   }, [pessoaBase.id, pessoas, relacionamentos, selectedPersonId]);
 
@@ -151,6 +152,7 @@ export function RelationshipFinder({
       targetPersonId: pessoaBase.id,
       people: pessoas,
       relationships: relacionamentos,
+      includeInactiveSpouses: true,
     });
   }, [linkedPessoaId, pessoaBase.id, pessoas, relacionamentos]);
 
@@ -212,7 +214,7 @@ export function RelationshipFinder({
             <div className="rounded-lg bg-white/80 p-3 text-sm text-gray-700">
               {resultado ? (
                 <p className="font-semibold text-gray-900">
-                  {getRelationshipResultSentence(resultado, pessoas)}
+                  {getRelationshipResultSentenceWithOverrides(resultado, pessoas)}
                 </p>
               ) : pessoasDisponiveis.length === 0 ? (
                 'Dados insuficientes para comparar com outra pessoa.'
