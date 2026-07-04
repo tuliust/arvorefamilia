@@ -17,7 +17,16 @@ type InsightDraftState = {
   astrologySign: string;
   historicalTitle: string;
   historicalMainEvent: string;
+  historicalPeriodTitle: string;
+  historicalBrazilTitle: string;
+  historicalBrazilBody: string;
+  historicalWorldTitle: string;
+  historicalWorldBody: string;
 };
+
+const DEFAULT_HISTORICAL_PERIOD_TITLE = 'O que estava acontecendo na época';
+const DEFAULT_BRAZIL_TITLE = 'Brasil';
+const DEFAULT_WORLD_TITLE = 'Mundo';
 
 function createEmptyDraft(): InsightDraftState {
   return {
@@ -25,6 +34,11 @@ function createEmptyDraft(): InsightDraftState {
     astrologySign: '',
     historicalTitle: '',
     historicalMainEvent: '',
+    historicalPeriodTitle: DEFAULT_HISTORICAL_PERIOD_TITLE,
+    historicalBrazilTitle: DEFAULT_BRAZIL_TITLE,
+    historicalBrazilBody: '',
+    historicalWorldTitle: DEFAULT_WORLD_TITLE,
+    historicalWorldBody: '',
   };
 }
 
@@ -37,18 +51,42 @@ function hasCompleteBirthDate(value: Pessoa['data_nascimento']) {
   );
 }
 
+function toMultilineText(value: unknown) {
+  if (Array.isArray(value)) {
+    return value
+      .filter((item): item is string => typeof item === 'string' && item.trim().length > 0)
+      .map((item) => item.trim())
+      .join('\n\n');
+  }
+
+  return typeof value === 'string' ? value.trim() : '';
+}
+
+function toParagraphArray(value: string) {
+  return value
+    .split(/\n{2,}/)
+    .map((paragraph) => paragraph.trim())
+    .filter(Boolean);
+}
+
 function createDraftFromInsights(
   insights: PersonGeneratedInsight[],
   birthDate: Pessoa['data_nascimento'] | undefined,
 ): InsightDraftState {
   const astrologyInsight = getInsightByType(insights, 'astrology');
   const historicalInsight = getInsightByType(insights, 'historical_events');
+  const historicalContent = historicalInsight?.conteudo;
 
   return {
     astrologyBody: String(astrologyInsight?.conteudo?.body ?? ''),
     astrologySign: String(astrologyInsight?.conteudo?.sign ?? getZodiacSignFromBirthDate(birthDate) ?? ''),
-    historicalTitle: String(historicalInsight?.conteudo?.title ?? ''),
-    historicalMainEvent: String(historicalInsight?.conteudo?.main_event ?? ''),
+    historicalTitle: String(historicalContent?.title ?? ''),
+    historicalMainEvent: String(historicalContent?.main_event ?? ''),
+    historicalPeriodTitle: String(historicalContent?.period_title ?? DEFAULT_HISTORICAL_PERIOD_TITLE),
+    historicalBrazilTitle: String(historicalContent?.brazil?.title ?? DEFAULT_BRAZIL_TITLE),
+    historicalBrazilBody: toMultilineText(historicalContent?.brazil?.body),
+    historicalWorldTitle: String(historicalContent?.world?.title ?? DEFAULT_WORLD_TITLE),
+    historicalWorldBody: toMultilineText(historicalContent?.world?.body),
   };
 }
 
@@ -207,6 +245,15 @@ export function AdminPeopleContentSettings() {
           conteudo: {
             title: insightDraft.historicalTitle,
             main_event: insightDraft.historicalMainEvent,
+            period_title: insightDraft.historicalPeriodTitle || DEFAULT_HISTORICAL_PERIOD_TITLE,
+            brazil: {
+              title: insightDraft.historicalBrazilTitle || DEFAULT_BRAZIL_TITLE,
+              body: toParagraphArray(insightDraft.historicalBrazilBody),
+            },
+            world: {
+              title: insightDraft.historicalWorldTitle || DEFAULT_WORLD_TITLE,
+              body: toParagraphArray(insightDraft.historicalWorldBody),
+            },
           },
         }),
       ]);
@@ -236,7 +283,16 @@ export function AdminPeopleContentSettings() {
       if (tipo === 'astrology') {
         setInsightDraft((current) => ({ ...current, astrologyBody: '', astrologySign: '' }));
       } else {
-        setInsightDraft((current) => ({ ...current, historicalTitle: '', historicalMainEvent: '' }));
+        setInsightDraft((current) => ({
+          ...current,
+          historicalTitle: '',
+          historicalMainEvent: '',
+          historicalPeriodTitle: DEFAULT_HISTORICAL_PERIOD_TITLE,
+          historicalBrazilTitle: DEFAULT_BRAZIL_TITLE,
+          historicalBrazilBody: '',
+          historicalWorldTitle: DEFAULT_WORLD_TITLE,
+          historicalWorldBody: '',
+        }));
       }
       setInsightToClear(null);
       toast.success('Conteúdo limpo.');
@@ -394,8 +450,34 @@ export function AdminPeopleContentSettings() {
                       </label>
                       <label className="space-y-1 text-sm">
                         <span className="font-medium text-gray-700">Resumo principal</span>
-                        <textarea className="min-h-40 w-full rounded-lg border border-gray-200 bg-white px-3 py-2" value={insightDraft.historicalMainEvent} onChange={(event) => setInsightDraft((current) => ({ ...current, historicalMainEvent: event.target.value }))} />
+                        <textarea className="min-h-32 w-full rounded-lg border border-gray-200 bg-white px-3 py-2" value={insightDraft.historicalMainEvent} onChange={(event) => setInsightDraft((current) => ({ ...current, historicalMainEvent: event.target.value }))} />
                       </label>
+                      <label className="space-y-1 text-sm">
+                        <span className="font-medium text-gray-700">Subtítulo do período</span>
+                        <input className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2" value={insightDraft.historicalPeriodTitle} onChange={(event) => setInsightDraft((current) => ({ ...current, historicalPeriodTitle: event.target.value }))} />
+                      </label>
+                      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+                        <div className="space-y-3 rounded-lg border border-gray-100 bg-gray-50 p-3">
+                          <label className="space-y-1 text-sm">
+                            <span className="font-medium text-gray-700">Título Brasil</span>
+                            <input className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2" value={insightDraft.historicalBrazilTitle} onChange={(event) => setInsightDraft((current) => ({ ...current, historicalBrazilTitle: event.target.value }))} />
+                          </label>
+                          <label className="space-y-1 text-sm">
+                            <span className="font-medium text-gray-700">Texto Brasil</span>
+                            <textarea className="min-h-32 w-full rounded-lg border border-gray-200 bg-white px-3 py-2" value={insightDraft.historicalBrazilBody} onChange={(event) => setInsightDraft((current) => ({ ...current, historicalBrazilBody: event.target.value }))} placeholder="Use uma linha em branco entre parágrafos." />
+                          </label>
+                        </div>
+                        <div className="space-y-3 rounded-lg border border-gray-100 bg-gray-50 p-3">
+                          <label className="space-y-1 text-sm">
+                            <span className="font-medium text-gray-700">Título Mundo</span>
+                            <input className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2" value={insightDraft.historicalWorldTitle} onChange={(event) => setInsightDraft((current) => ({ ...current, historicalWorldTitle: event.target.value }))} />
+                          </label>
+                          <label className="space-y-1 text-sm">
+                            <span className="font-medium text-gray-700">Texto Mundo</span>
+                            <textarea className="min-h-32 w-full rounded-lg border border-gray-200 bg-white px-3 py-2" value={insightDraft.historicalWorldBody} onChange={(event) => setInsightDraft((current) => ({ ...current, historicalWorldBody: event.target.value }))} placeholder="Use uma linha em branco entre parágrafos." />
+                          </label>
+                        </div>
+                      </div>
                       <Button type="button" variant="outline" onClick={() => void handleClearInsight('historical_events')} disabled={saving}>Limpar fatos</Button>
                     </div>
                   </div>
