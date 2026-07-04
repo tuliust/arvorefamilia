@@ -33,6 +33,7 @@ import { MeusDados } from './MeusDados';
 const PROFILE_RESULT_HOST_ID = 'meus-dados-profile-bio-result-host';
 const PROFILE_ACTIONS_HOST_ID = 'meus-dados-profile-bio-actions-host';
 const PROFILE_ORIGINAL_CONTENT_ATTRIBUTE = 'data-meus-dados-questionnaire-original';
+const RESET_QUESTIONNAIRE_EVENT = 'meus-dados:questionnaire-reset';
 const MAX_PROFILE_TEXT_LENGTH = 500;
 
 type ProfileTextState = {
@@ -338,7 +339,7 @@ function useHideConfirmUntilProfileResults(showResults: boolean) {
   }, [showResults]);
 }
 
-function MeusDadosProfileBioResults() {
+function MeusDadosProfileBioResults({ onReturnToQuestionnaire }: { onReturnToQuestionnaire: () => void }) {
   const { user } = useAuth();
   const [activePerspective, setActivePerspective] = useState<ResponsiblePerspective | null>(() => getResponsiblePerspective());
   const [pessoa, setPessoa] = useState<Pessoa | null>(null);
@@ -628,7 +629,7 @@ function MeusDadosProfileBioResults() {
           <div className="min-w-0">
             <h3 className="break-words text-lg font-bold text-gray-950">Perfil</h3>
             <p className="mt-1 break-words text-sm leading-relaxed text-gray-600">
-              Revise os textos gerados pela IA para este perfil. É possível editar livremente antes de confirmar os dados.
+              O questionário é opcional. É possível preencher Mini Bio e Curiosidades manualmente, deixar em branco ou voltar para responder às perguntas.
             </p>
           </div>
         </div>
@@ -648,8 +649,8 @@ function MeusDadosProfileBioResults() {
         )}
 
         {!loading && !questionnaire && (
-          <p className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
-            Não encontramos respostas salvas do questionário. Os campos podem ser preenchidos manualmente.
+          <p className="rounded-xl border border-blue-100 bg-white px-3 py-2 text-sm text-blue-900">
+            Nenhuma resposta do questionário foi salva. Esta etapa é opcional; você pode preencher os campos manualmente ou seguir com eles vazios.
           </p>
         )}
 
@@ -697,22 +698,33 @@ function MeusDadosProfileBioResults() {
           </div>
         </div>
 
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <p className="text-xs text-gray-500">
             {saving ? 'Salvando textos...' : 'Os textos são salvos automaticamente ao editar.'}
           </p>
-          {canGenerate && (
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
             <Button
               type="button"
               variant="outline"
               className="w-full sm:w-auto"
-              onClick={() => questionnaire && generateProfileText(questionnaire, { manual: true })}
-              disabled={generating || loading || saving}
+              onClick={onReturnToQuestionnaire}
+              disabled={loading || saving || generating}
             >
-              <Sparkles className="h-4 w-4" />
-              {generating ? 'Gerando...' : hasOutdatedSuggestion ? 'Atualizar com IA' : 'Regenerar com IA'}
+              Voltar ao questionário
             </Button>
-          )}
+            {canGenerate && (
+              <Button
+                type="button"
+                variant="outline"
+                className="w-full sm:w-auto"
+                onClick={() => questionnaire && generateProfileText(questionnaire, { manual: true })}
+                disabled={generating || loading || saving}
+              >
+                <Sparkles className="h-4 w-4" />
+                {generating ? 'Gerando...' : hasOutdatedSuggestion ? 'Atualizar com IA' : 'Regenerar com IA'}
+              </Button>
+            )}
+          </div>
         </div>
       </div>
     </section>
@@ -746,6 +758,11 @@ function MeusDadosInlineProfileBioController() {
     }, 80);
   };
 
+  const returnToQuestionnaire = () => {
+    setShowResults(false);
+    window.dispatchEvent(new CustomEvent(RESET_QUESTIONNAIRE_EVENT));
+  };
+
   return (
     <>
       {actionsHost && !showResults && !finalStepReached ? createPortal(
@@ -763,7 +780,7 @@ function MeusDadosInlineProfileBioController() {
       ) : null}
 
       {resultHost && showResults ? createPortal(
-        <MeusDadosProfileBioResults />,
+        <MeusDadosProfileBioResults onReturnToQuestionnaire={returnToQuestionnaire} />,
         resultHost,
       ) : null}
     </>
