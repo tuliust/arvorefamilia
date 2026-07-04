@@ -59,6 +59,53 @@ function normalizeBirthDate(value: string | number | null | undefined) {
   return null;
 }
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+function toText(value: unknown) {
+  return typeof value === 'string' ? value.trim() : '';
+}
+
+function toTextArray(value: unknown) {
+  if (Array.isArray(value)) {
+    return value
+      .filter((item): item is string => typeof item === 'string' && item.trim().length > 0)
+      .map((item) => item.trim());
+  }
+
+  const text = toText(value);
+  return text ? [text] : [];
+}
+
+function getSection(value: unknown, fallbackTitle: string) {
+  if (!isRecord(value)) {
+    return { title: fallbackTitle, body: [] as string[] };
+  }
+
+  return {
+    title: toText(value.title) || fallbackTitle,
+    body: toTextArray(value.body),
+  };
+}
+
+function normalizeHistoricalContent(raw: unknown, birth: NonNullable<ReturnType<typeof normalizeBirthDate>>) {
+  const record = isRecord(raw) ? raw : {};
+
+  return {
+    title: toText(record.title) || `${birth.original} — Acontecimentos históricos no dia do nascimento`,
+    main_event: toText(record.main_event) || toText(record.mainEvent),
+    period_title: toText(record.period_title) || toText(record.periodTitle) || 'O que estava acontecendo na época',
+    brazil: getSection(record.brazil ?? record.brasil, 'Brasil'),
+    world: getSection(record.world ?? record.mundo, 'Mundo'),
+  };
+}
+
+function hasHistoricalPeriodContext(raw: unknown, birth: NonNullable<ReturnType<typeof normalizeBirthDate>>) {
+  const normalized = normalizeHistoricalContent(raw, birth);
+  return normalized.brazil.body.length > 0 && normalized.world.body.length > 0;
+}
+
 async function callOpenAI(prompt: string) {
   const apiKey = Deno.env.get('OPENAI_API_KEY');
 
@@ -151,9 +198,53 @@ Modelo visual/textual esperado:
 - Evitar exageros e afirmações incertas.
 - Não inventar dados específicos se não houver segurança; nesse caso, usar contextualização histórica do ano/período.
 - Texto em português do Brasil.
+- As chaves "period_title", "brazil" e "world" são obrigatórias.
+- "brazil.body" e "world.body" devem ter pelo menos 1 parágrafo cada.
+- Use exatamente as chaves "brazil" e "world", não traduza os nomes das chaves.
 
 Responda apenas em JSON neste formato:
 
+{
+  "title": "DD/MM/AAAA — principal acontecimento do dia",
+  "main_event": "parágrafo sobre o principal acontecimento",
+  "period_title": "O que estava acontecendo na época",
+  "brazil": {
+    "title": "Brasil",
+    "body": ["parágrafo 1", "parágrafo 2 opcional"]
+  },
+  "world": {
+    "title": "Mundo",
+    "body": ["parágrafo 1", "parágrafo 2 opcional"]
+  }
+}
+`;
+}
+
+function buildHistoricalRepairPrompt(
+  pessoa: PessoaRow,
+  birth: ReturnType<typeof normalizeBirthDate>,
+  partialContent: unknown,
+) {
+  return `
+O JSON abaixo foi gerado para o bloco "Acontecimentos históricos no dia do nascimento", mas está incompleto.
+Complete e normalize o conteúdo mantendo o mesmo fato principal quando fizer sentido.
+
+Pessoa:
+- Nome: ${pessoa.nome_completo}
+- Data de nascimento: ${birth?.original}
+- Local de nascimento: ${pessoa.local_nascimento || 'não informado'}
+
+JSON incompleto:
+${JSON.stringify(partialContent)}
+
+Regras obrigatórias:
+- Responda somente JSON válido.
+- Use exatamente as chaves "title", "main_event", "period_title", "brazil" e "world".
+- "brazil.body" deve ter pelo menos 1 parágrafo sobre o Brasil naquele período.
+- "world.body" deve ter pelo menos 1 parágrafo sobre o mundo naquele período.
+- Se não houver segurança sobre fato do dia, contextualize pelo ano/período de forma conservadora.
+
+Formato obrigatório:
 {
   "title": "DD/MM/AAAA — principal acontecimento do dia",
   "main_event": "parágrafo sobre o principal acontecimento",
@@ -245,7 +336,15 @@ serve(async (req) => {
           ? buildAstrologyPrompt(pessoa, birth)
           : buildHistoricalPrompt(pessoa, birth);
 
-      const generatedContent = await callOpenAI(prompt);
+      let generatedContent = await callOpenAI(prompt);
+
+      if (tipo === 'historical_events') {
+        if (!hasHistoricalPeriodContext(generatedContent, birth)) {
+          generatedContent = await callOpenAI(buildHistoricalRepairPrompt(pessoa, birth, generatedContent));
+        }
+
+        generatedContent = normalizeHistoricalContent(generatedContent, birth);
+      }
 
       const { data: saved, error: saveError } = await supabase
         .from('person_generated_insights')
@@ -256,7 +355,7 @@ serve(async (req) => {
             data_nascimento: String(pessoa.data_nascimento),
             conteudo: generatedContent,
             modelo: 'gpt-4o-mini',
-            prompt_version: 'v1',
+            prompt_version: tipo === 'historical_events' ? 'v2-contexto-brasil-mundo' : 'v1',
             status: 'completed',
             error_message: null,
           },
