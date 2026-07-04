@@ -15,6 +15,13 @@ import {
   Users,
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '../ui/dialog';
 import type { PersonTimelineAttachment, PersonTimelineItem, PersonTimelineItemType } from '../../utils/buildPersonTimeline';
 
 type PersonTimelineProps = {
@@ -125,14 +132,67 @@ function getAttachmentDownloadName(attachment: PersonTimelineAttachment) {
   return cleanTitle.endsWith(`.${extension}`) ? cleanTitle : `${cleanTitle}.${extension}`;
 }
 
+function AttachmentPreviewDialog({
+  attachment,
+  onOpenChange,
+}: {
+  attachment: PersonTimelineAttachment | null;
+  onOpenChange: (open: boolean) => void;
+}) {
+  const attachmentUrl = attachment?.url;
+
+  return (
+    <Dialog open={Boolean(attachment)} onOpenChange={onOpenChange}>
+      <DialogContent className="flex h-[min(calc(100dvh-2rem),860px)] w-[min(calc(100vw-1rem),980px)] !max-w-none flex-col gap-0 overflow-hidden p-0">
+        <DialogHeader className="shrink-0 border-b border-gray-100 px-5 py-4 pr-16 text-left">
+          <DialogTitle className="break-words text-base font-semibold text-gray-900 sm:text-lg">
+            {attachment?.title || 'Arquivo'}
+          </DialogTitle>
+          <DialogDescription className="text-sm text-gray-500">
+            Visualização do PDF sem baixar o arquivo.
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="min-h-0 flex-1 bg-gray-100">
+          {attachmentUrl ? (
+            <iframe
+              src={attachmentUrl}
+              title={`Visualização de ${attachment?.title || 'arquivo'}`}
+              className="h-full w-full border-0 bg-white"
+            />
+          ) : (
+            <div className="flex h-full items-center justify-center p-6 text-center text-sm text-gray-500">
+              Este arquivo não tem uma URL disponível para visualização.
+            </div>
+          )}
+        </div>
+
+        {attachmentUrl && attachment && (
+          <div className="flex shrink-0 flex-wrap items-center justify-between gap-3 border-t border-gray-100 bg-white px-5 py-3 text-xs font-semibold sm:text-sm">
+            <span className="text-gray-500">O botão Baixar continua disponível no cartão da linha do tempo.</span>
+            <a
+              href={attachmentUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1 text-blue-700 hover:text-blue-900"
+            >
+              <ExternalLink className="h-3.5 w-3.5" />
+              Abrir em nova aba
+            </a>
+          </div>
+        )}
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 function TimelineAttachments({ attachments }: { attachments?: PersonTimelineAttachment[] }) {
+  const [previewAttachment, setPreviewAttachment] = React.useState<PersonTimelineAttachment | null>(null);
+
   if (!attachments?.length) return null;
 
   return (
     <div className="mt-4 space-y-2 border-t border-gray-100 pt-3">
-      <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">
-        Arquivos e registros vinculados
-      </p>
       <div className="space-y-2">
         {attachments.map((attachment) => (
           <div key={attachment.id} className="rounded-lg border border-gray-100 bg-gray-50 p-3">
@@ -155,15 +215,26 @@ function TimelineAttachments({ attachments }: { attachments?: PersonTimelineAtta
                 )}
                 {attachment.url && (
                   <div className="mt-2 flex flex-wrap items-center gap-3 text-xs font-semibold">
-                    <a
-                      href={attachment.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1 text-blue-700 hover:text-blue-900"
-                    >
-                      <ExternalLink className="h-3.5 w-3.5" />
-                      Abrir
-                    </a>
+                    {attachment.kind === 'pdf' ? (
+                      <button
+                        type="button"
+                        onClick={() => setPreviewAttachment(attachment)}
+                        className="inline-flex items-center gap-1 text-blue-700 hover:text-blue-900"
+                      >
+                        <ExternalLink className="h-3.5 w-3.5" />
+                        Abrir
+                      </button>
+                    ) : (
+                      <a
+                        href={attachment.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1 text-blue-700 hover:text-blue-900"
+                      >
+                        <ExternalLink className="h-3.5 w-3.5" />
+                        Abrir
+                      </a>
+                    )}
                     <a
                       href={attachment.url}
                       download={getAttachmentDownloadName(attachment)}
@@ -179,6 +250,12 @@ function TimelineAttachments({ attachments }: { attachments?: PersonTimelineAtta
           </div>
         ))}
       </div>
+      <AttachmentPreviewDialog
+        attachment={previewAttachment}
+        onOpenChange={(open) => {
+          if (!open) setPreviewAttachment(null);
+        }}
+      />
     </div>
   );
 }
