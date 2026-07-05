@@ -293,6 +293,17 @@ function handleTouchMove(event: TouchEvent) {
   const touch = event.touches[0];
   if (!touch) return;
 
+  if (gestureStart.screen === 'descendants') {
+    const scrollArea = getScrollArea(event.target) ?? gestureStart.scrollArea;
+    const stepY = touch.clientY - gestureStart.lastY;
+    if (scrollWithOneFinger(scrollArea, stepY)) {
+      gestureStart.handledScroll = true;
+    }
+    gestureStart.lastY = touch.clientY;
+    consumeGesture(event);
+    return;
+  }
+
   const deltaX = touch.clientX - gestureStart.x;
   const deltaY = touch.clientY - gestureStart.y;
   const stepY = touch.clientY - gestureStart.lastY;
@@ -339,6 +350,11 @@ function handleTouchEnd(event: TouchEvent) {
   const start = gestureStart;
   gestureStart = null;
   if (!touch) return;
+
+  if (start.screen === 'descendants') {
+    consumeGesture(event);
+    return;
+  }
 
   if (start.handledScroll) {
     consumeGesture(event);

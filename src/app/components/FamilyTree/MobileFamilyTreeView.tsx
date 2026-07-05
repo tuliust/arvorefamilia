@@ -903,6 +903,12 @@ export function MobileFamilyTreeView({
     const touch = event.touches[0];
     if (!start || !touch) return;
 
+    if (activeScreen === 'descendants') {
+      setDragOffset({ x: 0, y: 0 });
+      setIsDraggingScreen(false);
+      return;
+    }
+
     const deltaX = touch.clientX - start.x;
     const deltaY = touch.clientY - start.y;
     const absoluteX = Math.abs(deltaX);
@@ -961,6 +967,8 @@ export function MobileFamilyTreeView({
     setIsDraggingScreen(false);
     if (!start || !touch) return;
 
+    if (activeScreen === 'descendants') return;
+
     const deltaX = touch.clientX - start.x;
     const deltaY = touch.clientY - start.y;
     const absoluteX = Math.abs(deltaX);
@@ -979,7 +987,7 @@ export function MobileFamilyTreeView({
       || (direction === 'down' && !start.atScrollBottom)
     ) return;
     navigateByDirection(direction);
-  }, [navigateByDirection]);
+  }, [activeScreen, navigateByDirection]);
 
   const visibleSpouses = filterVisible(model.spouses);
   const visibleSiblings = filterVisible(model.siblings);

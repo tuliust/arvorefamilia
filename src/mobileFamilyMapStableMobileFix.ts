@@ -301,6 +301,12 @@ function ensureStyles() {
         overflow: hidden !important;
       }
 
+      ${ROOT_SELECTOR}[data-mobile-family-tree-active-screen="descendants"] ${STAGE_SELECTOR} {
+        transform: translate3d(calc(-33.333333333333336% + 0px), calc(-66.66666666666667% + 0px), 0) !important;
+        transition: none !important;
+        will-change: auto !important;
+      }
+
       .mobile-family-descendant-screen__scroll {
         display: block !important;
         height: 100% !important;
@@ -721,7 +727,8 @@ function stopGesture(event: TouchEvent, preventDefault = false) {
 }
 
 function handleTouchStart(event: TouchEvent) {
-  if (getRouteKind() !== 'direct' || !isMobileViewport()) return;
+  if (getRouteKind() === 'direct') return;
+  if (!isMobileViewport()) return;
   const target = event.target instanceof Element ? event.target : null;
   const touch = event.touches[0];
   if (!target?.closest(ROOT_SELECTOR) || !touch) return;
@@ -735,7 +742,8 @@ function handleTouchStart(event: TouchEvent) {
 }
 
 function handleTouchMove(event: TouchEvent) {
-  if (!gestureStart || getRouteKind() !== 'direct' || !isMobileViewport()) return;
+  if (getRouteKind() === 'direct') return;
+  if (!gestureStart || !isMobileViewport()) return;
   const touch = event.touches[0];
   if (!touch) return;
 
@@ -762,7 +770,11 @@ function handleTouchMove(event: TouchEvent) {
 }
 
 function handleTouchEnd(event: TouchEvent) {
-  if (!gestureStart || getRouteKind() !== 'direct' || !isMobileViewport()) {
+  if (getRouteKind() === 'direct') {
+    gestureStart = null;
+    return;
+  }
+  if (!gestureStart || !isMobileViewport()) {
     gestureStart = null;
     return;
   }
