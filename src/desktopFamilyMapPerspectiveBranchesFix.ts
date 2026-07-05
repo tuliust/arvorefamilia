@@ -91,6 +91,14 @@ function getLayer(container: HTMLElement) {
   return layer instanceof HTMLElement ? layer : null;
 }
 
+function setStyleIfNeeded(element: HTMLElement, property: string, value: string) {
+  if (element.style.getPropertyValue(property) !== value) element.style.setProperty(property, value);
+}
+
+function setAttributeIfNeeded(element: HTMLElement, name: string, value: string) {
+  if (element.getAttribute(name) !== value) element.setAttribute(name, value);
+}
+
 function ensureStyles() {
   const css = `
     @media (min-width: 768px) {
@@ -270,10 +278,10 @@ function positionContainer(container: HTMLElement, branch: BranchSide, width: nu
     ? LEFT_BRANCH_X
     : originalCenter - width / 2;
 
-  container.style.setProperty('width', `${width}px`);
-  container.style.setProperty('left', `${nextLeft}px`);
-  container.style.setProperty('--family-map-perspective-width', `${width}px`);
-  container.setAttribute('data-family-map-perspective-branch', branch);
+  setStyleIfNeeded(container, 'width', `${width}px`);
+  setStyleIfNeeded(container, 'left', `${nextLeft}px`);
+  setStyleIfNeeded(container, '--family-map-perspective-width', `${width}px`);
+  setAttributeIfNeeded(container, 'data-family-map-perspective-branch', branch);
 }
 
 function configureGroup(section: HTMLElement): TargetGroup | null {
@@ -290,8 +298,8 @@ function configureGroup(section: HTMLElement): TargetGroup | null {
   const columns = desiredColumns(visibleCount);
   const width = desiredWidth(columns);
 
-  section.setAttribute('data-family-map-perspective-branch-section', branch);
-  section.setAttribute('data-family-map-perspective-columns', String(columns));
+  setAttributeIfNeeded(section, 'data-family-map-perspective-branch-section', branch);
+  setAttributeIfNeeded(section, 'data-family-map-perspective-columns', String(columns));
   positionContainer(container, branch, width);
   arrangeSpousePairs(section, columns);
 
@@ -309,7 +317,6 @@ function getBox(element: HTMLElement, scale: number) {
     top,
     width,
     height,
-    cx: left + width / 2,
     topCenter: [left + width / 2, top] as [number, number],
     bottomCenter: [left + width / 2, top + height] as [number, number],
   };
@@ -402,20 +409,24 @@ function scheduleApplyPerspectiveBranchFixes() {
   });
 }
 
+function scheduleAfterInteraction() {
+  [120, 360, 800].forEach((delay) => window.setTimeout(applyPerspectiveBranchFixes, delay));
+}
+
 if (typeof window !== 'undefined' && typeof document !== 'undefined') {
   applyPerspectiveBranchFixes();
   [80, 240, 520, 1000].forEach((delay) => window.setTimeout(applyPerspectiveBranchFixes, delay));
 
   const observer = new MutationObserver(scheduleApplyPerspectiveBranchFixes);
   observer.observe(document.documentElement, {
-    childList: true,
     subtree: true,
     attributes: true,
-    attributeFilter: ['style', 'class', 'aria-label', 'title', 'data-family-map-perspective-overflow'],
+    attributeFilter: ['class', 'aria-label', 'title'],
   });
 
   window.addEventListener('resize', applyPerspectiveBranchFixes, { passive: true });
   window.addEventListener('popstate', applyPerspectiveBranchFixes, { passive: true });
+  document.addEventListener('click', scheduleAfterInteraction, { capture: true, passive: true });
   document.addEventListener('visibilitychange', applyPerspectiveBranchFixes, { passive: true });
 }
 
