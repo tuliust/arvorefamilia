@@ -209,7 +209,7 @@ const FAMILY_MAP_LAYOUT_BASE: FamilyMapLayout = {
     center: { x: 615, width: 210 },
     maternalAncestors: { x: 745, width: 430 },
     right: { x: 1120, width: 480 },
-    lowerLeft: { x: 225, width: 610 },
+    lowerLeft: { x: 375, width: 360 },
     lowerMiddle: { x: 855, width: 210 },
     lowerRight: { x: 1160, width: 300 },
   },
@@ -227,8 +227,8 @@ const FAMILY_MAP_LAYOUT_BASE: FamilyMapLayout = {
     maternalGrandparents: group('maternalGrandparents', 'Avós Maternos', 745, 430, 'double', 4, 'horizontal', true, 'always', 'ancestorSpouse'),
     maternalUncles: group('maternalUncles', 'Tios Maternos', 1120, 480, 'quad', 8, 'mini', true, 'filter', undefined, 300),
     maternalCousins: group('maternalCousins', 'Primos Maternos', 1120, 480, 'quad', 8, 'mini', true, 'filter', undefined, 250),
-    siblings: group('siblings', 'Irmãos', 225, 610, 'double', 4, 'horizontal', true, 'filter', undefined, 360),
-    nephews: group('nephews', 'Sobrinhos', 225, 610, 'quad', 4, 'mini', true, 'filter', undefined, 280),
+    siblings: group('siblings', 'Irmãos', 375, 360, 'double', 4, 'horizontal', true, 'filter', undefined, 300),
+    nephews: group('nephews', 'Sobrinhos', 375, 360, 'double', 4, 'mini', true, 'filter', undefined, 220),
     spouse: group('spouse', 'Cônjuge', 855, 210, 'single', 1, 'compact', false, 'always', 'spouse', undefined, true),
     children: group('children', 'Filhos', 1160, 300, 'double', 2, 'horizontal', true, 'filter', undefined, 260),
     pets: group('pets', 'Pets', 855, 210, 'single', 2, 'mini', true, 'never', undefined, 210),
@@ -267,7 +267,26 @@ function group(
   };
 }
 
-function getWideLayout(): FamilyMapLayout {
+
+function getPerspectivePersonLayout(): FamilyMapLayout {
+  const base = FAMILY_MAP_LAYOUT_BASE;
+  const groups: Record<string, GroupConfig> = {
+    ...base.groups,
+    siblings: { ...base.groups.siblings, x: 205, width: 610, columns: 'triple', singleWidth: 360 },
+    nephews: { ...base.groups.nephews, x: 205, width: 610, columns: 'quad', singleWidth: 280 },
+  };
+
+  return {
+    ...base,
+    areas: {
+      ...base.areas,
+      lowerLeft: { x: 205, width: 610 },
+    },
+    groups,
+  };
+}
+
+function getWideLayout(isPerspectivePersonLayout: boolean): FamilyMapLayout {
   const base = FAMILY_MAP_LAYOUT_BASE;
   const groups: Record<string, GroupConfig> = {
     ...base.groups,
@@ -284,8 +303,20 @@ function getWideLayout(): FamilyMapLayout {
     maternalGrandparents: { ...base.groups.maternalGrandparents, x: 950 },
     maternalUncles: { ...base.groups.maternalUncles, x: 1300, width: 560, singleWidth: 340 },
     maternalCousins: { ...base.groups.maternalCousins, x: 1300, width: 560, singleWidth: 250 },
-    siblings: { ...base.groups.siblings, x: 390, width: 640, singleWidth: 360 },
-    nephews: { ...base.groups.nephews, x: 390, width: 640, singleWidth: 280 },
+    siblings: {
+      ...base.groups.siblings,
+      x: isPerspectivePersonLayout ? 340 : 595,
+      width: isPerspectivePersonLayout ? 640 : 360,
+      columns: isPerspectivePersonLayout ? 'triple' : 'double',
+      singleWidth: isPerspectivePersonLayout ? 360 : 300,
+    },
+    nephews: {
+      ...base.groups.nephews,
+      x: isPerspectivePersonLayout ? 340 : 595,
+      width: isPerspectivePersonLayout ? 640 : 360,
+      columns: isPerspectivePersonLayout ? 'quad' : 'double',
+      singleWidth: isPerspectivePersonLayout ? 280 : 220,
+    },
     spouse: { ...base.groups.spouse, x: 1075 },
     children: { ...base.groups.children, x: 1380, width: 420, singleWidth: 300 },
     pets: { ...base.groups.pets, x: 1075, width: 210, singleWidth: 210 },
@@ -302,7 +333,7 @@ function getWideLayout(): FamilyMapLayout {
       center: { x: 835, width: 210 },
       maternalAncestors: { x: 950, width: 430 },
       right: { x: 1300, width: 560 },
-      lowerLeft: { x: 390, width: 640 },
+      lowerLeft: isPerspectivePersonLayout ? { x: 340, width: 640 } : { x: 595, width: 360 },
       lowerMiddle: { x: 1075, width: 210 },
       lowerRight: { x: 1380, width: 420 },
     },
@@ -310,8 +341,14 @@ function getWideLayout(): FamilyMapLayout {
   };
 }
 
-function getFamilyMapLayout(isWideLayout: boolean) {
-  return isWideLayout ? getWideLayout() : FAMILY_MAP_LAYOUT_BASE;
+function hasPerspectivePersonQuery() {
+  if (typeof window === 'undefined') return false;
+  return new URLSearchParams(window.location.search).has('pessoa');
+}
+
+function getFamilyMapLayout(isWideLayout: boolean, isPerspectivePersonLayout: boolean) {
+  if (isWideLayout) return getWideLayout(isPerspectivePersonLayout);
+  return isPerspectivePersonLayout ? getPerspectivePersonLayout() : FAMILY_MAP_LAYOUT_BASE;
 }
 
 function estimateElementExportPixels(element: HTMLElement) {
@@ -361,6 +398,7 @@ function getAdaptiveGroupColumns(config: GroupConfig, visiblePeople: Pessoa[]): 
   if (!ADAPTIVE_COLLATERAL_GROUP_IDS.has(config.id)) return config.columns;
 
   if (config.id === 'nephews') {
+    if (config.columns !== 'quad') return config.columns;
     if (visiblePeople.length >= 4) return 'quad';
     if (visiblePeople.length === 3) return 'triple';
     if (visiblePeople.length === 2) return 'double';
@@ -368,8 +406,8 @@ function getAdaptiveGroupColumns(config: GroupConfig, visiblePeople: Pessoa[]): 
   }
 
   if (config.id === 'siblings') {
-    if (visiblePeople.length === 3 || visiblePeople.length === 6) return 'triple';
-    return config.columns;
+    if (config.columns === 'triple' && visiblePeople.length >= 3) return 'triple';
+    return 'double';
   }
 
   const isCousinsGroup = config.id === 'paternalCousins' || config.id === 'maternalCousins';
@@ -982,7 +1020,14 @@ function DesktopFamilyMapViewComponent({
   const [expandedGroups, handleExpandedChange] = useExpandedGroups();
   const hideGroupChrome = useTreeHighlightGroupsActive();
   const isWideLayout = Boolean(sidebarCollapsed);
-  const familyMapLayout = React.useMemo(() => getFamilyMapLayout(isWideLayout), [isWideLayout]);
+  const isPerspectivePersonLayout = React.useMemo(
+    () => hasPerspectivePersonQuery(),
+    [centralPersonId, layoutRevision],
+  );
+  const familyMapLayout = React.useMemo(
+    () => getFamilyMapLayout(isWideLayout, isPerspectivePersonLayout),
+    [isPerspectivePersonLayout, isWideLayout],
+  );
   const model = React.useMemo(
     () => buildMobileFamilyTreeModel(pessoas, relacionamentos, centralPersonId),
     [centralPersonId, pessoas, relacionamentos],
@@ -1441,7 +1486,7 @@ function DesktopFamilyMapViewComponent({
       viewport.scrollLeft = 0;
       viewport.scrollTop = 0;
     }
-  }, [centralPersonId, isWideLayout, layoutRevision]);
+  }, [centralPersonId, isPerspectivePersonLayout, isWideLayout, layoutRevision]);
 
   const handleWheel = React.useCallback((event: React.WheelEvent<HTMLDivElement>) => {
     if (!event.ctrlKey) return;
@@ -1475,7 +1520,7 @@ function DesktopFamilyMapViewComponent({
       sourcePeople.maternalUncles,
       sourcePeople.maternalCousins,
       siblings,
-nephews,
+      nephews,
       allChildren,
       grandchildren,
     ],
