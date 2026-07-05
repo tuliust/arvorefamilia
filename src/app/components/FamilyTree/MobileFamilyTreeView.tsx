@@ -29,6 +29,7 @@ type MobileTreeScreen =
   | 'core'
   | 'maternal-uncles'
   | 'paternal-cousins'
+  | 'descendants'
   | 'maternal-cousins';
 
 type CardVariant = 'default' | 'sibling' | 'pet' | 'mini';
@@ -148,6 +149,7 @@ const SCREEN_POSITIONS: Record<MobileTreeScreen, { column: number; row: number }
   core: { column: 1, row: 1 },
   'maternal-uncles': { column: 2, row: 1 },
   'paternal-cousins': { column: 0, row: 2 },
+  descendants: { column: 1, row: 2 },
   'maternal-cousins': { column: 2, row: 2 },
 };
 
@@ -163,13 +165,15 @@ function getDestinationForScreen(
 ): MobileTreeScreen {
   const destinations: Partial<Record<SwipeDirection, MobileTreeScreen>> =
     screen === 'core'
-      ? { up: 'ancestors', left: 'paternal-uncles', right: 'maternal-uncles' }
+      ? { up: 'ancestors', down: 'descendants', left: 'paternal-uncles', right: 'maternal-uncles' }
       : screen === 'paternal-uncles'
         ? { up: 'ancestors', down: 'paternal-cousins', right: 'core' }
         : screen === 'maternal-uncles'
           ? { up: 'ancestors', down: 'maternal-cousins', left: 'core' }
           : screen === 'paternal-cousins'
             ? { up: 'paternal-uncles' }
+            : screen === 'descendants'
+              ? { up: 'core' }
             : screen === 'maternal-cousins'
               ? { up: 'maternal-uncles' }
               : { down: 'core', left: 'paternal-uncles', right: 'maternal-uncles' };
@@ -790,6 +794,7 @@ export function MobileFamilyTreeView({
   layoutRevision,
   onDirectRelationRenderedCounts,
 }: MobileFamilyTreeViewProps) {
+  const rootRef = React.useRef<HTMLDivElement | null>(null);
   const [activeScreen, setActiveScreen] = React.useState<MobileTreeScreen>('core');
   const [dragOffset, setDragOffset] = React.useState({ x: 0, y: 0 });
   const [isDraggingScreen, setIsDraggingScreen] = React.useState(false);
@@ -845,6 +850,34 @@ export function MobileFamilyTreeView({
     setDragOffset({ x: 0, y: 0 });
     setIsDraggingScreen(false);
   }, [centralPersonId, layoutRevision]);
+
+  React.useEffect(() => {
+    const root = rootRef.current;
+    if (!root) return undefined;
+
+    const syncFromAttribute = () => {
+      const nextScreen = root.getAttribute('data-mobile-family-tree-active-screen');
+      if (nextScreen && nextScreen in SCREEN_POSITIONS) {
+        setActiveScreen((current) => (
+          current === nextScreen ? current : nextScreen as MobileTreeScreen
+        ));
+      }
+    };
+
+    syncFromAttribute();
+    const observer = new MutationObserver(syncFromAttribute);
+    observer.observe(root, { attributes: true, attributeFilter: ['data-mobile-family-tree-active-screen'] });
+
+    return () => observer.disconnect();
+  }, []);
+
+  React.useEffect(() => {
+    const root = rootRef.current;
+    if (!root) return;
+    if (root.getAttribute('data-mobile-family-tree-active-screen') !== activeScreen) {
+      root.setAttribute('data-mobile-family-tree-active-screen', activeScreen);
+    }
+  }, [activeScreen]);
 
   const navigateByDirection = React.useCallback((direction: SwipeDirection) => {
     setActiveScreen((current) => getDestinationForScreen(current, direction));
@@ -1011,7 +1044,7 @@ export function MobileFamilyTreeView({
   const activePosition = SCREEN_POSITIONS[activeScreen];
 
   return (
-    <div className="relative h-full w-full overflow-hidden bg-[linear-gradient(180deg,#ecfeff_0%,#f8fafc_34%,#f8fafc_100%)]" data-mobile-family-tree-root="true">
+    <div ref={rootRef} className="relative h-full w-full overflow-hidden bg-[linear-gradient(180deg,#ecfeff_0%,#f8fafc_34%,#f8fafc_100%)]" data-mobile-family-tree-root="true" data-mobile-family-tree-active-screen={activeScreen}>
       <nav
         aria-label="Visualizações da árvore"
         className="absolute inset-x-0 top-0 z-40 border-b border-slate-200 bg-white/95 py-2 pl-2 pr-16 shadow-sm backdrop-blur"
@@ -1249,4 +1282,3 @@ export function MobileFamilyTreeView({
     </div>
   );
 }
-

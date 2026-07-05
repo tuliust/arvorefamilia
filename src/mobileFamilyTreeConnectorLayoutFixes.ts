@@ -118,21 +118,11 @@ function ensureStyles() {
       }
 
       ${ROOT_SELECTOR} [data-mobile-family-tree-grandparent-side="paternal"]::before {
-        top: 50% !important;
-        right: calc(100% - 1px) !important;
-        left: auto !important;
-        width: 46vw !important;
-        height: var(--mobile-family-tree-connector-width) !important;
-        transform: translateY(-50%) !important;
+        display: none !important;
       }
 
       ${ROOT_SELECTOR} [data-mobile-family-tree-grandparent-side="maternal"]::before {
-        top: 50% !important;
-        left: calc(100% - 1px) !important;
-        right: auto !important;
-        width: 46vw !important;
-        height: var(--mobile-family-tree-connector-width) !important;
-        transform: translateY(-50%) !important;
+        display: none !important;
       }
 
       ${ROOT_SELECTOR} [data-mobile-family-tree-grandparent-side]::after {

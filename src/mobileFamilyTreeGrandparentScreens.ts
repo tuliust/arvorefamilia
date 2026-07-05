@@ -132,19 +132,11 @@ function ensureStyles() {
       }
 
       [data-mobile-family-tree-grandparent-side="paternal"]::before {
-        top: 50%;
-        right: 100%;
-        height: var(--tree-palette-line-width, 3px);
-        width: 50vw;
-        transform: translateY(-50%);
+        display: none;
       }
 
       [data-mobile-family-tree-grandparent-side="maternal"]::before {
-        top: 50%;
-        left: 100%;
-        height: var(--tree-palette-line-width, 3px);
-        width: 50vw;
-        transform: translateY(-50%);
+        display: none;
       }
 
       [data-mobile-family-tree-grandparent-side]::after {

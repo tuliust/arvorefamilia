@@ -65,10 +65,21 @@ const mobileTopLayerStyles = `
     z-index: 2147483630 !important;
   }
 
-  html.mobile-user-menu-open div.fixed[class*="rounded-3xl"][class*="shadow-2xl"] {
+  html.mobile-user-menu-open div.fixed[class*="rounded-3xl"][class*="shadow-2xl"]:not([data-mobile-user-menu-compact="true"]) {
     top: calc(env(safe-area-inset-top, 0px) + 0.75rem) !important;
     bottom: calc(env(safe-area-inset-bottom, 0px) + 0.75rem) !important;
     max-height: none !important;
+    z-index: 2147483620 !important;
+    overflow-y: auto !important;
+    overscroll-behavior: contain !important;
+    -webkit-overflow-scrolling: touch !important;
+  }
+
+  html.mobile-user-menu-open div.fixed[data-mobile-user-menu-compact="true"][class*="rounded-3xl"][class*="shadow-2xl"] {
+    top: calc(env(safe-area-inset-top, 0px) + 4.75rem) !important;
+    bottom: auto !important;
+    height: auto !important;
+    max-height: min(32rem, calc(100dvh - 6rem - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px))) !important;
     z-index: 2147483620 !important;
     overflow-y: auto !important;
     overscroll-behavior: contain !important;
@@ -180,9 +191,11 @@ function applyTopLayerInlineStyles() {
   const avatarPanel = document.querySelector<HTMLElement>('html.mobile-user-menu-open div.fixed[class*="rounded-3xl"][class*="shadow-2xl"]');
   if (!avatarPanel) return;
 
-  setStyle(avatarPanel, 'top', 'calc(env(safe-area-inset-top, 0px) + 0.75rem)');
-  setStyle(avatarPanel, 'bottom', 'calc(env(safe-area-inset-bottom, 0px) + 0.75rem)');
-  setStyle(avatarPanel, 'max-height', 'none');
+  const compact = avatarPanel.dataset.mobileUserMenuCompact === 'true';
+  setStyle(avatarPanel, 'top', compact ? 'calc(env(safe-area-inset-top, 0px) + 4.75rem)' : 'calc(env(safe-area-inset-top, 0px) + 0.75rem)');
+  setStyle(avatarPanel, 'bottom', compact ? 'auto' : 'calc(env(safe-area-inset-bottom, 0px) + 0.75rem)');
+  setStyle(avatarPanel, 'height', compact ? 'auto' : '');
+  setStyle(avatarPanel, 'max-height', compact ? 'min(32rem, calc(100dvh - 6rem - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px)))' : 'none');
   setStyle(avatarPanel, 'z-index', MOBILE_USER_MENU_Z);
   setStyle(avatarPanel, 'overflow-y', 'auto');
   setStyle(avatarPanel, 'overscroll-behavior', 'contain');

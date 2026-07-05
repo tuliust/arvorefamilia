@@ -484,6 +484,15 @@ function expandMobileUserMenu() {
   const panel = closeButton?.closest('div.fixed') as HTMLElement | null;
   if (!panel) return;
 
+  if (panel.dataset.mobileUserMenuCompact === 'true') {
+    setStyleValue(panel, 'top', 'calc(env(safe-area-inset-top, 0px) + 4.75rem)');
+    setStyleValue(panel, 'bottom', 'auto');
+    setStyleValue(panel, 'height', 'auto');
+    setStyleValue(panel, 'maxHeight', 'min(32rem, calc(100dvh - 6rem - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px)))');
+    setStyleValue(panel, 'zIndex', '11110');
+    return;
+  }
+
   setStyleValue(panel, 'top', 'calc(env(safe-area-inset-top, 0px) + 1rem)');
   setStyleValue(panel, 'maxHeight', 'calc(100dvh - 2rem - env(safe-area-inset-top, 0px))');
   setStyleValue(panel, 'zIndex', '11110');

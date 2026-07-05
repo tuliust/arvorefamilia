@@ -303,6 +303,7 @@ export function UserProfileMenu({ variant = 'avatar' }: UserProfileMenuProps) {
   const itemClassName =
     'flex w-full items-center gap-3 rounded-xl px-4 py-3 text-left text-sm font-semibold text-gray-800 transition hover:bg-blue-50 hover:text-blue-800';
   const isHomeHeaderVariant = variant === 'home-header';
+  const isCompactMobileMenu = Boolean(user) && !isAdmin && managedPeopleLinks.length === 0;
 
   return (
     <div className="relative z-[10040] shrink-0">
@@ -362,7 +363,13 @@ export function UserProfileMenu({ variant = 'avatar' }: UserProfileMenuProps) {
 
           <div
             ref={menuRef}
-            className="fixed left-4 right-4 top-20 z-[10050] max-h-[calc(100dvh-7rem)] overflow-y-auto rounded-3xl border border-gray-200 bg-white p-4 shadow-2xl md:absolute md:left-auto md:right-0 md:top-full md:mt-2 md:max-h-[80vh] md:w-72 md:rounded-2xl"
+            data-mobile-user-menu-compact={isCompactMobileMenu ? 'true' : undefined}
+            className={[
+              'fixed left-4 right-4 top-20 z-[10050] overflow-y-auto rounded-3xl border border-gray-200 bg-white p-4 shadow-2xl md:absolute md:left-auto md:right-0 md:top-full md:mt-2 md:max-h-[80vh] md:w-72 md:rounded-2xl',
+              isCompactMobileMenu
+                ? 'h-auto max-h-[min(32rem,calc(100dvh-6rem))]'
+                : 'max-h-[calc(100dvh-7rem)]',
+            ].join(' ')}
           >
             <div className="mb-3 flex items-start gap-2 border-b border-gray-100 pb-4">
               <button
