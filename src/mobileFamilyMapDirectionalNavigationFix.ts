@@ -148,13 +148,11 @@ function getScreenFromTarget(target: EventTarget | null): ScreenName | null {
 function getCurrentScreen(root = getRoot()): ScreenName | null {
   if (!root) return null;
 
-  // Geometry is the most reliable source after DOM-based transforms because the React
-  // active screen can remain stale when navigation is handled by mobile fix scripts.
-  return getScreenFromGeometry(root)
-    ?? parseTranslatePercent(getStage(root)?.style.transform ?? '')
-    ?? (isScreenName(root.getAttribute('data-mobile-family-tree-active-screen'))
-      ? root.getAttribute('data-mobile-family-tree-active-screen') as ScreenName
-      : null);
+  const explicit = root.getAttribute('data-mobile-family-tree-active-screen');
+  if (isScreenName(explicit)) return explicit;
+
+  return parseTranslatePercent(getStage(root)?.style.transform ?? '')
+    ?? getScreenFromGeometry(root);
 }
 
 function descendantCardSelector() {
@@ -177,14 +175,22 @@ function screenHasContent(screenName: ScreenName, root = getRoot()) {
   );
 }
 
-function applyScreen(screenName: ScreenName) {
+function lockStageToScreen(screenName: ScreenName, animate = false) {
   const root = getRoot();
   const stage = getStage(root);
   if (!root || !stage) return;
 
   stage.style.setProperty('transform', getTransformForScreen(screenName), 'important');
-  stage.style.setProperty('transition', 'transform 300ms ease-out', 'important');
+  if (animate) stage.style.setProperty('transition', 'transform 300ms ease-out', 'important');
+  else stage.style.setProperty('transition', 'none', 'important');
   root.setAttribute('data-mobile-family-tree-active-screen', screenName);
+}
+
+function applyScreen(screenName: ScreenName) {
+  const root = getRoot();
+  if (!root) return;
+
+  lockStageToScreen(screenName, true);
 
   if (screenHasContent(screenName, root)) {
     getScreenElement(screenName, root)
@@ -294,6 +300,7 @@ function handleTouchMove(event: TouchEvent) {
   if (!touch) return;
 
   if (gestureStart.screen === 'descendants') {
+    lockStageToScreen('descendants');
     const scrollArea = getScrollArea(event.target) ?? gestureStart.scrollArea;
     const stepY = touch.clientY - gestureStart.lastY;
     if (scrollWithOneFinger(scrollArea, stepY)) {
@@ -352,6 +359,7 @@ function handleTouchEnd(event: TouchEvent) {
   if (!touch) return;
 
   if (start.screen === 'descendants') {
+    lockStageToScreen('descendants');
     consumeGesture(event);
     return;
   }

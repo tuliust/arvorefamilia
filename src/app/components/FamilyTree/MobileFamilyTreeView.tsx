@@ -785,6 +785,131 @@ function AncestorsOverviewScreen({
   );
 }
 
+
+function DescendantsScreen({
+  visibleSiblings,
+  visibleNephews,
+  visibleSpouses,
+  visiblePets,
+  visibleChildren,
+  visibleGrandchildren,
+  expandedGroups,
+  onToggle,
+  onPersonClick,
+}: {
+  visibleSiblings: Pessoa[];
+  visibleNephews: Pessoa[];
+  visibleSpouses: Pessoa[];
+  visiblePets: Pessoa[];
+  visibleChildren: Pessoa[];
+  visibleGrandchildren: Pessoa[];
+  expandedGroups: Set<string>;
+  onToggle: (id: string) => void;
+  onPersonClick: (person: Pessoa) => void;
+}) {
+  const hasDescendantContent = [
+    visibleSiblings,
+    visibleNephews,
+    visibleSpouses,
+    visiblePets,
+    visibleChildren,
+    visibleGrandchildren,
+  ].some((people) => people.length > 0);
+
+  return (
+    <div className="mobile-family-descendant-screen relative h-full w-full overflow-hidden">
+      <div
+        data-mobile-tree-scroll
+        data-stable-mobile-scroll="descendants"
+        className="mobile-family-descendant-screen__scroll h-full overflow-y-auto overflow-x-hidden overscroll-y-contain px-4 pb-32 pt-4"
+      >
+        <div className="mobile-family-descendant-screen__inner mx-auto w-full max-w-[430px]">
+          {hasDescendantContent ? (
+            <>
+              <div className="mobile-family-descendant-screen__connector pointer-events-none relative mx-auto h-9 w-full">
+                <div className="absolute left-1/2 top-0 h-5 w-px -translate-x-1/2 bg-cyan-600" />
+                <div className="absolute left-[calc(25%-3px)] right-[calc(25%-3px)] top-5 h-px bg-cyan-600" />
+                <div className="absolute left-[calc(25%-3px)] top-5 h-4 w-px -translate-x-1/2 bg-cyan-600" />
+                <div className="absolute right-[calc(25%-3px)] top-5 h-4 w-px translate-x-1/2 bg-cyan-600" />
+              </div>
+
+              <div className="mobile-family-descendant-screen__grid grid grid-cols-2 items-start gap-3">
+                <div className="min-w-0">
+                  <FamilyGroup
+                    id="core-siblings"
+                    title="Irmãos"
+                    people={visibleSiblings}
+                    expanded={expandedGroups.has('core-siblings')}
+                    onToggle={onToggle}
+                    onPersonClick={onPersonClick}
+                    columns="single"
+                    cardVariant="sibling"
+                  />
+                  <FamilyGroup
+                    id="core-nephews"
+                    title="Sobrinhos"
+                    people={visibleNephews}
+                    expanded={expandedGroups.has('core-nephews')}
+                    onToggle={onToggle}
+                    onPersonClick={onPersonClick}
+                    columns="single"
+                  />
+                </div>
+
+                <div className="min-w-0">
+                  <FamilyGroup
+                    id="core-spouses"
+                    title="Cônjuge"
+                    people={visibleSpouses}
+                    expanded={expandedGroups.has('core-spouses')}
+                    onToggle={onToggle}
+                    onPersonClick={onPersonClick}
+                    columns="single"
+                  />
+                  <div className="grid grid-cols-2 items-start gap-2">
+                    <FamilyGroup
+                      id="core-pets"
+                      title="Pets"
+                      people={visiblePets}
+                      expanded={expandedGroups.has('core-pets')}
+                      onToggle={onToggle}
+                      onPersonClick={onPersonClick}
+                      columns="single"
+                      cardVariant="pet"
+                    />
+                    <FamilyGroup
+                      id="core-children"
+                      title="Filhos"
+                      people={visibleChildren}
+                      expanded={expandedGroups.has('core-children')}
+                      onToggle={onToggle}
+                      onPersonClick={onPersonClick}
+                      columns="single"
+                    />
+                  </div>
+                  <FamilyGroup
+                    id="core-grandchildren"
+                    title="Netos"
+                    people={visibleGrandchildren}
+                    expanded={expandedGroups.has('core-grandchildren')}
+                    onToggle={onToggle}
+                    onPersonClick={onPersonClick}
+                    columns="single"
+                  />
+                </div>
+              </div>
+            </>
+          ) : (
+            <p className="rounded-xl border border-dashed border-slate-200 bg-white px-3 py-4 text-center text-xs font-semibold text-slate-500">
+              Nenhum descendente cadastrado.
+            </p>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export function MobileFamilyTreeView({
   pessoas,
   relacionamentos,
@@ -1241,6 +1366,20 @@ export function MobileFamilyTreeView({
                 </div>
               </div>
             </div>
+          </div>
+
+          <div className="col-start-2 row-start-3 h-full w-full overflow-hidden" data-mobile-family-tree-screen="descendants">
+            <DescendantsScreen
+              visibleSiblings={visibleSiblings}
+              visibleNephews={visibleNephews}
+              visibleSpouses={visibleSpouses}
+              visiblePets={visiblePets}
+              visibleChildren={visibleChildren}
+              visibleGrandchildren={visibleGrandchildren}
+              expandedGroups={expandedGroups}
+              onToggle={toggleGroup}
+              onPersonClick={onPersonClick}
+            />
           </div>
 
           <div className="col-start-3 row-start-2 h-full w-full overflow-visible" data-mobile-family-tree-screen="maternal-uncles">

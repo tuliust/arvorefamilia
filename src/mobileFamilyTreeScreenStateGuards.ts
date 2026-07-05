@@ -51,6 +51,11 @@ function getStage(root = getRoot()) {
   return root?.querySelector<HTMLElement>(STAGE_SELECTOR) ?? null;
 }
 
+function getTransformForScreen(screen: MobileTreeScreen) {
+  const position = SCREEN_POSITIONS[screen];
+  return `translate3d(calc(${-position.column * (100 / 3)}% + 0px), calc(${-position.row * (100 / 3)}% + 0px), 0)`;
+}
+
 function parseTranslatePercent(value: string) {
   const match = value.match(/translate3d\(calc\((-?\d+(?:\.\d+)?)%[^,]*,\s*calc\((-?\d+(?:\.\d+)?)%/);
   if (!match) return null;
@@ -81,6 +86,24 @@ function isScreenCurrent(screen: MobileTreeScreen, transform: string) {
   return expectedPosition.column === currentPosition.column && expectedPosition.row === currentPosition.row;
 }
 
+function hasReadyDescendantScreen(root: HTMLElement) {
+  if (root.getAttribute('data-mobile-family-tree-descendants-ready') === 'true') return true;
+
+  const descendantScreen = root.querySelector<HTMLElement>('[data-mobile-family-tree-screen="descendants"]');
+  return Boolean(
+    descendantScreen?.querySelector('[data-stable-mobile-scroll="descendants"], .mobile-family-descendant-screen__scroll'),
+  );
+}
+
+function lockDescendantTransform(root: HTMLElement, stage: HTMLElement) {
+  if (!hasReadyDescendantScreen(root)) return false;
+
+  stage.style.setProperty('transform', getTransformForScreen('descendants'), 'important');
+  stage.style.setProperty('transition', 'none', 'important');
+  stage.style.setProperty('will-change', 'auto', 'important');
+  return true;
+}
+
 function clearStaleScreenAttribute() {
   if (!isMobileViewport() || !isFamilyMapPath()) return;
   const root = getRoot();
@@ -89,6 +112,8 @@ function clearStaleScreenAttribute() {
 
   const screen = root.getAttribute('data-mobile-family-tree-active-screen');
   if (!screen || !isMobileTreeScreen(screen)) return;
+
+  if (screen === 'descendants' && lockDescendantTransform(root, stage)) return;
 
   const transform = stage.style.transform || '';
   if (!isScreenCurrent(screen, transform)) {

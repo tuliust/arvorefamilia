@@ -136,8 +136,31 @@ function descendantCardCount(root = getRoot()) {
   return getSourceGrid(root)?.querySelectorAll(descendantCardSelector()).length ?? 0;
 }
 
+function getNativeDescendantScreen(root = getRoot()) {
+  const screen = getScreenElement(DESCENDANTS_SCREEN, root);
+  if (!screen) return null;
+
+  const hasNativeScroll = Boolean(
+    screen.querySelector('[data-stable-mobile-scroll="descendants"], .mobile-family-descendant-screen__scroll'),
+  );
+  const hasCards = Boolean(screen.querySelector(descendantCardSelector()));
+
+  return hasNativeScroll && hasCards ? screen : null;
+}
+
 function hasDescendantContent(root = getRoot()) {
-  return descendantCardCount(root) > 0;
+  return Boolean(getNativeDescendantScreen(root)) || descendantCardCount(root) > 0;
+}
+
+function lockDescendantStage(root = getRoot()) {
+  if (!root || root.getAttribute('data-mobile-family-tree-active-screen') !== DESCENDANTS_SCREEN) return;
+
+  const stage = getStage(root);
+  if (!stage) return;
+
+  stage.style.setProperty('transform', getTransformForScreen(DESCENDANTS_SCREEN), 'important');
+  stage.style.setProperty('transition', 'none', 'important');
+  stage.style.setProperty('will-change', 'auto', 'important');
 }
 
 function relayCloneClicks(clone: HTMLElement, original: HTMLElement) {
@@ -165,9 +188,23 @@ function clearCloneMarkers(element: HTMLElement) {
 function ensureDescendantScreen(root: HTMLElement) {
   if (getRouteKind() !== 'direct') return;
   const stage = getStage(root);
+  if (!stage) return;
+
+  const nativeScreen = getNativeDescendantScreen(root);
+  if (nativeScreen) {
+    nativeScreen.classList.add('mobile-family-descendant-screen');
+    nativeScreen.style.gridColumnStart = '2';
+    nativeScreen.style.gridRowStart = '3';
+    nativeScreen.style.height = '100%';
+    nativeScreen.style.width = '100%';
+    nativeScreen.style.overflow = 'hidden';
+    lockDescendantStage(root);
+    return;
+  }
+
   const sourceGrid = getSourceGrid(root);
   const sourceConnector = getSourceConnector(sourceGrid);
-  if (!stage || !sourceGrid || !hasDescendantContent(root)) return;
+  if (!sourceGrid || !hasDescendantContent(root)) return;
 
   sourceGrid.setAttribute('data-mobile-family-tree-descendant-source', 'true');
   sourceConnector?.setAttribute('data-mobile-family-tree-descendant-connector', 'true');
@@ -1013,6 +1050,7 @@ function applyFixes() {
     markRelativeConnectors(root);
     ensureEmptyUncleStates(root);
     root.setAttribute('data-mobile-family-tree-descendants-ready', hasDescendantContent(root) ? 'true' : 'false');
+    lockDescendantStage(root);
   }
 }
 
