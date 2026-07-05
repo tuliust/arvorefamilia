@@ -4,27 +4,40 @@ const STYLE_ID = 'desktop-family-map-perspective-branches-fix-style';
 const OVERLAY_SELECTOR = '[data-family-map-perspective-connector-overlay="true"]';
 const GROUP_SELECTOR = '[data-family-map-group="true"]';
 const GROUP_TITLE_SELECTOR = '[data-family-map-group-title="true"]';
-const TARGET_WIDTH = 540;
 const CARD_WIDTH = 166;
 const GROUP_HORIZONTAL_PADDING = 24;
 const GRID_GAP = 8;
 const LEFT_BRANCH_X = 72;
-const MAX_VISIBLE_WITHOUT_MANUAL_EXPAND = 9;
+const MAX_COLUMNS = 4;
+const MAX_VISIBLE_WITHOUT_MANUAL_EXPAND = 12;
+const BRANCH_VERTICAL_GAP = 56;
 const CONNECTOR_COLOR = '#a5eef6';
 const CONNECTOR_WIDTH = 2;
+const TARGET_WIDTH = GROUP_HORIZONTAL_PADDING + MAX_COLUMNS * CARD_WIDTH + (MAX_COLUMNS - 1) * GRID_GAP;
 
 let scheduled = false;
 
 type BranchSide = 'left' | 'right';
+type TargetTitle =
+  | 'tios paternos'
+  | 'primos paternos'
+  | 'irmaos'
+  | 'sobrinhos'
+  | 'tios maternos'
+  | 'primos maternos'
+  | 'filhos'
+  | 'netos'
+  | 'pets';
+
 type TargetGroup = {
   section: HTMLElement;
   container: HTMLElement;
   branch: BranchSide;
-  title: string;
+  title: TargetTitle;
   cardCount: number;
   visibleCount: number;
   width: number;
-  columns: 1 | 2 | 3;
+  columns: 1 | 2 | 3 | 4;
 };
 
 function isDesktopViewport() {
@@ -54,18 +67,24 @@ function getGroupTitle(section: HTMLElement) {
   return normalizeText(section.querySelector<HTMLElement>(GROUP_TITLE_SELECTOR)?.textContent ?? '');
 }
 
-function getTargetBranch(title: string): BranchSide | null {
-  if (title === 'irmaos' || title === 'sobrinhos') return 'left';
-  if (
-    title === 'filhos'
-    || title.startsWith('filhos com ')
-    || title === 'netos'
-    || title === 'tios maternos'
-    || title === 'primos maternos'
-  ) {
-    return 'right';
-  }
+function getTargetTitle(title: string): TargetTitle | null {
+  if (title === 'tios paternos') return 'tios paternos';
+  if (title === 'primos paternos') return 'primos paternos';
+  if (title === 'irmaos') return 'irmaos';
+  if (title === 'sobrinhos') return 'sobrinhos';
+  if (title === 'tios maternos') return 'tios maternos';
+  if (title === 'primos maternos') return 'primos maternos';
+  if (title === 'filhos' || title.startsWith('filhos com ')) return 'filhos';
+  if (title === 'netos') return 'netos';
+  if (title === 'pets') return 'pets';
   return null;
+}
+
+function getTargetBranch(title: TargetTitle): BranchSide {
+  if (title === 'tios paternos' || title === 'primos paternos' || title === 'irmaos' || title === 'sobrinhos') {
+    return 'left';
+  }
+  return 'right';
 }
 
 function parsePixelValue(value: string | null | undefined) {
@@ -123,7 +142,12 @@ function ensureStyles() {
       }
 
       ${GROUP_SELECTOR}[data-family-map-perspective-columns="3"] > .grid {
-        grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+        grid-template-columns: repeat(3, minmax(0, ${CARD_WIDTH}px)) !important;
+        justify-content: center !important;
+      }
+
+      ${GROUP_SELECTOR}[data-family-map-perspective-columns="4"] > .grid {
+        grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
       }
 
       ${GROUP_SELECTOR}[data-family-map-perspective-branch-section="left"] > .grid > .col-span-2,
@@ -185,14 +209,14 @@ function countCards(section: HTMLElement) {
   )).length;
 }
 
-function desiredColumns(visibleCount: number): 1 | 2 | 3 {
+function desiredColumns(visibleCount: number): 1 | 2 | 3 | 4 {
   if (visibleCount <= 1) return 1;
   if (visibleCount === 2) return 2;
-  return 3;
+  if (visibleCount === 3) return 3;
+  return 4;
 }
 
-function desiredWidth(columns: 1 | 2 | 3) {
-  if (columns === 3) return TARGET_WIDTH;
+function desiredWidth(columns: 1 | 2 | 3 | 4) {
   return GROUP_HORIZONTAL_PADDING + columns * CARD_WIDTH + Math.max(0, columns - 1) * GRID_GAP;
 }
 
@@ -220,7 +244,7 @@ function hasLateralSpouseConnector(wrapper: HTMLElement) {
     .some((span) => span.className.includes('border-cyan-500'));
 }
 
-function arrangeSpousePairs(section: HTMLElement, columns: 1 | 2 | 3) {
+function arrangeSpousePairs(section: HTMLElement, columns: 1 | 2 | 3 | 4) {
   const grid = section.querySelector<HTMLElement>(':scope > .grid');
   if (!grid || columns < 2) return;
 
@@ -258,6 +282,9 @@ function storeOriginalGeometry(container: HTMLElement) {
   if (!container.dataset.familyMapPerspectiveOriginalWidth) {
     container.dataset.familyMapPerspectiveOriginalWidth = String(parsePixelValue(container.style.width) ?? container.getBoundingClientRect().width);
   }
+  if (!container.dataset.familyMapPerspectiveOriginalTop) {
+    container.dataset.familyMapPerspectiveOriginalTop = String(parsePixelValue(container.style.top) ?? container.offsetTop);
+  }
 }
 
 function getOriginalLeft(container: HTMLElement) {
@@ -285,11 +312,11 @@ function positionContainer(container: HTMLElement, branch: BranchSide, width: nu
 }
 
 function configureGroup(section: HTMLElement): TargetGroup | null {
-  const title = getGroupTitle(section);
-  const branch = getTargetBranch(title);
+  const targetTitle = getTargetTitle(getGroupTitle(section));
   const container = getAbsoluteContainer(section);
-  if (!branch || !container) return null;
+  if (!targetTitle || !container) return null;
 
+  const branch = getTargetBranch(targetTitle);
   expandGroupIfNeeded(section);
   limitVisibleCards(section);
 
@@ -303,7 +330,7 @@ function configureGroup(section: HTMLElement): TargetGroup | null {
   positionContainer(container, branch, width);
   arrangeSpousePairs(section, columns);
 
-  return { section, container, branch, title, cardCount, visibleCount, width, columns };
+  return { section, container, branch, title: targetTitle, cardCount, visibleCount, width, columns };
 }
 
 function getBox(element: HTMLElement, scale: number) {
@@ -320,6 +347,36 @@ function getBox(element: HTMLElement, scale: number) {
     topCenter: [left + width / 2, top] as [number, number],
     bottomCenter: [left + width / 2, top + height] as [number, number],
   };
+}
+
+function setContainerTop(container: HTMLElement, top: number) {
+  setStyleIfNeeded(container, 'top', `${top}px`);
+}
+
+function stackPair(groupsByTitle: Map<TargetTitle, TargetGroup>, upperTitle: TargetTitle, lowerTitle: TargetTitle, scale: number) {
+  const upper = groupsByTitle.get(upperTitle);
+  const lower = groupsByTitle.get(lowerTitle);
+  if (!upper || !lower) return;
+
+  const upperBox = getBox(upper.container, scale);
+  const expectedLowerTop = upperBox.top + upperBox.height + BRANCH_VERTICAL_GAP;
+  const currentLowerTop = parsePixelValue(lower.container.style.top) ?? lower.container.offsetTop;
+
+  if (currentLowerTop < expectedLowerTop) {
+    setContainerTop(lower.container, expectedLowerTop);
+  }
+}
+
+function stackDependentGroups(groups: TargetGroup[]) {
+  const layer = groups[0]?.container ? getLayer(groups[0].container) : null;
+  const scale = parseScale(layer?.style.transform || '');
+  const groupsByTitle = new Map<TargetTitle, TargetGroup>();
+  groups.forEach((group) => groupsByTitle.set(group.title, group));
+
+  stackPair(groupsByTitle, 'tios paternos', 'primos paternos', scale);
+  stackPair(groupsByTitle, 'irmaos', 'sobrinhos', scale);
+  stackPair(groupsByTitle, 'tios maternos', 'primos maternos', scale);
+  stackPair(groupsByTitle, 'filhos', 'netos', scale);
 }
 
 function pathBetween(from: [number, number], to: [number, number], mode: 'vertical' | 'branch') {
@@ -372,19 +429,22 @@ function renderConnectorOverlay(groups: TargetGroup[]) {
   svg.style.zIndex = '5';
 
   const centralBox = central ? getBox(central, scale) : null;
-  const siblingBox = byTitle.get('irmaos') ? getBox(byTitle.get('irmaos')!.container, scale) : null;
-  const nephewBox = byTitle.get('sobrinhos') ? getBox(byTitle.get('sobrinhos')!.container, scale) : null;
   const spouseBox = spouse ? getBox(spouse, scale) : null;
-  const childrenBox = byTitle.get('filhos') ? getBox(byTitle.get('filhos')!.container, scale) : null;
-  const grandchildrenBox = byTitle.get('netos') ? getBox(byTitle.get('netos')!.container, scale) : null;
-  const maternalUnclesBox = byTitle.get('tios maternos') ? getBox(byTitle.get('tios maternos')!.container, scale) : null;
-  const maternalCousinsBox = byTitle.get('primos maternos') ? getBox(byTitle.get('primos maternos')!.container, scale) : null;
+  const boxes = new Map<TargetTitle, ReturnType<typeof getBox>>();
+  groups.forEach((group) => boxes.set(group.title, getBox(group.container, scale)));
 
-  if (centralBox && siblingBox) appendPath(svg, pathBetween(centralBox.bottomCenter, siblingBox.topCenter, 'branch'));
-  if (siblingBox && nephewBox) appendPath(svg, pathBetween(siblingBox.bottomCenter, nephewBox.topCenter, 'vertical'));
-  if (spouseBox && childrenBox) appendPath(svg, pathBetween(spouseBox.bottomCenter, childrenBox.topCenter, 'branch'));
-  if (childrenBox && grandchildrenBox) appendPath(svg, pathBetween(childrenBox.bottomCenter, grandchildrenBox.topCenter, 'vertical'));
-  if (maternalUnclesBox && maternalCousinsBox) appendPath(svg, pathBetween(maternalUnclesBox.bottomCenter, maternalCousinsBox.topCenter, 'vertical'));
+  const appendDirect = (upperTitle: TargetTitle, lowerTitle: TargetTitle) => {
+    const upper = boxes.get(upperTitle);
+    const lower = boxes.get(lowerTitle);
+    if (upper && lower) appendPath(svg, pathBetween(upper.bottomCenter, lower.topCenter, 'vertical'));
+  };
+
+  if (centralBox && boxes.get('irmaos')) appendPath(svg, pathBetween(centralBox.bottomCenter, boxes.get('irmaos')!.topCenter, 'branch'));
+  appendDirect('tios paternos', 'primos paternos');
+  appendDirect('irmaos', 'sobrinhos');
+  appendDirect('tios maternos', 'primos maternos');
+  if (spouseBox && boxes.get('filhos')) appendPath(svg, pathBetween(spouseBox.bottomCenter, boxes.get('filhos')!.topCenter, 'branch'));
+  appendDirect('filhos', 'netos');
 
   layer.appendChild(svg);
 }
@@ -397,6 +457,7 @@ function applyPerspectiveBranchFixes() {
     .map(configureGroup)
     .filter((group): group is TargetGroup => Boolean(group));
 
+  stackDependentGroups(groups);
   renderConnectorOverlay(groups);
 }
 
