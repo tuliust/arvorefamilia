@@ -170,6 +170,8 @@ const ADAPTIVE_COLLATERAL_GROUP_IDS = new Set<string>([
   'maternalUncles',
   'paternalCousins',
   'maternalCousins',
+  'siblings',
+  'nephews',
 ]);
 
 const FAMILY_MAP_LAYOUT_BASE: FamilyMapLayout = {
@@ -207,7 +209,7 @@ const FAMILY_MAP_LAYOUT_BASE: FamilyMapLayout = {
     center: { x: 615, width: 210 },
     maternalAncestors: { x: 745, width: 430 },
     right: { x: 1120, width: 480 },
-    lowerLeft: { x: 375, width: 360 },
+    lowerLeft: { x: 225, width: 610 },
     lowerMiddle: { x: 855, width: 210 },
     lowerRight: { x: 1160, width: 300 },
   },
@@ -225,8 +227,8 @@ const FAMILY_MAP_LAYOUT_BASE: FamilyMapLayout = {
     maternalGrandparents: group('maternalGrandparents', 'Avós Maternos', 745, 430, 'double', 4, 'horizontal', true, 'always', 'ancestorSpouse'),
     maternalUncles: group('maternalUncles', 'Tios Maternos', 1120, 480, 'quad', 8, 'mini', true, 'filter', undefined, 300),
     maternalCousins: group('maternalCousins', 'Primos Maternos', 1120, 480, 'quad', 8, 'mini', true, 'filter', undefined, 250),
-    siblings: group('siblings', 'Irmãos', 375, 360, 'double', 4, 'horizontal', true, 'filter', undefined, 260),
-    nephews: group('nephews', 'Sobrinhos', 375, 300, 'double', 2, 'mini', true, 'filter', undefined, 220),
+    siblings: group('siblings', 'Irmãos', 225, 610, 'double', 4, 'horizontal', true, 'filter', undefined, 360),
+    nephews: group('nephews', 'Sobrinhos', 225, 610, 'quad', 4, 'mini', true, 'filter', undefined, 280),
     spouse: group('spouse', 'Cônjuge', 855, 210, 'single', 1, 'compact', false, 'always', 'spouse', undefined, true),
     children: group('children', 'Filhos', 1160, 300, 'double', 2, 'horizontal', true, 'filter', undefined, 260),
     pets: group('pets', 'Pets', 855, 210, 'single', 2, 'mini', true, 'never', undefined, 210),
@@ -282,8 +284,8 @@ function getWideLayout(): FamilyMapLayout {
     maternalGrandparents: { ...base.groups.maternalGrandparents, x: 950 },
     maternalUncles: { ...base.groups.maternalUncles, x: 1300, width: 560, singleWidth: 340 },
     maternalCousins: { ...base.groups.maternalCousins, x: 1300, width: 560, singleWidth: 250 },
-    siblings: { ...base.groups.siblings, x: 595, width: 360, singleWidth: 300 },
-    nephews: { ...base.groups.nephews, x: 595, width: 360, singleWidth: 280 },
+    siblings: { ...base.groups.siblings, x: 390, width: 640, singleWidth: 360 },
+    nephews: { ...base.groups.nephews, x: 390, width: 640, singleWidth: 280 },
     spouse: { ...base.groups.spouse, x: 1075 },
     children: { ...base.groups.children, x: 1380, width: 420, singleWidth: 300 },
     pets: { ...base.groups.pets, x: 1075, width: 210, singleWidth: 210 },
@@ -300,7 +302,7 @@ function getWideLayout(): FamilyMapLayout {
       center: { x: 835, width: 210 },
       maternalAncestors: { x: 950, width: 430 },
       right: { x: 1300, width: 560 },
-      lowerLeft: { x: 595, width: 360 },
+      lowerLeft: { x: 390, width: 640 },
       lowerMiddle: { x: 1075, width: 210 },
       lowerRight: { x: 1380, width: 420 },
     },
@@ -357,6 +359,18 @@ function getVisiblePeople(group: ComposedGroup, config: GroupConfig, expanded: b
 
 function getAdaptiveGroupColumns(config: GroupConfig, visiblePeople: Pessoa[]): GroupColumns {
   if (!ADAPTIVE_COLLATERAL_GROUP_IDS.has(config.id)) return config.columns;
+
+  if (config.id === 'nephews') {
+    if (visiblePeople.length >= 4) return 'quad';
+    if (visiblePeople.length === 3) return 'triple';
+    if (visiblePeople.length === 2) return 'double';
+    return config.columns;
+  }
+
+  if (config.id === 'siblings') {
+    if (visiblePeople.length === 3 || visiblePeople.length === 6) return 'triple';
+    return config.columns;
+  }
 
   const isCousinsGroup = config.id === 'paternalCousins' || config.id === 'maternalCousins';
   if (isCousinsGroup) {
@@ -1173,11 +1187,12 @@ function DesktopFamilyMapViewComponent({
     familyMapLayout.areas.lowerLeft,
     hideGroupChrome,
   );
+  const lowerLeftStackGap = Math.min(familyMapLayout.metrics.descendantRowGap, 28);
   const nephewsLayout = resolveGroup(
     familyMapLayout.groups.nephews,
     composedGroups.get('nephews') as ComposedGroup,
     expandedGroups,
-    descendantsTop + (siblingsLayout?.height ?? familyMapLayout.metrics.horizontalCardHeight) + familyMapLayout.metrics.descendantRowGap,
+    siblingsLayout ? siblingsLayout.top + siblingsLayout.height + lowerLeftStackGap : descendantsTop,
     familyMapLayout,
     familyMapLayout.areas.lowerLeft,
     hideGroupChrome,
