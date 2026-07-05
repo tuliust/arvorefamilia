@@ -5,18 +5,14 @@ const OVERLAY_SELECTOR = '[data-family-map-perspective-connector-overlay="true"]
 const OVERLAY_SIGNATURE_ATTR = 'data-family-map-perspective-connector-signature';
 const GROUP_SELECTOR = '[data-family-map-group="true"]';
 const GROUP_TITLE_SELECTOR = '[data-family-map-group-title="true"]';
+const PERSON_CARD_SELECTOR = ':scope > .grid > *:has([data-family-map-color-key])';
 const CARD_WIDTH = 166;
 const GROUP_HORIZONTAL_PADDING = 24;
 const GRID_GAP = 8;
-const LEFT_BRANCH_X = 72;
-const MAX_COLUMNS = 4;
 const MAX_VISIBLE_WITHOUT_MANUAL_EXPAND = 12;
 const BRANCH_VERTICAL_GAP = 56;
 const CONNECTOR_COLOR = '#a5eef6';
 const CONNECTOR_WIDTH = 2;
-const TARGET_WIDTH = GROUP_HORIZONTAL_PADDING + MAX_COLUMNS * CARD_WIDTH + (MAX_COLUMNS - 1) * GRID_GAP;
-
-let scheduled = false;
 
 type BranchSide = 'left' | 'right';
 type TargetTitle =
@@ -33,13 +29,13 @@ type TargetTitle =
 type TargetGroup = {
   section: HTMLElement;
   container: HTMLElement;
-  branch: BranchSide;
   title: TargetTitle;
-  cardCount: number;
-  visibleCount: number;
-  width: number;
+  branch: BranchSide;
   columns: 1 | 2 | 3 | 4;
+  width: number;
 };
+
+let scheduled = false;
 
 function isDesktopViewport() {
   return typeof window !== 'undefined'
@@ -102,8 +98,7 @@ function parseScale(value: string) {
 function getAbsoluteContainer(section: HTMLElement) {
   const container = section.parentElement;
   if (!(container instanceof HTMLElement)) return null;
-  const position = window.getComputedStyle(container).position;
-  return position === 'absolute' ? container : null;
+  return window.getComputedStyle(container).position === 'absolute' ? container : null;
 }
 
 function getLayer(container: HTMLElement) {
@@ -111,8 +106,13 @@ function getLayer(container: HTMLElement) {
   return layer instanceof HTMLElement ? layer : null;
 }
 
-function setStyleIfNeeded(element: HTMLElement, property: string, value: string) {
-  if (element.style.getPropertyValue(property) !== value) element.style.setProperty(property, value);
+function setStyleIfNeeded(element: HTMLElement, property: string, value: string, priority = '') {
+  if (
+    element.style.getPropertyValue(property) !== value
+    || element.style.getPropertyPriority(property) !== priority
+  ) {
+    element.style.setProperty(property, value, priority);
+  }
 }
 
 function setAttributeIfNeeded(element: HTMLElement, name: string, value: string) {
@@ -122,50 +122,22 @@ function setAttributeIfNeeded(element: HTMLElement, name: string, value: string)
 function ensureStyles() {
   const css = `
     @media (min-width: 768px) {
-      [data-family-map-perspective-branch="left"],
-      [data-family-map-perspective-branch="right"] {
-        width: var(--family-map-perspective-width, ${TARGET_WIDTH}px) !important;
+      [data-family-map-perspective-normalized="true"] {
+        overflow: visible !important;
       }
 
-      [data-family-map-perspective-branch="left"] ${GROUP_SELECTOR},
-      [data-family-map-perspective-branch="right"] ${GROUP_SELECTOR} {
+      [data-family-map-perspective-normalized="true"] ${GROUP_SELECTOR} {
         width: 100% !important;
       }
 
-      ${GROUP_SELECTOR}[data-family-map-perspective-columns="1"] > .grid {
-        grid-template-columns: minmax(0, ${CARD_WIDTH}px) !important;
-        justify-content: center !important;
-      }
-
-      ${GROUP_SELECTOR}[data-family-map-perspective-columns="2"] > .grid {
-        grid-template-columns: repeat(2, minmax(0, ${CARD_WIDTH}px)) !important;
-        justify-content: center !important;
-      }
-
-      ${GROUP_SELECTOR}[data-family-map-perspective-columns="3"] > .grid {
-        grid-template-columns: repeat(3, minmax(0, ${CARD_WIDTH}px)) !important;
-        justify-content: center !important;
-      }
-
-      ${GROUP_SELECTOR}[data-family-map-perspective-columns="4"] > .grid {
-        grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
-      }
-
-      ${GROUP_SELECTOR}[data-family-map-perspective-branch-section="left"] > .grid > .col-span-2,
-      ${GROUP_SELECTOR}[data-family-map-perspective-branch-section="right"] > .grid > .col-span-2 {
+      [data-family-map-perspective-normalized="true"] ${GROUP_SELECTOR} > .grid > .col-span-2 {
         grid-column: auto / span 1 !important;
         width: auto !important;
         margin-inline: 0 !important;
       }
 
-      ${GROUP_SELECTOR}[data-family-map-perspective-branch-section="left"] > .grid > [data-family-map-perspective-overflow="true"],
-      ${GROUP_SELECTOR}[data-family-map-perspective-branch-section="right"] > .grid > [data-family-map-perspective-overflow="true"] {
+      [data-family-map-perspective-normalized="true"] ${GROUP_SELECTOR} > .grid > [data-family-map-perspective-overflow="true"] {
         display: none !important;
-      }
-
-      ${GROUP_SELECTOR} > .grid > [data-family-map-perspective-spacer="true"] {
-        min-width: 0 !important;
-        pointer-events: none !important;
       }
     }
   `;
@@ -184,96 +156,40 @@ function expandGroupIfNeeded(section: HTMLElement) {
   const title = section.querySelector<HTMLElement>(GROUP_TITLE_SELECTOR)?.textContent?.trim() ?? '';
   const expandButton = Array.from(section.querySelectorAll<HTMLButtonElement>('button[aria-label], button[title]'))
     .find((button) => {
-      const label = `${button.getAttribute('aria-label') ?? ''} ${button.getAttribute('title') ?? ''}`;
-      return normalizeText(label).startsWith(`expandir ${normalizeText(title)}`);
+      const label = normalizeText(`${button.getAttribute('aria-label') ?? ''} ${button.getAttribute('title') ?? ''}`);
+      return label.startsWith(`expandir ${normalizeText(title)}`);
     });
 
   if (expandButton) expandButton.click();
 }
 
-function countVisibleCards(section: HTMLElement) {
-  const grid = section.querySelector<HTMLElement>(':scope > .grid');
-  if (!grid) return 0;
-  return Array.from(grid.children).filter((child) => (
-    child instanceof HTMLElement
-    && !child.hasAttribute('data-family-map-perspective-overflow')
-    && Boolean(child.querySelector('[data-family-map-color-key]'))
-  )).length;
-}
-
-function countCards(section: HTMLElement) {
-  const grid = section.querySelector<HTMLElement>(':scope > .grid');
-  if (!grid) return 0;
-  return Array.from(grid.children).filter((child) => (
-    child instanceof HTMLElement
-    && Boolean(child.querySelector('[data-family-map-color-key]'))
-  )).length;
-}
-
-function desiredColumns(visibleCount: number): 1 | 2 | 3 | 4 {
-  if (visibleCount <= 1) return 1;
-  if (visibleCount === 2) return 2;
-  if (visibleCount === 3) return 3;
-  return 4;
-}
-
-function desiredWidth(columns: 1 | 2 | 3 | 4) {
-  return GROUP_HORIZONTAL_PADDING + columns * CARD_WIDTH + Math.max(0, columns - 1) * GRID_GAP;
+function getCardWrappers(section: HTMLElement) {
+  return Array.from(section.querySelectorAll<HTMLElement>(PERSON_CARD_SELECTOR));
 }
 
 function limitVisibleCards(section: HTMLElement) {
-  const grid = section.querySelector<HTMLElement>(':scope > .grid');
-  if (!grid) return;
-
-  let renderedCards = 0;
-  Array.from(grid.children).forEach((child) => {
-    if (!(child instanceof HTMLElement)) return;
-    if (!child.hasAttribute('data-family-map-perspective-spacer')) {
-      child.removeAttribute('data-family-map-perspective-overflow');
-    }
-    if (!child.querySelector('[data-family-map-color-key]')) return;
-
-    renderedCards += 1;
-    if (renderedCards > MAX_VISIBLE_WITHOUT_MANUAL_EXPAND) {
-      child.setAttribute('data-family-map-perspective-overflow', 'true');
+  getCardWrappers(section).forEach((wrapper, index) => {
+    if (index >= MAX_VISIBLE_WITHOUT_MANUAL_EXPAND) {
+      setAttributeIfNeeded(wrapper, 'data-family-map-perspective-overflow', 'true');
+    } else if (wrapper.hasAttribute('data-family-map-perspective-overflow')) {
+      wrapper.removeAttribute('data-family-map-perspective-overflow');
     }
   });
 }
 
-function hasLateralSpouseConnector(wrapper: HTMLElement) {
-  return Array.from(wrapper.querySelectorAll<HTMLElement>('span[aria-hidden="true"]'))
-    .some((span) => span.className.includes('border-cyan-500'));
+function getVisibleCardCount(section: HTMLElement) {
+  return getCardWrappers(section).filter((wrapper) => !wrapper.hasAttribute('data-family-map-perspective-overflow')).length;
 }
 
-function arrangeSpousePairs(section: HTMLElement, columns: 1 | 2 | 3 | 4) {
-  const grid = section.querySelector<HTMLElement>(':scope > .grid');
-  if (!grid || columns < 2) return;
+function getColumns(visibleCards: number): 1 | 2 | 3 | 4 {
+  if (visibleCards <= 1) return 1;
+  if (visibleCards === 2) return 2;
+  if (visibleCards === 3) return 3;
+  return 4;
+}
 
-  grid.querySelectorAll<HTMLElement>('[data-family-map-perspective-spacer="true"]').forEach((spacer) => spacer.remove());
-
-  const wrappers = Array.from(grid.children).filter((child): child is HTMLElement => (
-    child instanceof HTMLElement
-    && !child.hasAttribute('data-family-map-perspective-overflow')
-    && Boolean(child.querySelector('[data-family-map-color-key]'))
-  ));
-
-  wrappers.forEach((wrapper) => {
-    if (!hasLateralSpouseConnector(wrapper)) return;
-
-    const currentChildren = Array.from(grid.children).filter((child): child is HTMLElement => child instanceof HTMLElement);
-    const index = currentChildren.indexOf(wrapper);
-    const previous = currentChildren[index - 1];
-    if (!(previous instanceof HTMLElement) || !previous.querySelector('[data-family-map-color-key]')) return;
-
-    const startsNewRow = index >= 0 && index % columns === 0;
-    if (!startsNewRow) return;
-
-    const spacer = document.createElement('div');
-    spacer.className = 'min-w-0';
-    spacer.setAttribute('data-family-map-perspective-spacer', 'true');
-    spacer.setAttribute('aria-hidden', 'true');
-    grid.insertBefore(spacer, previous);
-  });
+function getGroupWidth(columns: 1 | 2 | 3 | 4) {
+  return GROUP_HORIZONTAL_PADDING + columns * CARD_WIDTH + Math.max(0, columns - 1) * GRID_GAP;
 }
 
 function storeOriginalGeometry(container: HTMLElement) {
@@ -283,13 +199,10 @@ function storeOriginalGeometry(container: HTMLElement) {
   if (!container.dataset.familyMapPerspectiveOriginalWidth) {
     container.dataset.familyMapPerspectiveOriginalWidth = String(parsePixelValue(container.style.width) ?? container.getBoundingClientRect().width);
   }
-  if (!container.dataset.familyMapPerspectiveOriginalTop) {
-    container.dataset.familyMapPerspectiveOriginalTop = String(parsePixelValue(container.style.top) ?? container.offsetTop);
-  }
 }
 
 function getOriginalLeft(container: HTMLElement) {
-  return parsePixelValue(container.dataset.familyMapPerspectiveOriginalLeft) ?? parsePixelValue(container.style.left) ?? 0;
+  return parsePixelValue(container.dataset.familyMapPerspectiveOriginalLeft) ?? parsePixelValue(container.style.left) ?? container.offsetLeft;
 }
 
 function getOriginalWidth(container: HTMLElement) {
@@ -298,40 +211,44 @@ function getOriginalWidth(container: HTMLElement) {
 
 function positionContainer(container: HTMLElement, branch: BranchSide, width: number) {
   storeOriginalGeometry(container);
-
   const originalLeft = getOriginalLeft(container);
   const originalWidth = getOriginalWidth(container);
   const originalCenter = originalLeft + originalWidth / 2;
-  const nextLeft = branch === 'left'
-    ? LEFT_BRANCH_X
-    : originalCenter - width / 2;
+  const left = branch === 'left' ? Math.min(originalLeft, 72) : originalCenter - width / 2;
 
+  setStyleIfNeeded(container, 'left', `${left}px`);
   setStyleIfNeeded(container, 'width', `${width}px`);
-  setStyleIfNeeded(container, 'left', `${nextLeft}px`);
-  setStyleIfNeeded(container, '--family-map-perspective-width', `${width}px`);
-  setAttributeIfNeeded(container, 'data-family-map-perspective-branch', branch);
+  setAttributeIfNeeded(container, 'data-family-map-perspective-normalized', 'true');
+}
+
+function forceGrid(section: HTMLElement, columns: 1 | 2 | 3 | 4) {
+  const grid = section.querySelector<HTMLElement>(':scope > .grid');
+  if (!grid) return;
+
+  setStyleIfNeeded(grid, 'grid-template-columns', `repeat(${columns}, minmax(0, ${columns === 4 ? '1fr' : `${CARD_WIDTH}px`}))`, 'important');
+  setStyleIfNeeded(grid, 'justify-content', columns < 4 ? 'center' : 'stretch', 'important');
+  setAttributeIfNeeded(section, 'data-family-map-perspective-columns', String(columns));
 }
 
 function configureGroup(section: HTMLElement): TargetGroup | null {
-  const targetTitle = getTargetTitle(getGroupTitle(section));
+  const title = getTargetTitle(getGroupTitle(section));
   const container = getAbsoluteContainer(section);
-  if (!targetTitle || !container) return null;
+  if (!title || !container) return null;
 
-  const branch = getTargetBranch(targetTitle);
   expandGroupIfNeeded(section);
   limitVisibleCards(section);
 
-  const cardCount = countCards(section);
-  const visibleCount = Math.min(MAX_VISIBLE_WITHOUT_MANUAL_EXPAND, countVisibleCards(section) || cardCount);
-  const columns = desiredColumns(visibleCount);
-  const width = desiredWidth(columns);
+  const visibleCards = getVisibleCardCount(section);
+  if (visibleCards === 0) return null;
 
-  setAttributeIfNeeded(section, 'data-family-map-perspective-branch-section', branch);
-  setAttributeIfNeeded(section, 'data-family-map-perspective-columns', String(columns));
+  const columns = getColumns(visibleCards);
+  const width = getGroupWidth(columns);
+  const branch = getTargetBranch(title);
+
   positionContainer(container, branch, width);
-  arrangeSpousePairs(section, columns);
+  forceGrid(section, columns);
 
-  return { section, container, branch, title: targetTitle, cardCount, visibleCount, width, columns };
+  return { section, container, title, branch, columns, width };
 }
 
 function getBox(element: HTMLElement, scale: number) {
@@ -339,7 +256,6 @@ function getBox(element: HTMLElement, scale: number) {
   const top = parsePixelValue(element.style.top) ?? element.offsetTop;
   const width = parsePixelValue(element.style.width) ?? element.getBoundingClientRect().width / scale;
   const height = element.getBoundingClientRect().height / scale;
-
   return {
     left,
     top,
@@ -362,22 +278,19 @@ function stackPair(groupsByTitle: Map<TargetTitle, TargetGroup>, upperTitle: Tar
   const upperBox = getBox(upper.container, scale);
   const expectedLowerTop = upperBox.top + upperBox.height + BRANCH_VERTICAL_GAP;
   const currentLowerTop = parsePixelValue(lower.container.style.top) ?? lower.container.offsetTop;
-
-  if (currentLowerTop < expectedLowerTop) {
-    setContainerTop(lower.container, expectedLowerTop);
-  }
+  if (currentLowerTop < expectedLowerTop) setContainerTop(lower.container, expectedLowerTop);
 }
 
 function stackDependentGroups(groups: TargetGroup[]) {
   const layer = groups[0]?.container ? getLayer(groups[0].container) : null;
   const scale = parseScale(layer?.style.transform || '');
-  const groupsByTitle = new Map<TargetTitle, TargetGroup>();
-  groups.forEach((group) => groupsByTitle.set(group.title, group));
+  const byTitle = new Map<TargetTitle, TargetGroup>();
+  groups.forEach((group) => byTitle.set(group.title, group));
 
-  stackPair(groupsByTitle, 'tios paternos', 'primos paternos', scale);
-  stackPair(groupsByTitle, 'irmaos', 'sobrinhos', scale);
-  stackPair(groupsByTitle, 'tios maternos', 'primos maternos', scale);
-  stackPair(groupsByTitle, 'filhos', 'netos', scale);
+  stackPair(byTitle, 'tios paternos', 'primos paternos', scale);
+  stackPair(byTitle, 'irmaos', 'sobrinhos', scale);
+  stackPair(byTitle, 'tios maternos', 'primos maternos', scale);
+  stackPair(byTitle, 'filhos', 'netos', scale);
 }
 
 function pathBetween(from: [number, number], to: [number, number], mode: 'vertical' | 'branch') {
@@ -402,18 +315,6 @@ function createPath(d: string) {
   return path;
 }
 
-function styleConnectorOverlay(svg: SVGSVGElement, width: number, height: number) {
-  svg.setAttribute('data-family-map-perspective-connector-overlay', 'true');
-  svg.setAttribute('aria-hidden', 'true');
-  svg.setAttribute('viewBox', `0 0 ${width} ${height}`);
-  svg.style.position = 'absolute';
-  svg.style.inset = '0';
-  svg.style.width = '100%';
-  svg.style.height = '100%';
-  svg.style.pointerEvents = 'none';
-  svg.style.zIndex = '5';
-}
-
 function renderConnectorOverlay(groups: TargetGroup[]) {
   const firstContainer = groups[0]?.container;
   const layer = firstContainer ? getLayer(firstContainer) : null;
@@ -427,12 +328,12 @@ function renderConnectorOverlay(groups: TargetGroup[]) {
     .map((element) => element.closest<HTMLElement>('.absolute'))
     .find((element) => element?.parentElement === layer) ?? null;
 
-  const centralBox = central ? getBox(central, scale) : null;
-  const spouseBox = spouse ? getBox(spouse, scale) : null;
   const boxes = new Map<TargetTitle, ReturnType<typeof getBox>>();
   groups.forEach((group) => boxes.set(group.title, getBox(group.container, scale)));
 
   const paths: string[] = [];
+  const centralBox = central ? getBox(central, scale) : null;
+  const spouseBox = spouse ? getBox(spouse, scale) : null;
   const appendDirect = (upperTitle: TargetTitle, lowerTitle: TargetTitle) => {
     const upper = boxes.get(upperTitle);
     const lower = boxes.get(lowerTitle);
@@ -447,29 +348,35 @@ function renderConnectorOverlay(groups: TargetGroup[]) {
   appendDirect('filhos', 'netos');
 
   const signature = JSON.stringify({ width, height, paths });
-  const existingOverlay = layer.querySelector<SVGSVGElement>(OVERLAY_SELECTOR);
-  if (existingOverlay?.getAttribute(OVERLAY_SIGNATURE_ATTR) === signature) return;
+  const existing = layer.querySelector<SVGSVGElement>(OVERLAY_SELECTOR);
+  if (existing?.getAttribute(OVERLAY_SIGNATURE_ATTR) === signature) return;
 
   if (paths.length === 0) {
-    existingOverlay?.remove();
+    existing?.remove();
     return;
   }
 
-  const svg = existingOverlay ?? document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-  styleConnectorOverlay(svg, width, height);
+  const svg = existing ?? document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  svg.setAttribute('data-family-map-perspective-connector-overlay', 'true');
+  svg.setAttribute('aria-hidden', 'true');
+  svg.setAttribute('viewBox', `0 0 ${width} ${height}`);
   svg.setAttribute(OVERLAY_SIGNATURE_ATTR, signature);
+  svg.style.position = 'absolute';
+  svg.style.inset = '0';
+  svg.style.width = '100%';
+  svg.style.height = '100%';
+  svg.style.pointerEvents = 'none';
+  svg.style.zIndex = '5';
   svg.replaceChildren(...paths.map(createPath));
-  if (!existingOverlay) layer.appendChild(svg);
+  if (!existing) layer.appendChild(svg);
 }
 
 function applyPerspectiveBranchFixes() {
   if (!isEnabled()) return;
   ensureStyles();
-
   const groups = Array.from(document.querySelectorAll<HTMLElement>(GROUP_SELECTOR))
     .map(configureGroup)
     .filter((group): group is TargetGroup => Boolean(group));
-
   stackDependentGroups(groups);
   renderConnectorOverlay(groups);
 }
@@ -484,25 +391,25 @@ function scheduleApplyPerspectiveBranchFixes() {
 }
 
 function scheduleAfterInteraction() {
-  [120, 360, 800].forEach((delay) => window.setTimeout(applyPerspectiveBranchFixes, delay));
+  [0, 100, 240, 520, 1000].forEach((delay) => window.setTimeout(applyPerspectiveBranchFixes, delay));
 }
 
 if (typeof window !== 'undefined' && typeof document !== 'undefined') {
   applyPerspectiveBranchFixes();
-  [80, 240, 520, 1000].forEach((delay) => window.setTimeout(applyPerspectiveBranchFixes, delay));
+  [80, 240, 520, 1000, 1800, 3200].forEach((delay) => window.setTimeout(applyPerspectiveBranchFixes, delay));
 
   const observer = new MutationObserver(scheduleApplyPerspectiveBranchFixes);
   observer.observe(document.documentElement, {
     childList: true,
     subtree: true,
     attributes: true,
-    attributeFilter: ['class', 'aria-label', 'title'],
+    attributeFilter: ['class', 'aria-label', 'title', 'style'],
   });
 
-  window.addEventListener('resize', applyPerspectiveBranchFixes, { passive: true });
-  window.addEventListener('popstate', applyPerspectiveBranchFixes, { passive: true });
+  window.addEventListener('resize', scheduleAfterInteraction, { passive: true });
+  window.addEventListener('popstate', scheduleAfterInteraction, { passive: true });
   document.addEventListener('click', scheduleAfterInteraction, { capture: true, passive: true });
-  document.addEventListener('visibilitychange', applyPerspectiveBranchFixes, { passive: true });
+  document.addEventListener('visibilitychange', scheduleAfterInteraction, { passive: true });
 }
 
 export {};
