@@ -1134,6 +1134,8 @@ function DesktopFamilyHorizontalMapViewComponent({
         ref={exportRootRef}
         data-family-map-export-root="true"
         data-family-map-horizontal-root="true"
+        data-family-map-central-person-id={centralPersonId}
+        data-family-map-layout-revision={layoutRevision}
         className="relative z-10 mx-auto"
         style={{
           width: canvasWidth * effectiveScale,
@@ -1203,6 +1205,10 @@ function DesktopFamilyHorizontalMapViewComponent({
           {Array.from(layouts.values()).map((layout) => (
             <div
               key={layout.person.id}
+              data-family-map-horizontal-node="true"
+              data-family-map-person-id={layout.person.id}
+              data-family-map-generation={layout.generation}
+              data-family-map-spouse-tone={spouseTonePersonIds.has(layout.person.id) ? 'true' : undefined}
               className="absolute z-20"
               style={{ left: layout.left, top: layout.top, width: layout.width }}
             >

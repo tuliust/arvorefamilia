@@ -426,6 +426,7 @@ export function VisualGroup({
   vitalMode = 'year',
   roomy = false,
   hideChrome = false,
+  forceHideExpandToggle = false,
 }: {
   title: string;
   people: Pessoa[];
@@ -447,11 +448,13 @@ export function VisualGroup({
   vitalMode?: 'year' | 'full';
   roomy?: boolean;
   hideChrome?: boolean;
+  forceHideExpandToggle?: boolean;
 }) {
   const [internalExpanded, setInternalExpanded] = React.useState(defaultExpanded);
   const isExpanded = expanded ?? internalExpanded;
   const limit = collapsedLimit ?? people.length;
   const canExpand = expandable && people.length > limit;
+  const shouldShowExpandToggle = canExpand && !forceHideExpandToggle;
   const groupColorKey = getFamilyMapColorKeyFromText(title);
   const visiblePeople = React.useMemo(() => {
     if (!canExpand || isExpanded) return people;
@@ -527,6 +530,10 @@ export function VisualGroup({
       data-family-map-group="true"
       data-family-map-chrome-hidden={hideChrome ? 'true' : undefined}
       data-family-map-color-key={groupColorKey}
+      data-family-map-group-columns={effectiveColumns}
+      data-family-map-total-person-count={people.length}
+      data-family-map-visible-person-count={visiblePeople.length}
+      data-family-map-can-expand={canExpand ? 'true' : undefined}
       className={[
         groupChromeClassName,
         !hideChrome && (pillTitle ? 'pt-5' : 'overflow-hidden'),
@@ -556,7 +563,7 @@ export function VisualGroup({
         <div className={`grid min-h-0 ${gridColumns} gap-2 ${scrollClasses}`} style={gridStyle}>
           {renderedItems.map((item, index) => {
             if (item.type === 'spacer') {
-              return <div key={item.key} className="min-w-0" aria-hidden="true" />;
+              return <div key={item.key} data-family-map-grid-spacer="true" className="min-w-0" aria-hidden="true" />;
             }
 
             const { person } = item;
@@ -581,9 +588,20 @@ export function VisualGroup({
               : undefined;
 
             return (
-              <div key={person.id} className={personWrapperClassName} style={personWrapperStyle}>
+              <div
+                key={person.id}
+                data-family-map-person-wrapper="true"
+                data-family-map-person-id={person.id}
+                data-family-map-wrapper-is-spouse={isSpouseCard ? 'true' : undefined}
+                className={personWrapperClassName}
+                style={personWrapperStyle}
+              >
                 {lateralConnector && (
-                  <span className="pointer-events-none absolute -left-2 top-1/2 z-0 h-0 w-2 -translate-y-1/2 border-t-2 border-cyan-500" aria-hidden="true" />
+                  <span
+                    data-family-map-lateral-spouse-connector="true"
+                    className="pointer-events-none absolute -left-2 top-1/2 z-0 h-0 w-2 -translate-y-1/2 border-t-2 border-cyan-500"
+                    aria-hidden="true"
+                  />
                 )}
                 <VisualPersonCard
                   person={person}
@@ -600,10 +618,11 @@ export function VisualGroup({
           })}
         </div>
       )}
-      {canExpand && (
+      {shouldShowExpandToggle && (
         <button
           type="button"
           data-tree-export-ignore="true"
+          data-family-map-expand-toggle="true"
           onClick={handleToggle}
           aria-label={isExpanded ? `Recolher ${title}` : `Expandir ${title}`}
           title={isExpanded ? `Recolher ${title}` : `Expandir ${title}`}
