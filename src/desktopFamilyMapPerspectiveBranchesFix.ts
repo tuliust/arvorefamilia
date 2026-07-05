@@ -2,6 +2,7 @@ const DESKTOP_QUERY = '(min-width: 768px)';
 const MAP_PATH = '/mapa-familiar';
 const STYLE_ID = 'desktop-family-map-perspective-branches-fix-style';
 const OVERLAY_SELECTOR = '[data-family-map-perspective-connector-overlay="true"]';
+const OVERLAY_SIGNATURE_ATTR = 'data-family-map-perspective-connector-signature';
 const GROUP_SELECTOR = '[data-family-map-group="true"]';
 const GROUP_TITLE_SELECTOR = '[data-family-map-group-title="true"]';
 const CARD_WIDTH = 166;
@@ -390,7 +391,7 @@ function pathBetween(from: [number, number], to: [number, number], mode: 'vertic
   return `M ${from[0]} ${from[1]} L ${from[0]} ${junctionY} L ${to[0]} ${junctionY} L ${to[0]} ${to[1]}`;
 }
 
-function appendPath(svg: SVGSVGElement, d: string) {
+function createPath(d: string) {
   const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
   path.setAttribute('d', d);
   path.setAttribute('fill', 'none');
@@ -398,26 +399,10 @@ function appendPath(svg: SVGSVGElement, d: string) {
   path.setAttribute('stroke-width', String(CONNECTOR_WIDTH));
   path.setAttribute('stroke-linecap', 'round');
   path.setAttribute('stroke-linejoin', 'round');
-  svg.appendChild(path);
+  return path;
 }
 
-function renderConnectorOverlay(groups: TargetGroup[]) {
-  const firstContainer = groups[0]?.container;
-  const layer = firstContainer ? getLayer(firstContainer) : null;
-  if (!layer) return;
-
-  layer.querySelector(OVERLAY_SELECTOR)?.remove();
-
-  const scale = parseScale(layer.style.transform || '');
-  const width = parsePixelValue(layer.style.width) ?? layer.getBoundingClientRect().width / scale;
-  const height = parsePixelValue(layer.style.height) ?? layer.getBoundingClientRect().height / scale;
-  const byTitle = new Map(groups.map((group) => [group.title, group]));
-  const central = document.querySelector<HTMLElement>('[data-family-map-central-card="true"]');
-  const spouse = Array.from(document.querySelectorAll<HTMLElement>('[data-family-map-spouse-tone="true"]'))
-    .map((element) => element.closest<HTMLElement>('.absolute'))
-    .find((element) => element?.parentElement === layer) ?? null;
-
-  const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+function styleConnectorOverlay(svg: SVGSVGElement, width: number, height: number) {
   svg.setAttribute('data-family-map-perspective-connector-overlay', 'true');
   svg.setAttribute('aria-hidden', 'true');
   svg.setAttribute('viewBox', `0 0 ${width} ${height}`);
@@ -427,26 +412,54 @@ function renderConnectorOverlay(groups: TargetGroup[]) {
   svg.style.height = '100%';
   svg.style.pointerEvents = 'none';
   svg.style.zIndex = '5';
+}
+
+function renderConnectorOverlay(groups: TargetGroup[]) {
+  const firstContainer = groups[0]?.container;
+  const layer = firstContainer ? getLayer(firstContainer) : null;
+  if (!layer) return;
+
+  const scale = parseScale(layer.style.transform || '');
+  const width = parsePixelValue(layer.style.width) ?? layer.getBoundingClientRect().width / scale;
+  const height = parsePixelValue(layer.style.height) ?? layer.getBoundingClientRect().height / scale;
+  const central = document.querySelector<HTMLElement>('[data-family-map-central-card="true"]');
+  const spouse = Array.from(document.querySelectorAll<HTMLElement>('[data-family-map-spouse-tone="true"]'))
+    .map((element) => element.closest<HTMLElement>('.absolute'))
+    .find((element) => element?.parentElement === layer) ?? null;
 
   const centralBox = central ? getBox(central, scale) : null;
   const spouseBox = spouse ? getBox(spouse, scale) : null;
   const boxes = new Map<TargetTitle, ReturnType<typeof getBox>>();
   groups.forEach((group) => boxes.set(group.title, getBox(group.container, scale)));
 
+  const paths: string[] = [];
   const appendDirect = (upperTitle: TargetTitle, lowerTitle: TargetTitle) => {
     const upper = boxes.get(upperTitle);
     const lower = boxes.get(lowerTitle);
-    if (upper && lower) appendPath(svg, pathBetween(upper.bottomCenter, lower.topCenter, 'vertical'));
+    if (upper && lower) paths.push(pathBetween(upper.bottomCenter, lower.topCenter, 'vertical'));
   };
 
-  if (centralBox && boxes.get('irmaos')) appendPath(svg, pathBetween(centralBox.bottomCenter, boxes.get('irmaos')!.topCenter, 'branch'));
+  if (centralBox && boxes.get('irmaos')) paths.push(pathBetween(centralBox.bottomCenter, boxes.get('irmaos')!.topCenter, 'branch'));
   appendDirect('tios paternos', 'primos paternos');
   appendDirect('irmaos', 'sobrinhos');
   appendDirect('tios maternos', 'primos maternos');
-  if (spouseBox && boxes.get('filhos')) appendPath(svg, pathBetween(spouseBox.bottomCenter, boxes.get('filhos')!.topCenter, 'branch'));
+  if (spouseBox && boxes.get('filhos')) paths.push(pathBetween(spouseBox.bottomCenter, boxes.get('filhos')!.topCenter, 'branch'));
   appendDirect('filhos', 'netos');
 
-  layer.appendChild(svg);
+  const signature = JSON.stringify({ width, height, paths });
+  const existingOverlay = layer.querySelector<SVGSVGElement>(OVERLAY_SELECTOR);
+  if (existingOverlay?.getAttribute(OVERLAY_SIGNATURE_ATTR) === signature) return;
+
+  if (paths.length === 0) {
+    existingOverlay?.remove();
+    return;
+  }
+
+  const svg = existingOverlay ?? document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  styleConnectorOverlay(svg, width, height);
+  svg.setAttribute(OVERLAY_SIGNATURE_ATTR, signature);
+  svg.replaceChildren(...paths.map(createPath));
+  if (!existingOverlay) layer.appendChild(svg);
 }
 
 function applyPerspectiveBranchFixes() {
@@ -480,6 +493,7 @@ if (typeof window !== 'undefined' && typeof document !== 'undefined') {
 
   const observer = new MutationObserver(scheduleApplyPerspectiveBranchFixes);
   observer.observe(document.documentElement, {
+    childList: true,
     subtree: true,
     attributes: true,
     attributeFilter: ['class', 'aria-label', 'title'],
