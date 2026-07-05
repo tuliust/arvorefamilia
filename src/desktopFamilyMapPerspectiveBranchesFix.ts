@@ -4,6 +4,8 @@ const STYLE_ID = 'desktop-family-map-auto-expand-groups-style';
 const GROUP_SELECTOR = '[data-family-map-group="true"]';
 const GROUP_TITLE_SELECTOR = '[data-family-map-group-title="true"]';
 const MAX_VISIBLE_WITHOUT_TOGGLE = 12;
+const PERSPECTIVE_SIBLINGS_WIDTH = 560;
+const PERSPECTIVE_SIBLINGS_COLUMNS = 4;
 
 const AUTO_EXPAND_GROUP_TITLES = new Set([
   'tios paternos',
@@ -22,9 +24,18 @@ function isDesktopViewport() {
     && window.matchMedia(DESKTOP_QUERY).matches;
 }
 
+function getCurrentUrl() {
+  return typeof window === 'undefined' ? null : new URL(window.location.href);
+}
+
 function isEnabled() {
   if (typeof window === 'undefined' || typeof document === 'undefined') return false;
   return isDesktopViewport() && window.location.pathname.replace(/\/$/, '') === MAP_PATH;
+}
+
+function isPerspectivePersonRoute() {
+  const url = getCurrentUrl();
+  return Boolean(url?.searchParams.has('pessoa'));
 }
 
 function normalizeText(value: string) {
@@ -34,6 +45,11 @@ function normalizeText(value: string) {
     .toLowerCase()
     .replace(/\s+/g, ' ')
     .trim();
+}
+
+function parsePixelValue(value: string | null | undefined) {
+  const parsed = Number.parseFloat(String(value ?? ''));
+  return Number.isFinite(parsed) ? parsed : null;
 }
 
 function getGroupTitle(section: HTMLElement) {
@@ -51,6 +67,16 @@ function getExpandToggle(section: HTMLElement) {
     const label = normalizeText(`${button.getAttribute('aria-label') ?? ''} ${button.getAttribute('title') ?? ''}`);
     return label.startsWith('expandir ') || label.startsWith('recolher ');
   }) ?? null;
+}
+
+function getGrid(section: HTMLElement) {
+  return section.querySelector<HTMLElement>(':scope > .grid');
+}
+
+function getAbsoluteContainer(section: HTMLElement) {
+  const container = section.parentElement;
+  if (!(container instanceof HTMLElement)) return null;
+  return window.getComputedStyle(container).position === 'absolute' ? container : null;
 }
 
 function toggleIsCollapsed(toggle: HTMLButtonElement) {
@@ -71,11 +97,29 @@ function setAutoHiddenToggle(toggle: HTMLButtonElement, hidden: boolean) {
   toggle.removeAttribute('tabindex');
 }
 
+function setStyleIfNeeded(element: HTMLElement, property: string, value: string, priority = '') {
+  if (
+    element.style.getPropertyValue(property) !== value
+    || element.style.getPropertyPriority(property) !== priority
+  ) {
+    element.style.setProperty(property, value, priority);
+  }
+}
+
 function ensureStyles() {
   const css = `
     @media (min-width: 768px) {
       [data-family-map-auto-hidden-toggle="true"] {
         display: none !important;
+      }
+
+      [data-family-map-perspective-siblings-quad="true"] {
+        overflow: visible !important;
+      }
+
+      [data-family-map-perspective-siblings-quad="true"] > .grid {
+        grid-template-columns: repeat(${PERSPECTIVE_SIBLINGS_COLUMNS}, minmax(0, 1fr)) !important;
+        justify-content: stretch !important;
       }
     }
   `;
@@ -110,6 +154,28 @@ function normalizeExpandableGroup(section: HTMLElement) {
   return false;
 }
 
+function applyPerspectiveSiblingsLayout(section: HTMLElement) {
+  if (!isPerspectivePersonRoute()) return;
+  if (getGroupTitle(section) !== 'irmaos') return;
+
+  const container = getAbsoluteContainer(section);
+  const grid = getGrid(section);
+  if (!container || !grid) return;
+
+  const currentLeft = parsePixelValue(container.style.left) ?? container.offsetLeft;
+  const currentWidth = parsePixelValue(container.style.width) ?? container.getBoundingClientRect().width;
+  const rightEdge = currentLeft + currentWidth;
+  const nextWidth = Math.max(PERSPECTIVE_SIBLINGS_WIDTH, currentWidth);
+  const nextLeft = Math.min(currentLeft, rightEdge - nextWidth);
+
+  setStyleIfNeeded(container, 'left', `${nextLeft}px`);
+  setStyleIfNeeded(container, 'width', `${nextWidth}px`);
+  setStyleIfNeeded(grid, 'grid-template-columns', `repeat(${PERSPECTIVE_SIBLINGS_COLUMNS}, minmax(0, 1fr))`, 'important');
+  setStyleIfNeeded(grid, 'justify-content', 'stretch', 'important');
+  section.setAttribute('data-family-map-perspective-siblings-quad', 'true');
+  section.setAttribute('data-family-map-perspective-columns', String(PERSPECTIVE_SIBLINGS_COLUMNS));
+}
+
 function applyAutoExpandGroups() {
   if (!isEnabled()) return;
 
@@ -118,6 +184,7 @@ function applyAutoExpandGroups() {
   let clickedToggle = false;
   document.querySelectorAll<HTMLElement>(GROUP_SELECTOR).forEach((section) => {
     clickedToggle = normalizeExpandableGroup(section) || clickedToggle;
+    applyPerspectiveSiblingsLayout(section);
   });
 
   if (clickedToggle) {
@@ -151,6 +218,7 @@ if (typeof window !== 'undefined' && typeof document !== 'undefined') {
     attributeFilter: [
       'aria-label',
       'title',
+      'style',
       'data-family-map-total-person-count',
       'data-family-map-visible-person-count',
     ],
