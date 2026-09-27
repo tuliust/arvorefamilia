@@ -12,6 +12,9 @@ permissions:
 jobs:
   validate:
     runs-on: ubuntu-latest
+    env:
+      VITE_SUPABASE_URL: https://jimymkzejbhuseozunxl.supabase.co
+      VITE_SUPABASE_ANON_KEY: sb_publishable_hm6ZfkkpzWl6qAoZnQA-kg_68P53935
     timeout-minutes: 15
 
     steps:
