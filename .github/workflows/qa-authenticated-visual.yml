@@ -12,7 +12,7 @@ permissions:
 jobs:
   qa:
     runs-on: ubuntu-latest
-    timeout-minutes: 25
+    timeout-minutes: 30
     env:
       QA_BASE_URL: http://127.0.0.1:4173
       QA_PROD_URL: https://familiasouzabarros.com.br
@@ -40,7 +40,62 @@ jobs:
         run: |
           set -euo pipefail
           git diff --check
-          if grep -RIl --include='*.md' --include='*.txt' --include='*.json' --include='*.sql' 
+
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+          import path from 'node:path';
+
+          const allowed = new Set(['.md', '.txt', '.json', '.sql']);
+          const bad = [];
+          const walk = dir => {
+            for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+              const full = path.join(dir, entry.name);
+              if (entry.isDirectory()) walk(full);
+              else if (allowed.has(path.extname(entry.name)) && fs.readFileSync(full, 'utf8').includes('\uFFFD')) bad.push(full);
+            }
+          };
+          walk('docs');
+          if (bad.length) {
+            console.error('U+FFFD encontrado em:', bad.join(', '));
+            process.exit(1);
+          }
+          NODE
+
+          npm run typecheck
+          npm test
+          npm run build
+          npm run test:e2e
+
+      - name: Compare production deployment with current build
+        if: always()
+        shell: bash
+        run: |
+          mkdir -p "$QA_OUT_DIR"
+          curl -fsSL "$QA_PROD_URL/" -o /tmp/qa-production-index.html || true
+
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+
+          const localHtml = fs.existsSync('dist/index.html') ? fs.readFileSync('dist/index.html', 'utf8') : '';
+          const prodHtml = fs.existsSync('/tmp/qa-production-index.html') ? fs.readFileSync('/tmp/qa-production-index.html', 'utf8') : '';
+          const asset = html => html.match(/assets\/index-[^"'\\s>]+\.js/)?.[0] ?? null;
+          const localAsset = asset(localHtml);
+          const productionAsset = asset(prodHtml);
+
+          fs.writeFileSync(
+            process.env.QA_OUT_DIR + '/production-freshness.json',
+            JSON.stringify({
+              checked_at: new Date().toISOString(),
+              production_url: process.env.QA_PROD_URL,
+              local_asset: localAsset,
+              production_asset: productionAsset,
+              same_asset: Boolean(localAsset && productionAsset && localAsset === productionAsset),
+            }, null, 2),
+          );
+          NODE
+
+      - name: Install Playwright Chromium
+        run: npx playwright install --with-deps chromium
 
       - name: Get GitHub OIDC token
         uses: actions/github-script@v7
@@ -56,7 +111,12 @@ jobs:
         run: |
           set -euo pipefail
           TOKEN="$(cat /tmp/github-oidc-token)"
-          curl -fsS             -H "Authorization: Bearer ${TOKEN}"             -H "Content-Type: application/json"             -d '{"action":"setup"}'             "$QA_FUNCTION_URL"             -o "$QA_SESSION_FILE"
+          curl -fsS \
+            -H "Authorization: Bearer ${TOKEN}" \
+            -H "Content-Type: application/json" \
+            -d '{"action":"setup"}' \
+            "$QA_FUNCTION_URL" \
+            -o "$QA_SESSION_FILE"
 
           node <<'NODE'
           const fs = require('fs');
@@ -78,6 +138,7 @@ jobs:
           nohup npm run preview -- --host 127.0.0.1 --port 4173 > /tmp/qa-preview.log 2>&1 &
           PREVIEW_PID=$!
           trap 'kill "$PREVIEW_PID" 2>/dev/null || true' EXIT
+
           for i in $(seq 1 45); do
             if curl -fsS "$QA_BASE_URL/" >/dev/null; then
               break
@@ -85,6 +146,7 @@ jobs:
             sleep 1
           done
           curl -fsS "$QA_BASE_URL/" >/dev/null
+
           node scripts/qa-authenticated-visual.mjs
 
       - name: Preserve preview log
@@ -112,114 +174,10 @@ jobs:
             exit 0
           fi
 
-          node <<'NODE' > /tmp/qa-cleanup.json
-          const fs = require('fs');
-          const payload = JSON.parse(fs.readFileSync(process.env.QA_SESSION_FILE, 'utf8'));
-          process.stdout.write(JSON.stringify({
-            action: 'cleanup',
-            admin_user_id: payload.admin?.user_id ?? null,
-            onboarding_user_id: payload.onboarding?.user_id ?? null,
-            temp_person_id: payload.onboarding?.pessoa_id ?? null,
-          }));
-          NODE
-
           TOKEN="$(cat /tmp/github-oidc-token)"
-          curl -fsS             -H "Authorization: Bearer ${TOKEN}"             -H "Content-Type: application/json"             --data-binary @/tmp/qa-cleanup.json             "$QA_FUNCTION_URL"             -o /tmp/qa-cleanup-result.json
-\xEF\xBF\xBD' docs | grep -q .; then
-            echo "U+FFFD encontrado em docs"
-            exit 1
-          fi
-          npm run typecheck
-          npm test
-          npm run build
-          npm run test:e2e
-
-      - name: Compare production deployment with current build
-        if: always()
-        shell: bash
-        run: |
-          mkdir -p "$QA_OUT_DIR"
-          curl -fsSL "$QA_PROD_URL/" -o /tmp/qa-production-index.html || true
-          node <<'NODE'
-          const fs = require('fs');
-          const out = process.env.QA_OUT_DIR + '/production-freshness.json';
-          const localHtml = fs.existsSync('dist/index.html') ? fs.readFileSync('dist/index.html','utf8') : '';
-          const prodHtml = fs.existsSync('/tmp/qa-production-index.html') ? fs.readFileSync('/tmp/qa-production-index.html','utf8') : '';
-          const asset = html => html.match(/assets\/index-[^"'\s>]+\.js/)?.[0] ?? null;
-          const localAsset = asset(localHtml);
-          const productionAsset = asset(prodHtml);
-          fs.writeFileSync(out, JSON.stringify({
-            checked_at: new Date().toISOString(),
-            production_url: process.env.QA_PROD_URL,
-            local_asset: localAsset,
-            production_asset: productionAsset,
-            same_asset: Boolean(localAsset && productionAsset && localAsset === productionAsset)
-          }, null, 2));
-          NODE
-
-      - name: Install Playwright Chromium
-        run: npx playwright install --with-deps chromium
-
-      - name: Get GitHub OIDC token
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const fs = require('fs');
-            const token = await core.getIDToken('arvorefamilia-qa');
-            core.setSecret(token);
-            fs.writeFileSync('/tmp/github-oidc-token', token, { mode: 0o600 });
-
-      - name: Create isolated QA sessions
-        shell: bash
-        run: |
-          set -euo pipefail
-          TOKEN="$(cat /tmp/github-oidc-token)"
-          curl -fsS             -H "Authorization: Bearer ${TOKEN}"             -H "Content-Type: application/json"             -d '{"action":"setup"}'             "$QA_FUNCTION_URL"             -o "$QA_SESSION_FILE"
-
-          node <<'NODE'
-          const fs = require('fs');
-          const payload = JSON.parse(fs.readFileSync(process.env.QA_SESSION_FILE, 'utf8'));
-          if (payload.error) throw new Error(payload.error);
-          for (const session of [payload.admin?.session, payload.onboarding?.session]) {
-            if (!session?.access_token || !session?.refresh_token) {
-              throw new Error('Sessão temporária de QA inválida.');
-            }
-            console.log('::add-mask::' + session.access_token);
-            console.log('::add-mask::' + session.refresh_token);
-          }
-          NODE
-
-      - name: Run authenticated visual QA
-        run: node scripts/qa-authenticated-visual.mjs
-
-      - name: Upload QA evidence
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: qa-authenticated-visual
-          path: qa-artifacts/
-          if-no-files-found: warn
-          retention-days: 7
-
-      - name: Cleanup isolated QA data
-        if: always()
-        shell: bash
-        run: |
-          set +e
-          if [ ! -f "$QA_SESSION_FILE" ] || [ ! -f /tmp/github-oidc-token ]; then
-            exit 0
-          fi
-
-          node <<'NODE' > /tmp/qa-cleanup.json
-          const fs = require('fs');
-          const payload = JSON.parse(fs.readFileSync(process.env.QA_SESSION_FILE, 'utf8'));
-          process.stdout.write(JSON.stringify({
-            action: 'cleanup',
-            admin_user_id: payload.admin?.user_id ?? null,
-            onboarding_user_id: payload.onboarding?.user_id ?? null,
-            temp_person_id: payload.onboarding?.pessoa_id ?? null,
-          }));
-          NODE
-
-          TOKEN="$(cat /tmp/github-oidc-token)"
-          curl -fsS             -H "Authorization: Bearer ${TOKEN}"             -H "Content-Type: application/json"             --data-binary @/tmp/qa-cleanup.json             "$QA_FUNCTION_URL"             -o /tmp/qa-cleanup-result.json
+          curl -fsS \
+            -H "Authorization: Bearer ${TOKEN}" \
+            -H "Content-Type: application/json" \
+            -d '{"action":"cleanup"}' \
+            "$QA_FUNCTION_URL" \
+            -o /tmp/qa-cleanup-result.json
