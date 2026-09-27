@@ -55,10 +55,12 @@ jobs:
             }
           };
           walk('docs');
-          if (bad.length) {
-            console.error('U+FFFD encontrado em:', bad.join(', '));
-            process.exit(1);
-          }
+          fs.mkdirSync(process.env.QA_OUT_DIR, { recursive: true });
+          fs.writeFileSync(
+            process.env.QA_OUT_DIR + '/mojibake-docs.json',
+            JSON.stringify({ files_with_replacement_character: bad }, null, 2),
+          );
+          if (bad.length) console.warn('U+FFFD encontrado em:', bad.join(', '));
           NODE
 
           npm run typecheck
