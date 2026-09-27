@@ -18,6 +18,8 @@ A branch atual possui diretório versionado `supabase/migrations`. As fontes SQL
 - `supabase/migrations/20260701170000_add_variable_settings_to_admin_notification_config.sql`;
 - `supabase/migrations/20260703120000_fix_admin_reset_profile_storage_api_block.sql`, quando presente no repositório/ambiente;
 - `supabase/migrations/20260703170000_allow_responsible_profile_questionnaire_answers.sql`, quando presente no repositório/ambiente;
+- `supabase/migrations/20260927081540_make_historical_files_private.sql`, que torna `historical-files` privado após validação de signed URL/download autenticado;
+- `supabase/migrations/20260927090605_consolidate_qa_read_policies.sql`, que consolida leitura pública/admin de `qa_categories` e `qa_items` e reduz policies permissivas redundantes;
 - `supabase/forum-schema.sql`;
 - `supabase/google-calendar-schema.sql`;
 - `supabase/config.toml`;
@@ -203,7 +205,7 @@ where table_schema = 'public'
 
 ## Storage e arquivos históricos
 
-O bucket `historical-files` é necessário para PDFs/imagens históricos.
+O bucket `historical-files` é necessário para PDFs/imagens históricos e está **privado** no ambiente remoto desde a migration `20260927081540_make_historical_files_private`.
 
 Validações:
 
@@ -228,3 +230,18 @@ Validações:
 10. Rodar `npx supabase db push` antes do build quando houver migration nova.
 11. Rodar `supabase functions deploy <nome>` quando houver mudança em Edge Function.
 12. Rodar a aplicação e validar as rotas documentadas em `QA_MANUAL.md`.
+
+
+## Advisors pós-QA — 2026-09-27
+
+Após a consolidação seletiva das policies de FAQ:
+
+- `auth_rls_initplan`: 109 ocorrências (antes 113);
+- `multiple_permissive_policies`: 24 grupos (antes 28);
+- `unindexed_foreign_keys`: 23;
+- `unused_index`: 48, apenas informativo e sem remoção em massa;
+- `SECURITY DEFINER`: 1 função acessível a `anon` e 25 a `authenticated`, exigindo revisão individual;
+- proteção contra senhas vazadas continua desabilitada no Auth;
+- não há mais warning de índice duplicado.
+
+Regra: tratar os advisors por domínio/uso real, com migration pequena e validação após cada alteração. Não consolidar policies ou remover índices em massa apenas para zerar o linter.
