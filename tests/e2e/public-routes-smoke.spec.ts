@@ -10,7 +10,7 @@ test('rotas publicas essenciais carregam sem sessao', async ({ page }) => {
   for (const route of routes) {
     await page.goto(route.path);
     await expect(page).toHaveURL(new RegExp(`${route.path}$`));
-    await expect(page.getByRole('heading', { name: route.heading })).toBeVisible();
+    await expect(page.getByRole('heading', { name: route.heading, level: 1 })).toBeVisible();
     await expect(page.getByText('Não foi possível carregar esta página')).toHaveCount(0);
   }
 });
