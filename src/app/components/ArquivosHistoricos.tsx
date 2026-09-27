@@ -22,7 +22,12 @@ import {
   Upload,
   X,
 } from 'lucide-react';
-import { uploadHistoricalFile } from '../services/storageService';
+import {
+  downloadStorageFile,
+  getStorageFileAccessUrl,
+  openStorageFileInNewTab,
+  uploadHistoricalFile,
+} from '../services/storageService';
 import { HistoricalFileFavoriteButton } from './favorites/HistoricalFileFavoriteButton';
 
 const ACCEPTED_FILE_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'application/pdf'];
@@ -108,8 +113,13 @@ function getExtensionFromUrl(url: string) {
   return null;
 }
 
-function hasArquivoFile(arquivo: Pick<ArquivoHistorico, 'url'>) {
-  return Boolean(String(arquivo.url ?? '').trim());
+function hasArquivoFile(
+  arquivo: Pick<ArquivoHistorico, 'url' | 'storage_bucket' | 'storage_path'>
+) {
+  return Boolean(
+    String(arquivo.url ?? '').trim()
+    || (String(arquivo.storage_bucket ?? '').trim() && String(arquivo.storage_path ?? '').trim())
+  );
 }
 
 function getHistoricalFileName(arquivo: ArquivoHistorico) {
@@ -119,9 +129,14 @@ function getHistoricalFileName(arquivo: ArquivoHistorico) {
   return baseName.endsWith(`.${extension}`) ? baseName : `${baseName}.${extension}`;
 }
 
-function openArquivoInNewTab(arquivo: ArquivoHistorico) {
+async function openArquivoInNewTab(arquivo: ArquivoHistorico) {
   if (!hasArquivoFile(arquivo)) return;
-  window.open(String(arquivo.url ?? ''), '_blank', 'noopener,noreferrer');
+
+  try {
+    await openStorageFileInNewTab(arquivo);
+  } catch (error) {
+    toast.error(error instanceof Error ? error.message : 'Não foi possível abrir o arquivo.');
+  }
 }
 
 function getHistoricalFileEventCategoryLabel(value: ArquivoHistorico['categoria_evento']) {
@@ -162,7 +177,36 @@ function normalizeSearchText(value: string) {
     .toLowerCase();
 }
 
-function ArquivoThumbnail({ arquivo }: { arquivo: Pick<ArquivoHistorico, 'tipo' | 'url' | 'titulo'> }) {
+function ArquivoThumbnail({
+  arquivo,
+}: {
+  arquivo: Pick<ArquivoHistorico, 'tipo' | 'url' | 'titulo' | 'storage_bucket' | 'storage_path'>;
+}) {
+  const [imageUrl, setImageUrl] = useState(() => String(arquivo.url ?? '').trim());
+
+  useEffect(() => {
+    let cancelled = false;
+
+    if (!hasArquivoFile(arquivo) || arquivo.tipo !== 'imagem') {
+      setImageUrl('');
+      return () => {
+        cancelled = true;
+      };
+    }
+
+    void getStorageFileAccessUrl(arquivo)
+      .then((url) => {
+        if (!cancelled) setImageUrl(url);
+      })
+      .catch(() => {
+        if (!cancelled) setImageUrl('');
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [arquivo.storage_bucket, arquivo.storage_path, arquivo.tipo, arquivo.url]);
+
   if (!hasArquivoFile(arquivo)) {
     return (
       <div className="flex h-16 w-16 items-center justify-center rounded bg-blue-50">
@@ -176,11 +220,15 @@ function ArquivoThumbnail({ arquivo }: { arquivo: Pick<ArquivoHistorico, 'tipo' 
 
   return arquivo.tipo === 'imagem' ? (
     <div className="flex h-16 w-16 items-center justify-center overflow-hidden rounded bg-gray-100">
-      <img
-        src={arquivo.url}
-        alt={arquivo.titulo || 'Arquivo carregado'}
-        className="h-full w-full object-cover"
-      />
+      {imageUrl ? (
+        <img
+          src={imageUrl}
+          alt={arquivo.titulo || 'Arquivo carregado'}
+          className="h-full w-full object-cover"
+        />
+      ) : (
+        <Images className="h-7 w-7 text-gray-400" />
+      )}
     </div>
   ) : (
     <div className="flex h-16 w-16 items-center justify-center rounded bg-red-50">
@@ -536,21 +584,25 @@ export function ArquivosHistoricos({
   };
 
 
-  const handleViewFile = (arquivo: ArquivoHistorico) => {
+  const handleViewFile = async (arquivo: ArquivoHistorico) => {
     if (!hasArquivoFile(arquivo)) return;
-    setPreviewFile(arquivo);
+
+    try {
+      const url = await getStorageFileAccessUrl(arquivo);
+      setPreviewFile({ ...arquivo, url });
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Não foi possível abrir o arquivo.');
+    }
   };
 
-  const handleDownloadArquivo = (arquivo: ArquivoHistorico) => {
+  const handleDownloadArquivo = async (arquivo: ArquivoHistorico) => {
     if (!hasArquivoFile(arquivo)) return;
-    const link = document.createElement('a');
-    link.href = String(arquivo.url ?? '');
-    link.download = getHistoricalFileName(arquivo);
-    link.target = '_blank';
-    link.rel = 'noopener noreferrer';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+
+    try {
+      await downloadStorageFile(arquivo, getHistoricalFileName(arquivo));
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Não foi possível baixar o arquivo.');
+    }
   };
 
   return (
@@ -841,7 +893,7 @@ export function ArquivosHistoricos({
                                   <>
                                     <button
                                       type="button"
-                                      onClick={() => handleViewFile(arquivo)}
+                                      onClick={() => void handleViewFile(arquivo)}
                                       className="inline-flex items-center gap-1 text-xs text-blue-600 hover:underline"
                                     >
                                       <Eye className="h-3 w-3" />
@@ -849,7 +901,7 @@ export function ArquivosHistoricos({
                                     </button>
                                     <button
                                       type="button"
-                                      onClick={() => handleDownloadArquivo(arquivo)}
+                                      onClick={() => void handleDownloadArquivo(arquivo)}
                                       className="inline-flex items-center gap-1 text-xs text-gray-700 hover:underline"
                                     >
                                       <Download className="h-3 w-3" />
@@ -857,7 +909,7 @@ export function ArquivosHistoricos({
                                     </button>
                                     <button
                                       type="button"
-                                      onClick={() => openArquivoInNewTab(arquivo)}
+                                      onClick={() => void openArquivoInNewTab(arquivo)}
                                       className="inline-flex items-center gap-1 text-xs text-gray-700 hover:underline"
                                     >
                                       <ExternalLink className="h-3 w-3" />
@@ -1019,7 +1071,7 @@ export function ArquivosHistoricos({
                 type="button"
                 variant="outline"
                 className="w-full sm:w-auto"
-                onClick={() => handleDownloadArquivo(previewFile)}
+                onClick={() => void handleDownloadArquivo(previewFile)}
               >
                 <Download className="h-4 w-4" />
                 Baixar arquivo
@@ -1028,7 +1080,7 @@ export function ArquivosHistoricos({
                 type="button"
                 variant="outline"
                 className="w-full sm:w-auto"
-                onClick={() => openArquivoInNewTab(previewFile)}
+                onClick={() => void openArquivoInNewTab(previewFile)}
               >
                 <ExternalLink className="h-4 w-4" />
                 Abrir em nova aba
