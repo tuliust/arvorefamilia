@@ -1,5 +1,6 @@
 import { listarArquivosHistoricosPorPessoa } from './app/services/arquivosHistoricosService';
 import { getCurrentActiveEditablePersonWithPessoa } from './app/services/memberProfileService';
+import { getStorageFileAccessUrl } from './app/services/storageService';
 import type { ArquivoHistorico } from './app/types';
 
 const PAGE_PATH = '/revisao-dados';
@@ -132,7 +133,10 @@ function readArchiveDraft(userId: string, pessoaId: string) {
 }
 
 function archiveHasFile(archive: ArquivoHistorico) {
-  return Boolean(String(archive.url ?? '').trim());
+  return Boolean(
+    String(archive.url ?? '').trim()
+    || (String(archive.storage_bucket ?? '').trim() && String(archive.storage_path ?? '').trim())
+  );
 }
 
 function getArchiveLabel(archive: ArquivoHistorico) {
@@ -141,19 +145,24 @@ function getArchiveLabel(archive: ArquivoHistorico) {
   return 'Imagem';
 }
 
-function createArchiveCard(archive: ArquivoHistorico) {
+async function createArchiveCard(archive: ArquivoHistorico) {
   const card = document.createElement('div');
   card.className = 'flex gap-3 rounded-xl border border-gray-100 bg-gray-50 p-3';
 
   const thumb = document.createElement('div');
   thumb.className = 'flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-white text-gray-500 ring-1 ring-gray-200';
 
-  if (archive.url && (archive.tipo === 'imagem' || archive.mime_type?.startsWith('image/'))) {
-    const image = document.createElement('img');
-    image.src = archive.url;
-    image.alt = archive.titulo;
-    image.className = 'h-full w-full object-cover';
-    thumb.appendChild(image);
+  if (archiveHasFile(archive) && (archive.tipo === 'imagem' || archive.mime_type?.startsWith('image/'))) {
+    try {
+      const image = document.createElement('img');
+      image.src = await getStorageFileAccessUrl(archive);
+      image.alt = archive.titulo;
+      image.className = 'h-full w-full object-cover';
+      thumb.appendChild(image);
+    } catch {
+      thumb.textContent = 'Imagem';
+      thumb.classList.add('text-xs', 'font-semibold');
+    }
   } else {
     thumb.textContent = archiveHasFile(archive) ? 'PDF' : 'Fato';
     thumb.classList.add('text-xs', 'font-semibold');
@@ -192,7 +201,7 @@ function createArchiveCard(archive: ArquivoHistorico) {
   return card;
 }
 
-function renderArchives(archives: ArquivoHistorico[]) {
+async function renderArchives(archives: ArquivoHistorico[]) {
   const card = findSectionCard('Fatos e arquivos históricos');
   if (!card) return;
 
@@ -203,7 +212,8 @@ function renderArchives(archives: ArquivoHistorico[]) {
 
   const grid = document.createElement('div');
   grid.className = 'grid grid-cols-1 gap-3 md:grid-cols-2';
-  archives.forEach((archive) => grid.appendChild(createArchiveCard(archive)));
+  const cards = await Promise.all(archives.map((archive) => createArchiveCard(archive)));
+  cards.forEach((archiveCard) => grid.appendChild(archiveCard));
 
   content.replaceWith(grid);
 }
@@ -225,7 +235,7 @@ async function syncHistoricalArchives() {
     const draftArchives = readArchiveDraft(userId, link.pessoa_id);
     const archives = draftArchives ?? await listarArquivosHistoricosPorPessoa(link.pessoa_id);
     if (archives.length > 0) {
-      renderArchives(archives);
+      await renderArchives(archives);
     }
   } catch (error) {
     console.warn('[Revisão de dados] Não foi possível sincronizar fatos e arquivos históricos:', error);

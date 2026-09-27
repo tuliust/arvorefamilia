@@ -1,6 +1,6 @@
 # QA manual
 
-> Última revisão: 2026-07-04
+> Última revisão: 2026-09-27
 > Escopo: validação manual das rotas e contratos documentados, incluindo layout compartilhado mobile dos mapas, tutorial inicial, vínculos, notificações administrativas, perspectiva memorial, timeline com PDF, conexões de parentesco, conteúdos automáticos de pessoa e comandos compatíveis com PowerShell.
 > Status: canônico.
 
@@ -28,6 +28,7 @@ grep -R --include='*.md' --include='*.txt' --include='*.json' --include='*.sql' 
 npm run typecheck
 npm run build
 npm test
+npm run test:e2e
 ```
 
 ### PowerShell
@@ -44,7 +45,14 @@ Get-ChildItem -Path .\docs -Recurse -File |
 npm run typecheck
 npm run build
 npm test
+npm run test:e2e
 ```
+
+## Cobertura automatizada versus manual
+
+O smoke Playwright é obrigatório no CI e cobre rotas públicas, redirects/guards sem sessão, rotas legadas desativadas e 404.
+
+Ele **não substitui** a bateria autenticada/visual abaixo. Cenários que dependem de usuário membro/admin, perfil gerenciado, OAuth Google, IA em produção, upload/download, PDF, gestos mobile ou comparação visual devem ser validados com sessão real.
 
 ## QA transversal
 

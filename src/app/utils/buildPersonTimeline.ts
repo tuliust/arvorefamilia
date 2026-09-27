@@ -28,6 +28,8 @@ export interface PersonTimelineAttachment {
   description?: string;
   kind: 'pdf' | 'image' | 'record';
   url?: string;
+  storage_bucket?: string | null;
+  storage_path?: string | null;
   year?: string;
   category?: string | null;
 }
@@ -505,7 +507,10 @@ function createChildBirthItem(child: Pessoa, pessoaId: string, birthOrder: numbe
 }
 
 function arquivoHistoricoHasFile(arquivo: ArquivoHistorico) {
-  return Boolean(String(arquivo.url ?? '').trim());
+  return Boolean(
+    String(arquivo.url ?? '').trim()
+    || (String(arquivo.storage_bucket ?? '').trim() && String(arquivo.storage_path ?? '').trim())
+  );
 }
 
 function getHistoricalRecordBadgeLabel(arquivo: ArquivoHistorico) {
@@ -563,6 +568,8 @@ function createTimelineAttachment(arquivo: ArquivoHistorico): PersonTimelineAtta
     description: arquivo.descricao?.trim() || undefined,
     kind: hasFile ? (arquivo.tipo === 'pdf' || arquivo.mime_type === 'application/pdf' ? 'pdf' : 'image') : 'record',
     url: hasFile ? String(arquivo.url ?? '').trim() : undefined,
+    storage_bucket: arquivo.storage_bucket ?? null,
+    storage_path: arquivo.storage_path ?? null,
     year: arquivo.ano,
     category: arquivo.categoria_evento ?? null,
   };

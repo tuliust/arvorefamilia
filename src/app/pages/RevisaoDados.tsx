@@ -30,6 +30,7 @@ import { Textarea } from '../components/ui/textarea';
 import { useAuth } from '../contexts/AuthContext';
 import { obterRelacionamentosDaPessoa } from '../services/dataService';
 import { listarArquivosHistoricosPorPessoa } from '../services/arquivosHistoricosService';
+import { getStorageFileAccessUrl } from '../services/storageService';
 import {
   confirmOwnLinkedPersonData,
   EditableOwnPersonPayload,
@@ -159,7 +160,10 @@ function yesNo(value: boolean) {
 }
 
 function archiveHasFile(archive: ArquivoHistorico) {
-  return Boolean(String(archive.url ?? '').trim());
+  return Boolean(
+    String(archive.url ?? '').trim()
+    || (String(archive.storage_bucket ?? '').trim() && String(archive.storage_path ?? '').trim())
+  );
 }
 
 function isImageArchive(archive: ArquivoHistorico) {
@@ -169,6 +173,43 @@ function getArchiveRecordLabel(archive: ArquivoHistorico) {
   if (!archiveHasFile(archive)) return 'Fato sem arquivo';
   if (archive.tipo === 'pdf' || archive.mime_type === 'application/pdf') return 'PDF';
   return 'Imagem';
+}
+
+function HistoricalArchiveThumbnail({ archive }: { archive: ArquivoHistorico }) {
+  const [url, setUrl] = useState('');
+
+  useEffect(() => {
+    let cancelled = false;
+
+    if (!isImageArchive(archive)) {
+      setUrl('');
+      return () => {
+        cancelled = true;
+      };
+    }
+
+    void getStorageFileAccessUrl(archive)
+      .then((nextUrl) => {
+        if (!cancelled) setUrl(nextUrl);
+      })
+      .catch(() => {
+        if (!cancelled) setUrl('');
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [archive.storage_bucket, archive.storage_path, archive.url]);
+
+  if (isImageArchive(archive) && url) {
+    return <img src={url} alt={archive.titulo} className="h-full w-full object-cover" />;
+  }
+
+  if (archiveHasFile(archive)) {
+    return <FileText className="h-5 w-5" />;
+  }
+
+  return <ScrollText className="h-5 w-5" />;
 }
 
 function isCompleteBirthDate(value: unknown) {
@@ -816,13 +857,7 @@ export function RevisaoDados() {
                   {archives.map((archive) => (
                     <div key={archive.id} className="flex gap-3 rounded-xl border border-gray-100 bg-gray-50 p-3">
                       <div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-white text-gray-500 ring-1 ring-gray-200">
-                        {isImageArchive(archive) ? (
-                          <img src={archive.url} alt={archive.titulo} className="h-full w-full object-cover" />
-                        ) : archiveHasFile(archive) ? (
-                          <FileText className="h-5 w-5" />
-                        ) : (
-                          <ScrollText className="h-5 w-5" />
-                        )}
+                        <HistoricalArchiveThumbnail archive={archive} />
                       </div>
                       <div className="min-w-0">
                         <div className="flex flex-wrap items-center gap-2">

@@ -9,6 +9,12 @@ type UploadOptions = {
   relacionamentoId?: string | null;
 };
 
+type StorageBackedFile = {
+  url?: string | null;
+  storage_bucket?: string | null;
+  storage_path?: string | null;
+};
+
 type StorageUploadResult = {
   bucket: string;
   path: string;
@@ -88,6 +94,81 @@ async function uploadPublicFile(
     path,
     url: data.publicUrl,
   };
+}
+
+export async function getStorageFileAccessUrl(file: StorageBackedFile, expiresInSeconds = 15 * 60) {
+  const fallbackUrl = String(file.url ?? '').trim();
+  const bucket = String(file.storage_bucket ?? '').trim();
+  const path = String(file.storage_path ?? '').trim();
+
+  if (!bucket || !path) {
+    if (!fallbackUrl) throw new Error('Arquivo sem localização válida no Storage.');
+    return fallbackUrl;
+  }
+
+  if (bucket === HISTORICAL_FILES_BUCKET) {
+    const { data, error } = await supabase.storage
+      .from(bucket)
+      .createSignedUrl(path, expiresInSeconds);
+
+    if (error || !data?.signedUrl) {
+      throw new Error(error?.message || 'Não foi possível gerar acesso temporário ao arquivo histórico.');
+    }
+
+    return data.signedUrl;
+  }
+
+  if (fallbackUrl) return fallbackUrl;
+  return supabase.storage.from(bucket).getPublicUrl(path).data.publicUrl;
+}
+
+export async function openStorageFileInNewTab(file: StorageBackedFile) {
+  const popup = window.open('about:blank', '_blank');
+
+  try {
+    const url = await getStorageFileAccessUrl(file);
+    if (popup) {
+      popup.opener = null;
+      popup.location.href = url;
+      return;
+    }
+
+    window.open(url, '_blank', 'noopener,noreferrer');
+  } catch (error) {
+    popup?.close();
+    throw error;
+  }
+}
+
+export async function downloadStorageFile(file: StorageBackedFile, filename: string) {
+  const bucket = String(file.storage_bucket ?? '').trim();
+  const path = String(file.storage_path ?? '').trim();
+
+  if (bucket && path) {
+    const { data, error } = await supabase.storage.from(bucket).download(path);
+    if (error || !data) {
+      throw new Error(error?.message || 'Não foi possível baixar o arquivo.');
+    }
+
+    const objectUrl = URL.createObjectURL(data);
+    const link = document.createElement('a');
+    link.href = objectUrl;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(objectUrl);
+    return;
+  }
+
+  const url = await getStorageFileAccessUrl(file);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = filename;
+  link.rel = 'noopener noreferrer';
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
 }
 
 export async function uploadPersonAvatarFile(file: File | Blob, options: UploadOptions = {}) {
