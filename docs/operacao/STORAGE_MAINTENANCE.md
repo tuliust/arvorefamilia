@@ -1,6 +1,6 @@
 # Storage Maintenance
 
-> Última revisão: 2026-07-04
+> Última revisão: 2026-09-27
 > Escopo: buckets, arquivos históricos, preview de PDF, limpeza de órfãos e QA de Storage.
 > Status: canônico.
 
@@ -11,6 +11,7 @@
 | `person-avatars` | Avatares das pessoas. |
 | `historical-files` | Imagens/PDFs históricos. |
 | `site-media` | Mídias institucionais do site. |
+| `logo` | Bucket legado. Não usar em uploads novos; revisar seus 2 objetos antes de remoção. |
 
 ## Fatos sem arquivo
 
@@ -105,6 +106,23 @@ Mensagens técnicas devem ser investigadas no console:
 | PDF.js não carregou | CDN indisponível, CSP, bloqueio de rede. |
 | Erro de parse/renderização | PDF corrompido, MIME incorreto ou arquivo não-PDF. |
 | `X-Frame-Options` | Google Viewer/iframe externo foi reintroduzido indevidamente. |
+
+## Diagnóstico automatizado
+
+O script `scripts/storage-diagnose-orphans.mjs` opera em dry-run por padrão e cruza:
+
+- `pessoas.foto_principal_url`;
+- `profiles.avatar_url`;
+- `arquivos_historicos.storage_bucket/storage_path` e `url`;
+- URLs publicadas e referências em `draft_payload` de `site_visual_settings`.
+
+Buckets verificados por padrão:
+
+- `person-avatars`;
+- `historical-files`;
+- `site-media`.
+
+O bucket legado `logo` fica fora da limpeza automática padrão.
 
 ## Limpeza de órfãos
 
