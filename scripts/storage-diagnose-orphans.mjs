@@ -151,6 +151,12 @@ async function collectReferences(supabase) {
     if (parsed) addReference(parsed.bucket, parsed.path);
   }
 
+  const profiles = await collectPaged(supabase, 'profiles', 'id,avatar_url');
+  for (const profile of profiles) {
+    const parsed = parseStoragePathFromUrl(profile.avatar_url);
+    if (parsed) addReference(parsed.bucket, parsed.path);
+  }
+
   const arquivos = await collectPaged(supabase, 'arquivos_historicos', 'id,url,storage_bucket,storage_path');
   for (const arquivo of arquivos) {
     if (arquivo.storage_bucket && arquivo.storage_path) {
