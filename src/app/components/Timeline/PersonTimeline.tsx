@@ -23,6 +23,8 @@ import {
   DialogTitle,
 } from '../ui/dialog';
 import { PdfDocumentPreview } from './PdfDocumentPreview';
+import { toast } from 'sonner';
+import { downloadStorageFile, getStorageFileAccessUrl, openStorageFileInNewTab } from '../../services/storageService';
 import type { PersonTimelineAttachment, PersonTimelineItem, PersonTimelineItemType } from '../../utils/buildPersonTimeline';
 
 type PersonTimelineProps = {
@@ -192,8 +194,40 @@ function AttachmentPreviewDialog({
   );
 }
 
+function attachmentHasFile(attachment: PersonTimelineAttachment) {
+  return Boolean(
+    String(attachment.url ?? '').trim()
+    || (String(attachment.storage_bucket ?? '').trim() && String(attachment.storage_path ?? '').trim())
+  );
+}
+
 function TimelineAttachments({ attachments }: { attachments?: PersonTimelineAttachment[] }) {
   const [previewAttachment, setPreviewAttachment] = React.useState<PersonTimelineAttachment | null>(null);
+
+  const handlePreview = React.useCallback(async (attachment: PersonTimelineAttachment) => {
+    try {
+      const url = await getStorageFileAccessUrl(attachment);
+      setPreviewAttachment({ ...attachment, url });
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Não foi possível abrir o arquivo.');
+    }
+  }, []);
+
+  const handleOpen = React.useCallback(async (attachment: PersonTimelineAttachment) => {
+    try {
+      await openStorageFileInNewTab(attachment);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Não foi possível abrir o arquivo.');
+    }
+  }, []);
+
+  const handleDownload = React.useCallback(async (attachment: PersonTimelineAttachment) => {
+    try {
+      await downloadStorageFile(attachment, getAttachmentDownloadName(attachment));
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Não foi possível baixar o arquivo.');
+    }
+  }, []);
 
   if (!attachments?.length) return null;
 
@@ -219,36 +253,30 @@ function TimelineAttachments({ attachments }: { attachments?: PersonTimelineAtta
                 {attachment.description && (
                   <p className="mt-1 whitespace-pre-line break-words text-xs leading-5 text-gray-600">{attachment.description}</p>
                 )}
-                {attachment.url && (
+                {attachmentHasFile(attachment) && (
                   <div className="mt-2 flex flex-wrap items-center gap-3 text-xs font-semibold">
-                    {attachment.kind === 'pdf' ? (
-                      <button
-                        type="button"
-                        onClick={() => setPreviewAttachment(attachment)}
-                        className={ATTACHMENT_ACTION_CLASS}
-                      >
-                        <ExternalLink className="h-3.5 w-3.5" />
-                        Abrir
-                      </button>
-                    ) : (
-                      <a
-                        href={attachment.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className={ATTACHMENT_ACTION_CLASS}
-                      >
-                        <ExternalLink className="h-3.5 w-3.5" />
-                        Abrir
-                      </a>
-                    )}
-                    <a
-                      href={attachment.url}
-                      download={getAttachmentDownloadName(attachment)}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (attachment.kind === 'pdf') {
+                          void handlePreview(attachment);
+                        } else {
+                          void handleOpen(attachment);
+                        }
+                      }}
+                      className={ATTACHMENT_ACTION_CLASS}
+                    >
+                      <ExternalLink className="h-3.5 w-3.5" />
+                      Abrir
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => void handleDownload(attachment)}
                       className={ATTACHMENT_ACTION_CLASS}
                     >
                       <Download className="h-3.5 w-3.5" />
                       Baixar
-                    </a>
+                    </button>
                   </div>
                 )}
               </div>
