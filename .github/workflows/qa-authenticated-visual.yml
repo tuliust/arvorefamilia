@@ -149,7 +149,7 @@ jobs:
           done
           curl -fsS "$QA_BASE_URL/" >/dev/null
 
-          node scripts/qa-authenticated-followup.mjs
+          node scripts/qa-authenticated-final.mjs
 
       - name: Make historical-files private after production proof
         if: always()
