@@ -2,7 +2,7 @@ import { createClient } from '@supabase/supabase-js';
 import fs from 'node:fs';
 import path from 'node:path';
 
-const DEFAULT_BUCKETS = ['person-avatars', 'historical-files'];
+const DEFAULT_BUCKETS = ['person-avatars', 'historical-files', 'site-media'];
 
 function loadEnvFile(filePath) {
   if (!fs.existsSync(filePath)) return;
@@ -32,7 +32,7 @@ function parseArgs(argv) {
   }
 
   if (!args.buckets.length) {
-    throw new Error('Informe ao menos um bucket em --buckets=person-avatars,historical-files.');
+    throw new Error('Informe ao menos um bucket em --buckets=person-avatars,historical-files,site-media.');
   }
 
   return args;
@@ -53,7 +53,7 @@ function printHelp() {
   process.stdout.write(`Diagnostica objetos orfaos no Storage.
 
 Uso:
-  node scripts/storage-diagnose-orphans.mjs [--output=/tmp/orphans.json] [--buckets=person-avatars,historical-files]
+  node scripts/storage-diagnose-orphans.mjs [--output=/tmp/orphans.json] [--buckets=person-avatars,historical-files,site-media]
 
 Padrao:
   dry-run. Nenhum arquivo e removido.
@@ -151,6 +151,12 @@ async function collectReferences(supabase) {
     if (parsed) addReference(parsed.bucket, parsed.path);
   }
 
+  const profiles = await collectPaged(supabase, 'profiles', 'id,avatar_url');
+  for (const profile of profiles) {
+    const parsed = parseStoragePathFromUrl(profile.avatar_url);
+    if (parsed) addReference(parsed.bucket, parsed.path);
+  }
+
   const arquivos = await collectPaged(supabase, 'arquivos_historicos', 'id,url,storage_bucket,storage_path');
   for (const arquivo of arquivos) {
     if (arquivo.storage_bucket && arquivo.storage_path) {
@@ -160,6 +166,36 @@ async function collectReferences(supabase) {
 
     const parsed = parseStoragePathFromUrl(arquivo.url);
     if (parsed) addReference(parsed.bucket, parsed.path);
+  }
+
+  const siteSettings = await collectPaged(
+    supabase,
+    'site_visual_settings',
+    'home_logo_media_url,home_background_media_url,social_share_image_url,draft_payload'
+  );
+
+  const collectStorageUrls = (value) => {
+    if (typeof value === 'string') {
+      const parsed = parseStoragePathFromUrl(value);
+      if (parsed) addReference(parsed.bucket, parsed.path);
+      return;
+    }
+
+    if (Array.isArray(value)) {
+      value.forEach(collectStorageUrls);
+      return;
+    }
+
+    if (value && typeof value === 'object') {
+      Object.values(value).forEach(collectStorageUrls);
+    }
+  };
+
+  for (const settings of siteSettings) {
+    collectStorageUrls(settings.home_logo_media_url);
+    collectStorageUrls(settings.home_background_media_url);
+    collectStorageUrls(settings.social_share_image_url);
+    collectStorageUrls(settings.draft_payload);
   }
 
   return referenced;

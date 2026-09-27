@@ -739,6 +739,17 @@ export async function resolveFirstAccessLinkForUser(user: User): Promise<LinkRes
   }
 
   if (existingLink.data) {
+    const profile = await ensureMemberProfile(user.id, {
+      nome_exibicao:
+        (user.user_metadata?.nome_exibicao as string | undefined)
+        || user.email
+        || null,
+    });
+
+    if (profile.error) {
+      return { status: 'error', error: profile.error, data: null, created: false };
+    }
+
     return { status: 'linked', data: existingLink.data, created: false };
   }
 
