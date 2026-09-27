@@ -14,7 +14,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 25
     env:
-      QA_BASE_URL: https://arvorefamilia.com
+      QA_BASE_URL: https://familiasouzabarros.com.br
       QA_SESSION_FILE: qa-session.json
       QA_OUT_DIR: qa-artifacts
       QA_FUNCTION_URL: https://jimymkzejbhuseozunxl.supabase.co/functions/v1/qa-authenticated-session-v2
