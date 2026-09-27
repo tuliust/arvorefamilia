@@ -9,7 +9,7 @@
 | Bucket | Uso |
 |---|---|
 | `person-avatars` | Avatares das pessoas. |
-| `historical-files` | Imagens/PDFs históricos. |
+| `historical-files` | Imagens/PDFs históricos. **Privado**; leitura por usuário autenticado, signed URL ou download autenticado. |
 | `site-media` | Mídias institucionais do site. |
 | `logo` | Bucket legado. Não usar em uploads novos; revisar seus 2 objetos antes de remoção. |
 
@@ -30,11 +30,11 @@ Portanto:
 Quando há upload:
 
 - salvar arquivo no bucket `historical-files`;
-- preencher `url`;
+- preencher `url` apenas como metadado/compatibilidade quando necessário; não depender de URL pública permanente;
 - preencher `storage_bucket`;
 - preencher `storage_path`;
 - preencher `mime_type`;
-- permitir abrir/download quando aplicável;
+- permitir abrir por signed URL e baixar pela Storage API autenticada;
 - manter relação com o registro histórico.
 
 Campos esperados no registro ou estrutura equivalente:
@@ -65,11 +65,12 @@ Contrato atual:
 
 Requisitos de Storage para preview:
 
-- a URL precisa ser acessível pelo navegador do usuário autorizado;
+- `historical-files` é privado; o preview deve obter signed URL válida para o usuário autorizado;
 - o `fetch` do arquivo precisa retornar `response.ok`;
 - o conteúdo precisa ser um PDF válido ou compatível com PDF.js;
 - a política/CORS do bucket não pode bloquear a leitura;
-- se URLs assinadas forem usadas, devem estar válidas durante a visualização.
+- a signed URL deve permanecer válida durante a visualização;
+- `Baixar` deve usar `storage.from('historical-files').download(...)` com sessão autenticada.
 
 Observação:
 
@@ -159,14 +160,14 @@ Regras:
 3. Upload de PDF histórico.
 4. Registro histórico sem upload.
 5. Remoção/edição de registro.
-6. Link público ou assinado de arquivo.
+6. Signed URL de arquivo histórico; URL pública permanente deve permanecer bloqueada.
 7. Falha amigável se bucket ausente.
 8. Preview de PDF na Linha do Tempo.
 9. Download de PDF pelo botão `Baixar`.
 10. Abertura de PDF em nova aba pelo fallback do modal.
 11. PDF removido do Storage sem registro atualizado.
 12. PDF com `mime_type` incorreto.
-13. URL expirada, quando o fluxo usar signed URL.
+13. URL assinada expirada e fallback amigável.
 
 ## QA específico do modal de PDF
 
