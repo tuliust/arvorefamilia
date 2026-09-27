@@ -14,6 +14,20 @@ const FAVORITES_KEY = 'arvorefamilia:favorites';
 const NOTIFICATIONS_KEY = 'arvorefamilia:notifications';
 const NOTIFICATION_PREFERENCES_KEY = 'arvorefamilia:notification-preferences';
 const DEFAULT_USER_ID = 'demo-user';
+const UNREAD_NOTIFICATION_COUNT_CACHE_TTL_MS = 5_000;
+const unreadNotificationCountCache = new Map<string, { count: number; expiresAt: number }>();
+const unreadNotificationCountRequests = new Map<string, Promise<number>>();
+
+export function invalidateUnreadNotificationsCountCache(userId?: string) {
+  if (userId) {
+    unreadNotificationCountCache.delete(userId);
+    unreadNotificationCountRequests.delete(userId);
+    return;
+  }
+
+  unreadNotificationCountCache.clear();
+  unreadNotificationCountRequests.clear();
+}
 
 export const DEFAULT_NOTIFICATION_PREFERENCES = {
   receber_aniversarios: true,
@@ -301,19 +315,38 @@ export async function listarNotificacoesSupabase(userId: string): Promise<Notifi
 }
 
 export async function contarNotificacoesNaoLidasSupabase(userId: string): Promise<number> {
-  try {
-    const { count, error } = await supabase
-      .from('notificacoes_usuario')
-      .select('id', { count: 'exact', head: true })
-      .eq('user_id', userId)
-      .eq('lida', false);
+  const cached = unreadNotificationCountCache.get(userId);
+  if (cached && cached.expiresAt > Date.now()) return cached.count;
 
-    if (error) throw error;
-    return count ?? 0;
-  } catch (error) {
-    console.error('[Supabase] Erro ao contar notificações não lidas:', error);
-    return listarNotificacoes(userId).filter((item) => !item.lida).length;
-  }
+  const inFlight = unreadNotificationCountRequests.get(userId);
+  if (inFlight) return inFlight;
+
+  const request = (async () => {
+    try {
+      const { count, error } = await supabase
+        .from('notificacoes_usuario')
+        .select('id', { count: 'exact', head: true })
+        .eq('user_id', userId)
+        .eq('lida', false);
+
+      if (error) throw error;
+
+      const nextCount = count ?? 0;
+      unreadNotificationCountCache.set(userId, {
+        count: nextCount,
+        expiresAt: Date.now() + UNREAD_NOTIFICATION_COUNT_CACHE_TTL_MS,
+      });
+      return nextCount;
+    } catch (error) {
+      console.error('[Supabase] Erro ao contar notificações não lidas:', error);
+      return listarNotificacoes(userId).filter((item) => !item.lida).length;
+    } finally {
+      unreadNotificationCountRequests.delete(userId);
+    }
+  })();
+
+  unreadNotificationCountRequests.set(userId, request);
+  return request;
 }
 
 export async function marcarNotificacaoSupabaseComoLida(notificacaoId: string, userId: string) {
@@ -327,6 +360,8 @@ export async function marcarNotificacaoSupabaseComoLida(notificacaoId: string, u
     console.error('[Supabase] Erro ao marcar notificação como lida:', error);
     throw error;
   }
+
+  invalidateUnreadNotificationsCountCache(userId);
 }
 
 export async function removerNotificacaoSupabase(notificacaoId: string, userId: string) {
@@ -340,6 +375,8 @@ export async function removerNotificacaoSupabase(notificacaoId: string, userId: 
     console.error('[Supabase] Erro ao remover notificação:', error);
     throw error;
   }
+
+  invalidateUnreadNotificationsCountCache(userId);
 }
 
 export async function marcarTodasNotificacoesSupabaseComoLidas(userId: string) {
@@ -353,6 +390,8 @@ export async function marcarTodasNotificacoesSupabaseComoLidas(userId: string) {
     console.error('[Supabase] Erro ao marcar todas notificações como lidas:', error);
     throw error;
   }
+
+  invalidateUnreadNotificationsCountCache(userId);
 }
 
 export async function criarNotificacaoSupabase(params: {
@@ -383,6 +422,7 @@ export async function criarNotificacaoSupabase(params: {
     throw error;
   }
 
+  invalidateUnreadNotificationsCountCache(params.userId);
   return mapNotificacaoRow(data);
 }
 
