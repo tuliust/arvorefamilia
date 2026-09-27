@@ -1,0 +1,137 @@
+name: Supabase baseline cleanup
+
+on:
+  push:
+    paths:
+      - '.github/workflows/supabase-baseline-cleanup.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      PROJECT_REF: jimymkzejbhuseozunxl
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Validate Supabase token availability
+        shell: bash
+        run: |
+          if [ -z "$SUPABASE_ACCESS_TOKEN" ]; then
+            echo "::error::SUPABASE_ACCESS_TOKEN is not configured in GitHub Secrets."
+            exit 2
+          fi
+
+      - name: Link Supabase project
+        shell: bash
+        run: |
+          npx --yes supabase@latest link --project-ref "$PROJECT_REF"
+
+      - name: Rotate daily notification secret
+        id: rotate
+        shell: bash
+        run: |
+          DAILY_SECRET="$(openssl rand -hex 32)"
+          echo "::add-mask::$DAILY_SECRET"
+          echo "daily_secret=$DAILY_SECRET" >> "$GITHUB_OUTPUT"
+          npx --yes supabase@latest secrets set "DAILY_NOTIFICATIONS_SECRET=$DAILY_SECRET"
+
+      - name: Store cron secret in Vault and update pg_cron
+        shell: bash
+        env:
+          DAILY_SECRET: ${{ steps.rotate.outputs.daily_secret }}
+        run: |
+          echo "::add-mask::$DAILY_SECRET"
+          python3 - <<'PY' > /tmp/db-query.json
+          import json, os
+          secret = os.environ["DAILY_SECRET"]
+          sql = r"""
+          do $$
+          declare
+            current_id uuid;
+          begin
+            select id into current_id
+            from vault.secrets
+            where name = 'daily_notifications_secret'
+            limit 1;
+
+            if current_id is null then
+              perform vault.create_secret(
+                %s,
+                'daily_notifications_secret',
+                'Shared secret for run-daily-notifications pg_cron invocation.'
+              );
+            else
+              perform vault.update_secret(
+                current_id,
+                %s,
+                'daily_notifications_secret',
+                'Shared secret for run-daily-notifications pg_cron invocation.'
+              );
+            end if;
+          end
+          $$;
+
+          select cron.alter_job(
+            3,
+            command := $cron$
+              select net.http_post(
+                url := 'https://jimymkzejbhuseozunxl.supabase.co/functions/v1/run-daily-notifications',
+                headers := jsonb_build_object(
+                  'Content-Type', 'application/json',
+                  'x-daily-notifications-secret',
+                  (
+                    select decrypted_secret
+                    from vault.decrypted_secrets
+                    where name = 'daily_notifications_secret'
+                    limit 1
+                  )
+                ),
+                body := '{}'::jsonb,
+                timeout_milliseconds := 5000
+              );
+            $cron$
+          );
+          """ % (json.dumps(secret), json.dumps(secret))
+          print(json.dumps({"query": sql}))
+          PY
+
+          curl --fail-with-body --silent --show-error             --request POST             --url "https://api.supabase.com/v1/projects/$PROJECT_REF/database/query"             --header "Authorization: Bearer $SUPABASE_ACCESS_TOKEN"             --header "Content-Type: application/json"             --data-binary @/tmp/db-query.json >/tmp/db-result.json
+
+      - name: Validate daily notification function returns 200
+        shell: bash
+        env:
+          DAILY_SECRET: ${{ steps.rotate.outputs.daily_secret }}
+        run: |
+          echo "::add-mask::$DAILY_SECRET"
+          HTTP_CODE="$(curl --silent --show-error             --output /tmp/function-response.json             --write-out "%{http_code}"             --request POST             --url "https://$PROJECT_REF.supabase.co/functions/v1/run-daily-notifications"             --header "Content-Type: application/json"             --header "x-daily-notifications-secret: $DAILY_SECRET"             --data '{"referenceDate":"2026-01-01"}')"
+
+          echo "HTTP status: $HTTP_CODE"
+          jq '{ok, summary}' /tmp/function-response.json || cat /tmp/function-response.json
+
+          test "$HTTP_CODE" = "200"
+          test "$(jq -r '.ok' /tmp/function-response.json)" = "true"
+
+      - name: Delete temporary QA functions
+        shell: bash
+        run: |
+          npx --yes supabase@latest functions delete qa-authenticated-session --yes
+          npx --yes supabase@latest functions delete qa-authenticated-session-v2 --yes
+
+      - name: Verify QA functions are gone
+        shell: bash
+        run: |
+          curl --fail-with-body --silent --show-error             --url "https://api.supabase.com/v1/projects/$PROJECT_REF/functions"             --header "Authorization: Bearer $SUPABASE_ACCESS_TOKEN"             > /tmp/functions.json
+
+          if jq -e '.[] | select(.slug == "qa-authenticated-session" or .slug == "qa-authenticated-session-v2")' /tmp/functions.json >/dev/null; then
+            echo "::error::One or more QA functions are still deployed."
+            exit 1
+          fi
+
+          echo "QA functions removed successfully."
