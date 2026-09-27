@@ -2,7 +2,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import { chromium } from '@playwright/test';
 
-const BASE_URL = process.env.QA_BASE_URL || 'https://arvorefamilia.com';
+const BASE_URL = process.env.QA_BASE_URL || 'http://127.0.0.1:4173';
 const SESSION_FILE = process.env.QA_SESSION_FILE || 'qa-session.json';
 const OUT_DIR = process.env.QA_OUT_DIR || 'qa-artifacts';
 const PROJECT_REF = 'jimymkzejbhuseozunxl';
@@ -60,7 +60,7 @@ async function makePage(browser, session, viewport = { width: 1440, height: 1000
   });
   await context.addInitScript(sessionInit(session, extra), { authKey: AUTH_KEY, session, extra });
   const page = await context.newPage();
-  const telemetry = { pageErrors: [], consoleErrors: [], nativeDialogs: [], storageRequests: [] };
+  const telemetry = { pageErrors: [], consoleErrors: [], nativeDialogs: [], storageRequests: [], requestFailures: [], apiErrors: [] };
   page.on('pageerror', e => telemetry.pageErrors.push(e.message));
   page.on('console', msg => {
     if (msg.type() === 'error') telemetry.consoleErrors.push(msg.text());
@@ -75,12 +75,24 @@ async function makePage(browser, session, viewport = { width: 1440, height: 1000
       telemetry.storageRequests.push({ method: request.method(), url });
     }
   });
+  page.on('requestfailed', request => {
+    const url = request.url();
+    if (url.includes('supabase.co')) telemetry.requestFailures.push({ url, error: request.failure()?.errorText ?? 'failed' });
+  });
+  page.on('response', response => {
+    const url = response.url();
+    if (url.includes('supabase.co') && response.status() >= 400) {
+      telemetry.apiErrors.push({ url, status: response.status() });
+    }
+  });
   return { context, page, telemetry };
 }
 
 async function goto(page, route) {
   await page.goto(new URL(route, BASE_URL).toString(), { waitUntil: 'domcontentloaded', timeout: 45000 });
-  await page.waitForTimeout(900);
+  await page.locator('[data-testid="route-loading"]').waitFor({ state: 'hidden', timeout: 12000 }).catch(() => {});
+  await page.waitForLoadState('networkidle', { timeout: 6000 }).catch(() => {});
+  await page.waitForTimeout(1400);
   const url = page.url();
   expect(!/\/entrar(?:\?|$)/.test(url), `redirected-to-login:${url}`);
   return url;
@@ -145,10 +157,15 @@ try {
   });
 
   await record('/mapa-familiar: estrutura, grupos e exportação', async () => {
-    await assertRouteVisible(page, '/mapa-familiar', ['Grupos de Familiares', 'Exportar', 'Salvar Imagem', 'Imprimir']);
+    await goto(page, '/mapa-familiar');
+    await snap(page, '02-mapa-desktop-paineis');
+    await page.getByText('Grupos de Familiares', { exact: false }).first().waitFor({ state: 'visible', timeout: 12000 }).catch(() => {});
+    const mapText = await visibleText(page);
+    for (const needle of ['Grupos de Familiares', 'Exportar', 'Salvar Imagem', 'Imprimir']) expect(mapText.includes(needle), `missing-text:${needle}`);
+    await assertNoMojibake(page);
+    await assertNoHorizontalOverflow(page);
     const text = await visibleText(page);
     expect(!text.includes('Salvar PDF'), 'unexpected-export-option');
-    await snap(page, '02-mapa-desktop-paineis');
   });
 
   await record('/mapa-familiar: perspectivas Bianca, Charalambos e Leonardo', async () => {
@@ -195,6 +212,8 @@ try {
   await record('/pessoa/:id: timeline PDF abre por signed URL e download funciona', async () => {
     telemetry.storageRequests.length = 0;
     await goto(page, `/pessoa/${DECEASED_PERSON_ID}`);
+    await snap(page, '07-perfil-timeline-pdf-inicial');
+    await page.getByText(/Certidão de Óbito|PDF/i).first().waitFor({ state: 'visible', timeout: 12000 }).catch(() => {});
     const text = await visibleText(page);
     expect(!text.includes('Arquivos e registros vinculados'), 'legacy-attachments-title-visible');
     expect(/PDF/i.test(text), 'pdf-attachment-not-visible');
@@ -297,6 +316,8 @@ try {
       !/favicon|ResizeObserver|404.*manifest|ERR_BLOCKED_BY_CLIENT/i.test(x)
     );
     expect(telemetry.pageErrors.length === 0, 'page-errors:' + telemetry.pageErrors.join(' | '));
+    expect(telemetry.requestFailures.length === 0, 'supabase-request-failures:' + JSON.stringify(telemetry.requestFailures));
+    expect(telemetry.apiErrors.length === 0, 'supabase-api-errors:' + JSON.stringify(telemetry.apiErrors));
     expect(ignorable.length === 0, 'console-errors:' + ignorable.join(' | '));
     expect(telemetry.nativeDialogs.length === 0, 'native-dialogs:' + JSON.stringify(telemetry.nativeDialogs));
   });
