@@ -301,7 +301,7 @@ try {
               const x = r.left + r.width / 2;
               const y = r.top + r.height / 2;
               const top = document.elementFromPoint(x, y);
-              return { x, y, tag: top?.tagName, cls: String((top as HTMLElement)?.className || ''), text: String(top?.textContent || '').slice(0, 120) };
+              return { x, y, tag: top?.tagName, cls: String(top?.className || ''), text: String(top?.textContent || '').slice(0, 120) };
             });
             throw new Error(`toolbar-click-blocked:${action}:${JSON.stringify(point)}:${err(error)}`);
           }
