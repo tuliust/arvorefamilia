@@ -149,7 +149,43 @@ jobs:
           done
           curl -fsS "$QA_BASE_URL/" >/dev/null
 
-          node scripts/qa-authenticated-visual.mjs
+          node scripts/qa-authenticated-followup.mjs
+
+      - name: Make historical-files private after production proof
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$QA_OUT_DIR"
+
+          if [ ! -f "$QA_OUT_DIR/storage-readiness.json" ]; then
+            echo '{"applied":false,"reason":"storage-readiness.json ausente"}' > "$QA_OUT_DIR/storage-transition.json"
+            exit 0
+          fi
+
+          READY="$(node -e "const x=require('./$QA_OUT_DIR/storage-readiness.json'); process.stdout.write(x.ready_for_private ? 'yes' : 'no')")"
+          if [ "$READY" != "yes" ]; then
+            node -e "const fs=require('fs'); fs.writeFileSync('./$QA_OUT_DIR/storage-transition.json', JSON.stringify({applied:false,reason:'produção não comprovou signed URL + download autenticado'},null,2))"
+            exit 0
+          fi
+
+          TOKEN="$(cat /tmp/github-oidc-token)"
+          HTTP_CODE="$(curl -sS -o "$QA_OUT_DIR/storage-transition.json" -w '%{http_code}'             -H "Authorization: Bearer ${TOKEN}"             -H "Content-Type: application/json"             -d '{"action":"storage-transition"}'             "$QA_FUNCTION_URL")"
+
+          node <<'NODE'
+          const fs = require('fs');
+          const p = process.env.QA_OUT_DIR + '/storage-transition.json';
+          const payload = JSON.parse(fs.readFileSync(p, 'utf8'));
+          if (payload.error) throw new Error(payload.error);
+          if (!payload.ok || payload.bucket_public_after !== false) {
+            throw new Error('A transição para bucket privado não foi confirmada.');
+          }
+          console.log(JSON.stringify(payload, null, 2));
+          NODE
+
+          if [ "$HTTP_CODE" -lt 200 ] || [ "$HTTP_CODE" -ge 300 ]; then
+            exit 1
+          fi
 
       - name: Preserve preview log
         if: always()
