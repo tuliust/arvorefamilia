@@ -273,3 +273,7 @@ git switch main
 ---
 
 **Orientação final:** manter **uma única pasta local**, **um único repositório GitHub** e **o Supabase original** para a continuidade do Árvore Família. A prioridade é preservar os dados familiares reais; qualquer cenário de demonstração deve ser isolado, não misturado à base existente.
+
+## 10. Atualização de continuidade — 24/11/2026
+
+Consultar [checklist consolidado PROJETOS 2027 e histórico das sessões 01–12](CHECKLIST_PROJETOS_2027_2026-11-24.md). Este complemento preserva a fotografia de referência de 23/11, distingue resultados relatados de verificações confirmadas e lista pendências, critérios de segurança e ordem de retomada. Não representa homologação, backup restaurável ou autorização de deploy.
