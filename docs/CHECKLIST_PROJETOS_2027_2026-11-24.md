@@ -1,8 +1,9 @@
 # ARVOREFAMILIA — PROJETOS 2027: checklist e continuidade
 
-**Consolidação:** 24/11/2026, 21h29 (Brasília), sessões 01–12.  
+**Consolidação inicial:** 24/11/2026, 21h29 (Brasília), sessões 01–12.  
+**Atualização:** sessão 13, ciclo de 24/11/2026.  
 **Natureza:** registro documental de continuidade, não homologação.  
-**Fonte:** relatórios das sessões no chat e [fotografia de referência de 23/11](STATUS_E_CONTINUIDADE.md), lida diretamente no GitHub. Os retornos brutos das consultas das sessões não foram revalidados nesta gravação. A planilha central foi relatada como 21 pendências e 0 concluídas na sessão 12; não houve nova consulta ou alteração da planilha nesta gravação.
+**Fonte:** relatórios das sessões no chat e [fotografia de referência de 23/11](STATUS_E_CONTINUIDADE.md), lida diretamente no GitHub. Os retornos brutos das consultas das sessões não foram revalidados nesta gravação. A planilha central foi relatada como 21 pendências e 0 concluídas nas sessões 12 e 13; não houve nova consulta ou alteração da planilha nesta gravação.
 
 **Privacidade:** repositório público. Este registro omite dados pessoais, credenciais, definições SQL e detalhes de possíveis explorações. Achados específicos de segurança devem permanecer no controle restrito do responsável. Não confundir alertas estáticos com exploração comprovada.
 
@@ -62,6 +63,8 @@ Legenda: 🟢 subatividade executada/relatada; 🟡 parcial; 🔴 pendente; 🔒
 - [x] Inventário de funções privilegiadas sinalizadas e análise estática de sete funções, incluindo autorização administrativa (relatados).
 - [x] Estado da proteção contra senhas comprometidas verificado (relatado).
 - [x] Identificação preliminar de riscos em autorização, onboarding, privacidade e operações administrativas (relatados).
+- [x] Consultar as políticas RLS de perfis (sessão 13; análise estática relatada, não homologação de autorização).
+- [ ] Verificar grants efetivos por coluna e triggers de proteção de papéis; concluir a classificação de risco de autorização.
 - [ ] Revisar restantes funções privilegiadas; grants efetivos, políticas RLS individuais, papéis, triggers, proprietários, BYPASSRLS e search_path.
 - [ ] Validar autorização e proteção de papéis em ambiente sintético; não explorar produção.
 - [ ] Revisar cadastro, primeiro acesso, configuração Auth, visibilidade de perfis e permissões por papel.
@@ -102,19 +105,20 @@ Legenda: 🟢 subatividade executada/relatada; 🟡 parcial; 🔴 pendente; 🔒
 | 10 | 19h | Análise estática de seis funções privilegiadas |
 | 11 | 20h | Sem novas consultas técnicas |
 | 12 | 21h | Análise de função de autorização administrativa |
+| 13 | Não informado | Consulta das políticas RLS de perfis; três políticas relatadas; análise de autorização ainda incompleta |
 
-Indicadores relatados: 53/53 tabelas public/storage com RLS ativo (ativação, não eficácia), 27 ocorrências no Security Advisor, 25 funções sinalizadas, sete funções examinadas individualmente ao todo (não presumir que todas pertençam ao conjunto de 25). Nenhuma correção em produção ou teste sintético executado nas 12 sessões. Nenhum backup restaurável verificado e nenhuma homologação formal.
+Indicadores relatados: 53/53 tabelas public/storage com RLS ativo (ativação, não eficácia), 27 ocorrências no Security Advisor, 25 funções sinalizadas, sete funções examinadas individualmente ao todo (não presumir que todas pertençam ao conjunto de 25). Nenhuma correção em produção ou teste sintético executado nas 13 sessões. Nenhum backup restaurável verificado e nenhuma homologação formal.
 
 ## 4. Riscos e prioridades (resumo público)
 
 - P0 operacional: backup recuperável não comprovado — impede intervenções técnicas.
-- P1 preliminar: revisar autorização administrativa, primeiro acesso, minimização de informações, operações destrutivas e padrões de privacidade. Não houve teste de exploração nem confirmação de acesso indevido.
+- P1 preliminar: revisar autorização administrativa, primeiro acesso, minimização de informações, operações destrutivas e padrões de privacidade. Na sessão 13, a revisão estática das políticas de perfis aprofundou o diagnóstico; grants e triggers ainda precisam ser examinados. Não houve teste de exploração nem confirmação de acesso indevido.
 - A classificar: privilégios padrão, desempenho/RLS e proteção de Auth.
 - P1 operacional: ausência de evidências persistentes e baixa produtividade das sessões. Não confundir execução insuficiente com indisponibilidade comprovada dos serviços.
 
 ## 5. Ordem de retomada
 
-1. Revisar políticas e privilégios efetivos de autorização administrativa, funções e triggers, somente leitura.
+1. Examinar privilégios efetivos por coluna e triggers de proteção de papéis, somente leitura, sem repetir a consulta de políticas já relatada; concluir a classificação preliminar de autorização.
 2. Verificar backup preventivo restaurável (P0, pré-requisito de qualquer intervenção).
 3. Registrar evidências e riscos detalhados no controle restrito, com readback.
 4. Auditar integridade referencial, vínculos genealógicos e órfãos por contagens agregadas.
@@ -128,3 +132,11 @@ Indicadores relatados: 53/53 tabelas public/storage com RLS ativo (ativação, n
 Preservar o Supabase original, os dados genealógicos e os arquivos históricos. Não substituir dados reais por mocks. Não escrever dados reais durante testes, reaplicar migrations históricas, revogar permissões indiscriminadamente, habilitar ferramentas administrativas destrutivas no ambiente real, executar migração destrutiva, usar npm audit fix --force, criar recursos permanentes/pagos ou fazer merge/deploy automático. Mudanças de alto impacto exigem autorização específica e backup restaurável, escopo, impacto e rollback. Nenhuma alteração técnica foi realizada nesta gravação; rollback técnico desnecessário.
 
 Referência canônica: [STATUS_E_CONTINUIDADE.md](STATUS_E_CONTINUIDADE.md). Os números históricos de 23/11 são evidência documental, não verificação atual; as lacunas acima referem-se ao ciclo de 24/11. A documentação foi mantida separada da main para preservar produção.
+
+## 7. Delta da sessão 13
+
+- ARV-005, ARV-009 e ARV-021: avanço diagnóstico relatado; continuam parciais.
+- Consulta estática de três políticas de perfis: relatada como realizada; eficácia e controles complementares pendentes.
+- ARV-010: backup restaurável não verificado; nenhuma correção, escrita em produção ou homologação autorizada por este registro.
+- Planilha: sessão 13 relata 21 atividades pendentes e 0 concluídas; sem gravação relatada. Esta atualização documental não alterou a planilha.
+- Evidência: relatório da sessão 13 no chat; retornos brutos não revalidados nesta atualização. Detalhes sensíveis omitidos por se tratar de repositório público.
